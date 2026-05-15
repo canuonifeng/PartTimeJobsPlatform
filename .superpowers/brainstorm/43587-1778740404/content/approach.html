@@ -1,0 +1,53 @@
+<h2>企业端 — 两套架构方案对比</h2>
+
+<div class="options" style="margin-top:24px">
+  <div class="option" data-choice="modular-monolith" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>模块化单体 (推荐)</h3>
+      <p>一个后端应用，内部按领域拆分为独立模块</p>
+      <div class="pros-cons" style="margin-top:12px">
+        <div class="pros"><h4>Pros</h4>
+          <ul>
+            <li>开发速度快，MVP周期短</li>
+            <li>部署运维简单（一个服务）</li>
+            <li>模块间调用无网络开销</li>
+            <li>后期可逐步拆出微服务</li>
+          </ul>
+        </div>
+        <div class="cons"><h4>Cons</h4>
+          <ul>
+            <li>代码库会逐渐变大</li>
+            <li>需要严格模块边界纪律</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="option" data-choice="microservices" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>微服务 + API 网关</h3>
+      <p>按领域拆分为独立服务（岗位服务、排班服务、结算服务）</p>
+      <div class="pros-cons" style="margin-top:12px">
+        <div class="pros"><h4>Pros</h4>
+          <ul>
+            <li>领域边界天然隔离</li>
+            <li>独立部署和扩缩容</li>
+          </ul>
+        </div>
+        <div class="cons"><h4>Cons</h4>
+          <ul>
+            <li>初始开发成本高 2-3 倍</li>
+            <li>部署/调试/运维复杂</li>
+            <li>业务边界在不断验证中可能调整</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:32px;padding:20px;background:var(--bg-card);border-radius:12px;border-left:4px solid #10b981">
+  <p style="margin:0"><strong>推荐方案 A：</strong>先做模块化单体，领域模块之间通过接口（interface）调用而非直接数据耦合。后期三端（企业/C端/平台）共享的业务逻辑沉淀到共享能力层，必要时再拆分。</p>
+</div>

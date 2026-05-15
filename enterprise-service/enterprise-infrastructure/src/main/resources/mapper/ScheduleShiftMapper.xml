@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.enterprise.infrastructure.mapper.ScheduleShiftMapper">
+
+    <resultMap id="ShiftResultMap" type="com.parttime.enterprise.core.domain.ScheduleShift">
+        <id property="id" column="id"/>
+        <result property="jobId" column="job_id"/>
+        <result property="templateSlotId" column="template_slot_id"/>
+        <result property="workerId" column="worker_id"/>
+        <result property="shiftDate" column="shift_date"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="locationLat" column="location_lat"/>
+        <result property="locationLng" column="location_lng"/>
+        <result property="locationRadius" column="location_radius"/>
+        <result property="locationName" column="location_name"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO schedule_shifts (job_id, template_slot_id, worker_id, shift_date, start_time, end_time,
+                                     location_lat, location_lng, location_radius, location_name, status)
+        VALUES (#{jobId}, #{templateSlotId}, #{workerId}, #{shiftDate}, #{startTime}, #{endTime},
+                #{locationLat}, #{locationLng}, #{locationRadius}, #{locationName}, 'SCHEDULED')
+    </insert>
+
+    <select id="findById" resultMap="ShiftResultMap">
+        SELECT * FROM schedule_shifts WHERE id = #{id}
+    </select>
+
+    <select id="findByJobId" resultMap="ShiftResultMap">
+        SELECT * FROM schedule_shifts WHERE job_id = #{jobId} ORDER BY shift_date, start_time
+    </select>
+
+    <select id="findByWorkerId" resultMap="ShiftResultMap">
+        SELECT * FROM schedule_shifts WHERE worker_id = #{workerId} ORDER BY shift_date, start_time
+    </select>
+
+    <select id="findByJobIdAndDate" resultMap="ShiftResultMap">
+        SELECT * FROM schedule_shifts WHERE job_id = #{jobId} AND shift_date = #{shiftDate} ORDER BY start_time
+    </select>
+
+    <select id="findByWorkerIdAndDateRange" resultMap="ShiftResultMap">
+        SELECT * FROM schedule_shifts
+        WHERE worker_id = #{workerId} AND shift_date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY shift_date, start_time
+    </select>
+
+    <update id="updateStatus">
+        UPDATE schedule_shifts SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM schedule_shifts WHERE id = #{id}
+    </delete>
+
+</mapper>

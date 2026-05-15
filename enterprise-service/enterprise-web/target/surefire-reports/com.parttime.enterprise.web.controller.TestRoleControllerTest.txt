@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.parttime.enterprise.web.controller.TestRoleControllerTest
+-------------------------------------------------------------------------------
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.237 s -- in com.parttime.enterprise.web.controller.TestRoleControllerTest

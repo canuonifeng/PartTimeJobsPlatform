@@ -1,0 +1,2 @@
+-- Enterprise Service initial schema
+-- Placeholder: tables will be created in subsequent migrations

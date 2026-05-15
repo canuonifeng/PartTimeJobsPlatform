@@ -1,0 +1,11 @@
+com/parttime/enterprise/infrastructure/mapper/AttendanceRecordMapper.class
+com/parttime/enterprise/infrastructure/repository/ScheduleShiftRepositoryImpl.class
+com/parttime/enterprise/infrastructure/mapper/JobApplicationMapper.class
+com/parttime/enterprise/infrastructure/mapper/ScheduleTemplateMapper.class
+com/parttime/enterprise/infrastructure/repository/ScheduleTemplateRepositoryImpl.class
+com/parttime/enterprise/infrastructure/mapper/JobScheduleMapper.class
+com/parttime/enterprise/infrastructure/mapper/JobRateMapper.class
+com/parttime/enterprise/infrastructure/repository/AttendanceRecordRepositoryImpl.class
+com/parttime/enterprise/infrastructure/mapper/JobCategoryMapper.class
+com/parttime/enterprise/infrastructure/mapper/JobMapper.class
+com/parttime/enterprise/infrastructure/mapper/ScheduleShiftMapper.class

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.enterprise.infrastructure.mapper.ScheduleTemplateMapper">
+
+    <resultMap id="TemplateResultMap" type="com.parttime.enterprise.core.domain.ScheduleTemplate">
+        <id property="id" column="id"/>
+        <result property="companyId" column="company_id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <resultMap id="SlotResultMap" type="com.parttime.enterprise.core.domain.ScheduleTemplateSlot">
+        <id property="id" column="id"/>
+        <result property="templateId" column="template_id"/>
+        <result property="dayOfWeek" column="day_of_week"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="maxWorkers" column="max_workers"/>
+        <result property="locationLat" column="location_lat"/>
+        <result property="locationLng" column="location_lng"/>
+        <result property="locationRadius" column="location_radius"/>
+        <result property="locationName" column="location_name"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO schedule_templates (company_id, name, description)
+        VALUES (#{companyId}, #{name}, #{description})
+    </insert>
+
+    <select id="findById" resultMap="TemplateResultMap">
+        SELECT * FROM schedule_templates WHERE id = #{id}
+    </select>
+
+    <select id="findByCompanyId" resultMap="TemplateResultMap">
+        SELECT * FROM schedule_templates WHERE company_id = #{companyId} ORDER BY created_at DESC
+    </select>
+
+    <update id="update">
+        UPDATE schedule_templates
+        SET name = #{name}, description = #{description}
+        WHERE id = #{id}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM schedule_templates WHERE id = #{id}
+    </delete>
+
+    <insert id="insertSlot" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO schedule_template_slots (template_id, day_of_week, start_time, end_time, max_workers,
+                                             location_lat, location_lng, location_radius, location_name)
+        VALUES (#{templateId}, #{dayOfWeek}, #{startTime}, #{endTime}, #{maxWorkers},
+                #{locationLat}, #{locationLng}, #{locationRadius}, #{locationName})
+    </insert>
+
+    <select id="findSlotsByTemplateId" resultMap="SlotResultMap">
+        SELECT * FROM schedule_template_slots WHERE template_id = #{templateId} ORDER BY day_of_week, start_time
+    </select>
+
+    <delete id="deleteSlotsByTemplateId">
+        DELETE FROM schedule_template_slots WHERE template_id = #{templateId}
+    </delete>
+
+</mapper>
