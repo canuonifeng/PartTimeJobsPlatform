@@ -3,6 +3,8 @@ package com.parttime.platform.controller;
 import com.parttime.platform.config.JwtTokenProvider;
 import com.parttime.platform.pojo.cmd.LoginCmd;
 import com.parttime.platform.pojo.vo.LoginVO;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,8 +28,9 @@ public class AuthController {
     @Resource
     private AuthenticationManager authenticationManager;
 
+    @Operation(summary = "平台端登录", description = "平台管理员通过用户名密码登录，返回JWT令牌")
     @PostMapping("/login")
-    public ResponseEntity<LoginVO> login(@RequestBody LoginCmd request) {
+    public ResponseEntity<LoginVO> login(@Parameter(description = "登录请求") @RequestBody LoginCmd request) {
         try {
             var auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.username(), request.password()));

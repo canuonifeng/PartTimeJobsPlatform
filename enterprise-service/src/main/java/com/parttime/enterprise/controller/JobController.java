@@ -6,6 +6,8 @@ import com.parttime.enterprise.pojo.vo.JobRateVO;
 import com.parttime.enterprise.pojo.vo.JobScheduleVO;
 import com.parttime.enterprise.pojo.vo.JobVO;
 import com.parttime.enterprise.service.JobService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,64 +31,79 @@ public class JobController {
     @Resource
     private JobService jobService;
 
+    @Operation(summary = "发布岗位", description = "将草稿状态的岗位发布为已发布状态")
     @PutMapping("/publish")
-    public JobVO publishJob(@RequestParam Long id) {
+    public JobVO publishJob(@Parameter(description = "岗位ID") @RequestParam Long id) {
         return jobService.publishJob(id);
     }
 
+    @Operation(summary = "关闭岗位", description = "关闭已发布的岗位")
     @PutMapping("/close")
-    public JobVO closeJob(@RequestParam Long id) {
+    public JobVO closeJob(@Parameter(description = "岗位ID") @RequestParam Long id) {
         return jobService.closeJob(id);
     }
 
+    @Operation(summary = "重新开放岗位", description = "重新开放已关闭的岗位")
     @PutMapping("/reopen")
-    public JobVO reopenJob(@RequestParam Long id) {
+    public JobVO reopenJob(@Parameter(description = "岗位ID") @RequestParam Long id) {
         return jobService.reopenJob(id);
     }
 
+    @Operation(summary = "获取岗位薪资规则", description = "根据岗位ID获取所有薪资规则")
     @GetMapping("/rates")
-    public List<JobRateVO> getJobRates(@RequestParam Long jobId) {
+    public List<JobRateVO> getJobRates(@Parameter(description = "岗位ID") @RequestParam Long jobId) {
         return jobService.getJobRates(jobId);
     }
 
+    @Operation(summary = "添加薪资规则", description = "为岗位添加一条薪资规则")
     @PostMapping("/rates")
     @ResponseStatus(HttpStatus.CREATED)
-    public JobRateVO addJobRate(@RequestParam Long jobId, @RequestBody JobRateCmd request) {
+    public JobRateVO addJobRate(@Parameter(description = "岗位ID") @RequestParam Long jobId, @RequestBody JobRateCmd request) {
         return jobService.addJobRate(jobId, request);
     }
 
+    @Operation(summary = "更新薪资规则", description = "更新岗位的薪资规则")
     @PutMapping("/rates")
-    public JobRateVO updateJobRate(@RequestParam Long jobId, @RequestParam Long rateId,
+    public JobRateVO updateJobRate(@Parameter(description = "岗位ID") @RequestParam Long jobId,
+                                   @Parameter(description = "薪资规则ID") @RequestParam Long rateId,
                                    @RequestBody JobRateCmd request) {
         return jobService.updateJobRate(rateId, request);
     }
 
+    @Operation(summary = "删除薪资规则", description = "删除岗位的薪资规则")
     @DeleteMapping("/rates")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeJobRate(@RequestParam Long jobId, @RequestParam Long rateId) {
+    public void removeJobRate(@Parameter(description = "岗位ID") @RequestParam Long jobId,
+                              @Parameter(description = "薪资规则ID") @RequestParam Long rateId) {
         jobService.removeJobRate(rateId);
     }
 
+    @Operation(summary = "获取岗位排班", description = "根据岗位ID获取所有排班")
     @GetMapping("/schedules")
-    public List<JobScheduleVO> getJobSchedules(@RequestParam Long jobId) {
+    public List<JobScheduleVO> getJobSchedules(@Parameter(description = "岗位ID") @RequestParam Long jobId) {
         return jobService.getJobSchedules(jobId);
     }
 
+    @Operation(summary = "添加排班", description = "为岗位添加一条排班记录")
     @PostMapping("/schedules")
     @ResponseStatus(HttpStatus.CREATED)
-    public JobScheduleVO addJobSchedule(@RequestParam Long jobId, @RequestBody JobScheduleCmd request) {
+    public JobScheduleVO addJobSchedule(@Parameter(description = "岗位ID") @RequestParam Long jobId, @RequestBody JobScheduleCmd request) {
         return jobService.addJobSchedule(jobId, request);
     }
 
+    @Operation(summary = "更新排班", description = "更新岗位的排班记录")
     @PutMapping("/schedules")
-    public JobScheduleVO updateJobSchedule(@RequestParam Long jobId, @RequestParam Long scheduleId,
+    public JobScheduleVO updateJobSchedule(@Parameter(description = "岗位ID") @RequestParam Long jobId,
+                                           @Parameter(description = "排班ID") @RequestParam Long scheduleId,
                                            @RequestBody JobScheduleCmd request) {
         return jobService.updateJobSchedule(scheduleId, request);
     }
 
+    @Operation(summary = "删除排班", description = "删除岗位的排班记录")
     @DeleteMapping("/schedules")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeJobSchedule(@RequestParam Long jobId, @RequestParam Long scheduleId) {
+    public void removeJobSchedule(@Parameter(description = "岗位ID") @RequestParam Long jobId,
+                                  @Parameter(description = "排班ID") @RequestParam Long scheduleId) {
         jobService.removeJobSchedule(scheduleId);
     }
 }

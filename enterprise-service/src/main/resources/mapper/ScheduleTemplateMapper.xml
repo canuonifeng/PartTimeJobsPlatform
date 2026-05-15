@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.parttime.enterprise.infrastructure.mapper.ScheduleTemplateMapper">
+<mapper namespace="com.parttime.enterprise.mapper.ScheduleTemplateMapper">
 
-    <resultMap id="TemplateResultMap" type="com.parttime.enterprise.core.domain.ScheduleTemplate">
+    <resultMap id="TemplateResultMap" type="com.parttime.enterprise.pojo.entity.ScheduleTemplate">
         <id property="id" column="id"/>
         <result property="companyId" column="company_id"/>
         <result property="name" column="name"/>
@@ -11,7 +11,7 @@
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
-    <resultMap id="SlotResultMap" type="com.parttime.enterprise.core.domain.ScheduleTemplateSlot">
+    <resultMap id="SlotResultMap" type="com.parttime.enterprise.pojo.entity.ScheduleTemplateSlot">
         <id property="id" column="id"/>
         <result property="templateId" column="template_id"/>
         <result property="dayOfWeek" column="day_of_week"/>

@@ -1,13 +1,18 @@
 package com.parttime.cservice.pojo.vo;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
 public class LoginVO {
 
+    @Schema(description = "JWT令牌")
     private String token;
+    @Schema(description = "工人ID")
     private Long workerId;
+    @Schema(description = "微信OpenID")
     private String openId;
+    @Schema(description = "微信昵称")
     private String nickname;
 
     public LoginVO(String token, Long workerId) {

@@ -5,6 +5,8 @@ import com.parttime.cservice.pojo.vo.ApplicationVO;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
 import com.parttime.cservice.service.JobService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -23,25 +25,28 @@ public class JobController {
     @Resource
     private JobService jobService;
 
+    @Operation(summary = "搜索岗位", description = "根据关键词、分类、地点和薪资范围搜索岗位")
     @GetMapping
     public ResponseEntity<List<JobSummaryVO>> searchJobs(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) String location,
-            @RequestParam(required = false) BigDecimal minRate,
-            @RequestParam(required = false) BigDecimal maxRate) {
+            @Parameter(description = "搜索关键词") @RequestParam(required = false) String keyword,
+            @Parameter(description = "岗位分类ID") @RequestParam(required = false) Long categoryId,
+            @Parameter(description = "工作地点") @RequestParam(required = false) String location,
+            @Parameter(description = "最低薪资") @RequestParam(required = false) BigDecimal minRate,
+            @Parameter(description = "最高薪资") @RequestParam(required = false) BigDecimal maxRate) {
         List<JobSummaryVO> results = jobService.searchJobs(keyword, categoryId, location, minRate, maxRate);
         return ResponseEntity.ok(results);
     }
 
+    @Operation(summary = "获取岗位详情", description = "根据ID获取岗位详细信息，包括薪资规则和排班")
     @GetMapping("/detail")
-    public ResponseEntity<JobDetailVO> getJobDetail(@RequestParam Long id) {
+    public ResponseEntity<JobDetailVO> getJobDetail(@Parameter(description = "岗位ID") @RequestParam Long id) {
         JobDetailVO detail = jobService.getJobDetail(id);
         return ResponseEntity.ok(detail);
     }
 
+    @Operation(summary = "申请岗位", description = "工人申请岗位并选择排班")
     @PostMapping("/apply")
-    public ResponseEntity<?> applyForJob(@RequestParam Long id, @RequestBody ApplyJobCmd request) {
+    public ResponseEntity<?> applyForJob(@Parameter(description = "岗位ID") @RequestParam Long id, @RequestBody ApplyJobCmd request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -51,8 +56,9 @@ public class JobController {
         return ResponseEntity.ok(Map.of("success", success));
     }
 
+    @Operation(summary = "获取申请状态", description = "获取工人在指定岗位的申请状态")
     @GetMapping("/application")
-    public ResponseEntity<?> getApplicationStatus(@RequestParam Long id) {
+    public ResponseEntity<?> getApplicationStatus(@Parameter(description = "岗位ID") @RequestParam Long id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

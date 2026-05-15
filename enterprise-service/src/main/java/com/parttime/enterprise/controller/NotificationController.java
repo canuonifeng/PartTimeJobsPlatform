@@ -4,6 +4,8 @@ import com.parttime.enterprise.pojo.cmd.NotificationTemplateCmd;
 import com.parttime.enterprise.pojo.entity.NotificationTemplate;
 import com.parttime.enterprise.pojo.vo.NotificationLogVO;
 import com.parttime.enterprise.service.NotificationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,29 +29,33 @@ public class NotificationController {
     @Resource
     private NotificationService notificationService;
 
+    @Operation(summary = "获取通知列表", description = "根据接收者ID和类型获取通知列表")
     @GetMapping("/notifications")
     public List<NotificationLogVO> getNotifications(
-            @RequestParam Long recipientId,
-            @RequestParam(defaultValue = "ENTERPRISE") String recipientType) {
+            @Parameter(description = "接收者ID") @RequestParam Long recipientId,
+            @Parameter(description = "接收者类型: ENTERPRISE-企业, WORKER-工人") @RequestParam(defaultValue = "ENTERPRISE") String recipientType) {
         return notificationService.getNotificationsByRecipient(recipientId, recipientType);
     }
 
+    @Operation(summary = "获取通知模板列表", description = "根据类型和渠道筛选通知模板")
     @GetMapping("/notification-templates")
     public List<NotificationTemplate> getTemplates(
-            @RequestParam(required = false) String type,
-            @RequestParam(required = false) String channel) {
+            @Parameter(description = "通知类型") @RequestParam(required = false) String type,
+            @Parameter(description = "发送渠道") @RequestParam(required = false) String channel) {
         return notificationService.getNotificationTemplates(type, channel);
     }
 
+    @Operation(summary = "创建通知模板", description = "创建新的通知模板")
     @PostMapping("/notification-templates")
     public ResponseEntity<NotificationTemplate> createTemplate(@RequestBody NotificationTemplateCmd request) {
         NotificationTemplate template = notificationService.createNotificationTemplate(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(template);
     }
 
+    @Operation(summary = "更新通知模板", description = "更新指定的通知模板")
     @PutMapping("/notification-templates")
     public ResponseEntity<NotificationTemplate> updateTemplate(
-            @RequestParam Long id,
+            @Parameter(description = "模板ID") @RequestParam Long id,
             @RequestBody NotificationTemplateCmd request) {
         try {
             NotificationTemplate template = notificationService.updateNotificationTemplate(id, request);
@@ -59,8 +65,9 @@ public class NotificationController {
         }
     }
 
+    @Operation(summary = "删除通知模板", description = "删除指定的通知模板")
     @DeleteMapping("/notification-templates")
-    public ResponseEntity<Void> deleteTemplate(@RequestParam Long id) {
+    public ResponseEntity<Void> deleteTemplate(@Parameter(description = "模板ID") @RequestParam Long id) {
         notificationService.deleteNotificationTemplate(id);
         return ResponseEntity.noContent().build();
     }

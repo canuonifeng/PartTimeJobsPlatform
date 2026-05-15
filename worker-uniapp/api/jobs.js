@@ -10,14 +10,16 @@ export function getJobs(params) {
 
 export function getJobDetail(id) {
   return request({
-    url: `/api/jobs/${id}`,
-    method: 'GET'
+    url: '/api/jobs/detail',
+    method: 'GET',
+    data: { id }
   })
 }
 
-export function applyJob(id) {
+export function applyJob(id, data) {
   return request({
-    url: `/api/jobs/${id}/apply`,
-    method: 'POST'
+    url: `/api/jobs/apply?id=${id}`,
+    method: 'POST',
+    data
   })
 }

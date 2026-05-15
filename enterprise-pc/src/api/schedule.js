@@ -5,7 +5,7 @@ export function listTemplates(params) {
 }
 
 export function getTemplate(id) {
-  return request.get(`/schedule-templates/${id}`)
+  return request.get('/schedule-templates', { params: { id } })
 }
 
 export function createTemplate(data) {
@@ -13,11 +13,11 @@ export function createTemplate(data) {
 }
 
 export function updateTemplate(id, data) {
-  return request.put(`/schedule-templates/${id}`, data)
+  return request.put('/schedule-templates', data, { params: { id } })
 }
 
 export function deleteTemplate(id) {
-  return request.delete(`/schedule-templates/${id}`)
+  return request.delete('/schedule-templates', { params: { id } })
 }
 
 export function listShifts(params) {
@@ -28,10 +28,10 @@ export function createShift(data) {
   return request.post('/schedule-shifts', data)
 }
 
-export function updateShift(id, data) {
-  return request.put(`/schedule-shifts/${id}`, data)
+export function deleteShift(id) {
+  return request.delete('/schedule-shifts', { params: { id } })
 }
 
-export function deleteShift(id) {
-  return request.delete(`/schedule-shifts/${id}`)
+export function getAttendanceReport(params) {
+  return request.get('/attendance/report', { params })
 }

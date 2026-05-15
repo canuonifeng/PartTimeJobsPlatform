@@ -1,5 +1,6 @@
 package com.parttime.cservice.pojo.vo;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -7,11 +8,18 @@ import java.util.List;
 
 @Data
 public class JobSummaryVO {
+    @Schema(description = "岗位ID")
     private Long id;
+    @Schema(description = "岗位标题")
     private String title;
+    @Schema(description = "工作地点")
     private String location;
+    @Schema(description = "分类名称")
     private String categoryName;
+    @Schema(description = "最低薪资")
     private BigDecimal minRate;
+    @Schema(description = "最高薪资")
     private BigDecimal maxRate;
+    @Schema(description = "薪资类型列表")
     private List<String> rateTypes;
 }

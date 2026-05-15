@@ -4,6 +4,8 @@ import com.parttime.cservice.pojo.vo.EarningsSummaryVO;
 import com.parttime.cservice.pojo.cmd.WithdrawalCmd;
 import com.parttime.cservice.pojo.vo.WithdrawalVO;
 import com.parttime.cservice.service.WithdrawalService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -31,6 +33,7 @@ public class WithdrawalController {
         return Long.valueOf(auth.getName());
     }
 
+    @Operation(summary = "申请提现", description = "工人申请提现账户余额")
     @PostMapping("/api/withdrawals")
     public ResponseEntity<?> requestWithdrawal(@RequestBody WithdrawalCmd request) {
         Long workerId = getCurrentWorkerId();
@@ -45,6 +48,7 @@ public class WithdrawalController {
         }
     }
 
+    @Operation(summary = "获取收益汇总", description = "获取当前工人的收益汇总信息")
     @GetMapping("/api/earnings/summary")
     public ResponseEntity<?> getEarningsSummary() {
         Long workerId = getCurrentWorkerId();
@@ -55,6 +59,7 @@ public class WithdrawalController {
         return ResponseEntity.ok(summary);
     }
 
+    @Operation(summary = "获取提现记录", description = "获取当前工人的提现历史记录")
     @GetMapping("/api/withdrawals/my")
     public ResponseEntity<?> getWithdrawalHistory() {
         Long workerId = getCurrentWorkerId();

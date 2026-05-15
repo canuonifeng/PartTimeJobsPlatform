@@ -1,4 +1,6 @@
 package com.parttime.platform.pojo.cmd;
 
-public record LoginCmd(String username, String password) {
+public record LoginCmd(
+        @io.swagger.v3.oas.annotations.media.Schema(description = "用户名") String username,
+        @io.swagger.v3.oas.annotations.media.Schema(description = "密码") String password) {
 }

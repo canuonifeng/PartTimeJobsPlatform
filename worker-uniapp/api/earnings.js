@@ -1,18 +1,16 @@
 import request from './request'
 
-export function getMyAttendance(params) {
+export function getEarningsSummary() {
   return request({
-    url: '/api/attendance/my',
-    method: 'GET',
-    data: params
+    url: '/api/earnings/summary',
+    method: 'GET'
   })
 }
 
-export function getMyWithdrawals(params) {
+export function getMyWithdrawals() {
   return request({
     url: '/api/withdrawals/my',
-    method: 'GET',
-    data: params
+    method: 'GET'
   })
 }
 

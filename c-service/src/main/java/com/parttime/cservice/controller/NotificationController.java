@@ -2,6 +2,7 @@ package com.parttime.cservice.controller;
 
 import com.parttime.cservice.pojo.vo.NotificationVO;
 import com.parttime.cservice.service.NotificationService;
+import io.swagger.v3.oas.annotations.Operation;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +22,7 @@ public class NotificationController {
     @Resource
     private NotificationService notificationService;
 
+    @Operation(summary = "获取我的通知", description = "获取当前工人的通知列表")
     @GetMapping("/my")
     public ResponseEntity<List<NotificationVO>> getMyNotifications() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

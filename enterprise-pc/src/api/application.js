@@ -5,13 +5,13 @@ export function listApplications(params) {
 }
 
 export function getApplication(id) {
-  return request.get(`/applications/${id}`)
+  return request.get('/applications', { params: { id } })
 }
 
-export function acceptApplication(id) {
-  return request.put(`/applications/${id}/accept`)
+export function acceptApplication(applicationId) {
+  return request.put('/applications/accept', null, { params: { applicationId } })
 }
 
-export function rejectApplication(id) {
-  return request.put(`/applications/${id}/reject`)
+export function rejectApplication(applicationId) {
+  return request.put('/applications/reject', null, { params: { applicationId } })
 }

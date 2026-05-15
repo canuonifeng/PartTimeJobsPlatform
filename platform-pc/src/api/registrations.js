@@ -1,13 +1,17 @@
 import request from './request'
 
-export function getRegistrations() {
-  return request.get('/registrations')
+export function getRegistrations(params) {
+  return request.get('/registrations', { params })
+}
+
+export function getRegistration(id) {
+  return request.get('/registrations', { params: { id } })
 }
 
 export function approveRegistration(id) {
-  return request.put(`/registrations/${id}/approve`)
+  return request.put('/registrations/approve', null, { params: { id } })
 }
 
-export function rejectRegistration(id, reason) {
-  return request.put(`/registrations/${id}/reject`, { reason })
+export function rejectRegistration(id, data) {
+  return request.put('/registrations/reject', data, { params: { id } })
 }

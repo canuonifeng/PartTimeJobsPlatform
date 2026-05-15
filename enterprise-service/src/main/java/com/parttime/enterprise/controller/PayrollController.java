@@ -4,6 +4,8 @@ import com.parttime.enterprise.pojo.cmd.PayrollBatchCmd;
 import com.parttime.enterprise.pojo.vo.PayrollBatchVO;
 import com.parttime.enterprise.pojo.vo.PayrollItemVO;
 import com.parttime.enterprise.service.PayrollService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,39 +27,46 @@ public class PayrollController {
     @Resource
     private PayrollService payrollService;
 
+    @Operation(summary = "创建薪资批次", description = "创建新的薪资计算批次")
     @PostMapping("/batches")
     @ResponseStatus(HttpStatus.CREATED)
     public PayrollBatchVO createBatch(@RequestBody PayrollBatchCmd request) {
         return payrollService.createBatch(request);
     }
 
+    @Operation(summary = "计算薪资批次", description = "计算指定批次的薪资")
     @PostMapping("/batches/calculate")
-    public PayrollBatchVO calculateBatch(@RequestParam Long id) {
+    public PayrollBatchVO calculateBatch(@Parameter(description = "批次ID") @RequestParam Long id) {
         return payrollService.calculateBatch(id);
     }
 
+    @Operation(summary = "确认薪资批次", description = "确认指定批次的薪资数据")
     @PostMapping("/batches/confirm")
-    public PayrollBatchVO confirmBatch(@RequestParam Long id) {
+    public PayrollBatchVO confirmBatch(@Parameter(description = "批次ID") @RequestParam Long id) {
         return payrollService.confirmBatch(id);
     }
 
+    @Operation(summary = "支付薪资批次", description = "支付指定批次的薪资")
     @PostMapping("/batches/pay")
-    public PayrollBatchVO payBatch(@RequestParam Long id) {
+    public PayrollBatchVO payBatch(@Parameter(description = "批次ID") @RequestParam Long id) {
         return payrollService.payBatch(id);
     }
 
+    @Operation(summary = "获取批次详情", description = "根据ID获取薪资批次详情")
     @GetMapping(value = "/batches", params = "id")
-    public PayrollBatchVO getBatchById(@RequestParam Long id) {
+    public PayrollBatchVO getBatchById(@Parameter(description = "批次ID") @RequestParam Long id) {
         return payrollService.getBatchById(id);
     }
 
+    @Operation(summary = "获取企业薪资批次列表", description = "根据企业ID获取所有薪资批次")
     @GetMapping("/batches")
-    public List<PayrollBatchVO> getBatchesByCompany(@RequestParam Long companyId) {
+    public List<PayrollBatchVO> getBatchesByCompany(@Parameter(description = "企业ID") @RequestParam Long companyId) {
         return payrollService.getBatchesByCompany(companyId);
     }
 
+    @Operation(summary = "获取批次薪资项", description = "获取指定批次的薪资明细项")
     @GetMapping("/batches/items")
-    public List<PayrollItemVO> getBatchItems(@RequestParam Long id) {
+    public List<PayrollItemVO> getBatchItems(@Parameter(description = "批次ID") @RequestParam Long id) {
         return payrollService.getBatchItems(id);
     }
 }
