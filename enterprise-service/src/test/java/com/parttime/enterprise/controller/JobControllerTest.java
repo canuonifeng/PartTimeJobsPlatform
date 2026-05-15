@@ -58,7 +58,7 @@ class JobControllerTest {
 
         when(jobService.publishJob(1L)).thenReturn(response);
 
-        mockMvc.perform(put("/api/jobs/1/publish"))
+        mockMvc.perform(put("/api/jobs/publish").param("id", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PUBLISHED"));
 
@@ -74,7 +74,7 @@ class JobControllerTest {
 
         when(jobService.closeJob(1L)).thenReturn(response);
 
-        mockMvc.perform(put("/api/jobs/1/close"))
+        mockMvc.perform(put("/api/jobs/close").param("id", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CLOSED"));
 
@@ -90,7 +90,7 @@ class JobControllerTest {
 
         when(jobService.reopenJob(1L)).thenReturn(response);
 
-        mockMvc.perform(put("/api/jobs/1/reopen"))
+        mockMvc.perform(put("/api/jobs/reopen").param("id", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PUBLISHED"));
 
@@ -108,7 +108,7 @@ class JobControllerTest {
 
         when(jobService.getJobRates(100L)).thenReturn(List.of(rate));
 
-        mockMvc.perform(get("/api/jobs/100/rates"))
+        mockMvc.perform(get("/api/jobs/rates").param("jobId", "100"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].type").value("HOURLY"))
                 .andExpect(jsonPath("$[0].amount").value(25.00));
@@ -132,7 +132,7 @@ class JobControllerTest {
 
         when(jobService.addJobRate(eq(100L), any(JobRateCmd.class))).thenReturn(response);
 
-        mockMvc.perform(post("/api/jobs/100/rates")
+        mockMvc.perform(post("/api/jobs/rates").param("jobId", "100")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -155,7 +155,7 @@ class JobControllerTest {
 
         when(jobService.updateJobRate(eq(1L), any(JobRateCmd.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/jobs/100/rates/1")
+        mockMvc.perform(put("/api/jobs/rates").param("jobId", "100").param("rateId", "1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -165,7 +165,7 @@ class JobControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void removeJobRate_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/jobs/100/rates/1"))
+        mockMvc.perform(delete("/api/jobs/rates").param("jobId", "100").param("rateId", "1"))
                 .andExpect(status().isNoContent());
 
         verify(jobService).removeJobRate(1L);
@@ -184,7 +184,7 @@ class JobControllerTest {
 
         when(jobService.getJobSchedules(100L)).thenReturn(List.of(schedule));
 
-        mockMvc.perform(get("/api/jobs/100/schedules"))
+        mockMvc.perform(get("/api/jobs/schedules").param("jobId", "100"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].slotsAvailable").value(5));
 
@@ -207,7 +207,7 @@ class JobControllerTest {
 
         when(jobService.addJobSchedule(eq(100L), any(JobScheduleCmd.class))).thenReturn(response);
 
-        mockMvc.perform(post("/api/jobs/100/schedules")
+        mockMvc.perform(post("/api/jobs/schedules").param("jobId", "100")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -217,7 +217,7 @@ class JobControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void removeJobSchedule_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/jobs/100/schedules/1"))
+        mockMvc.perform(delete("/api/jobs/schedules").param("jobId", "100").param("scheduleId", "1"))
                 .andExpect(status().isNoContent());
 
         verify(jobService).removeJobSchedule(1L);

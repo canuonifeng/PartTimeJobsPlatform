@@ -8,6 +8,9 @@ import com.parttime.cservice.service.impl.WorkerServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,7 +22,6 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -30,19 +32,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AuthControllerTest {
 
     private MockMvc mockMvc;
+    @Mock
     private WorkerServiceImpl workerService;
+    @Mock
     private JwtTokenProvider jwtTokenProvider;
+    @InjectMocks
+    private AuthController controller;
     private ObjectMapper objectMapper;
 
     private WorkerVO sampleWorker;
 
     @BeforeEach
     void setUp() {
-        workerService = mock(WorkerServiceImpl.class);
-        jwtTokenProvider = mock(JwtTokenProvider.class);
+        MockitoAnnotations.openMocks(this);
         objectMapper = new ObjectMapper();
-
-        AuthController controller = new AuthController(workerService, jwtTokenProvider);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
 
         sampleWorker = new WorkerVO();

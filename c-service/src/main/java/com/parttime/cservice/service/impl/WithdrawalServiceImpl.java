@@ -1,31 +1,35 @@
 package com.parttime.cservice.service.impl;
 
+import com.parttime.cservice.mapper.WithdrawalRecordMapper;
+import com.parttime.cservice.pojo.entity.WithdrawalRecord;
 import com.parttime.cservice.pojo.vo.EarningsSummaryVO;
 import com.parttime.cservice.pojo.vo.WithdrawalVO;
-import com.parttime.cservice.pojo.entity.WithdrawalRecord;
 import com.parttime.cservice.service.WithdrawalService;
 import org.springframework.stereotype.Service;
+
+import jakarta.annotation.Resource;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Service
 public class WithdrawalServiceImpl implements WithdrawalService {
 
-    private final ConcurrentHashMap<Long, WithdrawalRecord> records = new ConcurrentHashMap<>();
-    private final AtomicLong idCounter = new AtomicLong(1);
+    @Resource
+    private WithdrawalRecordMapper withdrawalRecordMapper;
 
     public WithdrawalVO requestWithdrawal(Long workerId, BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException("Invalid withdrawal amount");
         }
 
-        BigDecimal totalPending = records.values().stream()
-                .filter(r -> r.getWorkerId().equals(workerId) && "PENDING".equals(r.getStatus()))
+        List<WithdrawalRecord> pending = withdrawalRecordMapper.findByWorkerId(workerId).stream()
+                .filter(r -> "PENDING".equals(r.getStatus()))
+                .collect(Collectors.toList());
+
+        BigDecimal totalPending = pending.stream()
                 .map(WithdrawalRecord::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -33,25 +37,26 @@ public class WithdrawalServiceImpl implements WithdrawalService {
             throw new RuntimeException("Insufficient balance: total pending withdrawals exceed available balance");
         }
 
-        WithdrawalRecord record = new WithdrawalRecord(
-                idCounter.getAndIncrement(), workerId, amount, "PENDING",
-                LocalDateTime.now(), null);
-        records.put(record.getId(), record);
+        WithdrawalRecord record = new WithdrawalRecord();
+        record.setWorkerId(workerId);
+        record.setAmount(amount);
+        record.setStatus("PENDING");
+        record.setRequestedAt(LocalDateTime.now());
+        record.setCreatedAt(LocalDateTime.now());
+        record.setUpdatedAt(LocalDateTime.now());
+        withdrawalRecordMapper.insert(record);
 
         return toResponse(record);
     }
 
     public List<WithdrawalVO> getWithdrawalHistory(Long workerId) {
-        return records.values().stream()
-                .filter(r -> r.getWorkerId().equals(workerId))
+        return withdrawalRecordMapper.findByWorkerId(workerId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
     public EarningsSummaryVO getEarningsSummary(Long workerId) {
-        List<WithdrawalRecord> workerRecords = records.values().stream()
-                .filter(r -> r.getWorkerId().equals(workerId))
-                .collect(Collectors.toList());
+        List<WithdrawalRecord> workerRecords = withdrawalRecordMapper.findByWorkerId(workerId);
 
         BigDecimal totalWithdrawn = workerRecords.stream()
                 .filter(r -> "COMPLETED".equals(r.getStatus()))

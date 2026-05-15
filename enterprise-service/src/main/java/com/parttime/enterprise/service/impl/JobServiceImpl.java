@@ -18,21 +18,20 @@ import com.parttime.enterprise.pojo.vo.JobVO;
 import com.parttime.enterprise.service.JobService;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class JobServiceImpl implements JobService {
 
-    private final JobMapper jobMapper;
-    private final JobRateMapper jobRateMapper;
-    private final JobScheduleMapper jobScheduleMapper;
-
-    public JobServiceImpl(JobMapper jobMapper, JobRateMapper jobRateMapper, JobScheduleMapper jobScheduleMapper) {
-        this.jobMapper = jobMapper;
-        this.jobRateMapper = jobRateMapper;
-        this.jobScheduleMapper = jobScheduleMapper;
-    }
+    @Resource
+    private JobMapper jobMapper;
+    @Resource
+    private JobRateMapper jobRateMapper;
+    @Resource
+    private JobScheduleMapper jobScheduleMapper;
 
     @Override
     public JobVO createJob(JobCreateCmd request) {

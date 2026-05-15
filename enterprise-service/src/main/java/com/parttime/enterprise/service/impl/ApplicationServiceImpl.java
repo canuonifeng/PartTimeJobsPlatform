@@ -10,19 +10,18 @@ import com.parttime.enterprise.pojo.vo.JobApplicationVO;
 import com.parttime.enterprise.service.ApplicationService;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class ApplicationServiceImpl implements ApplicationService {
 
-    private final JobApplicationMapper applicationMapper;
-    private final JobMapper jobMapper;
-
-    public ApplicationServiceImpl(JobApplicationMapper applicationMapper, JobMapper jobMapper) {
-        this.applicationMapper = applicationMapper;
-        this.jobMapper = jobMapper;
-    }
+    @Resource
+    private JobApplicationMapper applicationMapper;
+    @Resource
+    private JobMapper jobMapper;
 
     @Override
     public List<JobApplicationVO> getApplicationsByJob(Long jobId) {

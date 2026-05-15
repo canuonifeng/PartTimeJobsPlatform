@@ -2,10 +2,12 @@ package com.parttime.cservice.service;
 
 import com.parttime.cservice.service.impl.AttendanceServiceImpl;
 import com.parttime.cservice.pojo.vo.AttendanceVO;
-import com.parttime.cservice.pojo.cmd.CheckInCmd;
 import com.parttime.cservice.pojo.vo.WorkerShiftVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -17,11 +19,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class AttendanceServiceTest {
 
+    @InjectMocks
     private AttendanceServiceImpl attendanceService;
 
     @BeforeEach
     void setUp() {
-        attendanceService = new AttendanceServiceImpl();
+        MockitoAnnotations.openMocks(this);
+        ReflectionTestUtils.setField(attendanceService, "shiftMapper", InMemoryMappers.createShiftMapper());
+        ReflectionTestUtils.setField(attendanceService, "attendanceRecordMapper", InMemoryMappers.createAttendanceRecordMapper());
     }
 
     @Test

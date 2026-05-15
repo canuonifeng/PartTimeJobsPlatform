@@ -6,6 +6,9 @@ import com.parttime.cservice.pojo.cmd.ProfileUpdateCmd;
 import com.parttime.cservice.pojo.vo.ResumeVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
@@ -14,11 +17,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ProfileServiceTest {
 
+    @InjectMocks
     private ProfileServiceImpl profileService;
 
     @BeforeEach
     void setUp() {
-        profileService = new ProfileServiceImpl();
+        MockitoAnnotations.openMocks(this);
+        ReflectionTestUtils.setField(profileService, "workerProfileMapper", InMemoryMappers.createWorkerProfileMapper());
+        ReflectionTestUtils.setField(profileService, "workerResumeMapper", InMemoryMappers.createWorkerResumeMapper());
     }
 
     @Test

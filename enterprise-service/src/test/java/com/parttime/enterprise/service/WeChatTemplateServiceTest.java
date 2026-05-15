@@ -1,21 +1,20 @@
 package com.parttime.enterprise.service;
 
 import com.parttime.enterprise.service.impl.WeChatTemplateServiceImpl;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 
+@ExtendWith(MockitoExtension.class)
 class WeChatTemplateServiceTest {
 
-    private WeChatTemplateService weChatTemplateService;
-
-    @BeforeEach
-    void setUp() {
-        weChatTemplateService = new WeChatTemplateServiceImpl();
-    }
+    @InjectMocks
+    private WeChatTemplateServiceImpl weChatTemplateService;
 
     @Test
     void sendTemplateMessage_shouldNotThrow() {

@@ -5,11 +5,11 @@ import com.parttime.enterprise.pojo.cmd.JobCategoryCmd;
 import com.parttime.enterprise.pojo.entity.JobCategory;
 import com.parttime.enterprise.pojo.vo.JobCategoryVO;
 import com.parttime.enterprise.service.impl.JobCategoryServiceImpl;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -32,12 +32,8 @@ class JobCategoryServiceTest {
     @Captor
     private ArgumentCaptor<JobCategory> categoryCaptor;
 
-    private JobCategoryService jobCategoryService;
-
-    @BeforeEach
-    void setUp() {
-        jobCategoryService = new JobCategoryServiceImpl(jobCategoryMapper);
-    }
+    @InjectMocks
+    private JobCategoryServiceImpl jobCategoryService;
 
     @Test
     void getAllCategories_shouldReturnTreeStructure() {

@@ -10,6 +10,9 @@ import com.parttime.cservice.service.impl.JobServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,7 +25,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -32,17 +34,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class JobControllerTest {
 
     private MockMvc mockMvc;
+    @Mock
     private JobServiceImpl jobService;
+    @InjectMocks
+    private JobController controller;
     private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
-        jobService = mock(JobServiceImpl.class);
+        MockitoAnnotations.openMocks(this);
         objectMapper = new ObjectMapper();
-
-        JobController controller = new JobController(jobService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
-
         SecurityContextHolder.clearContext();
     }
 
@@ -127,7 +129,7 @@ class JobControllerTest {
 
         when(jobService.getJobDetail(1L)).thenReturn(detail);
 
-        mockMvc.perform(get("/api/jobs/1"))
+        mockMvc.perform(get("/api/jobs/detail?id=1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.title").value("Software Engineer"))
@@ -147,7 +149,7 @@ class JobControllerTest {
 
         when(jobService.applyForJob(1L, 1L, List.of(1L, 2L))).thenReturn(true);
 
-        mockMvc.perform(post("/api/jobs/1/apply")
+        mockMvc.perform(post("/api/jobs/apply?id=1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -158,7 +160,7 @@ class JobControllerTest {
     void applyForJob_withoutAuth_shouldReturn401() throws Exception {
         ApplyJobCmd request = new ApplyJobCmd(1L, List.of(1L));
 
-        mockMvc.perform(post("/api/jobs/1/apply")
+        mockMvc.perform(post("/api/jobs/apply?id=1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isUnauthorized());
@@ -177,7 +179,7 @@ class JobControllerTest {
 
         when(jobService.getApplicationStatus(1L, 1L)).thenReturn(List.of(app));
 
-        mockMvc.perform(get("/api/jobs/1/application"))
+        mockMvc.perform(get("/api/jobs/application?id=1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].applicationId").value(10))
@@ -186,7 +188,7 @@ class JobControllerTest {
 
     @Test
     void getApplicationStatus_withoutAuth_shouldReturn401() throws Exception {
-        mockMvc.perform(get("/api/jobs/1/application"))
+        mockMvc.perform(get("/api/jobs/application?id=1"))
                 .andExpect(status().isUnauthorized());
     }
 }

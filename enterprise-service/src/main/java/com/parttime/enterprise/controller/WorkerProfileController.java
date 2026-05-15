@@ -10,50 +10,48 @@ import com.parttime.enterprise.service.WorkerProfileService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/workers")
 public class WorkerProfileController {
 
-    private final WorkerProfileService workerProfileService;
+    @Resource
+    private WorkerProfileService workerProfileService;
 
-    public WorkerProfileController(WorkerProfileService workerProfileService) {
-        this.workerProfileService = workerProfileService;
-    }
-
-    @GetMapping("/{workerId}/profile")
-    public WorkerProfileVO getProfile(@PathVariable Long workerId, @RequestParam Long companyId) {
+    @GetMapping("/profile")
+    public WorkerProfileVO getProfile(@RequestParam Long workerId, @RequestParam Long companyId) {
         return workerProfileService.getWorkerProfile(companyId, workerId);
     }
 
-    @PostMapping("/{workerId}/evaluations")
+    @PostMapping("/evaluations")
     @ResponseStatus(HttpStatus.CREATED)
-    public EvaluationVO evaluateWorker(@PathVariable Long workerId, @RequestBody EvaluationCmd request) {
+    public EvaluationVO evaluateWorker(@RequestParam Long workerId, @RequestBody EvaluationCmd request) {
         return workerProfileService.evaluateWorker(
                 request.getCompanyId(), request.getJobId(), workerId,
                 request.getRating(), request.getComment());
     }
 
-    @GetMapping("/{workerId}/evaluations")
-    public List<EvaluationVO> getEvaluations(@PathVariable Long workerId, @RequestParam Long companyId) {
+    @GetMapping("/evaluations")
+    public List<EvaluationVO> getEvaluations(@RequestParam Long workerId, @RequestParam Long companyId) {
         return workerProfileService.getEvaluations(workerId, companyId);
     }
 
-    @PostMapping("/{workerId}/blacklist")
+    @PostMapping("/blacklist")
     @ResponseStatus(HttpStatus.CREATED)
-    public void addToBlacklist(@PathVariable Long workerId, @RequestBody BlacklistCmd request) {
+    public void addToBlacklist(@RequestParam Long workerId, @RequestBody BlacklistCmd request) {
         workerProfileService.addToBlacklist(request.getCompanyId(), workerId, request.getReason());
     }
 
-    @DeleteMapping("/{workerId}/blacklist")
+    @DeleteMapping("/blacklist")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeFromBlacklist(@PathVariable Long workerId, @RequestParam Long companyId) {
+    public void removeFromBlacklist(@RequestParam Long workerId, @RequestParam Long companyId) {
         workerProfileService.removeFromBlacklist(companyId, workerId);
     }
 
-    @GetMapping("/{workerId}/work-history")
-    public List<WorkHistoryVO> getWorkHistory(@PathVariable Long workerId, @RequestParam Long companyId) {
+    @GetMapping("/work-history")
+    public List<WorkHistoryVO> getWorkHistory(@RequestParam Long workerId, @RequestParam Long companyId) {
         return workerProfileService.getWorkHistory(workerId, companyId);
     }
 }

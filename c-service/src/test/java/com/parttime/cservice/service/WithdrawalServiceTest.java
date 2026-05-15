@@ -5,6 +5,9 @@ import com.parttime.cservice.pojo.vo.EarningsSummaryVO;
 import com.parttime.cservice.pojo.vo.WithdrawalVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -14,11 +17,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class WithdrawalServiceTest {
 
+    @InjectMocks
     private WithdrawalServiceImpl withdrawalService;
 
     @BeforeEach
     void setUp() {
-        withdrawalService = new WithdrawalServiceImpl();
+        MockitoAnnotations.openMocks(this);
+        ReflectionTestUtils.setField(withdrawalService, "withdrawalRecordMapper", InMemoryMappers.createWithdrawalRecordMapper());
     }
 
     @Test

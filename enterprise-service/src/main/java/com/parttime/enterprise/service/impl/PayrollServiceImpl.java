@@ -16,6 +16,8 @@ import com.parttime.enterprise.pojo.vo.PayrollItemVO;
 import com.parttime.enterprise.service.PayrollService;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -26,23 +28,16 @@ import java.util.stream.Collectors;
 @Service
 public class PayrollServiceImpl implements PayrollService {
 
-    private final PayrollBatchMapper payrollBatchMapper;
-    private final PayrollItemMapper payrollItemMapper;
-    private final ScheduleShiftMapper scheduleShiftMapper;
-    private final AttendanceRecordMapper attendanceRecordMapper;
-    private final JobRateMapper jobRateMapper;
-
-    public PayrollServiceImpl(PayrollBatchMapper payrollBatchMapper,
-                              PayrollItemMapper payrollItemMapper,
-                              ScheduleShiftMapper scheduleShiftMapper,
-                              AttendanceRecordMapper attendanceRecordMapper,
-                              JobRateMapper jobRateMapper) {
-        this.payrollBatchMapper = payrollBatchMapper;
-        this.payrollItemMapper = payrollItemMapper;
-        this.scheduleShiftMapper = scheduleShiftMapper;
-        this.attendanceRecordMapper = attendanceRecordMapper;
-        this.jobRateMapper = jobRateMapper;
-    }
+    @Resource
+    private PayrollBatchMapper payrollBatchMapper;
+    @Resource
+    private PayrollItemMapper payrollItemMapper;
+    @Resource
+    private ScheduleShiftMapper scheduleShiftMapper;
+    @Resource
+    private AttendanceRecordMapper attendanceRecordMapper;
+    @Resource
+    private JobRateMapper jobRateMapper;
 
     @Override
     public PayrollBatchVO createBatch(PayrollBatchCmd request) {

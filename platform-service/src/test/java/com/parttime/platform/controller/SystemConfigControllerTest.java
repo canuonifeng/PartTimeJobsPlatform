@@ -71,7 +71,8 @@ class SystemConfigControllerTest {
 
         String json = "{\"value\":\"0.15\"}";
 
-        mockMvc.perform(put("/api/admin/configs/platform_fee_rate")
+        mockMvc.perform(put("/api/admin/configs")
+                        .param("key", "platform_fee_rate")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
@@ -88,7 +89,8 @@ class SystemConfigControllerTest {
 
         String json = "{\"value\":\"test\"}";
 
-        mockMvc.perform(put("/api/admin/configs/nonexistent")
+        mockMvc.perform(put("/api/admin/configs")
+                        .param("key", "nonexistent")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isBadRequest());

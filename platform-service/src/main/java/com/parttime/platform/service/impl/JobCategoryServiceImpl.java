@@ -8,6 +8,7 @@ import com.parttime.platform.pojo.vo.JobCategoryVO;
 import com.parttime.platform.service.JobCategoryService;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -16,11 +17,8 @@ import java.util.stream.Collectors;
 @Service
 public class JobCategoryServiceImpl implements JobCategoryService {
 
-    private final JobCategoryMapper jobCategoryMapper;
-
-    public JobCategoryServiceImpl(JobCategoryMapper jobCategoryMapper) {
-        this.jobCategoryMapper = jobCategoryMapper;
-    }
+    @Resource
+    private JobCategoryMapper jobCategoryMapper;
 
     @Override
     public List<JobCategoryVO> getAllCategories() {

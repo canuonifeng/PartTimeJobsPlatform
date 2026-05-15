@@ -9,6 +9,8 @@ import com.parttime.enterprise.pojo.vo.NotificationLogVO;
 import com.parttime.enterprise.service.NotificationService;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,14 +18,10 @@ import java.util.stream.Collectors;
 @Service
 public class NotificationServiceImpl implements NotificationService {
 
-    private final NotificationLogMapper notificationLogMapper;
-    private final NotificationTemplateMapper notificationTemplateMapper;
-
-    public NotificationServiceImpl(NotificationLogMapper notificationLogMapper,
-                                    NotificationTemplateMapper notificationTemplateMapper) {
-        this.notificationLogMapper = notificationLogMapper;
-        this.notificationTemplateMapper = notificationTemplateMapper;
-    }
+    @Resource
+    private NotificationLogMapper notificationLogMapper;
+    @Resource
+    private NotificationTemplateMapper notificationTemplateMapper;
 
     @Override
     public NotificationLogVO sendNotification(Long recipientId, String recipientType, String type,

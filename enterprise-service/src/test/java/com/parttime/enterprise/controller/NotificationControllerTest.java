@@ -157,7 +157,7 @@ class NotificationControllerTest {
         request.setTitleTemplate("Updated Title");
         request.setContentTemplate("Updated Content");
 
-        mockMvc.perform(put("/api/notification-templates/1")
+        mockMvc.perform(put("/api/notification-templates").param("id", "1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -167,7 +167,7 @@ class NotificationControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void deleteTemplate_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/notification-templates/1"))
+        mockMvc.perform(delete("/api/notification-templates").param("id", "1"))
                 .andExpect(status().isNoContent());
     }
 }

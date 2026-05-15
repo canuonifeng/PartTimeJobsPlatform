@@ -5,6 +5,9 @@ import com.parttime.cservice.pojo.vo.NotificationVO;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
@@ -12,11 +15,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class NotificationServiceTest {
 
+    @InjectMocks
     private NotificationServiceImpl notificationService;
 
     @BeforeEach
     void setUp() {
-        notificationService = new NotificationServiceImpl();
+        MockitoAnnotations.openMocks(this);
+        ReflectionTestUtils.setField(notificationService, "notificationMapper", InMemoryMappers.createNotificationMapper());
     }
 
     @Test

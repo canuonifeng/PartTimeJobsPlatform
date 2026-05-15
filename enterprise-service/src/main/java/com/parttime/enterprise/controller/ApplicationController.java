@@ -4,35 +4,34 @@ import com.parttime.enterprise.pojo.vo.JobApplicationVO;
 import com.parttime.enterprise.service.ApplicationService;
 
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/jobs/{jobId}/applications")
+@RequestMapping("/api/applications")
 public class ApplicationController {
 
-    private final ApplicationService applicationService;
-
-    public ApplicationController(ApplicationService applicationService) {
-        this.applicationService = applicationService;
-    }
+    @Resource
+    private ApplicationService applicationService;
 
     @GetMapping
-    public List<JobApplicationVO> getApplicationsByJob(@PathVariable Long jobId) {
+    public List<JobApplicationVO> getApplicationsByJob(@RequestParam Long jobId) {
         return applicationService.getApplicationsByJob(jobId);
     }
 
-    @PutMapping("/{applicationId}/accept")
-    public JobApplicationVO acceptApplication(@PathVariable Long applicationId) {
+    @PutMapping("/accept")
+    public JobApplicationVO acceptApplication(@RequestParam Long applicationId) {
         return applicationService.acceptApplication(applicationId);
     }
 
-    @PutMapping("/{applicationId}/reject")
-    public JobApplicationVO rejectApplication(@PathVariable Long applicationId) {
+    @PutMapping("/reject")
+    public JobApplicationVO rejectApplication(@RequestParam Long applicationId) {
         return applicationService.rejectApplication(applicationId);
     }
 }

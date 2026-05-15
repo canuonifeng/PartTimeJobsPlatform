@@ -17,6 +17,8 @@ import com.parttime.enterprise.pojo.vo.ScheduleTemplateVO;
 import com.parttime.enterprise.service.ScheduleService;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,17 +26,12 @@ import java.util.stream.Collectors;
 @Service
 public class ScheduleServiceImpl implements ScheduleService {
 
-    private final ScheduleTemplateMapper templateMapper;
-    private final ScheduleShiftMapper shiftMapper;
-    private final AttendanceRecordMapper attendanceRecordMapper;
-
-    public ScheduleServiceImpl(ScheduleTemplateMapper templateMapper,
-                               ScheduleShiftMapper shiftMapper,
-                               AttendanceRecordMapper attendanceRecordMapper) {
-        this.templateMapper = templateMapper;
-        this.shiftMapper = shiftMapper;
-        this.attendanceRecordMapper = attendanceRecordMapper;
-    }
+    @Resource
+    private ScheduleTemplateMapper templateMapper;
+    @Resource
+    private ScheduleShiftMapper shiftMapper;
+    @Resource
+    private AttendanceRecordMapper attendanceRecordMapper;
 
     @Override
     public ScheduleTemplateVO createTemplate(ScheduleTemplateCmd request) {

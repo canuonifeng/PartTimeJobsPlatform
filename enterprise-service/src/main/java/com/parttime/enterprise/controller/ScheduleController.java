@@ -11,6 +11,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -18,11 +19,8 @@ import java.util.List;
 @RequestMapping("/api")
 public class ScheduleController {
 
-    private final ScheduleService scheduleService;
-
-    public ScheduleController(ScheduleService scheduleService) {
-        this.scheduleService = scheduleService;
-    }
+    @Resource
+    private ScheduleService scheduleService;
 
     @PostMapping("/schedule-templates")
     @ResponseStatus(HttpStatus.CREATED)
@@ -35,19 +33,19 @@ public class ScheduleController {
         return scheduleService.getTemplatesByCompany(companyId);
     }
 
-    @GetMapping("/schedule-templates/{id}")
-    public ScheduleTemplateVO getTemplate(@PathVariable Long id) {
+    @GetMapping(value = "/schedule-templates", params = "id")
+    public ScheduleTemplateVO getTemplate(@RequestParam Long id) {
         return scheduleService.getTemplateById(id);
     }
 
-    @PutMapping("/schedule-templates/{id}")
-    public ScheduleTemplateVO updateTemplate(@PathVariable Long id, @RequestBody ScheduleTemplateCmd request) {
+    @PutMapping("/schedule-templates")
+    public ScheduleTemplateVO updateTemplate(@RequestParam Long id, @RequestBody ScheduleTemplateCmd request) {
         return scheduleService.updateTemplate(id, request);
     }
 
-    @DeleteMapping("/schedule-templates/{id}")
+    @DeleteMapping("/schedule-templates")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTemplate(@PathVariable Long id) {
+    public void deleteTemplate(@RequestParam Long id) {
         scheduleService.deleteTemplate(id);
     }
 
@@ -65,9 +63,9 @@ public class ScheduleController {
         return scheduleService.getShifts(jobId, workerId, shiftDate);
     }
 
-    @DeleteMapping("/schedule-shifts/{id}")
+    @DeleteMapping("/schedule-shifts")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeShift(@PathVariable Long id) {
+    public void removeShift(@RequestParam Long id) {
         scheduleService.removeShift(id);
     }
 

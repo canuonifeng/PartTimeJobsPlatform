@@ -8,9 +8,9 @@ import com.parttime.enterprise.pojo.entity.Job;
 import com.parttime.enterprise.pojo.entity.JobApplication;
 import com.parttime.enterprise.pojo.vo.JobApplicationVO;
 import com.parttime.enterprise.service.impl.ApplicationServiceImpl;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -32,12 +32,8 @@ class ApplicationServiceTest {
     @Mock
     private JobMapper jobMapper;
 
-    private ApplicationService applicationService;
-
-    @BeforeEach
-    void setUp() {
-        applicationService = new ApplicationServiceImpl(applicationMapper, jobMapper);
-    }
+    @InjectMocks
+    private ApplicationServiceImpl applicationService;
 
     @Test
     void getApplicationsByJob_shouldReturnList() {

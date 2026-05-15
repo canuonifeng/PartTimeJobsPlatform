@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.annotation.Resource;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -18,11 +19,8 @@ import java.util.List;
 @RequestMapping("/api")
 public class AttendanceController {
 
-    private final AttendanceService attendanceService;
-
-    public AttendanceController(AttendanceService attendanceService) {
-        this.attendanceService = attendanceService;
-    }
+    @Resource
+    private AttendanceService attendanceService;
 
     private Long getCurrentWorkerId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

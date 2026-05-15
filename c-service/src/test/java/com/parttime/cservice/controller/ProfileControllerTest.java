@@ -9,6 +9,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,7 +21,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -26,15 +28,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ProfileControllerTest {
 
     private MockMvc mockMvc;
+    @Mock
     private ProfileServiceImpl profileService;
+    @InjectMocks
+    private ProfileController controller;
     private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
-        profileService = mock(ProfileServiceImpl.class);
+        MockitoAnnotations.openMocks(this);
         objectMapper = new ObjectMapper();
-
-        ProfileController controller = new ProfileController(profileService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 

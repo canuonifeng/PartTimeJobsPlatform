@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,17 +16,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/api")
 public class NotificationController {
 
-    private final NotificationService notificationService;
-
-    public NotificationController(NotificationService notificationService) {
-        this.notificationService = notificationService;
-    }
+    @Resource
+    private NotificationService notificationService;
 
     @GetMapping("/notifications")
     public List<NotificationLogVO> getNotifications(
@@ -49,9 +47,9 @@ public class NotificationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(template);
     }
 
-    @PutMapping("/notification-templates/{id}")
+    @PutMapping("/notification-templates")
     public ResponseEntity<NotificationTemplate> updateTemplate(
-            @PathVariable Long id,
+            @RequestParam Long id,
             @RequestBody NotificationTemplateCmd request) {
         try {
             NotificationTemplate template = notificationService.updateNotificationTemplate(id, request);
@@ -61,8 +59,8 @@ public class NotificationController {
         }
     }
 
-    @DeleteMapping("/notification-templates/{id}")
-    public ResponseEntity<Void> deleteTemplate(@PathVariable Long id) {
+    @DeleteMapping("/notification-templates")
+    public ResponseEntity<Void> deleteTemplate(@RequestParam Long id) {
         notificationService.deleteNotificationTemplate(id);
         return ResponseEntity.noContent().build();
     }

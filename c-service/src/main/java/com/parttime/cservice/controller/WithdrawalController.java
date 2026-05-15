@@ -14,16 +14,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.annotation.Resource;
 import java.util.List;
 
 @RestController
 public class WithdrawalController {
 
-    private final WithdrawalService withdrawalService;
-
-    public WithdrawalController(WithdrawalService withdrawalService) {
-        this.withdrawalService = withdrawalService;
-    }
+    @Resource
+    private WithdrawalService withdrawalService;
 
     private Long getCurrentWorkerId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

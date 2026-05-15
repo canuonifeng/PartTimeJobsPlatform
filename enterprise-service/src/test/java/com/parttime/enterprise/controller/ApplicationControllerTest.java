@@ -49,7 +49,7 @@ class ApplicationControllerTest {
 
         when(applicationService.getApplicationsByJob(100L)).thenReturn(List.of(app));
 
-        mockMvc.perform(get("/api/jobs/100/applications"))
+        mockMvc.perform(get("/api/applications").param("jobId", "100"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1L))
                 .andExpect(jsonPath("$[0].status").value("PENDING"));
@@ -66,7 +66,7 @@ class ApplicationControllerTest {
 
         when(applicationService.acceptApplication(1L)).thenReturn(app);
 
-        mockMvc.perform(put("/api/jobs/100/applications/1/accept"))
+        mockMvc.perform(put("/api/applications/accept").param("applicationId", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ACCEPTED"));
     }
@@ -82,7 +82,7 @@ class ApplicationControllerTest {
 
         when(applicationService.rejectApplication(1L)).thenReturn(app);
 
-        mockMvc.perform(put("/api/jobs/100/applications/1/reject"))
+        mockMvc.perform(put("/api/applications/reject").param("applicationId", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("REJECTED"));
     }
@@ -93,7 +93,7 @@ class ApplicationControllerTest {
         when(applicationService.acceptApplication(anyLong()))
                 .thenThrow(new BusinessException("岗位已录满"));
 
-        mockMvc.perform(put("/api/jobs/100/applications/1/accept"))
+        mockMvc.perform(put("/api/applications/accept").param("applicationId", "1"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$").value("岗位已录满"));
     }

@@ -109,7 +109,7 @@ class ScheduleControllerTest {
 
         when(scheduleService.getTemplateById(100L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/schedule-templates/100"))
+        mockMvc.perform(get("/api/schedule-templates").param("id", "100"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(100));
     }
@@ -131,7 +131,7 @@ class ScheduleControllerTest {
                 }
                 """;
 
-        mockMvc.perform(put("/api/schedule-templates/100")
+        mockMvc.perform(put("/api/schedule-templates").param("id", "100")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
@@ -141,7 +141,7 @@ class ScheduleControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void deleteTemplate_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/schedule-templates/100"))
+        mockMvc.perform(delete("/api/schedule-templates").param("id", "100"))
                 .andExpect(status().isNoContent());
         verify(scheduleService).deleteTemplate(100L);
     }
@@ -193,7 +193,7 @@ class ScheduleControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void removeShift_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/schedule-shifts/99"))
+        mockMvc.perform(delete("/api/schedule-shifts").param("id", "99"))
                 .andExpect(status().isNoContent());
         verify(scheduleService).removeShift(99L);
     }

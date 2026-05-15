@@ -8,6 +8,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,7 +22,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -27,15 +29,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AttendanceControllerTest {
 
     private MockMvc mockMvc;
+    @Mock
     private AttendanceServiceImpl attendanceService;
+    @InjectMocks
+    private AttendanceController controller;
     private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
-        attendanceService = mock(AttendanceServiceImpl.class);
+        MockitoAnnotations.openMocks(this);
         objectMapper = new ObjectMapper();
-
-        AttendanceController controller = new AttendanceController(attendanceService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 

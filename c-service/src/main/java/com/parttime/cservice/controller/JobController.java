@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -19,11 +20,8 @@ import java.util.Map;
 @RequestMapping("/api/jobs")
 public class JobController {
 
-    private final JobService jobService;
-
-    public JobController(JobService jobService) {
-        this.jobService = jobService;
-    }
+    @Resource
+    private JobService jobService;
 
     @GetMapping
     public ResponseEntity<List<JobSummaryVO>> searchJobs(
@@ -36,14 +34,14 @@ public class JobController {
         return ResponseEntity.ok(results);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<JobDetailVO> getJobDetail(@PathVariable Long id) {
+    @GetMapping("/detail")
+    public ResponseEntity<JobDetailVO> getJobDetail(@RequestParam Long id) {
         JobDetailVO detail = jobService.getJobDetail(id);
         return ResponseEntity.ok(detail);
     }
 
-    @PostMapping("/{id}/apply")
-    public ResponseEntity<?> applyForJob(@PathVariable Long id, @RequestBody ApplyJobCmd request) {
+    @PostMapping("/apply")
+    public ResponseEntity<?> applyForJob(@RequestParam Long id, @RequestBody ApplyJobCmd request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -53,8 +51,8 @@ public class JobController {
         return ResponseEntity.ok(Map.of("success", success));
     }
 
-    @GetMapping("/{id}/application")
-    public ResponseEntity<?> getApplicationStatus(@PathVariable Long id) {
+    @GetMapping("/application")
+    public ResponseEntity<?> getApplicationStatus(@RequestParam Long id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

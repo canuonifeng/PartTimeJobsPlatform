@@ -1,10 +1,10 @@
 package com.parttime.enterprise.service;
 
-import com.parttime.enterprise.dao.AttendanceRecordDao;
-import com.parttime.enterprise.dao.JobDao;
-import com.parttime.enterprise.dao.PayrollBatchDao;
-import com.parttime.enterprise.dao.PayrollItemDao;
-import com.parttime.enterprise.dao.ScheduleShiftDao;
+import com.parttime.enterprise.mapper.AttendanceRecordMapper;
+import com.parttime.enterprise.mapper.JobRateMapper;
+import com.parttime.enterprise.mapper.PayrollBatchMapper;
+import com.parttime.enterprise.mapper.PayrollItemMapper;
+import com.parttime.enterprise.mapper.ScheduleShiftMapper;
 import com.parttime.enterprise.pojo.cmd.PayrollBatchCmd;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
 import com.parttime.enterprise.pojo.entity.JobRate;
@@ -14,17 +14,16 @@ import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.vo.PayrollBatchVO;
 import com.parttime.enterprise.pojo.vo.PayrollItemVO;
 import com.parttime.enterprise.service.impl.PayrollServiceImpl;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,19 +39,19 @@ import static org.mockito.Mockito.when;
 class PayrollServiceTest {
 
     @Mock
-    private PayrollBatchDao payrollBatchDao;
+    private PayrollBatchMapper payrollBatchMapper;
 
     @Mock
-    private PayrollItemDao payrollItemDao;
+    private PayrollItemMapper payrollItemMapper;
 
     @Mock
-    private ScheduleShiftDao scheduleShiftDao;
+    private ScheduleShiftMapper scheduleShiftMapper;
 
     @Mock
-    private AttendanceRecordDao attendanceRecordDao;
+    private AttendanceRecordMapper attendanceRecordMapper;
 
     @Mock
-    private JobDao jobDao;
+    private JobRateMapper jobRateMapper;
 
     @Captor
     private ArgumentCaptor<PayrollBatch> batchCaptor;
@@ -60,13 +59,8 @@ class PayrollServiceTest {
     @Captor
     private ArgumentCaptor<List<PayrollItem>> itemsCaptor;
 
-    private PayrollService payrollService;
-
-    @BeforeEach
-    void setUp() {
-        payrollService = new PayrollServiceImpl(payrollBatchDao, payrollItemDao,
-                scheduleShiftDao, attendanceRecordDao, jobDao);
-    }
+    @InjectMocks
+    private PayrollServiceImpl payrollService;
 
     @Test
     void createBatch_shouldCreateAndReturnResponse() {
@@ -79,8 +73,8 @@ class PayrollServiceTest {
         doAnswer(invocation -> {
             PayrollBatch batch = invocation.getArgument(0);
             batch.setId(100L);
-            return null;
-        }).when(payrollBatchDao).save(any(PayrollBatch.class));
+            return 1;
+        }).when(payrollBatchMapper).insert(any(PayrollBatch.class));
 
         PayrollBatchVO response = payrollService.createBatch(request);
 
@@ -92,7 +86,7 @@ class PayrollServiceTest {
         assertThat(response.getTotalAmount()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(response.getWorkerCount()).isZero();
 
-        verify(payrollBatchDao).save(batchCaptor.capture());
+        verify(payrollBatchMapper).insert(batchCaptor.capture());
         assertThat(batchCaptor.getValue().getCompanyId()).isEqualTo(1L);
         assertThat(batchCaptor.getValue().getStatus()).isEqualTo("DRAFT");
     }
@@ -131,18 +125,18 @@ class PayrollServiceTest {
         rate.setType("HOURLY");
         rate.setAmount(new BigDecimal("25.00"));
 
-        when(payrollBatchDao.findById(1L)).thenReturn(Optional.of(batch));
-        when(scheduleShiftDao.findByDateRange(batch.getPeriodStart(), batch.getPeriodEnd()))
+        when(payrollBatchMapper.findById(1L)).thenReturn(Optional.of(batch));
+        when(scheduleShiftMapper.findByDateRange(batch.getPeriodStart(), batch.getPeriodEnd()))
                 .thenReturn(List.of(shift1, shift2));
-        when(attendanceRecordDao.findByShiftIds(List.of(10L, 11L))).thenReturn(List.of(att1, att2));
-        when(jobDao.findRatesByJobId(200L)).thenReturn(List.of(rate));
+        when(attendanceRecordMapper.findByShiftIds(List.of(10L, 11L))).thenReturn(List.of(att1, att2));
+        when(jobRateMapper.findByJobId(200L)).thenReturn(List.of(rate));
 
         PayrollBatchVO response = payrollService.calculateBatch(1L);
 
         assertThat(response.getStatus()).isEqualTo("CALCULATED");
         assertThat(response.getTotalAmount()).isEqualByComparingTo(new BigDecimal("387.50"));
 
-        verify(payrollItemDao).saveAll(itemsCaptor.capture());
+        verify(payrollItemMapper).insertBatch(itemsCaptor.capture());
         List<PayrollItem> items = itemsCaptor.getValue();
         assertThat(items).hasSize(1);
         assertThat(items.get(0).getWorkerId()).isEqualTo(100L);
@@ -151,7 +145,7 @@ class PayrollServiceTest {
         assertThat(items.get(0).getRateType()).isEqualTo("HOURLY");
         assertThat(items.get(0).getTotalPay()).isEqualByComparingTo(new BigDecimal("387.50"));
 
-        verify(payrollBatchDao).update(batchCaptor.capture());
+        verify(payrollBatchMapper).update(batchCaptor.capture());
         assertThat(batchCaptor.getValue().getStatus()).isEqualTo("CALCULATED");
     }
 
@@ -189,18 +183,18 @@ class PayrollServiceTest {
         rate.setType("DAILY");
         rate.setAmount(new BigDecimal("200.00"));
 
-        when(payrollBatchDao.findById(1L)).thenReturn(Optional.of(batch));
-        when(scheduleShiftDao.findByDateRange(batch.getPeriodStart(), batch.getPeriodEnd()))
+        when(payrollBatchMapper.findById(1L)).thenReturn(Optional.of(batch));
+        when(scheduleShiftMapper.findByDateRange(batch.getPeriodStart(), batch.getPeriodEnd()))
                 .thenReturn(List.of(shift1, shift2));
-        when(attendanceRecordDao.findByShiftIds(List.of(10L, 11L))).thenReturn(List.of(att1, att2));
-        when(jobDao.findRatesByJobId(200L)).thenReturn(List.of(rate));
+        when(attendanceRecordMapper.findByShiftIds(List.of(10L, 11L))).thenReturn(List.of(att1, att2));
+        when(jobRateMapper.findByJobId(200L)).thenReturn(List.of(rate));
 
         PayrollBatchVO response = payrollService.calculateBatch(1L);
 
         assertThat(response.getStatus()).isEqualTo("CALCULATED");
         assertThat(response.getTotalAmount()).isEqualByComparingTo(new BigDecimal("400.00"));
 
-        verify(payrollItemDao).saveAll(itemsCaptor.capture());
+        verify(payrollItemMapper).insertBatch(itemsCaptor.capture());
         List<PayrollItem> items = itemsCaptor.getValue();
         assertThat(items).hasSize(1);
         assertThat(items.get(0).getTotalPay()).isEqualByComparingTo(new BigDecimal("400.00"));
@@ -212,7 +206,7 @@ class PayrollServiceTest {
         batch.setId(1L);
         batch.setStatus("CALCULATED");
 
-        when(payrollBatchDao.findById(1L)).thenReturn(Optional.of(batch));
+        when(payrollBatchMapper.findById(1L)).thenReturn(Optional.of(batch));
 
         assertThatThrownBy(() -> payrollService.calculateBatch(1L))
                 .isInstanceOf(RuntimeException.class)
@@ -225,12 +219,12 @@ class PayrollServiceTest {
         batch.setId(1L);
         batch.setStatus("CALCULATED");
 
-        when(payrollBatchDao.findById(1L)).thenReturn(Optional.of(batch));
+        when(payrollBatchMapper.findById(1L)).thenReturn(Optional.of(batch));
 
         PayrollBatchVO response = payrollService.confirmBatch(1L);
 
         assertThat(response.getStatus()).isEqualTo("CONFIRMED");
-        verify(payrollBatchDao).updateStatus(1L, "CONFIRMED");
+        verify(payrollBatchMapper).updateStatus(1L, "CONFIRMED");
     }
 
     @Test
@@ -239,7 +233,7 @@ class PayrollServiceTest {
         batch.setId(1L);
         batch.setStatus("DRAFT");
 
-        when(payrollBatchDao.findById(1L)).thenReturn(Optional.of(batch));
+        when(payrollBatchMapper.findById(1L)).thenReturn(Optional.of(batch));
 
         assertThatThrownBy(() -> payrollService.confirmBatch(1L))
                 .isInstanceOf(RuntimeException.class)
@@ -252,12 +246,12 @@ class PayrollServiceTest {
         batch.setId(1L);
         batch.setStatus("CONFIRMED");
 
-        when(payrollBatchDao.findById(1L)).thenReturn(Optional.of(batch));
+        when(payrollBatchMapper.findById(1L)).thenReturn(Optional.of(batch));
 
         PayrollBatchVO response = payrollService.payBatch(1L);
 
         assertThat(response.getStatus()).isEqualTo("PAID");
-        verify(payrollBatchDao).updateStatus(1L, "PAID");
+        verify(payrollBatchMapper).updateStatus(1L, "PAID");
     }
 
     @Test
@@ -266,7 +260,7 @@ class PayrollServiceTest {
         batch.setId(1L);
         batch.setStatus("DRAFT");
 
-        when(payrollBatchDao.findById(1L)).thenReturn(Optional.of(batch));
+        when(payrollBatchMapper.findById(1L)).thenReturn(Optional.of(batch));
 
         assertThatThrownBy(() -> payrollService.payBatch(1L))
                 .isInstanceOf(RuntimeException.class)
@@ -281,7 +275,7 @@ class PayrollServiceTest {
         batch.setName("Test Batch");
         batch.setStatus("DRAFT");
 
-        when(payrollBatchDao.findById(1L)).thenReturn(Optional.of(batch));
+        when(payrollBatchMapper.findById(1L)).thenReturn(Optional.of(batch));
 
         PayrollBatchVO response = payrollService.getBatchById(1L);
 
@@ -291,7 +285,7 @@ class PayrollServiceTest {
 
     @Test
     void getBatchById_shouldThrowWhenNotFound() {
-        when(payrollBatchDao.findById(999L)).thenReturn(Optional.empty());
+        when(payrollBatchMapper.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> payrollService.getBatchById(999L))
                 .isInstanceOf(RuntimeException.class)
@@ -308,7 +302,7 @@ class PayrollServiceTest {
         batch2.setId(2L);
         batch2.setCompanyId(1L);
 
-        when(payrollBatchDao.findByCompanyId(1L)).thenReturn(List.of(batch1, batch2));
+        when(payrollBatchMapper.findByCompanyId(1L)).thenReturn(List.of(batch1, batch2));
 
         List<PayrollBatchVO> batches = payrollService.getBatchesByCompany(1L);
 
@@ -327,8 +321,8 @@ class PayrollServiceTest {
         item.setWorkerId(100L);
         item.setTotalPay(new BigDecimal("500.00"));
 
-        when(payrollBatchDao.findById(1L)).thenReturn(Optional.of(batch));
-        when(payrollItemDao.findByBatchId(1L)).thenReturn(List.of(item));
+        when(payrollBatchMapper.findById(1L)).thenReturn(Optional.of(batch));
+        when(payrollItemMapper.findByBatchId(1L)).thenReturn(List.of(item));
 
         List<PayrollItemVO> items = payrollService.getBatchItems(1L);
 
@@ -339,7 +333,7 @@ class PayrollServiceTest {
 
     @Test
     void getBatchItems_shouldThrowWhenBatchNotFound() {
-        when(payrollBatchDao.findById(999L)).thenReturn(Optional.empty());
+        when(payrollBatchMapper.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> payrollService.getBatchItems(999L))
                 .isInstanceOf(RuntimeException.class)

@@ -51,7 +51,8 @@ class WorkerProfileControllerTest {
 
         when(workerProfileService.getWorkerProfile(1L, 10L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/workers/10/profile")
+        mockMvc.perform(get("/api/workers/profile")
+                        .param("workerId", "10")
                         .param("companyId", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.workerId").value(10))
@@ -78,7 +79,7 @@ class WorkerProfileControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/workers/10/evaluations")
+        mockMvc.perform(post("/api/workers/evaluations").param("workerId", "10")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated())
@@ -95,7 +96,7 @@ class WorkerProfileControllerTest {
 
         when(workerProfileService.getEvaluations(10L, 1L)).thenReturn(List.of(e1));
 
-        mockMvc.perform(get("/api/workers/10/evaluations")
+        mockMvc.perform(get("/api/workers/evaluations").param("workerId", "10")
                         .param("companyId", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -112,7 +113,7 @@ class WorkerProfileControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/workers/10/blacklist")
+        mockMvc.perform(post("/api/workers/blacklist").param("workerId", "10")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated());
@@ -123,7 +124,8 @@ class WorkerProfileControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void removeFromBlacklist_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/workers/10/blacklist")
+        mockMvc.perform(delete("/api/workers/blacklist")
+                        .param("workerId", "10")
                         .param("companyId", "1"))
                 .andExpect(status().isNoContent());
 
@@ -142,7 +144,8 @@ class WorkerProfileControllerTest {
 
         when(workerProfileService.getWorkHistory(10L, 1L)).thenReturn(List.of(wh));
 
-        mockMvc.perform(get("/api/workers/10/work-history")
+        mockMvc.perform(get("/api/workers/work-history")
+                        .param("workerId", "10")
                         .param("companyId", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -158,7 +161,7 @@ class WorkerProfileControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/workers/10/blacklist")
+        mockMvc.perform(post("/api/workers/blacklist").param("workerId", "10")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated());
@@ -182,7 +185,7 @@ class WorkerProfileControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/workers/10/evaluations")
+        mockMvc.perform(post("/api/workers/evaluations").param("workerId", "10")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isCreated());

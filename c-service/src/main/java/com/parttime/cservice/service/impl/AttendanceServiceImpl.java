@@ -1,6 +1,7 @@
 package com.parttime.cservice.service.impl;
 
-import com.parttime.cservice.pojo.cmd.CheckInCmd;
+import com.parttime.cservice.mapper.AttendanceRecordMapper;
+import com.parttime.cservice.mapper.ShiftMapper;
 import com.parttime.cservice.pojo.entity.AttendanceRecordEntity;
 import com.parttime.cservice.pojo.entity.ShiftEntity;
 import com.parttime.cservice.pojo.vo.AttendanceVO;
@@ -8,63 +9,71 @@ import com.parttime.cservice.pojo.vo.WorkerShiftVO;
 import com.parttime.cservice.service.AttendanceService;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.Resource;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalTime;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.time.LocalTime;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class AttendanceServiceImpl implements AttendanceService {
 
-    private final ConcurrentHashMap<Long, ShiftEntity> shifts = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<Long, AttendanceRecordEntity> attendanceRecords = new ConcurrentHashMap<>();
-    private final AtomicLong shiftIdCounter = new AtomicLong(1);
-    private final AtomicLong attendanceIdCounter = new AtomicLong(1);
+    @Resource
+    private ShiftMapper shiftMapper;
+    @Resource
+    private AttendanceRecordMapper attendanceRecordMapper;
 
     @Override
     public ShiftEntity addShift(Long jobId, String jobTitle, String jobLocation, Long workerId,
                                   LocalDate shiftDate, LocalTime startTime, LocalTime endTime,
                                   BigDecimal locationLat, BigDecimal locationLng, Integer locationRadius,
                                   String locationName) {
-        ShiftEntity shift = new ShiftEntity(
-                shiftIdCounter.getAndIncrement(), jobId, jobTitle, jobLocation, workerId,
-                shiftDate, startTime, endTime,
-                locationLat, locationLng, locationRadius, locationName, "SCHEDULED");
-        shifts.put(shift.getId(), shift);
+        ShiftEntity shift = new ShiftEntity();
+        shift.setJobId(jobId);
+        shift.setJobTitle(jobTitle);
+        shift.setJobLocation(jobLocation);
+        shift.setWorkerId(workerId);
+        shift.setShiftDate(shiftDate);
+        shift.setStartTime(startTime);
+        shift.setEndTime(endTime);
+        shift.setLocationLat(locationLat);
+        shift.setLocationLng(locationLng);
+        shift.setLocationRadius(locationRadius);
+        shift.setLocationName(locationName);
+        shift.setStatus("SCHEDULED");
+        shift.setCreatedAt(LocalDateTime.now());
+        shift.setUpdatedAt(LocalDateTime.now());
+        shiftMapper.insert(shift);
         return shift;
     }
 
     @Override
     public List<WorkerShiftVO> getMyShifts(Long workerId, LocalDate startDate, LocalDate endDate) {
-        return shifts.values().stream()
-                .filter(s -> s.getWorkerId().equals(workerId))
-                .filter(s -> startDate == null || !s.getShiftDate().isBefore(startDate))
-                .filter(s -> endDate == null || !s.getShiftDate().isAfter(endDate))
+        return shiftMapper.findByWorkerIdAndDateRange(workerId, startDate, endDate).stream()
                 .map(this::toWorkerShiftResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public AttendanceVO checkIn(Long workerId, Long shiftId, BigDecimal lat, BigDecimal lng) {
-        ShiftEntity shift = shifts.get(shiftId);
-        if (shift == null) {
-            throw new RuntimeException("Shift not found: " + shiftId);
-        }
+        ShiftEntity shift = shiftMapper.findById(shiftId)
+                .orElseThrow(() -> new RuntimeException("Shift not found: " + shiftId));
+
         if (!shift.getWorkerId().equals(workerId)) {
             throw new RuntimeException("Shift does not belong to this worker");
         }
         if (!"SCHEDULED".equals(shift.getStatus())) {
             throw new RuntimeException("Cannot check in: shift status is " + shift.getStatus());
         }
-        if (attendanceRecords.values().stream().anyMatch(r -> r.getShiftId().equals(shiftId))) {
+
+        attendanceRecordMapper.findByShiftId(shiftId).ifPresent(r -> {
             throw new RuntimeException("Already checked in for this shift");
-        }
+        });
 
         if (shift.getLocationLat() != null && shift.getLocationRadius() != null && lat != null) {
             double distance = haversine(
@@ -76,29 +85,31 @@ public class AttendanceServiceImpl implements AttendanceService {
         }
 
         shift.setStatus("CHECKED_IN");
-        shifts.put(shiftId, shift);
+        shift.setUpdatedAt(LocalDateTime.now());
+        shiftMapper.update(shift);
 
-        AttendanceRecordEntity record = new AttendanceRecordEntity(
-                attendanceIdCounter.getAndIncrement(), shiftId, workerId,
-                LocalDateTime.now(), lat, lng, null, null, null, null, "CHECKED_IN");
-        attendanceRecords.put(record.getId(), record);
+        AttendanceRecordEntity record = new AttendanceRecordEntity();
+        record.setShiftId(shiftId);
+        record.setWorkerId(workerId);
+        record.setCheckInTime(LocalDateTime.now());
+        record.setStatus("CHECKED_IN");
+        record.setCreatedAt(LocalDateTime.now());
+        record.setUpdatedAt(LocalDateTime.now());
+        attendanceRecordMapper.insert(record);
 
         return toAttendanceResponse(record);
     }
 
     @Override
     public AttendanceVO checkOut(Long workerId, Long shiftId, BigDecimal lat, BigDecimal lng) {
-        ShiftEntity shift = shifts.get(shiftId);
-        if (shift == null) {
-            throw new RuntimeException("Shift not found: " + shiftId);
-        }
+        ShiftEntity shift = shiftMapper.findById(shiftId)
+                .orElseThrow(() -> new RuntimeException("Shift not found: " + shiftId));
+
         if (!shift.getWorkerId().equals(workerId)) {
             throw new RuntimeException("Shift does not belong to this worker");
         }
 
-        AttendanceRecordEntity record = attendanceRecords.values().stream()
-                .filter(r -> r.getShiftId().equals(shiftId))
-                .findFirst()
+        AttendanceRecordEntity record = attendanceRecordMapper.findByShiftId(shiftId)
                 .orElseThrow(() -> new RuntimeException("No check-in record found for this shift"));
 
         if (!"CHECKED_IN".equals(record.getStatus())) {
@@ -111,20 +122,21 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .setScale(2, RoundingMode.HALF_UP);
 
         record.setCheckOutTime(checkOutTime);
-        record.setCheckOutLat(lat);
-        record.setCheckOutLng(lng);
         record.setTotalHours(hours);
         record.setStatus("CHECKED_OUT");
+        record.setUpdatedAt(LocalDateTime.now());
+        attendanceRecordMapper.update(record);
 
         shift.setStatus("CHECKED_OUT");
+        shift.setUpdatedAt(LocalDateTime.now());
+        shiftMapper.update(shift);
 
         return toAttendanceResponse(record);
     }
 
     @Override
     public List<AttendanceVO> getMyAttendance(Long workerId) {
-        return attendanceRecords.values().stream()
-                .filter(r -> r.getWorkerId().equals(workerId))
+        return attendanceRecordMapper.findByWorkerId(workerId).stream()
                 .map(this::toAttendanceResponse)
                 .collect(Collectors.toList());
     }

@@ -3,18 +3,19 @@ package com.parttime.cservice.service;
 import com.parttime.cservice.config.JwtTokenProvider;
 import com.parttime.cservice.service.impl.WorkerServiceImpl;
 import com.parttime.cservice.pojo.vo.LoginVO;
-import com.parttime.cservice.pojo.cmd.LoginCmd;
 import com.parttime.cservice.pojo.cmd.RegisterCmd;
 import com.parttime.cservice.pojo.vo.WorkerVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class WorkerServiceTest {
 
+    @InjectMocks
     private WorkerServiceImpl workerService;
 
     private static final String SECRET = "parttime-cservice-jwt-secret-key-must-be-at-least-256-bits";
@@ -22,8 +23,9 @@ class WorkerServiceTest {
 
     @BeforeEach
     void setUp() {
-        JwtTokenProvider jwtTokenProvider = new JwtTokenProvider(SECRET, EXPIRATION);
-        workerService = new WorkerServiceImpl(jwtTokenProvider);
+        MockitoAnnotations.openMocks(this);
+        ReflectionTestUtils.setField(workerService, "workerMapper", InMemoryMappers.createWorkerMapper());
+        ReflectionTestUtils.setField(workerService, "jwtTokenProvider", new JwtTokenProvider(SECRET, EXPIRATION));
     }
 
     @Test

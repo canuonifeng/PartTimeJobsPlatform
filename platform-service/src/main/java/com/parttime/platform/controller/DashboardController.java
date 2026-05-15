@@ -6,15 +6,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.annotation.Resource;
+
 @RestController
 @RequestMapping("/api/admin/dashboard")
 public class DashboardController {
 
-    private final DashboardService dashboardService;
-
-    public DashboardController(DashboardService dashboardService) {
-        this.dashboardService = dashboardService;
-    }
+    @Resource
+    private DashboardService dashboardService;
 
     @GetMapping("/stats")
     public DashboardVO getStats() {

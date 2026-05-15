@@ -9,6 +9,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -37,7 +38,9 @@ class AuthControllerTest {
         authProvider.setPasswordEncoder(new BCryptPasswordEncoder());
         var authManager = new ProviderManager(authProvider);
 
-        AuthController authController = new AuthController(jwtTokenProvider, authManager);
+        AuthController authController = new AuthController();
+        ReflectionTestUtils.setField(authController, "jwtTokenProvider", jwtTokenProvider);
+        ReflectionTestUtils.setField(authController, "authenticationManager", authManager);
 
         mockMvc = MockMvcBuilders
                 .standaloneSetup(authController)

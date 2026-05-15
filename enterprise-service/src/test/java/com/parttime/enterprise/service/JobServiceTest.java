@@ -15,11 +15,11 @@ import com.parttime.enterprise.pojo.vo.JobRateVO;
 import com.parttime.enterprise.pojo.vo.JobScheduleVO;
 import com.parttime.enterprise.pojo.vo.JobVO;
 import com.parttime.enterprise.service.impl.JobServiceImpl;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -58,12 +58,8 @@ class JobServiceTest {
     @Captor
     private ArgumentCaptor<JobSchedule> scheduleCaptor;
 
-    private JobService jobService;
-
-    @BeforeEach
-    void setUp() {
-        jobService = new JobServiceImpl(jobMapper, jobRateMapper, jobScheduleMapper);
-    }
+    @InjectMocks
+    private JobServiceImpl jobService;
 
     @Test
     void getJobById_shouldReturnJobWithRatesAndSchedules() {

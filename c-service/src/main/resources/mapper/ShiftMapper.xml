@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.cservice.mapper.ShiftMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO c_shift (worker_id, job_id, company_id, shift_date, start_time, end_time,
+                             location_name, location_lat, location_lng, location_radius, status,
+                             created_at, updated_at)
+        VALUES (#{workerId}, #{jobId}, #{companyId}, #{shiftDate}, #{startTime}, #{endTime},
+                #{locationName}, #{locationLat}, #{locationLng}, #{locationRadius}, #{status},
+                #{createdAt}, #{updatedAt})
+    </insert>
+
+    <select id="findById" resultType="com.parttime.cservice.pojo.entity.ShiftEntity">
+        SELECT * FROM c_shift WHERE id = #{id}
+    </select>
+
+    <select id="findByWorkerId" resultType="com.parttime.cservice.pojo.entity.ShiftEntity">
+        SELECT * FROM c_shift WHERE worker_id = #{workerId}
+    </select>
+
+    <select id="findByWorkerIdAndDateRange" resultType="com.parttime.cservice.pojo.entity.ShiftEntity">
+        SELECT * FROM c_shift
+        WHERE worker_id = #{workerId}
+        <if test="startDate != null">
+            AND shift_date >= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND shift_date &lt;= #{endDate}
+        </if>
+    </select>
+
+    <select id="findByJobId" resultType="com.parttime.cservice.pojo.entity.ShiftEntity">
+        SELECT * FROM c_shift WHERE job_id = #{jobId}
+    </select>
+
+    <update id="updateStatus">
+        UPDATE c_shift SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <update id="update">
+        UPDATE c_shift
+        SET worker_id = #{workerId}, job_id = #{jobId}, company_id = #{companyId},
+            shift_date = #{shiftDate}, start_time = #{startTime}, end_time = #{endTime},
+            location_name = #{locationName}, location_lat = #{locationLat},
+            location_lng = #{locationLng}, location_radius = #{locationRadius},
+            status = #{status}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

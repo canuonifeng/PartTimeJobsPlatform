@@ -11,17 +11,15 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.annotation.Resource;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api")
 public class ProfileController {
 
-    private final ProfileService profileService;
-
-    public ProfileController(ProfileService profileService) {
-        this.profileService = profileService;
-    }
+    @Resource
+    private ProfileService profileService;
 
     private Long getCurrentWorkerId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

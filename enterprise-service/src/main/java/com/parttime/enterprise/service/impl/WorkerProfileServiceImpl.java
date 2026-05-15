@@ -13,26 +13,22 @@ import com.parttime.enterprise.pojo.vo.WorkerProfileVO;
 import com.parttime.enterprise.service.WorkerProfileService;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class WorkerProfileServiceImpl implements WorkerProfileService {
 
-    private final WorkerBlacklistMapper blacklistMapper;
-    private final WorkerEvaluationMapper evaluationMapper;
-    private final ScheduleShiftMapper shiftMapper;
-    private final JobMapper jobMapper;
-
-    public WorkerProfileServiceImpl(WorkerBlacklistMapper blacklistMapper,
-                                    WorkerEvaluationMapper evaluationMapper,
-                                    ScheduleShiftMapper shiftMapper,
-                                    JobMapper jobMapper) {
-        this.blacklistMapper = blacklistMapper;
-        this.evaluationMapper = evaluationMapper;
-        this.shiftMapper = shiftMapper;
-        this.jobMapper = jobMapper;
-    }
+    @Resource
+    private WorkerBlacklistMapper blacklistMapper;
+    @Resource
+    private WorkerEvaluationMapper evaluationMapper;
+    @Resource
+    private ScheduleShiftMapper shiftMapper;
+    @Resource
+    private JobMapper jobMapper;
 
     @Override
     public WorkerProfileVO getWorkerProfile(Long companyId, Long workerId) {

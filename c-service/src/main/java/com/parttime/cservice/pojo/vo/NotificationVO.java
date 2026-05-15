@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 public class NotificationVO {
 
     private Long id;
+    private Long recipientId;
+    private String recipientType;
     private String type;
     private String title;
     private String content;
@@ -13,6 +15,12 @@ public class NotificationVO {
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public Long getRecipientId() { return recipientId; }
+    public void setRecipientId(Long recipientId) { this.recipientId = recipientId; }
+
+    public String getRecipientType() { return recipientType; }
+    public void setRecipientType(String recipientType) { this.recipientType = recipientType; }
 
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }

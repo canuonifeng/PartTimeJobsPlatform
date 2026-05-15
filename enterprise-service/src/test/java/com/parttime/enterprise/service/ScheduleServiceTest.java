@@ -14,11 +14,11 @@ import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
 import com.parttime.enterprise.pojo.vo.ScheduleShiftVO;
 import com.parttime.enterprise.pojo.vo.ScheduleTemplateVO;
 import com.parttime.enterprise.service.impl.ScheduleServiceImpl;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -54,12 +54,8 @@ class ScheduleServiceTest {
     @Captor
     private ArgumentCaptor<ScheduleShift> shiftCaptor;
 
-    private ScheduleService scheduleService;
-
-    @BeforeEach
-    void setUp() {
-        scheduleService = new ScheduleServiceImpl(templateMapper, shiftMapper, attendanceRecordMapper);
-    }
+    @InjectMocks
+    private ScheduleServiceImpl scheduleService;
 
     @Test
     void createTemplate_shouldCreateAndReturnResponse() {

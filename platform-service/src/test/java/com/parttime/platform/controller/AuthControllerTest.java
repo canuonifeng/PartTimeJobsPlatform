@@ -3,42 +3,42 @@ package com.parttime.platform.controller;
 import com.parttime.platform.config.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
 
     private MockMvc mockMvc;
 
-    private static final String SECRET = "parttime-platform-jwt-secret-key-must-be-at-least-256-bits-long-enough";
-    private static final long EXPIRATION = 86400000L;
+    @Mock
+    private JwtTokenProvider jwtTokenProvider;
+
+    @Mock
+    private AuthenticationManager authenticationManager;
+
+    @InjectMocks
+    private AuthController authController;
 
     @BeforeEach
     void setUp() {
-        JwtTokenProvider jwtTokenProvider = new JwtTokenProvider(SECRET, EXPIRATION);
-
-        var userDetails = User.withUsername("admin")
-                .password(new BCryptPasswordEncoder().encode("admin123"))
-                .roles("ADMIN")
-                .build();
-        var userDetailsService = new InMemoryUserDetailsManager(userDetails);
-        var authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(new BCryptPasswordEncoder());
-        var authManager = new ProviderManager(authProvider);
-
-        AuthController authController = new AuthController(jwtTokenProvider, authManager);
-
         mockMvc = MockMvcBuilders
                 .standaloneSetup(authController)
                 .build();
@@ -46,15 +46,22 @@ class AuthControllerTest {
 
     @Test
     void login_withValidCredentials_shouldReturn200WithToken() throws Exception {
+        Authentication auth = new UsernamePasswordAuthenticationToken("admin", null, List.of());
+        when(authenticationManager.authenticate(any())).thenReturn(auth);
+        when(jwtTokenProvider.generateToken("admin", List.of())).thenReturn("test-token");
+
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"admin\",\"password\":\"admin123\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").isNotEmpty());
+                .andExpect(jsonPath("$.token").value("test-token"));
     }
 
     @Test
     void login_withInvalidCredentials_shouldReturn401() throws Exception {
+        when(authenticationManager.authenticate(any()))
+                .thenThrow(new BadCredentialsException("Bad credentials"));
+
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"admin\",\"password\":\"wrong\"}"))

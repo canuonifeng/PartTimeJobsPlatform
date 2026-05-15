@@ -93,7 +93,8 @@ class JobCategoryControllerTest {
 
         when(jobCategoryService.updateCategory(eq(1L), any(JobCategoryCmd.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/admin/job-categories/1")
+        mockMvc.perform(put("/api/admin/job-categories")
+                        .param("id", "1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cmd)))
                 .andExpect(status().isOk())
@@ -103,7 +104,7 @@ class JobCategoryControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void deleteCategory_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/admin/job-categories/1"))
+        mockMvc.perform(delete("/api/admin/job-categories").param("id", "1"))
                 .andExpect(status().isNoContent());
 
         verify(jobCategoryService).deleteCategory(1L);

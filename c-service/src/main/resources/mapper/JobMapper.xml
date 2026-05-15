@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.cservice.mapper.JobMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO c_job (job_id, company_id, company_name, title, description, location,
+                           category_id, category_name, rate_type, rate_amount, status, published_at,
+                           created_at, updated_at)
+        VALUES (#{jobId}, #{companyId}, #{companyName}, #{title}, #{description}, #{location},
+                #{categoryId}, #{categoryName}, #{rateType}, #{rateAmount}, #{status}, #{publishedAt},
+                #{createdAt}, #{updatedAt})
+    </insert>
+
+    <select id="findById" resultType="com.parttime.cservice.pojo.entity.Job">
+        SELECT * FROM c_job WHERE id = #{id}
+    </select>
+
+    <select id="findByJobId" resultType="com.parttime.cservice.pojo.entity.Job">
+        SELECT * FROM c_job WHERE job_id = #{jobId}
+    </select>
+
+    <select id="findAll" resultType="com.parttime.cservice.pojo.entity.Job">
+        SELECT * FROM c_job
+    </select>
+
+    <select id="search" resultType="com.parttime.cservice.pojo.entity.Job">
+        SELECT * FROM c_job
+        WHERE status = 'PUBLISHED'
+        <if test="keyword != null and keyword != ''">
+            AND (title LIKE CONCAT('%', #{keyword}, '%') OR description LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="location != null and location != ''">
+            AND location LIKE CONCAT('%', #{location}, '%')
+        </if>
+        <if test="categoryId != null">
+            AND category_id = #{categoryId}
+        </if>
+    </select>
+
+    <select id="findByCompanyId" resultType="com.parttime.cservice.pojo.entity.Job">
+        SELECT * FROM c_job WHERE company_id = #{companyId}
+    </select>
+
+    <update id="update">
+        UPDATE c_job
+        SET title = #{title}, description = #{description}, location = #{location},
+            category_id = #{categoryId}, category_name = #{categoryName},
+            rate_type = #{rateType}, rate_amount = #{rateAmount},
+            status = #{status}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

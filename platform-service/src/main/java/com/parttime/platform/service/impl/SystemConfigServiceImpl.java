@@ -7,17 +7,15 @@ import com.parttime.platform.pojo.vo.SystemConfigVO;
 import com.parttime.platform.service.SystemConfigService;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class SystemConfigServiceImpl implements SystemConfigService {
 
-    private final SystemConfigMapper systemConfigMapper;
-
-    public SystemConfigServiceImpl(SystemConfigMapper systemConfigMapper) {
-        this.systemConfigMapper = systemConfigMapper;
-    }
+    @Resource
+    private SystemConfigMapper systemConfigMapper;
 
     @Override
     public String getConfig(String key) {

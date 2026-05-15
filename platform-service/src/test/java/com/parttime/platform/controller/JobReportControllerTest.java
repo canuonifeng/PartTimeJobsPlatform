@@ -74,7 +74,7 @@ class JobReportControllerTest {
 
         when(jobReportService.getJobReport(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/job-reports/1"))
+        mockMvc.perform(get("/api/job-reports").param("id", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.reason").value("Spam"));
 
@@ -92,7 +92,8 @@ class JobReportControllerTest {
 
         String json = "{\"remark\":\"No violation\"}";
 
-        mockMvc.perform(put("/api/job-reports/1/dismiss")
+        mockMvc.perform(put("/api/job-reports/dismiss")
+                        .param("id", "1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
@@ -112,7 +113,8 @@ class JobReportControllerTest {
 
         String json = "{\"remark\":\"Violates terms\"}";
 
-        mockMvc.perform(put("/api/job-reports/1/ban")
+        mockMvc.perform(put("/api/job-reports/ban")
+                        .param("id", "1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())

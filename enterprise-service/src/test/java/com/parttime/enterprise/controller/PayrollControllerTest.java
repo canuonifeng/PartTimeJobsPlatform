@@ -83,7 +83,7 @@ class PayrollControllerTest {
 
         when(payrollService.calculateBatch(1L)).thenReturn(response);
 
-        mockMvc.perform(post("/api/payroll/batches/1/calculate"))
+        mockMvc.perform(post("/api/payroll/batches/calculate").param("id", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CALCULATED"))
                 .andExpect(jsonPath("$.totalAmount").value(5000.00));
@@ -100,7 +100,7 @@ class PayrollControllerTest {
 
         when(payrollService.confirmBatch(1L)).thenReturn(response);
 
-        mockMvc.perform(post("/api/payroll/batches/1/confirm"))
+        mockMvc.perform(post("/api/payroll/batches/confirm").param("id", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("CONFIRMED"));
 
@@ -116,7 +116,7 @@ class PayrollControllerTest {
 
         when(payrollService.payBatch(1L)).thenReturn(response);
 
-        mockMvc.perform(post("/api/payroll/batches/1/pay"))
+        mockMvc.perform(post("/api/payroll/batches/pay").param("id", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("PAID"));
 
@@ -134,7 +134,7 @@ class PayrollControllerTest {
 
         when(payrollService.getBatchById(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/payroll/batches/1"))
+        mockMvc.perform(get("/api/payroll/batches").param("id", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Test Batch"));
 
@@ -169,7 +169,7 @@ class PayrollControllerTest {
 
         when(payrollService.getBatchItems(1L)).thenReturn(List.of(item));
 
-        mockMvc.perform(get("/api/payroll/batches/1/items"))
+        mockMvc.perform(get("/api/payroll/batches/items").param("id", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].workerId").value(100));

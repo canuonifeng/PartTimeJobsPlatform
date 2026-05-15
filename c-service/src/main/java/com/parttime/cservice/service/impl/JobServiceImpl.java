@@ -1,5 +1,7 @@
 package com.parttime.cservice.service.impl;
 
+import com.parttime.cservice.mapper.JobApplicationMapper;
+import com.parttime.cservice.mapper.JobMapper;
 import com.parttime.cservice.pojo.entity.Job;
 import com.parttime.cservice.pojo.entity.JobApplication;
 import com.parttime.cservice.pojo.vo.ApplicationVO;
@@ -10,18 +12,21 @@ import com.parttime.cservice.pojo.vo.JobSummaryVO;
 import com.parttime.cservice.service.JobService;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.Resource;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 public class JobServiceImpl implements JobService {
 
-    private final ConcurrentHashMap<Long, Job> jobs = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, JobApplication> applications = new ConcurrentHashMap<>();
-    private final AtomicLong applicationIdCounter = new AtomicLong(1);
+    @Resource
+    private JobMapper jobMapper;
+    @Resource
+    private JobApplicationMapper jobApplicationMapper;
 
     @Override
     public Job addJob(Long id, String title, String description, String location, Long categoryId,
@@ -29,35 +34,31 @@ public class JobServiceImpl implements JobService {
                       Integer headcount, Integer acceptedCount, LocalDateTime deadline, String status) {
         Job job = new Job(id, title, description, location, categoryId, categoryName,
                 rates, schedules, headcount, acceptedCount, deadline, status);
-        jobs.put(id, job);
+        if (rates != null && !rates.isEmpty()) {
+            job.setRateType(rates.get(0).getType());
+            job.setRateAmount(rates.get(0).getAmount());
+        }
+        job.setPublishedAt(LocalDateTime.now());
+        job.setCreatedAt(LocalDateTime.now());
+        job.setUpdatedAt(LocalDateTime.now());
+        jobMapper.insert(job);
         return job;
     }
 
     @Override
     public List<JobSummaryVO> searchJobs(String keyword, Long categoryId, String location,
                                         BigDecimal minRate, BigDecimal maxRate) {
-        return jobs.values().stream()
-                .filter(job -> "PUBLISHED".equals(job.getStatus()))
-                .filter(job -> keyword == null || keyword.isEmpty()
-                        || job.getTitle().toLowerCase().contains(keyword.toLowerCase()))
-                .filter(job -> categoryId == null || categoryId.equals(job.getCategoryId()))
-                .filter(job -> location == null || location.isEmpty()
-                        || job.getLocation().toLowerCase().contains(location.toLowerCase()))
+        List<Job> jobs = jobMapper.search(keyword, location, categoryId);
+        return jobs.stream()
                 .filter(job -> {
                     if (minRate == null) return true;
-                    BigDecimal jobMinRate = job.getRates().stream()
-                            .map(JobRateInfoVO::getAmount)
-                            .min(Comparator.naturalOrder())
-                            .orElse(BigDecimal.ZERO);
-                    return jobMinRate.compareTo(minRate) >= 0;
+                    BigDecimal jobRate = job.getRateAmount() != null ? job.getRateAmount() : BigDecimal.ZERO;
+                    return jobRate.compareTo(minRate) >= 0;
                 })
                 .filter(job -> {
                     if (maxRate == null) return true;
-                    BigDecimal jobMaxRate = job.getRates().stream()
-                            .map(JobRateInfoVO::getAmount)
-                            .max(Comparator.naturalOrder())
-                            .orElse(BigDecimal.ZERO);
-                    return jobMaxRate.compareTo(maxRate) <= 0;
+                    BigDecimal jobRate = job.getRateAmount() != null ? job.getRateAmount() : BigDecimal.ZERO;
+                    return jobRate.compareTo(maxRate) <= 0;
                 })
                 .map(this::toSummary)
                 .toList();
@@ -65,33 +66,35 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public JobDetailVO getJobDetail(Long jobId) {
-        Job job = jobs.get(jobId);
-        if (job == null) {
-            throw new RuntimeException("Job not found with id: " + jobId);
-        }
+        Job job = jobMapper.findByJobId(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
         return toDetail(job);
     }
 
     @Override
     public boolean applyForJob(Long workerId, Long jobId, List<Long> scheduleIds) {
-        String key = workerId + ":" + jobId;
-        if (applications.containsKey(key)) {
+        List<JobApplication> existing = jobApplicationMapper.findByWorkerIdAndJobId(workerId, jobId);
+        if (!existing.isEmpty()) {
             return false;
         }
-        JobApplication app = new JobApplication(
-                applicationIdCounter.getAndIncrement(), workerId, jobId,
-                scheduleIds, "PENDING", LocalDateTime.now());
-        applications.put(key, app);
+        JobApplication app = new JobApplication();
+        app.setWorkerId(workerId);
+        app.setJobId(jobId);
+        app.setStatus("PENDING");
+        app.setAppliedAt(LocalDateTime.now());
+        app.setCreatedAt(LocalDateTime.now());
+        app.setUpdatedAt(LocalDateTime.now());
+        jobApplicationMapper.insert(app);
         return true;
     }
 
     @Override
     public List<ApplicationVO> getApplicationStatus(Long workerId, Long jobId) {
-        String key = workerId + ":" + jobId;
-        JobApplication app = applications.get(key);
-        if (app == null) {
+        List<JobApplication> apps = jobApplicationMapper.findByWorkerIdAndJobId(workerId, jobId);
+        if (apps.isEmpty()) {
             return Collections.emptyList();
         }
+        JobApplication app = apps.get(0);
         ApplicationVO resp = new ApplicationVO();
         resp.setApplicationId(app.getId());
         resp.setJobId(app.getJobId());
@@ -101,26 +104,16 @@ public class JobServiceImpl implements JobService {
     }
 
     private JobSummaryVO toSummary(Job job) {
-        BigDecimal minRate = job.getRates().stream()
-                .map(JobRateInfoVO::getAmount)
-                .min(Comparator.naturalOrder())
-                .orElse(BigDecimal.ZERO);
-        BigDecimal maxRate = job.getRates().stream()
-                .map(JobRateInfoVO::getAmount)
-                .max(Comparator.naturalOrder())
-                .orElse(BigDecimal.ZERO);
-        List<String> rateTypes = job.getRates().stream()
-                .map(JobRateInfoVO::getType)
-                .distinct()
-                .toList();
+        BigDecimal rate = job.getRateAmount() != null ? job.getRateAmount() : BigDecimal.ZERO;
+        List<String> rateTypes = job.getRateType() != null ? List.of(job.getRateType()) : List.of();
 
         JobSummaryVO summary = new JobSummaryVO();
         summary.setId(job.getId());
         summary.setTitle(job.getTitle());
         summary.setLocation(job.getLocation());
         summary.setCategoryName(job.getCategoryName());
-        summary.setMinRate(minRate);
-        summary.setMaxRate(maxRate);
+        summary.setMinRate(rate);
+        summary.setMaxRate(rate);
         summary.setRateTypes(rateTypes);
         return summary;
     }
@@ -132,11 +125,6 @@ public class JobServiceImpl implements JobService {
         detail.setDescription(job.getDescription());
         detail.setLocation(job.getLocation());
         detail.setCategoryName(job.getCategoryName());
-        detail.setRates(job.getRates());
-        detail.setSchedules(job.getSchedules());
-        detail.setHeadcount(job.getHeadcount());
-        detail.setAcceptedCount(job.getAcceptedCount());
-        detail.setDeadline(job.getDeadline());
         detail.setStatus(job.getStatus());
         return detail;
     }

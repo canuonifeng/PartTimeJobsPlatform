@@ -10,13 +10,15 @@ import com.parttime.enterprise.service.JobService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.Resource;
 
 import java.util.List;
 
@@ -24,70 +26,67 @@ import java.util.List;
 @RequestMapping("/api/jobs")
 public class JobController {
 
-    private final JobService jobService;
+    @Resource
+    private JobService jobService;
 
-    public JobController(JobService jobService) {
-        this.jobService = jobService;
-    }
-
-    @PutMapping("/{id}/publish")
-    public JobVO publishJob(@PathVariable Long id) {
+    @PutMapping("/publish")
+    public JobVO publishJob(@RequestParam Long id) {
         return jobService.publishJob(id);
     }
 
-    @PutMapping("/{id}/close")
-    public JobVO closeJob(@PathVariable Long id) {
+    @PutMapping("/close")
+    public JobVO closeJob(@RequestParam Long id) {
         return jobService.closeJob(id);
     }
 
-    @PutMapping("/{id}/reopen")
-    public JobVO reopenJob(@PathVariable Long id) {
+    @PutMapping("/reopen")
+    public JobVO reopenJob(@RequestParam Long id) {
         return jobService.reopenJob(id);
     }
 
-    @GetMapping("/{jobId}/rates")
-    public List<JobRateVO> getJobRates(@PathVariable Long jobId) {
+    @GetMapping("/rates")
+    public List<JobRateVO> getJobRates(@RequestParam Long jobId) {
         return jobService.getJobRates(jobId);
     }
 
-    @PostMapping("/{jobId}/rates")
+    @PostMapping("/rates")
     @ResponseStatus(HttpStatus.CREATED)
-    public JobRateVO addJobRate(@PathVariable Long jobId, @RequestBody JobRateCmd request) {
+    public JobRateVO addJobRate(@RequestParam Long jobId, @RequestBody JobRateCmd request) {
         return jobService.addJobRate(jobId, request);
     }
 
-    @PutMapping("/{jobId}/rates/{rateId}")
-    public JobRateVO updateJobRate(@PathVariable Long jobId, @PathVariable Long rateId,
+    @PutMapping("/rates")
+    public JobRateVO updateJobRate(@RequestParam Long jobId, @RequestParam Long rateId,
                                    @RequestBody JobRateCmd request) {
         return jobService.updateJobRate(rateId, request);
     }
 
-    @DeleteMapping("/{jobId}/rates/{rateId}")
+    @DeleteMapping("/rates")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeJobRate(@PathVariable Long jobId, @PathVariable Long rateId) {
+    public void removeJobRate(@RequestParam Long jobId, @RequestParam Long rateId) {
         jobService.removeJobRate(rateId);
     }
 
-    @GetMapping("/{jobId}/schedules")
-    public List<JobScheduleVO> getJobSchedules(@PathVariable Long jobId) {
+    @GetMapping("/schedules")
+    public List<JobScheduleVO> getJobSchedules(@RequestParam Long jobId) {
         return jobService.getJobSchedules(jobId);
     }
 
-    @PostMapping("/{jobId}/schedules")
+    @PostMapping("/schedules")
     @ResponseStatus(HttpStatus.CREATED)
-    public JobScheduleVO addJobSchedule(@PathVariable Long jobId, @RequestBody JobScheduleCmd request) {
+    public JobScheduleVO addJobSchedule(@RequestParam Long jobId, @RequestBody JobScheduleCmd request) {
         return jobService.addJobSchedule(jobId, request);
     }
 
-    @PutMapping("/{jobId}/schedules/{scheduleId}")
-    public JobScheduleVO updateJobSchedule(@PathVariable Long jobId, @PathVariable Long scheduleId,
+    @PutMapping("/schedules")
+    public JobScheduleVO updateJobSchedule(@RequestParam Long jobId, @RequestParam Long scheduleId,
                                            @RequestBody JobScheduleCmd request) {
         return jobService.updateJobSchedule(scheduleId, request);
     }
 
-    @DeleteMapping("/{jobId}/schedules/{scheduleId}")
+    @DeleteMapping("/schedules")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeJobSchedule(@PathVariable Long jobId, @PathVariable Long scheduleId) {
+    public void removeJobSchedule(@RequestParam Long jobId, @RequestParam Long scheduleId) {
         jobService.removeJobSchedule(scheduleId);
     }
 }

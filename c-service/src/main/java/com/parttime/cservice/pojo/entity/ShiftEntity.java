@@ -2,6 +2,7 @@ package com.parttime.cservice.pojo.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public class ShiftEntity {
@@ -11,6 +12,7 @@ public class ShiftEntity {
     private String jobTitle;
     private String jobLocation;
     private Long workerId;
+    private Long companyId;
     private LocalDate shiftDate;
     private LocalTime startTime;
     private LocalTime endTime;
@@ -19,6 +21,8 @@ public class ShiftEntity {
     private Integer locationRadius;
     private String locationName;
     private String status;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public ShiftEntity() {}
 
@@ -56,6 +60,9 @@ public class ShiftEntity {
     public Long getWorkerId() { return workerId; }
     public void setWorkerId(Long workerId) { this.workerId = workerId; }
 
+    public Long getCompanyId() { return companyId; }
+    public void setCompanyId(Long companyId) { this.companyId = companyId; }
+
     public LocalDate getShiftDate() { return shiftDate; }
     public void setShiftDate(LocalDate shiftDate) { this.shiftDate = shiftDate; }
 
@@ -79,4 +86,10 @@ public class ShiftEntity {
 
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

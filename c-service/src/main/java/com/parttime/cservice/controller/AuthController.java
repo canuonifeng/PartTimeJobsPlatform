@@ -18,19 +18,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.annotation.Resource;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final WorkerService workerService;
-    private final JwtTokenProvider jwtTokenProvider;
-
-    public AuthController(WorkerService workerService, JwtTokenProvider jwtTokenProvider) {
-        this.workerService = workerService;
-        this.jwtTokenProvider = jwtTokenProvider;
-    }
+    @Resource
+    private WorkerService workerService;
+    @Resource
+    private JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/register")
     public ResponseEntity<LoginVO> register(@RequestBody RegisterCmd request) {

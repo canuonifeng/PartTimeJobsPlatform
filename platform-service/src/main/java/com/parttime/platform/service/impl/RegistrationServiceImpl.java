@@ -9,6 +9,7 @@ import com.parttime.platform.pojo.vo.RegistrationVO;
 import com.parttime.platform.service.RegistrationService;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,11 +17,8 @@ import java.util.stream.Collectors;
 @Service
 public class RegistrationServiceImpl implements RegistrationService {
 
-    private final EnterpriseRegistrationMapper registrationMapper;
-
-    public RegistrationServiceImpl(EnterpriseRegistrationMapper registrationMapper) {
-        this.registrationMapper = registrationMapper;
-    }
+    @Resource
+    private EnterpriseRegistrationMapper registrationMapper;
 
     @Override
     public RegistrationListVO getRegistrations(String status) {

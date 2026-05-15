@@ -4,6 +4,7 @@ import com.parttime.platform.pojo.vo.DashboardVO;
 import com.parttime.platform.service.impl.DashboardServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -13,7 +14,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ExtendWith(MockitoExtension.class)
 class DashboardServiceTest {
 
-    private final DashboardServiceImpl dashboardService = new DashboardServiceImpl();
+    @InjectMocks
+    private DashboardServiceImpl dashboardService;
 
     @Test
     void getDashboardStats_shouldReturnMockData() {

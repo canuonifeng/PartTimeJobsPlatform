@@ -75,7 +75,7 @@ class RegistrationControllerTest {
 
         when(registrationService.getRegistration(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/registrations/1"))
+        mockMvc.perform(get("/api/registrations").param("id", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.companyName").value("TestCo"));
 
@@ -91,7 +91,7 @@ class RegistrationControllerTest {
 
         when(registrationService.approveRegistration(eq(1L), any())).thenReturn(response);
 
-        mockMvc.perform(put("/api/registrations/1/approve"))
+        mockMvc.perform(put("/api/registrations/approve").param("id", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("APPROVED"));
 
@@ -110,7 +110,8 @@ class RegistrationControllerTest {
 
         String json = "{\"remark\":\"Invalid docs\"}";
 
-        mockMvc.perform(put("/api/registrations/1/reject")
+        mockMvc.perform(put("/api/registrations/reject")
+                        .param("id", "1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())

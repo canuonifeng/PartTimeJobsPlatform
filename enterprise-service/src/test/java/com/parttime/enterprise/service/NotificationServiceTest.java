@@ -8,11 +8,11 @@ import com.parttime.enterprise.pojo.entity.NotificationTemplate;
 import com.parttime.enterprise.pojo.vo.NotificationLogVO;
 import com.parttime.enterprise.service.impl.NotificationServiceImpl;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -39,12 +39,8 @@ class NotificationServiceTest {
     @Captor
     private ArgumentCaptor<NotificationLog> logCaptor;
 
-    private NotificationService notificationService;
-
-    @BeforeEach
-    void setUp() {
-        notificationService = new NotificationServiceImpl(notificationLogMapper, notificationTemplateMapper);
-    }
+    @InjectMocks
+    private NotificationServiceImpl notificationService;
 
     @Test
     void sendNotification_shouldCreateLogWithPendingStatus() {

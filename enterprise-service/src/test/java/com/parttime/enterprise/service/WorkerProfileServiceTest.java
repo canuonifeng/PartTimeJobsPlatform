@@ -1,9 +1,9 @@
 package com.parttime.enterprise.service;
 
-import com.parttime.enterprise.dao.JobDao;
-import com.parttime.enterprise.dao.ScheduleShiftDao;
-import com.parttime.enterprise.dao.WorkerBlacklistDao;
-import com.parttime.enterprise.dao.WorkerEvaluationDao;
+import com.parttime.enterprise.mapper.JobMapper;
+import com.parttime.enterprise.mapper.ScheduleShiftMapper;
+import com.parttime.enterprise.mapper.WorkerBlacklistMapper;
+import com.parttime.enterprise.mapper.WorkerEvaluationMapper;
 import com.parttime.enterprise.pojo.entity.Job;
 import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.entity.WorkerBlacklist;
@@ -12,9 +12,9 @@ import com.parttime.enterprise.pojo.vo.EvaluationVO;
 import com.parttime.enterprise.pojo.vo.WorkHistoryVO;
 import com.parttime.enterprise.pojo.vo.WorkerProfileVO;
 import com.parttime.enterprise.service.impl.WorkerProfileServiceImpl;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -26,38 +26,32 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class WorkerProfileServiceTest {
 
     @Mock
-    private WorkerBlacklistDao blacklistDao;
+    private WorkerBlacklistMapper blacklistMapper;
 
     @Mock
-    private WorkerEvaluationDao evaluationDao;
+    private WorkerEvaluationMapper evaluationMapper;
 
     @Mock
-    private ScheduleShiftDao shiftDao;
+    private ScheduleShiftMapper shiftMapper;
 
     @Mock
-    private JobDao jobDao;
+    private JobMapper jobMapper;
 
-    private WorkerProfileService workerProfileService;
-
-    @BeforeEach
-    void setUp() {
-        workerProfileService = new WorkerProfileServiceImpl(
-                blacklistDao, evaluationDao, shiftDao, jobDao);
-    }
+    @InjectMocks
+    private WorkerProfileServiceImpl workerProfileService;
 
     @Test
     void getWorkerProfile_shouldReturnProfileWithAllFields() {
-        when(blacklistDao.findByCompanyIdAndWorkerId(1L, 10L)).thenReturn(Optional.empty());
-        when(evaluationDao.findAvgRatingByWorkerIdAndCompanyId(10L, 1L)).thenReturn(4.5);
-        when(evaluationDao.findByWorkerIdAndCompanyId(10L, 1L)).thenReturn(List.of(new WorkerEvaluation(), new WorkerEvaluation()));
-        when(shiftDao.findCompletedByWorkerIdAndCompanyId(10L, 1L)).thenReturn(List.of());
+        when(blacklistMapper.findByCompanyIdAndWorkerId(1L, 10L)).thenReturn(Optional.empty());
+        when(evaluationMapper.findAvgRatingByWorkerIdAndCompanyId(10L, 1L)).thenReturn(4.5);
+        when(evaluationMapper.findByWorkerIdAndCompanyId(10L, 1L)).thenReturn(List.of(new WorkerEvaluation(), new WorkerEvaluation()));
+        when(shiftMapper.findCompletedByWorkerIdAndCompanyId(10L, 1L)).thenReturn(List.of());
 
         WorkerProfileVO profile = workerProfileService.getWorkerProfile(1L, 10L);
 
@@ -75,12 +69,12 @@ class WorkerProfileServiceTest {
         blacklist.setWorkerId(10L);
         blacklist.setReason("No-show");
 
-        when(blacklistDao.findByCompanyIdAndWorkerId(1L, 10L))
+        when(blacklistMapper.findByCompanyIdAndWorkerId(1L, 10L))
                 .thenReturn(Optional.of(blacklist))
                 .thenReturn(Optional.of(blacklist));
-        when(evaluationDao.findAvgRatingByWorkerIdAndCompanyId(10L, 1L)).thenReturn(null);
-        when(evaluationDao.findByWorkerIdAndCompanyId(10L, 1L)).thenReturn(List.of());
-        when(shiftDao.findCompletedByWorkerIdAndCompanyId(10L, 1L)).thenReturn(List.of());
+        when(evaluationMapper.findAvgRatingByWorkerIdAndCompanyId(10L, 1L)).thenReturn(null);
+        when(evaluationMapper.findByWorkerIdAndCompanyId(10L, 1L)).thenReturn(List.of());
+        when(shiftMapper.findCompletedByWorkerIdAndCompanyId(10L, 1L)).thenReturn(List.of());
 
         WorkerProfileVO profile = workerProfileService.getWorkerProfile(1L, 10L);
 
@@ -104,11 +98,11 @@ class WorkerProfileServiceTest {
         job.setId(50L);
         job.setTitle("Warehouse Helper");
 
-        when(blacklistDao.findByCompanyIdAndWorkerId(1L, 10L)).thenReturn(Optional.empty());
-        when(evaluationDao.findAvgRatingByWorkerIdAndCompanyId(10L, 1L)).thenReturn(4.0);
-        when(evaluationDao.findByWorkerIdAndCompanyId(10L, 1L)).thenReturn(List.of());
-        when(shiftDao.findCompletedByWorkerIdAndCompanyId(10L, 1L)).thenReturn(List.of(shift));
-        when(jobDao.findById(50L)).thenReturn(Optional.of(job));
+        when(blacklistMapper.findByCompanyIdAndWorkerId(1L, 10L)).thenReturn(Optional.empty());
+        when(evaluationMapper.findAvgRatingByWorkerIdAndCompanyId(10L, 1L)).thenReturn(4.0);
+        when(evaluationMapper.findByWorkerIdAndCompanyId(10L, 1L)).thenReturn(List.of());
+        when(shiftMapper.findCompletedByWorkerIdAndCompanyId(10L, 1L)).thenReturn(List.of(shift));
+        when(jobMapper.findById(50L)).thenReturn(Optional.of(job));
 
         WorkerProfileVO profile = workerProfileService.getWorkerProfile(1L, 10L);
 
@@ -122,8 +116,8 @@ class WorkerProfileServiceTest {
         doAnswer(invocation -> {
             WorkerEvaluation e = invocation.getArgument(0);
             e.setId(99L);
-            return null;
-        }).when(evaluationDao).save(any(WorkerEvaluation.class));
+            return 1;
+        }).when(evaluationMapper).insert(any(WorkerEvaluation.class));
 
         EvaluationVO response = workerProfileService.evaluateWorker(1L, 50L, 10L, 5, "Excellent worker");
 
@@ -134,7 +128,7 @@ class WorkerProfileServiceTest {
         assertThat(response.getRating()).isEqualTo(5);
         assertThat(response.getComment()).isEqualTo("Excellent worker");
 
-        verify(evaluationDao).save(any(WorkerEvaluation.class));
+        verify(evaluationMapper).insert(any(WorkerEvaluation.class));
     }
 
     @Test
@@ -143,26 +137,26 @@ class WorkerProfileServiceTest {
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> workerProfileService.evaluateWorker(1L, 50L, 10L, 6, "bad"))
                 .isInstanceOf(IllegalArgumentException.class);
-        verifyNoInteractions(evaluationDao);
+        verifyNoInteractions(evaluationMapper);
     }
 
     @Test
     void addToBlacklist_shouldSave() {
         workerProfileService.addToBlacklist(1L, 10L, "Frequent no-show");
 
-        verify(blacklistDao).save(any(WorkerBlacklist.class));
+        verify(blacklistMapper).insert(any(WorkerBlacklist.class));
     }
 
     @Test
     void removeFromBlacklist_shouldDelete() {
         workerProfileService.removeFromBlacklist(1L, 10L);
 
-        verify(blacklistDao).deleteByCompanyIdAndWorkerId(1L, 10L);
+        verify(blacklistMapper).deleteByCompanyIdAndWorkerId(1L, 10L);
     }
 
     @Test
     void isBlacklisted_shouldReturnTrueWhenFound() {
-        when(blacklistDao.findByCompanyIdAndWorkerId(1L, 10L))
+        when(blacklistMapper.findByCompanyIdAndWorkerId(1L, 10L))
                 .thenReturn(Optional.of(new WorkerBlacklist()));
 
         assertThat(workerProfileService.isBlacklisted(1L, 10L)).isTrue();
@@ -170,7 +164,7 @@ class WorkerProfileServiceTest {
 
     @Test
     void isBlacklisted_shouldReturnFalseWhenNotFound() {
-        when(blacklistDao.findByCompanyIdAndWorkerId(1L, 10L))
+        when(blacklistMapper.findByCompanyIdAndWorkerId(1L, 10L))
                 .thenReturn(Optional.empty());
 
         assertThat(workerProfileService.isBlacklisted(1L, 10L)).isFalse();
@@ -194,10 +188,10 @@ class WorkerProfileServiceTest {
         shift2.setStartTime(LocalTime.of(10, 0));
         shift2.setEndTime(LocalTime.of(17, 0));
 
-        when(shiftDao.findCompletedByWorkerIdAndCompanyId(10L, 1L))
+        when(shiftMapper.findCompletedByWorkerIdAndCompanyId(10L, 1L))
                 .thenReturn(List.of(shift1, shift2));
-        when(jobDao.findById(50L)).thenReturn(Optional.empty());
-        when(jobDao.findById(51L)).thenReturn(Optional.empty());
+        when(jobMapper.findById(50L)).thenReturn(Optional.empty());
+        when(jobMapper.findById(51L)).thenReturn(Optional.empty());
 
         List<WorkHistoryVO> history = workerProfileService.getWorkHistory(10L, 1L);
 
@@ -216,7 +210,7 @@ class WorkerProfileServiceTest {
         e1.setRating(4);
         e1.setComment("Good");
 
-        when(evaluationDao.findByWorkerIdAndCompanyId(10L, 1L)).thenReturn(List.of(e1));
+        when(evaluationMapper.findByWorkerIdAndCompanyId(10L, 1L)).thenReturn(List.of(e1));
 
         List<EvaluationVO> responses = workerProfileService.getEvaluations(10L, 1L);
 

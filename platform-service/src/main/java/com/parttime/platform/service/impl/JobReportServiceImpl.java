@@ -8,6 +8,7 @@ import com.parttime.platform.pojo.vo.JobReportVO;
 import com.parttime.platform.service.JobReportService;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,11 +16,8 @@ import java.util.stream.Collectors;
 @Service
 public class JobReportServiceImpl implements JobReportService {
 
-    private final JobReportMapper jobReportMapper;
-
-    public JobReportServiceImpl(JobReportMapper jobReportMapper) {
-        this.jobReportMapper = jobReportMapper;
-    }
+    @Resource
+    private JobReportMapper jobReportMapper;
 
     @Override
     public List<JobReportVO> getJobReports(String status) {
