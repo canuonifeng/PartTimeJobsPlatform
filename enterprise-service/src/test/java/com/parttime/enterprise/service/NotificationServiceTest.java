@@ -1,7 +1,7 @@
 package com.parttime.enterprise.service;
 
-import com.parttime.enterprise.dao.NotificationLogDao;
-import com.parttime.enterprise.dao.NotificationTemplateDao;
+import com.parttime.enterprise.mapper.NotificationLogMapper;
+import com.parttime.enterprise.mapper.NotificationTemplateMapper;
 import com.parttime.enterprise.pojo.cmd.NotificationTemplateCmd;
 import com.parttime.enterprise.pojo.entity.NotificationLog;
 import com.parttime.enterprise.pojo.entity.NotificationTemplate;
@@ -31,10 +31,10 @@ import static org.mockito.Mockito.when;
 class NotificationServiceTest {
 
     @Mock
-    private NotificationLogDao notificationLogDao;
+    private NotificationLogMapper notificationLogMapper;
 
     @Mock
-    private NotificationTemplateDao notificationTemplateDao;
+    private NotificationTemplateMapper notificationTemplateMapper;
 
     @Captor
     private ArgumentCaptor<NotificationLog> logCaptor;
@@ -43,7 +43,7 @@ class NotificationServiceTest {
 
     @BeforeEach
     void setUp() {
-        notificationService = new NotificationServiceImpl(notificationLogDao, notificationTemplateDao);
+        notificationService = new NotificationServiceImpl(notificationLogMapper, notificationTemplateMapper);
     }
 
     @Test
@@ -51,8 +51,8 @@ class NotificationServiceTest {
         doAnswer(invocation -> {
             NotificationLog log = invocation.getArgument(0);
             log.setId(1L);
-            return null;
-        }).when(notificationLogDao).save(any(NotificationLog.class));
+            return 1;
+        }).when(notificationLogMapper).insert(any(NotificationLog.class));
 
         NotificationLogVO response = notificationService.sendNotification(
                 100L, "WORKER", "APPLICATION_RECEIVED", "IN_APP",
@@ -68,7 +68,7 @@ class NotificationServiceTest {
         assertThat(response.getContent()).isEqualTo("You have a new application");
         assertThat(response.getStatus()).isEqualTo("PENDING");
 
-        verify(notificationLogDao).save(logCaptor.capture());
+        verify(notificationLogMapper).insert(logCaptor.capture());
         NotificationLog saved = logCaptor.getValue();
         assertThat(saved.getRecipientId()).isEqualTo(100L);
         assertThat(saved.getStatus()).isEqualTo("PENDING");
@@ -87,7 +87,7 @@ class NotificationServiceTest {
         log.setStatus("SENT");
         log.setSentAt(LocalDateTime.now());
 
-        when(notificationLogDao.findByRecipientIdAndRecipientType(200L, "ENTERPRISE"))
+        when(notificationLogMapper.findByRecipientIdAndRecipientType(200L, "ENTERPRISE"))
                 .thenReturn(List.of(log));
 
         List<NotificationLogVO> responses = notificationService.getNotificationsByRecipient(200L, "ENTERPRISE");
@@ -100,7 +100,7 @@ class NotificationServiceTest {
 
     @Test
     void getNotificationsByRecipient_shouldReturnEmptyListWhenNone() {
-        when(notificationLogDao.findByRecipientIdAndRecipientType(999L, "WORKER"))
+        when(notificationLogMapper.findByRecipientIdAndRecipientType(999L, "WORKER"))
                 .thenReturn(List.of());
 
         List<NotificationLogVO> responses = notificationService.getNotificationsByRecipient(999L, "WORKER");
@@ -111,13 +111,13 @@ class NotificationServiceTest {
     @Test
     void markAsSent_shouldUpdateStatus() {
         notificationService.markAsSent(1L);
-        verify(notificationLogDao).markSent(any(), any(LocalDateTime.class));
+        verify(notificationLogMapper).markSent(any(), any(LocalDateTime.class));
     }
 
     @Test
     void markAsFailed_shouldUpdateStatusWithError() {
         notificationService.markAsFailed(1L, "Connection timeout");
-        verify(notificationLogDao).updateStatusWithError(1L, "FAILED", "Connection timeout");
+        verify(notificationLogMapper).updateStatusWithError(1L, "FAILED", "Connection timeout");
     }
 
     @Test
@@ -129,7 +129,7 @@ class NotificationServiceTest {
         template.setTitleTemplate("New Application");
         template.setContentTemplate("You have a new application from {workerName}");
 
-        when(notificationTemplateDao.findByType("APPLICATION_RECEIVED"))
+        when(notificationTemplateMapper.findByType("APPLICATION_RECEIVED"))
                 .thenReturn(List.of(template));
 
         List<NotificationTemplate> templates = notificationService.getTemplatesByType("APPLICATION_RECEIVED");
@@ -140,7 +140,7 @@ class NotificationServiceTest {
 
     @Test
     void getTemplatesByType_shouldReturnEmptyListWhenNone() {
-        when(notificationTemplateDao.findByType("UNKNOWN")).thenReturn(List.of());
+        when(notificationTemplateMapper.findByType("UNKNOWN")).thenReturn(List.of());
 
         List<NotificationTemplate> templates = notificationService.getTemplatesByType("UNKNOWN");
 
@@ -158,8 +158,8 @@ class NotificationServiceTest {
         doAnswer(invocation -> {
             NotificationTemplate t = invocation.getArgument(0);
             t.setId(10L);
-            return null;
-        }).when(notificationTemplateDao).save(any(NotificationTemplate.class));
+            return 1;
+        }).when(notificationTemplateMapper).insert(any(NotificationTemplate.class));
 
         NotificationTemplate result = notificationService.createNotificationTemplate(request);
 
@@ -169,7 +169,7 @@ class NotificationServiceTest {
         assertThat(result.getChannel()).isEqualTo("WECHAT_TEMPLATE");
         assertThat(result.getTitleTemplate()).isEqualTo("New Job Posted");
 
-        verify(notificationTemplateDao).save(any(NotificationTemplate.class));
+        verify(notificationTemplateMapper).insert(any(NotificationTemplate.class));
     }
 
     @Test
@@ -181,7 +181,7 @@ class NotificationServiceTest {
         existing.setTitleTemplate("Old Title");
         existing.setContentTemplate("Old Content");
 
-        when(notificationTemplateDao.findById(5L)).thenReturn(Optional.of(existing));
+        when(notificationTemplateMapper.findById(5L)).thenReturn(Optional.of(existing));
 
         NotificationTemplateCmd request = new NotificationTemplateCmd();
         request.setTitleTemplate("Updated Title");
@@ -191,12 +191,12 @@ class NotificationServiceTest {
 
         assertThat(result.getTitleTemplate()).isEqualTo("Updated Title");
         assertThat(result.getContentTemplate()).isEqualTo("Updated Content");
-        verify(notificationTemplateDao).update(existing);
+        verify(notificationTemplateMapper).update(existing);
     }
 
     @Test
     void updateNotificationTemplate_shouldThrowWhenNotFound() {
-        when(notificationTemplateDao.findById(999L)).thenReturn(Optional.empty());
+        when(notificationTemplateMapper.findById(999L)).thenReturn(Optional.empty());
 
         NotificationTemplateCmd request = new NotificationTemplateCmd();
         request.setTitleTemplate("Title");
@@ -211,7 +211,7 @@ class NotificationServiceTest {
     void deleteNotificationTemplate_shouldDelete() {
         notificationService.deleteNotificationTemplate(1L);
 
-        verify(notificationTemplateDao).deleteById(1L);
+        verify(notificationTemplateMapper).deleteById(1L);
     }
 
     @Test
@@ -220,7 +220,7 @@ class NotificationServiceTest {
         t1.setId(1L);
         t1.setType("JOB_POSTED");
 
-        when(notificationTemplateDao.findAll("JOB_POSTED", null)).thenReturn(List.of(t1));
+        when(notificationTemplateMapper.findAll("JOB_POSTED", null)).thenReturn(List.of(t1));
 
         List<NotificationTemplate> results = notificationService.getNotificationTemplates("JOB_POSTED", null);
 
