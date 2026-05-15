@@ -12,13 +12,13 @@
   "dependencies": {
     "vue": "^3.3.4",
     "pinia": "^2.1.6",
-    "@dcloudio/uni-app": "3.0.0-alpha-30820231130003",
+    "@dcloudio/uni-app": "3.0.0-alpha-3090920231215001",
     "@dcloudio/uni-ui": "^1.4.28",
-    "@dcloudio/uni-mp-weixin": "3.0.0-alpha-30820231130003",
-    "@dcloudio/uni-h5": "3.0.0-alpha-30820231130003"
+    "@dcloudio/uni-mp-weixin": "3.0.0-alpha-3090920231215001",
+    "@dcloudio/uni-h5": "3.0.0-alpha-3090920231215001"
   },
   "devDependencies": {
-    "@dcloudio/uni-cli-shared": "3.0.0-alpha-30820231130003",
+    "@dcloudio/uni-cli-shared": "3.0.0-alpha-3090920231215001",
     "@dcloudio/vite-plugin-uni": "^0.2.0",
     "typescript": "^5.2.2"
   }
