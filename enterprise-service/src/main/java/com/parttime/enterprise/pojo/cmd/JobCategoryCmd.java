@@ -1,17 +1,11 @@
 package com.parttime.enterprise.pojo.cmd;
 
+import lombok.Data;
+
+@Data
 public class JobCategoryCmd {
 
     private String name;
     private Long parentId;
     private Integer sortOrder;
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public Long getParentId() { return parentId; }
-    public void setParentId(Long parentId) { this.parentId = parentId; }
-
-    public Integer getSortOrder() { return sortOrder; }
-    public void setSortOrder(Integer sortOrder) { this.sortOrder = sortOrder; }
 }

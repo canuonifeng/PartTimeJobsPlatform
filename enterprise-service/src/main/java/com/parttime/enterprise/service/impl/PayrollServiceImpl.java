@@ -1,10 +1,10 @@
 package com.parttime.enterprise.service.impl;
 
-import com.parttime.enterprise.dao.AttendanceRecordDao;
-import com.parttime.enterprise.dao.JobDao;
-import com.parttime.enterprise.dao.PayrollBatchDao;
-import com.parttime.enterprise.dao.PayrollItemDao;
-import com.parttime.enterprise.dao.ScheduleShiftDao;
+import com.parttime.enterprise.mapper.AttendanceRecordMapper;
+import com.parttime.enterprise.mapper.JobRateMapper;
+import com.parttime.enterprise.mapper.PayrollBatchMapper;
+import com.parttime.enterprise.mapper.PayrollItemMapper;
+import com.parttime.enterprise.mapper.ScheduleShiftMapper;
 import com.parttime.enterprise.pojo.cmd.PayrollBatchCmd;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
 import com.parttime.enterprise.pojo.entity.JobRate;
@@ -26,22 +26,22 @@ import java.util.stream.Collectors;
 @Service
 public class PayrollServiceImpl implements PayrollService {
 
-    private final PayrollBatchDao payrollBatchDao;
-    private final PayrollItemDao payrollItemDao;
-    private final ScheduleShiftDao scheduleShiftDao;
-    private final AttendanceRecordDao attendanceRecordDao;
-    private final JobDao jobDao;
+    private final PayrollBatchMapper payrollBatchMapper;
+    private final PayrollItemMapper payrollItemMapper;
+    private final ScheduleShiftMapper scheduleShiftMapper;
+    private final AttendanceRecordMapper attendanceRecordMapper;
+    private final JobRateMapper jobRateMapper;
 
-    public PayrollServiceImpl(PayrollBatchDao payrollBatchDao,
-                              PayrollItemDao payrollItemDao,
-                              ScheduleShiftDao scheduleShiftDao,
-                              AttendanceRecordDao attendanceRecordDao,
-                              JobDao jobDao) {
-        this.payrollBatchDao = payrollBatchDao;
-        this.payrollItemDao = payrollItemDao;
-        this.scheduleShiftDao = scheduleShiftDao;
-        this.attendanceRecordDao = attendanceRecordDao;
-        this.jobDao = jobDao;
+    public PayrollServiceImpl(PayrollBatchMapper payrollBatchMapper,
+                              PayrollItemMapper payrollItemMapper,
+                              ScheduleShiftMapper scheduleShiftMapper,
+                              AttendanceRecordMapper attendanceRecordMapper,
+                              JobRateMapper jobRateMapper) {
+        this.payrollBatchMapper = payrollBatchMapper;
+        this.payrollItemMapper = payrollItemMapper;
+        this.scheduleShiftMapper = scheduleShiftMapper;
+        this.attendanceRecordMapper = attendanceRecordMapper;
+        this.jobRateMapper = jobRateMapper;
     }
 
     @Override
@@ -55,21 +55,21 @@ public class PayrollServiceImpl implements PayrollService {
         batch.setTotalAmount(BigDecimal.ZERO);
         batch.setWorkerCount(0);
 
-        payrollBatchDao.save(batch);
+        payrollBatchMapper.insert(batch);
 
         return toBatchResponse(batch);
     }
 
     @Override
     public PayrollBatchVO calculateBatch(Long batchId) {
-        PayrollBatch batch = payrollBatchDao.findById(batchId)
+        PayrollBatch batch = payrollBatchMapper.findById(batchId)
                 .orElseThrow(() -> new RuntimeException("Payroll batch not found: " + batchId));
 
         if (!"DRAFT".equals(batch.getStatus())) {
             throw new RuntimeException("Cannot calculate batch in status: " + batch.getStatus());
         }
 
-        List<ScheduleShift> shifts = scheduleShiftDao.findByDateRange(
+        List<ScheduleShift> shifts = scheduleShiftMapper.findByDateRange(
                 batch.getPeriodStart(), batch.getPeriodEnd());
 
         Map<String, List<ScheduleShift>> grouped = shifts.stream()
@@ -87,7 +87,7 @@ public class PayrollServiceImpl implements PayrollService {
                     .map(ScheduleShift::getId)
                     .collect(Collectors.toList());
 
-            List<AttendanceRecord> attendanceRecords = attendanceRecordDao.findByShiftIds(shiftIds);
+            List<AttendanceRecord> attendanceRecords = attendanceRecordMapper.findByShiftIds(shiftIds);
 
             BigDecimal totalHours = BigDecimal.ZERO;
             for (AttendanceRecord ar : attendanceRecords) {
@@ -96,7 +96,7 @@ public class PayrollServiceImpl implements PayrollService {
                 }
             }
 
-            List<JobRate> rates = jobDao.findRatesByJobId(jobId);
+            List<JobRate> rates = jobRateMapper.findByJobId(jobId);
             if (rates.isEmpty()) {
                 continue;
             }
@@ -132,26 +132,26 @@ public class PayrollServiceImpl implements PayrollService {
             totalAmount = totalAmount.add(totalPay);
         }
 
-        payrollItemDao.saveAll(items);
+        payrollItemMapper.insertBatch(items);
 
         batch.setStatus("CALCULATED");
         batch.setTotalAmount(totalAmount);
         batch.setWorkerCount(items.size());
-        payrollBatchDao.update(batch);
+        payrollBatchMapper.update(batch);
 
         return toBatchResponse(batch);
     }
 
     @Override
     public PayrollBatchVO confirmBatch(Long batchId) {
-        PayrollBatch batch = payrollBatchDao.findById(batchId)
+        PayrollBatch batch = payrollBatchMapper.findById(batchId)
                 .orElseThrow(() -> new RuntimeException("Payroll batch not found: " + batchId));
 
         if (!"CALCULATED".equals(batch.getStatus())) {
             throw new RuntimeException("Cannot confirm batch in status: " + batch.getStatus());
         }
 
-        payrollBatchDao.updateStatus(batchId, "CONFIRMED");
+        payrollBatchMapper.updateStatus(batchId, "CONFIRMED");
         batch.setStatus("CONFIRMED");
 
         return toBatchResponse(batch);
@@ -159,14 +159,14 @@ public class PayrollServiceImpl implements PayrollService {
 
     @Override
     public PayrollBatchVO payBatch(Long batchId) {
-        PayrollBatch batch = payrollBatchDao.findById(batchId)
+        PayrollBatch batch = payrollBatchMapper.findById(batchId)
                 .orElseThrow(() -> new RuntimeException("Payroll batch not found: " + batchId));
 
         if (!"CONFIRMED".equals(batch.getStatus())) {
             throw new RuntimeException("Cannot pay batch in status: " + batch.getStatus());
         }
 
-        payrollBatchDao.updateStatus(batchId, "PAID");
+        payrollBatchMapper.updateStatus(batchId, "PAID");
         batch.setStatus("PAID");
 
         return toBatchResponse(batch);
@@ -174,14 +174,14 @@ public class PayrollServiceImpl implements PayrollService {
 
     @Override
     public PayrollBatchVO getBatchById(Long batchId) {
-        PayrollBatch batch = payrollBatchDao.findById(batchId)
+        PayrollBatch batch = payrollBatchMapper.findById(batchId)
                 .orElseThrow(() -> new RuntimeException("Payroll batch not found: " + batchId));
         return toBatchResponse(batch);
     }
 
     @Override
     public List<PayrollBatchVO> getBatchesByCompany(Long companyId) {
-        return payrollBatchDao.findByCompanyId(companyId)
+        return payrollBatchMapper.findByCompanyId(companyId)
                 .stream()
                 .map(this::toBatchResponse)
                 .collect(Collectors.toList());
@@ -189,10 +189,10 @@ public class PayrollServiceImpl implements PayrollService {
 
     @Override
     public List<PayrollItemVO> getBatchItems(Long batchId) {
-        payrollBatchDao.findById(batchId)
+        payrollBatchMapper.findById(batchId)
                 .orElseThrow(() -> new RuntimeException("Payroll batch not found: " + batchId));
 
-        return payrollItemDao.findByBatchId(batchId)
+        return payrollItemMapper.findByBatchId(batchId)
                 .stream()
                 .map(this::toItemResponse)
                 .collect(Collectors.toList());

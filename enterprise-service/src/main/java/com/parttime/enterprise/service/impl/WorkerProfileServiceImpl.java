@@ -1,9 +1,9 @@
 package com.parttime.enterprise.service.impl;
 
-import com.parttime.enterprise.dao.JobDao;
-import com.parttime.enterprise.dao.ScheduleShiftDao;
-import com.parttime.enterprise.dao.WorkerBlacklistDao;
-import com.parttime.enterprise.dao.WorkerEvaluationDao;
+import com.parttime.enterprise.mapper.JobMapper;
+import com.parttime.enterprise.mapper.ScheduleShiftMapper;
+import com.parttime.enterprise.mapper.WorkerBlacklistMapper;
+import com.parttime.enterprise.mapper.WorkerEvaluationMapper;
 import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.entity.WorkerBlacklist;
 import com.parttime.enterprise.pojo.entity.WorkerEvaluation;
@@ -19,34 +19,34 @@ import java.util.stream.Collectors;
 @Service
 public class WorkerProfileServiceImpl implements WorkerProfileService {
 
-    private final WorkerBlacklistDao blacklistDao;
-    private final WorkerEvaluationDao evaluationDao;
-    private final ScheduleShiftDao shiftDao;
-    private final JobDao jobDao;
+    private final WorkerBlacklistMapper blacklistMapper;
+    private final WorkerEvaluationMapper evaluationMapper;
+    private final ScheduleShiftMapper shiftMapper;
+    private final JobMapper jobMapper;
 
-    public WorkerProfileServiceImpl(WorkerBlacklistDao blacklistDao,
-                                    WorkerEvaluationDao evaluationDao,
-                                    ScheduleShiftDao shiftDao,
-                                    JobDao jobDao) {
-        this.blacklistDao = blacklistDao;
-        this.evaluationDao = evaluationDao;
-        this.shiftDao = shiftDao;
-        this.jobDao = jobDao;
+    public WorkerProfileServiceImpl(WorkerBlacklistMapper blacklistMapper,
+                                    WorkerEvaluationMapper evaluationMapper,
+                                    ScheduleShiftMapper shiftMapper,
+                                    JobMapper jobMapper) {
+        this.blacklistMapper = blacklistMapper;
+        this.evaluationMapper = evaluationMapper;
+        this.shiftMapper = shiftMapper;
+        this.jobMapper = jobMapper;
     }
 
     @Override
     public WorkerProfileVO getWorkerProfile(Long companyId, Long workerId) {
-        boolean isBlacklisted = blacklistDao.findByCompanyIdAndWorkerId(companyId, workerId).isPresent();
+        boolean isBlacklisted = blacklistMapper.findByCompanyIdAndWorkerId(companyId, workerId).isPresent();
         String blacklistReason = null;
         if (isBlacklisted) {
-            blacklistReason = blacklistDao.findByCompanyIdAndWorkerId(companyId, workerId)
+            blacklistReason = blacklistMapper.findByCompanyIdAndWorkerId(companyId, workerId)
                     .map(WorkerBlacklist::getReason).orElse(null);
         }
 
-        Double avgRating = evaluationDao.findAvgRatingByWorkerIdAndCompanyId(workerId, companyId);
-        List<WorkerEvaluation> evaluations = evaluationDao.findByWorkerIdAndCompanyId(workerId, companyId);
+        Double avgRating = evaluationMapper.findAvgRatingByWorkerIdAndCompanyId(workerId, companyId);
+        List<WorkerEvaluation> evaluations = evaluationMapper.findByWorkerIdAndCompanyId(workerId, companyId);
 
-        List<ScheduleShift> completedShifts = shiftDao.findCompletedByWorkerIdAndCompanyId(workerId, companyId);
+        List<ScheduleShift> completedShifts = shiftMapper.findCompletedByWorkerIdAndCompanyId(workerId, companyId);
         List<WorkHistoryVO> workHistory = completedShifts.stream().map(shift -> {
             WorkHistoryVO wh = new WorkHistoryVO();
             wh.setShiftId(shift.getId());
@@ -54,7 +54,7 @@ public class WorkerProfileServiceImpl implements WorkerProfileService {
             wh.setShiftDate(shift.getShiftDate());
             wh.setStartTime(shift.getStartTime());
             wh.setEndTime(shift.getEndTime());
-            jobDao.findById(shift.getJobId()).ifPresent(job -> wh.setJobTitle(job.getTitle()));
+            jobMapper.findById(shift.getJobId()).ifPresent(job -> wh.setJobTitle(job.getTitle()));
             return wh;
         }).collect(Collectors.toList());
 
@@ -80,7 +80,7 @@ public class WorkerProfileServiceImpl implements WorkerProfileService {
         evaluation.setWorkerId(workerId);
         evaluation.setRating(rating);
         evaluation.setComment(comment);
-        evaluationDao.save(evaluation);
+        evaluationMapper.insert(evaluation);
 
         EvaluationVO response = new EvaluationVO();
         response.setId(evaluation.getId());
@@ -99,22 +99,22 @@ public class WorkerProfileServiceImpl implements WorkerProfileService {
         blacklist.setCompanyId(companyId);
         blacklist.setWorkerId(workerId);
         blacklist.setReason(reason);
-        blacklistDao.save(blacklist);
+        blacklistMapper.insert(blacklist);
     }
 
     @Override
     public void removeFromBlacklist(Long companyId, Long workerId) {
-        blacklistDao.deleteByCompanyIdAndWorkerId(companyId, workerId);
+        blacklistMapper.deleteByCompanyIdAndWorkerId(companyId, workerId);
     }
 
     @Override
     public boolean isBlacklisted(Long companyId, Long workerId) {
-        return blacklistDao.findByCompanyIdAndWorkerId(companyId, workerId).isPresent();
+        return blacklistMapper.findByCompanyIdAndWorkerId(companyId, workerId).isPresent();
     }
 
     @Override
     public List<WorkHistoryVO> getWorkHistory(Long workerId, Long companyId) {
-        List<ScheduleShift> completedShifts = shiftDao.findCompletedByWorkerIdAndCompanyId(workerId, companyId);
+        List<ScheduleShift> completedShifts = shiftMapper.findCompletedByWorkerIdAndCompanyId(workerId, companyId);
         return completedShifts.stream().map(shift -> {
             WorkHistoryVO wh = new WorkHistoryVO();
             wh.setShiftId(shift.getId());
@@ -122,14 +122,14 @@ public class WorkerProfileServiceImpl implements WorkerProfileService {
             wh.setShiftDate(shift.getShiftDate());
             wh.setStartTime(shift.getStartTime());
             wh.setEndTime(shift.getEndTime());
-            jobDao.findById(shift.getJobId()).ifPresent(job -> wh.setJobTitle(job.getTitle()));
+            jobMapper.findById(shift.getJobId()).ifPresent(job -> wh.setJobTitle(job.getTitle()));
             return wh;
         }).collect(Collectors.toList());
     }
 
     @Override
     public List<EvaluationVO> getEvaluations(Long workerId, Long companyId) {
-        return evaluationDao.findByWorkerIdAndCompanyId(workerId, companyId).stream()
+        return evaluationMapper.findByWorkerIdAndCompanyId(workerId, companyId).stream()
                 .map(e -> {
                     EvaluationVO response = new EvaluationVO();
                     response.setId(e.getId());

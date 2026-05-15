@@ -1,7 +1,7 @@
 package com.parttime.enterprise.service.impl;
 
-import com.parttime.enterprise.dao.NotificationLogDao;
-import com.parttime.enterprise.dao.NotificationTemplateDao;
+import com.parttime.enterprise.mapper.NotificationLogMapper;
+import com.parttime.enterprise.mapper.NotificationTemplateMapper;
 import com.parttime.enterprise.pojo.cmd.NotificationTemplateCmd;
 import com.parttime.enterprise.pojo.entity.NotificationLog;
 import com.parttime.enterprise.pojo.entity.NotificationTemplate;
@@ -16,13 +16,13 @@ import java.util.stream.Collectors;
 @Service
 public class NotificationServiceImpl implements NotificationService {
 
-    private final NotificationLogDao notificationLogDao;
-    private final NotificationTemplateDao notificationTemplateDao;
+    private final NotificationLogMapper notificationLogMapper;
+    private final NotificationTemplateMapper notificationTemplateMapper;
 
-    public NotificationServiceImpl(NotificationLogDao notificationLogDao,
-                                    NotificationTemplateDao notificationTemplateDao) {
-        this.notificationLogDao = notificationLogDao;
-        this.notificationTemplateDao = notificationTemplateDao;
+    public NotificationServiceImpl(NotificationLogMapper notificationLogMapper,
+                                    NotificationTemplateMapper notificationTemplateMapper) {
+        this.notificationLogMapper = notificationLogMapper;
+        this.notificationTemplateMapper = notificationTemplateMapper;
     }
 
     @Override
@@ -36,35 +36,35 @@ public class NotificationServiceImpl implements NotificationService {
         log.setTitle(title);
         log.setContent(content);
         log.setStatus("PENDING");
-        notificationLogDao.save(log);
+        notificationLogMapper.insert(log);
         return toResponse(log);
     }
 
     @Override
     public List<NotificationLogVO> getNotificationsByRecipient(Long recipientId, String recipientType) {
-        return notificationLogDao.findByRecipientIdAndRecipientType(recipientId, recipientType).stream()
+        return notificationLogMapper.findByRecipientIdAndRecipientType(recipientId, recipientType).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
     @Override
     public void markAsSent(Long id) {
-        notificationLogDao.markSent(id, LocalDateTime.now());
+        notificationLogMapper.markSent(id, LocalDateTime.now());
     }
 
     @Override
     public void markAsFailed(Long id, String error) {
-        notificationLogDao.updateStatusWithError(id, "FAILED", error);
+        notificationLogMapper.updateStatusWithError(id, "FAILED", error);
     }
 
     @Override
     public List<NotificationTemplate> getTemplatesByType(String type) {
-        return notificationTemplateDao.findByType(type);
+        return notificationTemplateMapper.findByType(type);
     }
 
     @Override
     public List<NotificationTemplate> getNotificationTemplates(String type, String channel) {
-        return notificationTemplateDao.findAll(type, channel);
+        return notificationTemplateMapper.findAll(type, channel);
     }
 
     @Override
@@ -74,23 +74,23 @@ public class NotificationServiceImpl implements NotificationService {
         template.setChannel(request.getChannel());
         template.setTitleTemplate(request.getTitleTemplate());
         template.setContentTemplate(request.getContentTemplate());
-        notificationTemplateDao.save(template);
+        notificationTemplateMapper.insert(template);
         return template;
     }
 
     @Override
     public NotificationTemplate updateNotificationTemplate(Long id, NotificationTemplateCmd request) {
-        NotificationTemplate template = notificationTemplateDao.findById(id)
+        NotificationTemplate template = notificationTemplateMapper.findById(id)
                 .orElseThrow(() -> new RuntimeException("Notification template not found: " + id));
         template.setTitleTemplate(request.getTitleTemplate());
         template.setContentTemplate(request.getContentTemplate());
-        notificationTemplateDao.update(template);
+        notificationTemplateMapper.update(template);
         return template;
     }
 
     @Override
     public void deleteNotificationTemplate(Long id) {
-        notificationTemplateDao.deleteById(id);
+        notificationTemplateMapper.deleteById(id);
     }
 
     private NotificationLogVO toResponse(NotificationLog log) {
