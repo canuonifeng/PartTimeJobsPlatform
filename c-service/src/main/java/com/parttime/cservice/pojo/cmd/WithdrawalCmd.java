@@ -1,11 +1,11 @@
 package com.parttime.cservice.pojo.cmd;
 
+import lombok.Data;
+
 import java.math.BigDecimal;
 
+@Data
 public class WithdrawalCmd {
 
     private BigDecimal amount;
-
-    public BigDecimal getAmount() { return amount; }
-    public void setAmount(BigDecimal amount) { this.amount = amount; }
 }

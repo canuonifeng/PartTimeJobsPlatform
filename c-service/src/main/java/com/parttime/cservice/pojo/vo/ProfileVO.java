@@ -1,7 +1,9 @@
 package com.parttime.cservice.pojo.vo;
 
+import lombok.Data;
 import java.time.LocalDateTime;
 
+@Data
 public class ProfileVO {
 
     private Long workerId;
@@ -12,28 +14,4 @@ public class ProfileVO {
     private String availableDays;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public Long getWorkerId() { return workerId; }
-    public void setWorkerId(Long workerId) { this.workerId = workerId; }
-
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
-
-    public String getAvatarUrl() { return avatarUrl; }
-    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
-
-    public String getSkills() { return skills; }
-    public void setSkills(String skills) { this.skills = skills; }
-
-    public String getAvailableDays() { return availableDays; }
-    public void setAvailableDays(String availableDays) { this.availableDays = availableDays; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
