@@ -1,6 +1,8 @@
 package com.parttime.cservice.core.service;
 
 import com.parttime.cservice.core.auth.JwtTokenProvider;
+import com.parttime.cservice.core.dto.WeChatLoginRequest;
+import com.parttime.cservice.core.dto.WeChatLoginResponse;
 import com.parttime.cservice.core.dto.WorkerRegisterRequest;
 import com.parttime.cservice.core.dto.WorkerResponse;
 import com.parttime.cservice.core.model.Worker;
@@ -16,6 +18,7 @@ public class WorkerService {
 
     private final ConcurrentHashMap<Long, Worker> workers = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Long> wechatCodeIndex = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Long> openIdIndex = new ConcurrentHashMap<>();
     private final AtomicLong idCounter = new AtomicLong(1);
     private final JwtTokenProvider jwtTokenProvider;
 
@@ -37,6 +40,26 @@ public class WorkerService {
             return worker.getId();
         });
         return jwtTokenProvider.generateToken(String.valueOf(workerId), List.of("ROLE_WORKER"));
+    }
+
+    public WeChatLoginResponse loginWithWechat(String code) {
+        String openId = exchangeWechatCode(code);
+        Long workerId = openIdIndex.computeIfAbsent(openId, id -> {
+            Worker worker = new Worker(idCounter.getAndIncrement(), null, null, null, openId, null, null, LocalDateTime.now());
+            workers.put(worker.getId(), worker);
+            return worker.getId();
+        });
+        Worker worker = workers.get(workerId);
+        String token = jwtTokenProvider.generateToken(String.valueOf(workerId), List.of("ROLE_WORKER"));
+        return new WeChatLoginResponse(token, workerId, openId, worker.getNickname());
+    }
+
+    public WorkerResponse getWorkerByOpenId(String openId) {
+        Long workerId = openIdIndex.get(openId);
+        if (workerId == null) {
+            throw new RuntimeException("Worker not found with openId: " + openId);
+        }
+        return getWorkerById(workerId);
     }
 
     public WorkerResponse getWorkerById(Long id) {
@@ -64,12 +87,19 @@ public class WorkerService {
         return toResponse(worker);
     }
 
+    private String exchangeWechatCode(String code) {
+        return "openid_" + code;
+    }
+
     private WorkerResponse toResponse(Worker worker) {
         WorkerResponse response = new WorkerResponse();
         response.setId(worker.getId());
         response.setName(worker.getName());
         response.setPhone(worker.getPhone());
         response.setAvatar(worker.getAvatar());
+        response.setOpenId(worker.getWechatOpenId());
+        response.setNickname(worker.getNickname());
+        response.setAvatarUrl(worker.getAvatarUrl());
         response.setCreatedAt(worker.getCreatedAt());
         return response;
     }

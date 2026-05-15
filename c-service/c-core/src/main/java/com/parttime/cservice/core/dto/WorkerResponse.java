@@ -7,6 +7,9 @@ public class WorkerResponse {
     private String name;
     private String phone;
     private String avatar;
+    private String openId;
+    private String nickname;
+    private String avatarUrl;
     private LocalDateTime createdAt;
 
     public Long getId() { return id; }
@@ -17,6 +20,12 @@ public class WorkerResponse {
     public void setPhone(String phone) { this.phone = phone; }
     public String getAvatar() { return avatar; }
     public void setAvatar(String avatar) { this.avatar = avatar; }
+    public String getOpenId() { return openId; }
+    public void setOpenId(String openId) { this.openId = openId; }
+    public String getNickname() { return nickname; }
+    public void setNickname(String nickname) { this.nickname = nickname; }
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

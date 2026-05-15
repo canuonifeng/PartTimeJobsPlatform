@@ -1,1 +1,17 @@
+/Users/nifeng/workspace/my/demo/platform-service/platform-core/src/main/java/com/parttime/platform/core/service/RegistrationService.java
+/Users/nifeng/workspace/my/demo/platform-service/platform-core/src/main/java/com/parttime/platform/core/repository/SystemConfigRepository.java
+/Users/nifeng/workspace/my/demo/platform-service/platform-core/src/main/java/com/parttime/platform/core/service/JobReportService.java
+/Users/nifeng/workspace/my/demo/platform-service/platform-core/src/main/java/com/parttime/platform/core/auth/JwtTokenProvider.java
+/Users/nifeng/workspace/my/demo/platform-service/platform-core/src/main/java/com/parttime/platform/core/auth/JwtConfig.java
+/Users/nifeng/workspace/my/demo/platform-service/platform-core/src/main/java/com/parttime/platform/core/service/JobCategoryService.java
+/Users/nifeng/workspace/my/demo/platform-service/platform-core/src/main/java/com/parttime/platform/core/service/SystemConfigService.java
+/Users/nifeng/workspace/my/demo/platform-service/platform-core/src/main/java/com/parttime/platform/core/domain/JobCategory.java
+/Users/nifeng/workspace/my/demo/platform-service/platform-core/src/main/java/com/parttime/platform/core/service/DashboardService.java
+/Users/nifeng/workspace/my/demo/platform-service/platform-core/src/main/java/com/parttime/platform/core/domain/EnterpriseRegistration.java
+/Users/nifeng/workspace/my/demo/platform-service/platform-core/src/main/java/com/parttime/platform/core/repository/JobCategoryRepository.java
+/Users/nifeng/workspace/my/demo/platform-service/platform-core/src/main/java/com/parttime/platform/core/domain/JobReport.java
 /Users/nifeng/workspace/my/demo/platform-service/platform-core/src/main/java/com/parttime/platform/core/config/RedisConfig.java
+/Users/nifeng/workspace/my/demo/platform-service/platform-core/src/main/java/com/parttime/platform/core/exception/BusinessException.java
+/Users/nifeng/workspace/my/demo/platform-service/platform-core/src/main/java/com/parttime/platform/core/domain/SystemConfig.java
+/Users/nifeng/workspace/my/demo/platform-service/platform-core/src/main/java/com/parttime/platform/core/repository/EnterpriseRegistrationRepository.java
+/Users/nifeng/workspace/my/demo/platform-service/platform-core/src/main/java/com/parttime/platform/core/repository/JobReportRepository.java

@@ -1,6 +1,7 @@
 package com.parttime.cservice.web.controller;
 
 import com.parttime.cservice.core.auth.JwtTokenProvider;
+import com.parttime.cservice.core.dto.WeChatLoginResponse;
 import com.parttime.cservice.core.dto.WorkerRegisterRequest;
 import com.parttime.cservice.core.dto.WorkerResponse;
 import com.parttime.cservice.core.service.WorkerService;
@@ -94,6 +95,22 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.name").value("John"))
                 .andExpect(jsonPath("$.phone").value("13800138000"));
+    }
+
+    @Test
+    void wechatLogin_shouldReturn200WithToken() throws Exception {
+        WeChatLoginResponse wechatResponse = new WeChatLoginResponse("wechat.jwt.token", 1L, "openid_123", "nickname");
+
+        when(workerService.loginWithWechat("test_code")).thenReturn(wechatResponse);
+
+        mockMvc.perform(post("/api/auth/wechat-login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"code\":\"test_code\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("wechat.jwt.token"))
+                .andExpect(jsonPath("$.workerId").value(1))
+                .andExpect(jsonPath("$.openId").value("openid_123"))
+                .andExpect(jsonPath("$.nickname").value("nickname"));
     }
 
     @Test

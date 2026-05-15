@@ -49,6 +49,11 @@ public class ScheduleShiftRepositoryImpl implements ScheduleShiftRepository {
     }
 
     @Override
+    public List<ScheduleShift> findByDateRange(LocalDate startDate, LocalDate endDate) {
+        return mapper.findByDateRange(startDate, endDate);
+    }
+
+    @Override
     public void updateStatus(Long id, String status) {
         mapper.updateStatus(id, status);
     }
@@ -56,5 +61,10 @@ public class ScheduleShiftRepositoryImpl implements ScheduleShiftRepository {
     @Override
     public void delete(Long id) {
         mapper.delete(id);
+    }
+
+    @Override
+    public List<ScheduleShift> findCompletedByWorkerIdAndCompanyId(Long workerId, Long companyId) {
+        return mapper.findCompletedByWorkerIdAndCompanyId(workerId, companyId);
     }
 }

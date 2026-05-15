@@ -1,6 +1,8 @@
 package com.parttime.cservice.web.controller;
 
 import com.parttime.cservice.core.auth.JwtTokenProvider;
+import com.parttime.cservice.core.dto.WeChatLoginRequest;
+import com.parttime.cservice.core.dto.WeChatLoginResponse;
 import com.parttime.cservice.core.dto.WorkerLoginRequest;
 import com.parttime.cservice.core.dto.WorkerLoginResponse;
 import com.parttime.cservice.core.dto.WorkerRegisterRequest;
@@ -42,6 +44,12 @@ public class AuthController {
         String token = workerService.login(request.wechatCode());
         String userId = jwtTokenProvider.getUserIdFromToken(token);
         return ResponseEntity.ok(new WorkerLoginResponse(token, Long.valueOf(userId)));
+    }
+
+    @PostMapping("/wechat-login")
+    public ResponseEntity<WeChatLoginResponse> wechatLogin(@RequestBody WeChatLoginRequest request) {
+        WeChatLoginResponse response = workerService.loginWithWechat(request.code());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/profile")

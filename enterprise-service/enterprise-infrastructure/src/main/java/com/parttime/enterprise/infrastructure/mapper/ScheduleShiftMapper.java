@@ -26,7 +26,11 @@ public interface ScheduleShiftMapper {
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
 
+    List<ScheduleShift> findByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
     int updateStatus(@Param("id") Long id, @Param("status") String status);
 
     int delete(Long id);
+
+    List<ScheduleShift> findCompletedByWorkerIdAndCompanyId(@Param("workerId") Long workerId, @Param("companyId") Long companyId);
 }

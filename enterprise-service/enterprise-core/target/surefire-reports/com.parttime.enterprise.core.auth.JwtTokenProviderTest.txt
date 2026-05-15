@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.parttime.enterprise.core.auth.JwtTokenProviderTest
 -------------------------------------------------------------------------------
-Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.950 s -- in com.parttime.enterprise.core.auth.JwtTokenProviderTest
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.510 s -- in com.parttime.enterprise.core.auth.JwtTokenProviderTest

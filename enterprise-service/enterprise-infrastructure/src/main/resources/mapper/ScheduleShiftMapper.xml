@@ -42,6 +42,12 @@
         SELECT * FROM schedule_shifts WHERE job_id = #{jobId} AND shift_date = #{shiftDate} ORDER BY start_time
     </select>
 
+    <select id="findByDateRange" resultMap="ShiftResultMap">
+        SELECT * FROM schedule_shifts
+        WHERE shift_date BETWEEN #{startDate} AND #{endDate}
+        ORDER BY worker_id, job_id, shift_date
+    </select>
+
     <select id="findByWorkerIdAndDateRange" resultMap="ShiftResultMap">
         SELECT * FROM schedule_shifts
         WHERE worker_id = #{workerId} AND shift_date BETWEEN #{startDate} AND #{endDate}
@@ -55,5 +61,12 @@
     <delete id="delete">
         DELETE FROM schedule_shifts WHERE id = #{id}
     </delete>
+
+    <select id="findCompletedByWorkerIdAndCompanyId" resultMap="ShiftResultMap">
+        SELECT ss.* FROM schedule_shifts ss
+        JOIN jobs j ON ss.job_id = j.id
+        WHERE ss.worker_id = #{workerId} AND j.company_id = #{companyId} AND ss.status = 'CHECKED_OUT'
+        ORDER BY ss.shift_date DESC
+    </select>
 
 </mapper>

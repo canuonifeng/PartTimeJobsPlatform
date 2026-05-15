@@ -20,7 +20,11 @@ public interface ScheduleShiftRepository {
 
     List<ScheduleShift> findByWorkerIdAndDateRange(Long workerId, LocalDate startDate, LocalDate endDate);
 
+    List<ScheduleShift> findByDateRange(LocalDate startDate, LocalDate endDate);
+
     void updateStatus(Long id, String status);
 
     void delete(Long id);
+
+    List<ScheduleShift> findCompletedByWorkerIdAndCompanyId(Long workerId, Long companyId);
 }

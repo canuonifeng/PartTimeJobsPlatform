@@ -1,6 +1,7 @@
 package com.parttime.cservice.core.service;
 
 import com.parttime.cservice.core.auth.JwtTokenProvider;
+import com.parttime.cservice.core.dto.WeChatLoginResponse;
 import com.parttime.cservice.core.dto.WorkerLoginRequest;
 import com.parttime.cservice.core.dto.WorkerRegisterRequest;
 import com.parttime.cservice.core.dto.WorkerResponse;
@@ -104,5 +105,42 @@ class WorkerServiceTest {
         assertThat(updated.getName()).isEqualTo("New Name");
         assertThat(updated.getPhone()).isEqualTo("13800138000");
         assertThat(updated.getAvatar()).isEqualTo("http://avatar");
+    }
+
+    @Test
+    void loginWithWechat_shouldReturnResponseWithToken() {
+        WeChatLoginResponse response = workerService.loginWithWechat("test_code");
+
+        assertThat(response).isNotNull();
+        assertThat(response.getToken()).isNotBlank();
+        assertThat(response.getWorkerId()).isNotNull();
+        assertThat(response.getOpenId()).isEqualTo("openid_test_code");
+    }
+
+    @Test
+    void loginWithWechat_sameCode_shouldReturnSameWorker() {
+        WeChatLoginResponse r1 = workerService.loginWithWechat("same_code");
+        WeChatLoginResponse r2 = workerService.loginWithWechat("same_code");
+
+        assertThat(r1.getWorkerId()).isEqualTo(r2.getWorkerId());
+        assertThat(r1.getOpenId()).isEqualTo(r2.getOpenId());
+    }
+
+    @Test
+    void loginWithWechat_differentCodes_shouldReturnDifferentWorkers() {
+        WeChatLoginResponse r1 = workerService.loginWithWechat("code_1");
+        WeChatLoginResponse r2 = workerService.loginWithWechat("code_2");
+
+        assertThat(r1.getWorkerId()).isNotEqualTo(r2.getWorkerId());
+        assertThat(r1.getOpenId()).isNotEqualTo(r2.getOpenId());
+    }
+
+    @Test
+    void getWorkerByOpenId_shouldReturnWorker() {
+        WeChatLoginResponse loginResponse = workerService.loginWithWechat("find_by_openid");
+        WorkerResponse worker = workerService.getWorkerByOpenId("openid_find_by_openid");
+
+        assertThat(worker).isNotNull();
+        assertThat(worker.getId()).isEqualTo(loginResponse.getWorkerId());
     }
 }

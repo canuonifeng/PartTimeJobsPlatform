@@ -1,0 +1,8 @@
+com/parttime/platform/infrastructure/mapper/EnterpriseRegistrationMapper.class
+com/parttime/platform/infrastructure/repository/JobReportRepositoryImpl.class
+com/parttime/platform/infrastructure/repository/SystemConfigRepositoryImpl.class
+com/parttime/platform/infrastructure/mapper/JobReportMapper.class
+com/parttime/platform/infrastructure/repository/JobCategoryRepositoryImpl.class
+com/parttime/platform/infrastructure/mapper/SystemConfigMapper.class
+com/parttime/platform/infrastructure/mapper/JobCategoryMapper.class
+com/parttime/platform/infrastructure/repository/EnterpriseRegistrationRepositoryImpl.class

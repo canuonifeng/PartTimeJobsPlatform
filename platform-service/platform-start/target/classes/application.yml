@@ -28,6 +28,10 @@ spring:
           max-idle: 8
           min-idle: 0
 
+jwt:
+  secret: parttime-platform-jwt-secret-key-must-be-at-least-256-bits-long-enough
+  expiration: 86400000
+
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
   type-aliases-package: com.parttime.platform.api.dto

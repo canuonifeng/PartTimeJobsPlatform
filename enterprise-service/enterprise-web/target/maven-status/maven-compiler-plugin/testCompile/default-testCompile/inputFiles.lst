@@ -1,6 +1,9 @@
+/Users/nifeng/workspace/my/demo/enterprise-service/enterprise-web/src/test/java/com/parttime/enterprise/web/controller/PayrollControllerTest.java
 /Users/nifeng/workspace/my/demo/enterprise-service/enterprise-web/src/test/java/com/parttime/enterprise/web/TestEnterpriseWebApplication.java
+/Users/nifeng/workspace/my/demo/enterprise-service/enterprise-web/src/test/java/com/parttime/enterprise/web/controller/WorkerProfileControllerTest.java
 /Users/nifeng/workspace/my/demo/enterprise-service/enterprise-web/src/test/java/com/parttime/enterprise/web/controller/JobCategoryControllerTest.java
 /Users/nifeng/workspace/my/demo/enterprise-service/enterprise-web/src/test/java/com/parttime/enterprise/web/controller/ApplicationControllerTest.java
+/Users/nifeng/workspace/my/demo/enterprise-service/enterprise-web/src/test/java/com/parttime/enterprise/web/controller/NotificationControllerTest.java
 /Users/nifeng/workspace/my/demo/enterprise-service/enterprise-web/src/test/java/com/parttime/enterprise/web/auth/JwtAuthenticationFilterTest.java
 /Users/nifeng/workspace/my/demo/enterprise-service/enterprise-web/src/test/java/com/parttime/enterprise/web/controller/AuthControllerTest.java
 /Users/nifeng/workspace/my/demo/enterprise-service/enterprise-web/src/test/java/com/parttime/enterprise/web/controller/ScheduleControllerTest.java

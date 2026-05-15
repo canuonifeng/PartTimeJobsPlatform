@@ -1,7 +1,11 @@
 com/parttime/enterprise/core/service/ScheduleServiceTest.class
 com/parttime/enterprise/core/auth/GenHash.class
 com/parttime/enterprise/core/auth/JwtTokenProviderTest.class
+com/parttime/enterprise/core/service/PayrollServiceTest.class
 com/parttime/enterprise/core/auth/RoleTest.class
 com/parttime/enterprise/core/service/JobServiceTest.class
 com/parttime/enterprise/core/service/ApplicationServiceTest.class
 com/parttime/enterprise/core/service/JobCategoryServiceTest.class
+com/parttime/enterprise/core/service/WorkerProfileServiceTest.class
+com/parttime/enterprise/core/service/WeChatTemplateServiceTest.class
+com/parttime/enterprise/core/service/NotificationServiceTest.class

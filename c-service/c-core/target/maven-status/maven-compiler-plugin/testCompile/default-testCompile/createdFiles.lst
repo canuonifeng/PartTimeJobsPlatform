@@ -1,5 +1,8 @@
 com/parttime/cservice/core/service/WorkerServiceTest.class
 com/parttime/cservice/core/service/JobServiceTest.class
-com/parttime/cservice/core/TestDataFactory.class
-com/parttime/cservice/core/auth/JwtTokenProviderTest.class
+com/parttime/cservice/core/service/WithdrawalServiceTest.class
 com/parttime/cservice/core/service/AttendanceServiceTest.class
+com/parttime/cservice/core/TestDataFactory.class
+com/parttime/cservice/core/service/ProfileServiceTest.class
+com/parttime/cservice/core/service/NotificationServiceTest.class
+com/parttime/cservice/core/auth/JwtTokenProviderTest.class
