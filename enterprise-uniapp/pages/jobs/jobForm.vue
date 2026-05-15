@@ -1,0 +1,432 @@
+<script setup>
+import { ref, onMounted } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
+import { createJob, updateJob, getJob, getCategories, createRate, createSchedule, getRates, getSchedules } from '@/api/jobs'
+
+const isEdit = ref(false)
+const jobId = ref('')
+const saving = ref(false)
+const categories = ref([])
+
+const formData = ref({
+  title: '',
+  description: '',
+  location: '',
+  categoryId: '',
+  headcount: 1,
+  deadline: ''
+})
+
+const rates = ref([])
+const schedules = ref([])
+
+const rateTypeLabels = ['时薪', '日薪', '计件']
+const rateTypeValues = ['HOURLY', 'DAILY', 'PIECEWORK']
+
+const categoryNames = ref([])
+
+onLoad(async (params) => {
+  if (params.id) {
+    isEdit.value = true
+    jobId.value = params.id
+  }
+  await loadCategories()
+  if (isEdit.value) {
+    await loadJobDetail()
+  }
+})
+
+async function loadCategories() {
+  try {
+    const res = await getCategories()
+    const list = Array.isArray(res) ? res : (res.data || res.records || [])
+    categories.value = list
+    categoryNames.value = list.map(c => c.name || c.categoryName || '')
+  } catch (e) {
+    console.error('Failed to load categories', e)
+  }
+}
+
+async function loadJobDetail() {
+  try {
+    const job = await getJob(jobId.value)
+    formData.value = {
+      title: job.title || '',
+      description: job.description || '',
+      location: job.location || '',
+      categoryId: job.categoryId || '',
+      headcount: job.headcount || 1,
+      deadline: job.deadline || ''
+    }
+    try {
+      const rateRes = await getRates(jobId.value)
+      rates.value = Array.isArray(rateRes) ? rateRes : []
+    } catch {}
+    try {
+      const schedRes = await getSchedules(jobId.value)
+      schedules.value = Array.isArray(schedRes) ? schedRes : []
+    } catch {}
+  } catch (e) {
+    uni.showToast({ title: '加载失败', icon: 'none' })
+  }
+}
+
+function addRate() {
+  rates.value.push({ type: 'HOURLY', amount: '', currency: 'CNY' })
+}
+
+function removeRate(index) {
+  rates.value.splice(index, 1)
+}
+
+function addSchedule() {
+  schedules.value.push({ date: '', startTime: '', endTime: '', slots: 1 })
+}
+
+function removeSchedule(index) {
+  schedules.value.splice(index, 1)
+}
+
+function onRateTypeChange(e, index) {
+  rates.value[index].type = rateTypeValues[e.detail.value]
+}
+
+function getRateTypeIndex(type) {
+  const i = rateTypeValues.indexOf(type)
+  return i >= 0 ? i : 0
+}
+
+function onCategoryChange(e) {
+  const idx = e.detail.value
+  const cat = categories.value[idx]
+  if (cat) {
+    formData.value.categoryId = cat.id || cat.categoryId || cat.code || ''
+  }
+}
+
+function getCategoryIndex() {
+  const id = formData.value.categoryId
+  return categories.value.findIndex(c => (c.id || c.categoryId || c.code) === id)
+}
+
+async function handleSave() {
+  if (!formData.value.title) {
+    uni.showToast({ title: '请输入职位标题', icon: 'none' })
+    return
+  }
+
+  saving.value = true
+  try {
+    let id = jobId.value
+
+    if (isEdit.value) {
+      await updateJob(id, formData.value)
+    } else {
+      const res = await createJob(formData.value)
+      id = res.id || res.data?.id || ''
+    }
+
+    for (const rate of rates.value) {
+      if (rate.amount) {
+        await createRate(id, { type: rate.type, amount: Number(rate.amount), currency: rate.currency || 'CNY' })
+      }
+    }
+
+    for (const sched of schedules.value) {
+      if (sched.date && sched.startTime && sched.endTime) {
+        await createSchedule(id, {
+          date: sched.date,
+          startTime: sched.startTime,
+          endTime: sched.endTime,
+          slots: Number(sched.slots) || 1
+        })
+      }
+    }
+
+    uni.showToast({ title: '保存成功', icon: 'success' })
+    setTimeout(() => uni.navigateBack(), 1500)
+  } catch (e) {
+    uni.showToast({ title: '保存失败', icon: 'none' })
+  } finally {
+    saving.value = false
+  }
+}
+</script>
+
+<template>
+  <view class="page form-page">
+    <scroll-view scroll-y class="form-scroll">
+      <view class="form-section">
+        <text class="section-title">基本信息</text>
+
+        <view class="form-item">
+          <text class="label">职位标题 *</text>
+          <input v-model="formData.title" class="input" placeholder="请输入职位标题" />
+        </view>
+
+        <view class="form-item">
+          <text class="label">职位描述</text>
+          <textarea v-model="formData.description" class="textarea" placeholder="请输入职位描述" />
+        </view>
+
+        <view class="form-item">
+          <text class="label">工作地点</text>
+          <input v-model="formData.location" class="input" placeholder="请输入工作地点" />
+        </view>
+
+        <view class="form-item">
+          <text class="label">职位类别</text>
+          <picker
+            mode="selector"
+            :range="categoryNames"
+            :value="getCategoryIndex()"
+            @change="onCategoryChange"
+          >
+            <view class="picker">
+              <text v-if="formData.categoryId" class="picker-value">{{ categoryNames[getCategoryIndex()] }}</text>
+              <text v-else class="picker-placeholder">请选择类别</text>
+            </view>
+          </picker>
+        </view>
+
+        <view class="form-item">
+          <text class="label">招聘人数</text>
+          <input v-model.number="formData.headcount" class="input" type="number" placeholder="招聘人数" />
+        </view>
+
+        <view class="form-item">
+          <text class="label">截止日期</text>
+          <picker
+            mode="date"
+            :value="formData.deadline"
+            @change="(e) => formData.deadline = e.detail.value"
+          >
+            <view class="picker">
+              <text v-if="formData.deadline" class="picker-value">{{ formData.deadline }}</text>
+              <text v-else class="picker-placeholder">请选择日期</text>
+            </view>
+          </picker>
+        </view>
+      </view>
+
+      <view class="form-section">
+        <view class="section-header">
+          <text class="section-title">薪资标准</text>
+          <text class="add-btn" @click="addRate">+ 添加</text>
+        </view>
+        <view v-for="(rate, index) in rates" :key="index" class="sub-item">
+          <view class="sub-row">
+            <picker
+              mode="selector"
+              :range="rateTypeLabels"
+              :value="getRateTypeIndex(rate.type)"
+              @change="(e) => onRateTypeChange(e, index)"
+            >
+              <view class="picker picker-sm">
+                <text>{{ rateTypeLabels[getRateTypeIndex(rate.type)] }}</text>
+              </view>
+            </picker>
+            <input v-model="rate.amount" class="input input-sm" type="digit" placeholder="金额" />
+            <text class="currency-label">CNY</text>
+            <text class="remove-btn" @click="removeRate(index)">删除</text>
+          </view>
+        </view>
+        <view v-if="rates.length === 0" class="empty-hint">
+          <text>暂无薪资标准，点击上方 "添加"</text>
+        </view>
+      </view>
+
+      <view class="form-section">
+        <view class="section-header">
+          <text class="section-title">排班时段</text>
+          <text class="add-btn" @click="addSchedule">+ 添加</text>
+        </view>
+        <view v-for="(sched, index) in schedules" :key="index" class="sub-item">
+          <view class="sub-row">
+            <picker mode="date" @change="(e) => sched.date = e.detail.value">
+              <view class="picker picker-sm">
+                <text>{{ sched.date || '日期' }}</text>
+              </view>
+            </picker>
+          </view>
+          <view class="sub-row">
+            <picker mode="time" @change="(e) => sched.startTime = e.detail.value">
+              <view class="picker picker-sm">
+                <text>{{ sched.startTime || '开始' }}</text>
+              </view>
+            </picker>
+            <text class="time-sep">至</text>
+            <picker mode="time" @change="(e) => sched.endTime = e.detail.value">
+              <view class="picker picker-sm">
+                <text>{{ sched.endTime || '结束' }}</text>
+              </view>
+            </picker>
+            <input v-model.number="sched.slots" class="input input-sm" type="number" placeholder="人数" />
+            <text class="remove-btn" @click="removeSchedule(index)">删除</text>
+          </view>
+        </view>
+        <view v-if="schedules.length === 0" class="empty-hint">
+          <text>暂无排班时段，点击上方 "添加"</text>
+        </view>
+      </view>
+
+      <view class="form-actions">
+        <button class="save-btn" :disabled="saving" @click="handleSave">
+          <text v-if="saving">保存中...</text>
+          <text v-else>保存</text>
+        </button>
+      </view>
+    </scroll-view>
+  </view>
+</template>
+
+<style>
+.form-page {
+  background: #f5f5f5;
+}
+.form-scroll {
+  padding: 24rpx 32rpx;
+}
+.form-section {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+}
+.section-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 20rpx;
+  display: block;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+.section-header .section-title {
+  margin-bottom: 0;
+}
+.add-btn {
+  font-size: 26rpx;
+  color: #007aff;
+  padding: 8rpx 12rpx;
+}
+.form-item {
+  margin-bottom: 24rpx;
+}
+.label {
+  display: block;
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 8rpx;
+}
+.input {
+  width: 100%;
+  height: 72rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+.textarea {
+  width: 100%;
+  height: 160rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 8rpx;
+  padding: 16rpx 20rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+.picker {
+  height: 72rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+  display: flex;
+  align-items: center;
+  background: #fff;
+}
+.picker-value {
+  font-size: 28rpx;
+  color: #333;
+}
+.picker-placeholder {
+  font-size: 28rpx;
+  color: #ccc;
+}
+.sub-item {
+  background: #f9f9f9;
+  border-radius: 12rpx;
+  padding: 16rpx;
+  margin-bottom: 12rpx;
+}
+.sub-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 8rpx;
+}
+.sub-row:last-child {
+  margin-bottom: 0;
+}
+.picker-sm {
+  height: 60rpx;
+  border-color: #ddd;
+  padding: 0 12rpx;
+  min-width: 100rpx;
+}
+.picker-sm text {
+  font-size: 24rpx;
+}
+.input-sm {
+  height: 60rpx;
+  font-size: 24rpx;
+  flex: 1;
+  min-width: 80rpx;
+  width: auto;
+}
+.currency-label {
+  font-size: 24rpx;
+  color: #999;
+  flex-shrink: 0;
+}
+.time-sep {
+  font-size: 24rpx;
+  color: #999;
+}
+.remove-btn {
+  font-size: 24rpx;
+  color: #ff3b30;
+  padding: 8rpx;
+  flex-shrink: 0;
+}
+.empty-hint {
+  text-align: center;
+  padding: 20rpx 0;
+  color: #ccc;
+  font-size: 24rpx;
+}
+.form-actions {
+  padding: 20rpx 0 60rpx;
+}
+.save-btn {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: #007aff;
+  color: #fff;
+  border-radius: 12rpx;
+  font-size: 32rpx;
+  text-align: center;
+}
+.save-btn[disabled] {
+  opacity: 0.6;
+}
+.save-btn::after {
+  border: none;
+}
+</style>

@@ -1,0 +1,14 @@
+{
+  "pages": [
+    {"path": "pages/login/login", "style": {"navigationBarTitleText": "登录"}},
+    {"path": "pages/jobs/jobList", "style": {"navigationBarTitleText": "职位管理", "enablePullDownRefresh": true}},
+    {"path": "pages/jobs/jobForm", "style": {"navigationBarTitleText": "职位表单"}},
+    {"path": "pages/jobs/jobDetail", "style": {"navigationBarTitleText": "职位详情"}}
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "职管",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F5F5F5"
+  }
+}

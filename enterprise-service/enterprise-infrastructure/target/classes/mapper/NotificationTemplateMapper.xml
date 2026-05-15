@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.enterprise.infrastructure.mapper.NotificationTemplateMapper">
+
+    <resultMap id="NotificationTemplateResultMap" type="com.parttime.enterprise.core.domain.NotificationTemplate">
+        <id property="id" column="id"/>
+        <result property="type" column="type"/>
+        <result property="channel" column="channel"/>
+        <result property="titleTemplate" column="title_template"/>
+        <result property="contentTemplate" column="content_template"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByType" resultMap="NotificationTemplateResultMap">
+        SELECT * FROM notification_templates WHERE type = #{type}
+    </select>
+
+    <select id="findByTypeAndChannel" resultMap="NotificationTemplateResultMap">
+        SELECT * FROM notification_templates WHERE type = #{type} AND channel = #{channel}
+    </select>
+
+    <select id="findAll" resultMap="NotificationTemplateResultMap">
+        SELECT * FROM notification_templates
+        <where>
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+            <if test="channel != null and channel != ''">
+                AND channel = #{channel}
+            </if>
+        </where>
+    </select>
+
+    <select id="findById" resultMap="NotificationTemplateResultMap">
+        SELECT * FROM notification_templates WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO notification_templates (type, channel, title_template, content_template, created_at, updated_at)
+        VALUES (#{type}, #{channel}, #{titleTemplate}, #{contentTemplate}, NOW(), NOW())
+    </insert>
+
+    <update id="update">
+        UPDATE notification_templates
+        SET title_template = #{titleTemplate}, content_template = #{contentTemplate}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM notification_templates WHERE id = #{id}
+    </delete>
+
+</mapper>

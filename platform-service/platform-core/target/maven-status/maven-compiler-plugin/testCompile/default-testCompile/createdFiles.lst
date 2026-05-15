@@ -1,0 +1,6 @@
+com/parttime/platform/core/auth/JwtTokenProviderTest.class
+com/parttime/platform/core/service/RegistrationServiceTest.class
+com/parttime/platform/core/service/DashboardServiceTest.class
+com/parttime/platform/core/service/JobCategoryServiceTest.class
+com/parttime/platform/core/service/SystemConfigServiceTest.class
+com/parttime/platform/core/service/JobReportServiceTest.class

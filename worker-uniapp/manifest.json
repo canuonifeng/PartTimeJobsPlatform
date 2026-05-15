@@ -1,0 +1,35 @@
+{
+  "name": "找零工",
+  "appid": "",
+  "description": "零工平台工人端",
+  "versionName": "1.0.0",
+  "versionCode": "1",
+  "transformPx": false,
+  "app-plus": {},
+  "quickapp": {},
+  "mp-weixin": {
+    "appid": "",
+    "setting": {
+      "urlCheck": false
+    },
+    "usingComponents": true,
+    "permission": {
+      "scope.userLocation": {
+        "desc": "你的位置信息将用于打卡签到"
+      }
+    },
+    "requiredPrivateInfos": ["getLocation"]
+  },
+  "h5": {
+    "title": "找零工",
+    "template": "index.html",
+    "router": {
+      "mode": "history",
+      "base": "/"
+    }
+  },
+  "uniStatistics": {
+    "enable": false
+  },
+  "vueVersion": "3"
+}

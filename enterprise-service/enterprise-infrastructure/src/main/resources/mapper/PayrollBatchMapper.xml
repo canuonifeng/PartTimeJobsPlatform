@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.enterprise.infrastructure.mapper.PayrollBatchMapper">
+
+    <resultMap id="BatchResultMap" type="com.parttime.enterprise.core.domain.PayrollBatch">
+        <id property="id" column="id"/>
+        <result property="companyId" column="company_id"/>
+        <result property="name" column="name"/>
+        <result property="periodStart" column="period_start"/>
+        <result property="periodEnd" column="period_end"/>
+        <result property="status" column="status"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="workerCount" column="worker_count"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO payroll_batches (company_id, name, period_start, period_end, status, total_amount, worker_count)
+        VALUES (#{companyId}, #{name}, #{periodStart}, #{periodEnd}, #{status}, #{totalAmount}, #{workerCount})
+    </insert>
+
+    <select id="findById" resultMap="BatchResultMap">
+        SELECT * FROM payroll_batches WHERE id = #{id}
+    </select>
+
+    <select id="findByCompanyId" resultMap="BatchResultMap">
+        SELECT * FROM payroll_batches WHERE company_id = #{companyId} ORDER BY created_at DESC
+    </select>
+
+    <select id="findByCompanyIdAndStatus" resultMap="BatchResultMap">
+        SELECT * FROM payroll_batches WHERE company_id = #{companyId} AND status = #{status} ORDER BY created_at DESC
+    </select>
+
+    <update id="updateStatus">
+        UPDATE payroll_batches SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <update id="update">
+        UPDATE payroll_batches
+        SET name = #{name}, period_start = #{periodStart}, period_end = #{periodEnd},
+            status = #{status}, total_amount = #{totalAmount}, worker_count = #{workerCount}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

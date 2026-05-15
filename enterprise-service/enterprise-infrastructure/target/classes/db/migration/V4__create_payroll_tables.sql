@@ -1,0 +1,45 @@
+CREATE TABLE payroll_batches (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    company_id BIGINT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    period_start DATE NOT NULL,
+    period_end DATE NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'DRAFT' COMMENT 'DRAFT/CALCULATED/CONFIRMED/PAID',
+    total_amount DECIMAL(12,2) DEFAULT 0.00,
+    worker_count INT DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_company_id (company_id),
+    INDEX idx_status (status)
+);
+
+CREATE TABLE payroll_items (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    batch_id BIGINT NOT NULL,
+    worker_id BIGINT NOT NULL,
+    job_id BIGINT NOT NULL,
+    total_hours DECIMAL(10,2) DEFAULT 0.00,
+    rate_type VARCHAR(20) NOT NULL COMMENT 'HOURLY/DAILY',
+    rate_amount DECIMAL(12,2) NOT NULL,
+    total_pay DECIMAL(12,2) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING/CONFIRMED/PAID',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (batch_id) REFERENCES payroll_batches(id),
+    INDEX idx_batch_id (batch_id),
+    INDEX idx_worker_id (worker_id),
+    INDEX idx_job_id (job_id)
+);
+
+CREATE TABLE withdrawal_records (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    worker_id BIGINT NOT NULL,
+    amount DECIMAL(12,2) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING/COMPLETED/FAILED',
+    requested_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    completed_at DATETIME DEFAULT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_worker_id (worker_id),
+    INDEX idx_status (status)
+);
