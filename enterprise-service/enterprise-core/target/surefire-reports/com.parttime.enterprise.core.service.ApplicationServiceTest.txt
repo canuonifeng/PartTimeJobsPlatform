@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.parttime.enterprise.core.service.ApplicationServiceTest
--------------------------------------------------------------------------------
-Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.071 s -- in com.parttime.enterprise.core.service.ApplicationServiceTest

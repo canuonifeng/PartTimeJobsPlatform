@@ -1,8 +1,0 @@
-com/parttime/platform/web/auth/JwtAuthenticationFilterTest.class
-com/parttime/platform/web/controller/RegistrationControllerTest.class
-com/parttime/platform/web/controller/JobReportControllerTest.class
-com/parttime/platform/web/controller/JobCategoryControllerTest.class
-com/parttime/platform/web/controller/SystemConfigControllerTest.class
-com/parttime/platform/web/controller/DashboardControllerTest.class
-com/parttime/platform/web/controller/AuthControllerTest.class
-com/parttime/platform/web/TestPlatformWebApplication.class
