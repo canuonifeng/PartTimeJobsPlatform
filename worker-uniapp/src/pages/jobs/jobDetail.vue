@@ -30,6 +30,10 @@
       <view class="map-section" v-if="job.latitude && job.longitude">
         <map :latitude="job.latitude" :longitude="job.longitude" :markers="markers" style="width:100%;height:300rpx;border-radius:16rpx" />
         <text class="map-address">{{ job.province }} {{ job.city }} {{ job.district }} {{ job.address }}</text>
+        <view class="map-meta">
+          <text class="map-coords">{{ job.latitude }}, {{ job.longitude }}</text>
+          <text class="map-link" @click="handleOpenLocation">定位</text>
+        </view>
       </view>
 
       <view class="section">
@@ -131,6 +135,19 @@ async function handleApply() {
   } catch {
     uni.showToast({ title: '报名失败', icon: 'none' })
   }
+}
+
+function handleOpenLocation() {
+  if (!job.value?.latitude || !job.value?.longitude) {
+    uni.showToast({ title: '暂无定位信息', icon: 'none' })
+    return
+  }
+  uni.openLocation({
+    latitude: Number(job.value.latitude),
+    longitude: Number(job.value.longitude),
+    name: job.value.title || '岗位地点',
+    address: [job.value.province, job.value.city, job.value.district, job.value.address].filter(Boolean).join(' ')
+  })
 }
 
 onMounted(loadDetail)
@@ -277,6 +294,24 @@ onMounted(loadDetail)
   background: #fff;
   font-size: 24rpx;
   color: #666;
+}
+
+.map-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16rpx 12rpx;
+  background: #fff;
+}
+
+.map-coords {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.map-link {
+  font-size: 24rpx;
+  color: #07c160;
 }
 
 .bottom-bar {

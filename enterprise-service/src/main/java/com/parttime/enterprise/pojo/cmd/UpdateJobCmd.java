@@ -1,6 +1,7 @@
 package com.parttime.enterprise.pojo.cmd;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -34,6 +35,7 @@ public class UpdateJobCmd {
     @Schema(description = "招聘人数")
     private Integer headcount;
     @Schema(description = "报名截止时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private LocalDateTime deadline;
     @Schema(description = "薪资规则列表")
     private List<JobRateCmd> rates;

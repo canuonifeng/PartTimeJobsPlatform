@@ -51,16 +51,16 @@ INSERT INTO enterprise_registrations (company_name, contact_name, contact_phone,
 -- 4. 企业岗位 (jobs)
 -- ========================
 INSERT INTO jobs (id, company_id, title, description, location, category_id, headcount, status, deadline) VALUES
-(1, 1, '餐厅服务员', '负责餐厅日常接待、点餐、上菜等工作，工作环境好，包工作餐。', '北京市朝阳区建国路88号', 1, 10, 'PUBLISHED', DATE_ADD(NOW(), INTERVAL 30 DAY)),
-(2, 1, '洗碗工', '负责餐厅餐具清洗消毒，工作简单，时间灵活。', '北京市朝阳区建国路88号', 1, 5, 'PUBLISHED', DATE_ADD(NOW(), INTERVAL 20 DAY)),
-(3, 1, '传菜员', '负责将菜品从厨房传送到餐桌，配合服务员工作。', '北京市朝阳区建国路88号', 1, 8, 'PUBLISHED', DATE_ADD(NOW(), INTERVAL 25 DAY)),
-(4, 2, '外卖配送员', '负责区域内外卖订单配送，自备电动车优先，按单计酬。', '上海市浦东新区陆家嘴路100号', 2, 20, 'PUBLISHED', DATE_ADD(NOW(), INTERVAL 15 DAY)),
-(5, 2, '仓库分拣员', '负责仓库内货物分拣、打包，夜班为主，补贴高。', '上海市浦东新区陆家嘴路100号', 2, 15, 'PUBLISHED', DATE_ADD(NOW(), INTERVAL 30 DAY)),
-(6, 3, '家庭保洁员', '负责家庭日常保洁，按小时计费，时间自由。', '广州市天河区天河路200号', 3, 12, 'PUBLISHED', DATE_ADD(NOW(), INTERVAL 60 DAY)),
-(7, 3, '家电清洗师', '负责空调、油烟机等家电清洗，提供培训。', '广州市天河区天河路200号', 3, 6, 'PUBLISHED', DATE_ADD(NOW(), INTERVAL 45 DAY)),
-(8, 4, '兼职家教(小学)', '辅导小学生语数外作业，要求有耐心，师范生优先。', '深圳市南山区科技园路300号', 5, 5, 'PUBLISHED', DATE_ADD(NOW(), INTERVAL 90 DAY)),
-(9, 4, '课程顾问', '负责课程咨询和推广，底薪+提成，沟通能力强。', '深圳市南山区科技园路300号', 5, 3, 'PUBLISHED', DATE_ADD(NOW(), INTERVAL 30 DAY)),
-(10, 1, '周末帮厨', '周末厨房帮工，协助厨师准备食材，简单易上手。', '北京市朝阳区建国路88号', 1, 4, 'PUBLISHED', DATE_ADD(NOW(), INTERVAL 14 DAY));
+(1, 1, '餐厅服务员', '负责餐厅日常接待、点餐、上菜等工作，工作环境好，包工作餐。', '北京市朝阳区建国路88号', 1, 10, 'PUBLISHED', CONCAT(DATE_ADD(CURDATE(), INTERVAL 30 DAY), ' 23:59:59')),
+(2, 1, '洗碗工', '负责餐厅餐具清洗消毒，工作简单，时间灵活。', '北京市朝阳区建国路88号', 1, 5, 'PUBLISHED', CONCAT(DATE_ADD(CURDATE(), INTERVAL 20 DAY), ' 23:59:59')),
+(3, 1, '传菜员', '负责将菜品从厨房传送到餐桌，配合服务员工作。', '北京市朝阳区建国路88号', 1, 8, 'PUBLISHED', CONCAT(DATE_ADD(CURDATE(), INTERVAL 25 DAY), ' 23:59:59')),
+(4, 2, '外卖配送员', '负责区域内外卖订单配送，自备电动车优先，按单计酬。', '上海市浦东新区陆家嘴路100号', 2, 20, 'PUBLISHED', CONCAT(DATE_ADD(CURDATE(), INTERVAL 15 DAY), ' 23:59:59')),
+(5, 2, '仓库分拣员', '负责仓库内货物分拣、打包，夜班为主，补贴高。', '上海市浦东新区陆家嘴路100号', 2, 15, 'PUBLISHED', CONCAT(DATE_ADD(CURDATE(), INTERVAL 30 DAY), ' 23:59:59')),
+(6, 3, '家庭保洁员', '负责家庭日常保洁，按小时计费，时间自由。', '广州市天河区天河路200号', 3, 12, 'PUBLISHED', CONCAT(DATE_ADD(CURDATE(), INTERVAL 60 DAY), ' 23:59:59')),
+(7, 3, '家电清洗师', '负责空调、油烟机等家电清洗，提供培训。', '广州市天河区天河路200号', 3, 6, 'PUBLISHED', CONCAT(DATE_ADD(CURDATE(), INTERVAL 45 DAY), ' 23:59:59')),
+(8, 4, '兼职家教(小学)', '辅导小学生语数外作业，要求有耐心，师范生优先。', '深圳市南山区科技园路300号', 5, 5, 'PUBLISHED', CONCAT(DATE_ADD(CURDATE(), INTERVAL 90 DAY), ' 23:59:59')),
+(9, 4, '课程顾问', '负责课程咨询和推广，底薪+提成，沟通能力强。', '深圳市南山区科技园路300号', 5, 3, 'PUBLISHED', CONCAT(DATE_ADD(CURDATE(), INTERVAL 30 DAY), ' 23:59:59')),
+(10, 1, '周末帮厨', '周末厨房帮工，协助厨师准备食材，简单易上手。', '北京市朝阳区建国路88号', 1, 4, 'PUBLISHED', CONCAT(DATE_ADD(CURDATE(), INTERVAL 14 DAY), ' 23:59:59'));
 
 -- ========================
 -- 5. 岗位薪资规则 (job_rates)
@@ -161,16 +161,16 @@ INSERT INTO worker_resumes (worker_id, file_name, file_url) VALUES
 -- ========================
 -- 9. C端: 工作数据 (c_job)
 -- ========================
-INSERT INTO c_job (job_id, company_id, company_name, title, description, location, category_id, category_name, rate_type, rate_amount, status, headcount, deadline) VALUES
-(1, 1, '美味餐饮管理有限公司', '餐厅服务员', '负责餐厅日常接待、点餐、上菜等工作。', '北京市朝阳区建国路88号', 1, '餐饮服务', 'HOURLY', 25.00, 'PUBLISHED', 10, DATE_ADD(NOW(), INTERVAL 30 DAY)),
-(2, 1, '美味餐饮管理有限公司', '洗碗工', '负责餐厅餐具清洗消毒。', '北京市朝阳区建国路88号', 1, '餐饮服务', 'HOURLY', 20.00, 'PUBLISHED', 5, DATE_ADD(NOW(), INTERVAL 20 DAY)),
-(3, 1, '美味餐饮管理有限公司', '传菜员', '负责菜品传送。', '北京市朝阳区建国路88号', 1, '餐饮服务', 'HOURLY', 22.00, 'PUBLISHED', 8, DATE_ADD(NOW(), INTERVAL 25 DAY)),
-(4, 2, '极速物流配送有限公司', '外卖配送员', '负责外卖配送，按单计酬。', '上海市浦东新区陆家嘴路100号', 2, '物流配送', 'PIECE', 5.00, 'PUBLISHED', 20, DATE_ADD(NOW(), INTERVAL 15 DAY)),
-(5, 2, '极速物流配送有限公司', '仓库分拣员', '负责仓库分拣打包。', '上海市浦东新区陆家嘴路100号', 2, '物流配送', 'HOURLY', 28.00, 'PUBLISHED', 15, DATE_ADD(NOW(), INTERVAL 30 DAY)),
-(6, 3, '洁新家政服务有限公司', '家庭保洁员', '负责家庭日常保洁。', '广州市天河区天河路200号', 3, '家政保洁', 'HOURLY', 35.00, 'PUBLISHED', 12, DATE_ADD(NOW(), INTERVAL 60 DAY)),
-(7, 3, '洁新家政服务有限公司', '家电清洗师', '负责家电清洗。', '广州市天河区天河路200号', 3, '家政保洁', 'HOURLY', 40.00, 'PUBLISHED', 6, DATE_ADD(NOW(), INTERVAL 45 DAY)),
-(8, 4, '卓越教育培训中心', '兼职家教(小学)', '辅导小学生作业。', '深圳市南山区科技园路300号', 5, '教育培训', 'HOURLY', 60.00, 'PUBLISHED', 5, DATE_ADD(NOW(), INTERVAL 90 DAY)),
-(9, 4, '卓越教育培训中心', '课程顾问', '负责课程咨询推广。', '深圳市南山区科技园路300号', 5, '教育培训', 'MONTHLY', 3500.00, 'PUBLISHED', 3, DATE_ADD(NOW(), INTERVAL 30 DAY));
+INSERT INTO c_job (job_id, company_id, company_name, company_logo, title, description, location, category_id, category_name, rate_type, rate_amount, status, headcount, deadline) VALUES
+(1, 1, '美味餐饮管理有限公司', 'https://cdn.example.com/logos/meiwei.png', '餐厅服务员', '负责餐厅日常接待、点餐、上菜等工作。', '北京市朝阳区建国路88号', 1, '餐饮服务', 'HOURLY', 25.00, 'PUBLISHED', 10, DATE_ADD(NOW(), INTERVAL 30 DAY)),
+(2, 1, '美味餐饮管理有限公司', 'https://cdn.example.com/logos/meiwei.png', '洗碗工', '负责餐厅餐具清洗消毒。', '北京市朝阳区建国路88号', 1, '餐饮服务', 'HOURLY', 20.00, 'PUBLISHED', 5, DATE_ADD(NOW(), INTERVAL 20 DAY)),
+(3, 1, '美味餐饮管理有限公司', 'https://cdn.example.com/logos/meiwei.png', '传菜员', '负责菜品传送。', '北京市朝阳区建国路88号', 1, '餐饮服务', 'HOURLY', 22.00, 'PUBLISHED', 8, DATE_ADD(NOW(), INTERVAL 25 DAY)),
+(4, 2, '极速物流配送有限公司', 'https://cdn.example.com/logos/jisu.png', '外卖配送员', '负责外卖配送，按单计酬。', '上海市浦东新区陆家嘴路100号', 2, '物流配送', 'PIECE', 5.00, 'PUBLISHED', 20, DATE_ADD(NOW(), INTERVAL 15 DAY)),
+(5, 2, '极速物流配送有限公司', 'https://cdn.example.com/logos/jisu.png', '仓库分拣员', '负责仓库分拣打包。', '上海市浦东新区陆家嘴路100号', 2, '物流配送', 'HOURLY', 28.00, 'PUBLISHED', 15, DATE_ADD(NOW(), INTERVAL 30 DAY)),
+(6, 3, '洁新家政服务有限公司', 'https://cdn.example.com/logos/jiexin.png', '家庭保洁员', '负责家庭日常保洁。', '广州市天河区天河路200号', 3, '家政保洁', 'HOURLY', 35.00, 'PUBLISHED', 12, DATE_ADD(NOW(), INTERVAL 60 DAY)),
+(7, 3, '洁新家政服务有限公司', 'https://cdn.example.com/logos/jiexin.png', '家电清洗师', '负责家电清洗。', '广州市天河区天河路200号', 3, '家政保洁', 'HOURLY', 40.00, 'PUBLISHED', 6, DATE_ADD(NOW(), INTERVAL 45 DAY)),
+(8, 4, '卓越教育培训中心', 'https://cdn.example.com/logos/zhuoyue.png', '兼职家教(小学)', '辅导小学生作业。', '深圳市南山区科技园路300号', 5, '教育培训', 'HOURLY', 60.00, 'PUBLISHED', 5, DATE_ADD(NOW(), INTERVAL 90 DAY)),
+(9, 4, '卓越教育培训中心', 'https://cdn.example.com/logos/zhuoyue.png', '课程顾问', '负责课程咨询推广。', '深圳市南山区科技园路300号', 5, '教育培训', 'MONTHLY', 3500.00, 'PUBLISHED', 3, DATE_ADD(NOW(), INTERVAL 30 DAY));
 
 UPDATE c_job
 SET schedule_info = JSON_ARRAY(
@@ -307,11 +307,11 @@ INSERT INTO job_reports (job_id, reporter_id, reason, description, status) VALUE
 -- ========================
 -- 18. 企业信息 (enterprises)
 -- ========================
-INSERT INTO enterprises (id, company_name, contact_name, contact_phone, company_address, business_license, status, registration_id) VALUES
-(1, '北京迅捷物流有限公司', '王经理', '13800138001', '北京市朝阳区建国路88号', 'BL-2024001', 'ACTIVE', 1),
-(2, '上海丰盛餐饮管理有限公司', '李店长', '13900139002', '上海市浦东新区陆家嘴路100号', 'BL-2024002', 'ACTIVE', 2),
-(3, '广州天汇商贸有限公司', '陈主管', '13700137003', '广州市天河区天河路200号', 'BL-2024003', 'ACTIVE', 3),
-(4, '深圳创想科技有限公司', '张总', '13600136004', '深圳市南山区科技园路300号', 'BL-2024004', 'ACTIVE', 4);
+INSERT INTO enterprises (id, company_name, company_logo, contact_name, contact_phone, company_address, business_license, status, registration_id) VALUES
+(1, '北京迅捷物流有限公司', 'https://cdn.example.com/logos/beijing-xunjie.png', '王经理', '13800138001', '北京市朝阳区建国路88号', 'BL-2024001', 'ACTIVE', 1),
+(2, '上海丰盛餐饮管理有限公司', 'https://cdn.example.com/logos/shanghai-fengsheng.png', '李店长', '13900139002', '上海市浦东新区陆家嘴路100号', 'BL-2024002', 'ACTIVE', 2),
+(3, '广州天汇商贸有限公司', 'https://cdn.example.com/logos/guangzhou-tianhui.png', '陈主管', '13700137003', '广州市天河区天河路200号', 'BL-2024003', 'ACTIVE', 3),
+(4, '深圳创想科技有限公司', 'https://cdn.example.com/logos/shenzhen-chuangxiang.png', '张总', '13600136004', '深圳市南山区科技园路300号', 'BL-2024004', 'ACTIVE', 4);
 
 -- ========================
 -- 19. 企业端登录账号 (enterprise_accounts)

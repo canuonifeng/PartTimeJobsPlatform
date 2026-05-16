@@ -3,11 +3,11 @@
 <mapper namespace="com.parttime.cservice.mapper.JobMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO c_job (job_id, company_id, company_name, title, description, location,
+        INSERT INTO c_job (job_id, company_id, company_name, company_logo, title, description, location,
                            province, city, district, address, latitude, longitude,
                            category_id, category_name, rate_type, rate_amount, status, published_at,
                            created_at, updated_at)
-        VALUES (#{jobId}, #{companyId}, #{companyName}, #{title}, #{description}, #{location},
+        VALUES (#{jobId}, #{companyId}, #{companyName}, #{companyLogo}, #{title}, #{description}, #{location},
                 #{province}, #{city}, #{district}, #{address}, #{latitude}, #{longitude},
                 #{categoryId}, #{categoryName}, #{rateType}, #{rateAmount}, #{status}, #{publishedAt},
                 #{createdAt}, #{updatedAt})
@@ -49,6 +49,7 @@
             province = #{province}, city = #{city}, district = #{district}, address = #{address},
             latitude = #{latitude}, longitude = #{longitude},
             category_id = #{categoryId}, category_name = #{categoryName},
+            company_logo = #{companyLogo},
             rate_type = #{rateType}, rate_amount = #{rateAmount},
             status = #{status}
         WHERE id = #{id}

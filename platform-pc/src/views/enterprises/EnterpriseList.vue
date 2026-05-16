@@ -11,6 +11,13 @@
     </template>
     <el-table :data="enterprises" v-loading="loading" stripe style="width:100%">
       <el-table-column prop="id" label="编号" width="60" />
+      <el-table-column label="Logo" width="80">
+        <template #default="{ row }">
+          <el-avatar :src="row.companyLogo" :size="36">
+            {{ row.companyName?.slice(0, 1) }}
+          </el-avatar>
+        </template>
+      </el-table-column>
       <el-table-column prop="companyName" label="企业名称" min-width="160" />
       <el-table-column prop="contactName" label="联系人" width="120" />
       <el-table-column prop="contactPhone" label="联系电话" width="140" />
@@ -49,6 +56,9 @@
       <el-form-item label="企业地址">
         <el-input v-model="createDialog.form.companyAddress" type="textarea" />
       </el-form-item>
+      <el-form-item label="企业logo">
+        <el-input v-model="createDialog.form.companyLogo" placeholder="logo图片URL" />
+      </el-form-item>
     </el-form>
     <template #footer>
       <el-button @click="createDialog.visible = false">取消</el-button>
@@ -70,6 +80,9 @@
       </el-form-item>
       <el-form-item label="企业地址">
         <el-input v-model="editDialog.form.companyAddress" type="textarea" />
+      </el-form-item>
+      <el-form-item label="企业logo">
+        <el-input v-model="editDialog.form.companyLogo" placeholder="logo图片URL" />
       </el-form-item>
     </el-form>
     <template #footer>
@@ -161,7 +174,7 @@ const loading = ref(false)
 const enterprises = ref([])
 const statusFilter = ref('')
 
-const createDialog = ref({ visible: false, form: { companyName: '', contactName: '', contactPhone: '', companyAddress: '' } })
+const createDialog = ref({ visible: false, form: { companyName: '', companyLogo: '', contactName: '', contactPhone: '', companyAddress: '' } })
 const editDialog = ref({ visible: false, form: {} })
 const accountDialog = ref({ visible: false, companyName: '', enterpriseId: null, accounts: [] })
 const accountFormDialog = ref({ visible: false, isEdit: false, form: { username: '', password: '', displayName: '', role: 'ADMIN' } })
@@ -178,7 +191,7 @@ async function fetchData() {
 }
 
 function handleAdd() {
-  createDialog.value = { visible: true, form: { companyName: '', contactName: '', contactPhone: '', companyAddress: '' } }
+  createDialog.value = { visible: true, form: { companyName: '', companyLogo: '', contactName: '', contactPhone: '', companyAddress: '' } }
 }
 
 async function confirmCreate() {

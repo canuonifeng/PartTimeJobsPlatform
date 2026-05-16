@@ -1,6 +1,7 @@
 package com.parttime.cservice.service;
 
 import com.parttime.cservice.service.impl.JobServiceImpl;
+import com.parttime.cservice.mapper.CompanyWorkerInsertMapper;
 import com.parttime.cservice.pojo.vo.ApplicationVO;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
@@ -26,19 +27,25 @@ class JobServiceTest {
         MockitoAnnotations.openMocks(this);
         ReflectionTestUtils.setField(jobService, "jobMapper", InMemoryMappers.createJobMapper());
         ReflectionTestUtils.setField(jobService, "jobApplicationMapper", InMemoryMappers.createJobApplicationMapper());
+        ReflectionTestUtils.setField(jobService, "companyWorkerInsertMapper", new CompanyWorkerInsertMapper() {
+            @Override
+            public int upsert(Long companyId, Long workerId) {
+                return 1;
+            }
+        });
         TestDataFactory.addSampleJobs(jobService);
     }
 
     @Test
     void searchJobs_withoutFilters_returnsAllPublishedJobs() {
-        List<JobSummaryVO> results = jobService.searchJobs(null, null, null, null, null);
+        List<JobSummaryVO> results = jobService.searchJobs(null, null, null, null, null, null, null);
 
         assertThat(results).hasSize(3);
     }
 
     @Test
     void searchJobs_withKeyword_filtersCorrectly() {
-        List<JobSummaryVO> results = jobService.searchJobs("engineer", null, null, null, null);
+        List<JobSummaryVO> results = jobService.searchJobs("engineer", null, null, null, null, null, null);
 
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getTitle()).contains("Engineer");
@@ -46,7 +53,7 @@ class JobServiceTest {
 
     @Test
     void searchJobs_withCategoryId_filtersCorrectly() {
-        List<JobSummaryVO> results = jobService.searchJobs(null, 2L, null, null, null);
+        List<JobSummaryVO> results = jobService.searchJobs(null, 2L, null, null, null, null, null);
 
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getCategoryName()).isEqualTo("Marketing");
@@ -54,7 +61,7 @@ class JobServiceTest {
 
     @Test
     void searchJobs_withLocation_filtersCorrectly() {
-        List<JobSummaryVO> results = jobService.searchJobs(null, null, "Shanghai", null, null);
+        List<JobSummaryVO> results = jobService.searchJobs(null, null, "Shanghai", null, null, null, null);
 
         assertThat(results).hasSize(1);
         assertThat(results.get(0).getLocation()).isEqualTo("Shanghai");
@@ -62,16 +69,26 @@ class JobServiceTest {
 
     @Test
     void searchJobs_withMinRate_filtersCorrectly() {
-        List<JobSummaryVO> results = jobService.searchJobs(null, null, null, new BigDecimal("500.00"), null);
+        List<JobSummaryVO> results = jobService.searchJobs(null, null, null, new BigDecimal("500.00"), null, null, null);
 
         assertThat(results).hasSize(1);
     }
 
     @Test
     void searchJobs_withMaxRate_filtersCorrectly() {
-        List<JobSummaryVO> results = jobService.searchJobs(null, null, null, null, new BigDecimal("100.00"));
+        List<JobSummaryVO> results = jobService.searchJobs(null, null, null, null, new BigDecimal("100.00"), null, null);
 
         assertThat(results).hasSize(2);
+    }
+
+    @Test
+    void searchJobs_withCoordinates_sortsByDistance() {
+        List<JobSummaryVO> results = jobService.searchJobs(null, null, null, null, null,
+                new BigDecimal("39.9"), new BigDecimal("116.4"));
+
+        assertThat(results).hasSize(3);
+        assertThat(results.get(0).getId()).isEqualTo(1L);
+        assertThat(results.get(0).getDistanceKm()).isNotNull();
     }
 
     @Test
@@ -85,6 +102,9 @@ class JobServiceTest {
         assertThat(detail.getLocation()).isEqualTo("Beijing");
         assertThat(detail.getCategoryName()).isEqualTo("Technology");
         assertThat(detail.getStatus()).isEqualTo("PUBLISHED");
+        assertThat(detail.getCompanyName()).isEqualTo("美味餐饮管理有限公司");
+        assertThat(detail.getHeadcount()).isEqualTo(10);
+        assertThat(detail.getDeadline()).isNotNull();
         assertThat(detail.getRates()).isNotEmpty();
         assertThat(detail.getRates().get(0).getType()).isEqualTo("HOURLY");
         assertThat(detail.getRates().get(0).getAmount()).isEqualByComparingTo(new BigDecimal("50.00"));

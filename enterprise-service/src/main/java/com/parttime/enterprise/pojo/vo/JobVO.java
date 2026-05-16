@@ -1,6 +1,7 @@
 package com.parttime.enterprise.pojo.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import com.parttime.enterprise.enums.JobStatus;
 import java.math.BigDecimal;
@@ -39,6 +40,7 @@ public class JobVO {
     @Schema(description = "岗位状态")
     private JobStatus status;
     @Schema(description = "报名截止时间")
+    @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Shanghai")
     private LocalDateTime deadline;
     @Schema(description = "薪资规则列表")
     private List<JobRateVO> rates;

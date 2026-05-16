@@ -7,6 +7,8 @@ import lombok.Data;
 public class EnterpriseCreateCmd {
     @Schema(description = "企业名称")
     private String companyName;
+    @Schema(description = "企业logoURL")
+    private String companyLogo;
     @Schema(description = "联系人")
     private String contactName;
     @Schema(description = "联系电话")

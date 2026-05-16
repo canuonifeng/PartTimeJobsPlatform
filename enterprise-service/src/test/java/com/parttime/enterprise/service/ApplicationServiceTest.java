@@ -2,6 +2,8 @@ package com.parttime.enterprise.service;
 
 import com.parttime.enterprise.enums.ApplicationStatus;
 import com.parttime.enterprise.exception.BusinessException;
+import com.parttime.enterprise.mapper.CWorkerMapper;
+import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.JobApplicationMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.pojo.entity.Job;
@@ -32,6 +34,12 @@ class ApplicationServiceTest {
     @Mock
     private JobMapper jobMapper;
 
+    @Mock
+    private CWorkerMapper cWorkerMapper;
+
+    @Mock
+    private CompanyWorkerMapper companyWorkerMapper;
+
     @InjectMocks
     private ApplicationServiceImpl applicationService;
 
@@ -46,7 +54,7 @@ class ApplicationServiceTest {
 
         when(applicationMapper.findByJobId(100L)).thenReturn(List.of(app));
 
-        List<JobApplicationVO> result = applicationService.getApplicationsByJob(100L);
+        List<JobApplicationVO> result = applicationService.getApplicationsByJob(100L, null, null);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo(1L);

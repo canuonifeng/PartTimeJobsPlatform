@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: c-service
+  jackson:
+    time-zone: Asia/Shanghai
+    serialization:
+      write-dates-as-timestamps: false
 
   datasource:
     url: jdbc:mysql://localhost:3306/part_time_work?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai

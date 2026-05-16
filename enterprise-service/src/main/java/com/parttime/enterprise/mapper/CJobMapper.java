@@ -11,6 +11,7 @@ public interface CJobMapper {
     void upsert(@Param("jobId") Long jobId,
                 @Param("companyId") Long companyId,
                 @Param("companyName") String companyName,
+                @Param("companyLogo") String companyLogo,
                 @Param("title") String title,
                 @Param("description") String description,
                 @Param("location") String location,

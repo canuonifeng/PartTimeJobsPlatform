@@ -5,6 +5,7 @@
     <resultMap id="EnterpriseResultMap" type="com.parttime.platform.pojo.entity.Enterprise">
         <id property="id" column="id"/>
         <result property="companyName" column="company_name"/>
+        <result property="companyLogo" column="company_logo"/>
         <result property="contactName" column="contact_name"/>
         <result property="contactPhone" column="contact_phone"/>
         <result property="companyAddress" column="company_address"/>
@@ -28,13 +29,14 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO enterprises (company_name, contact_name, contact_phone, company_address, business_license, status, registration_id)
-        VALUES (#{companyName}, #{contactName}, #{contactPhone}, #{companyAddress}, #{businessLicense}, #{status}, #{registrationId})
+        INSERT INTO enterprises (company_name, company_logo, contact_name, contact_phone, company_address, business_license, status, registration_id)
+        VALUES (#{companyName}, #{companyLogo}, #{contactName}, #{contactPhone}, #{companyAddress}, #{businessLicense}, #{status}, #{registrationId})
     </insert>
 
     <update id="update">
         UPDATE enterprises
         SET company_name = #{companyName},
+            company_logo = #{companyLogo},
             contact_name = #{contactName},
             contact_phone = #{contactPhone},
             company_address = #{companyAddress},

@@ -2,6 +2,8 @@ package com.parttime.enterprise.service;
 
 import com.parttime.enterprise.enums.JobRateType;
 import com.parttime.enterprise.enums.JobStatus;
+import com.parttime.enterprise.mapper.CJobMapper;
+import com.parttime.enterprise.mapper.EnterpriseMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.JobRateMapper;
 import com.parttime.enterprise.mapper.JobScheduleMapper;
@@ -15,6 +17,7 @@ import com.parttime.enterprise.pojo.vo.JobRateVO;
 import com.parttime.enterprise.pojo.vo.JobScheduleVO;
 import com.parttime.enterprise.pojo.vo.JobVO;
 import com.parttime.enterprise.service.impl.JobServiceImpl;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -33,7 +36,12 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -48,6 +56,15 @@ class JobServiceTest {
 
     @Mock
     private JobScheduleMapper jobScheduleMapper;
+
+    @Mock
+    private EnterpriseMapper enterpriseMapper;
+
+    @Mock
+    private CJobMapper cJobMapper;
+
+    @Mock
+    private ObjectMapper objectMapper;
 
     @Captor
     private ArgumentCaptor<Job> jobCaptor;
@@ -164,17 +181,26 @@ class JobServiceTest {
     }
 
     @Test
-    void publishJob_shouldTransitionFromDraftToPublished() {
+    void publishJob_shouldTransitionFromDraftToPublished() throws Exception {
         Job job = new Job();
         job.setId(1L);
+        job.setCompanyId(1L);
         job.setStatus("DRAFT");
 
         when(jobMapper.findById(1L)).thenReturn(Optional.of(job));
+        when(enterpriseMapper.findCompanyNameById(1L)).thenReturn("美味餐饮管理有限公司");
+        when(enterpriseMapper.findCompanyLogoById(1L)).thenReturn("https://cdn.example.com/logos/meiwei.png");
+        doReturn("[]").when(objectMapper).writeValueAsString(any());
 
         JobVO response = jobService.publishJob(1L);
 
         assertThat(response.getStatus()).isEqualTo(JobStatus.PUBLISHED);
         verify(jobMapper).updateStatus(1L, "PUBLISHED");
+        verify(cJobMapper).upsert(
+                eq(1L), eq(1L), eq("美味餐饮管理有限公司"), eq("https://cdn.example.com/logos/meiwei.png"),
+                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), isNull(), isNull(), isNull(), eq("PUBLISHED"), eq("[]"), isNull(), isNull()
+        );
     }
 
     @Test
@@ -370,6 +396,12 @@ class JobServiceTest {
             return 1;
         }).when(jobScheduleMapper).insert(any(JobSchedule.class));
 
+        Job syncJob = new Job();
+        syncJob.setId(100L);
+        syncJob.setCompanyId(1L);
+        when(jobMapper.findById(100L)).thenReturn(Optional.of(syncJob));
+        when(jobScheduleMapper.findByJobId(100L)).thenReturn(List.of());
+
         JobScheduleVO response = jobService.addJobSchedule(100L, request);
 
         assertThat(response.getJobId()).isEqualTo(100L);
@@ -395,6 +427,12 @@ class JobServiceTest {
 
         when(jobScheduleMapper.findById(1L)).thenReturn(Optional.of(existing));
 
+        Job syncJob = new Job();
+        syncJob.setId(100L);
+        syncJob.setCompanyId(1L);
+        when(jobMapper.findById(100L)).thenReturn(Optional.of(syncJob));
+        when(jobScheduleMapper.findByJobId(100L)).thenReturn(List.of());
+
         JobScheduleVO response = jobService.updateJobSchedule(1L, request);
 
         assertThat(response.getSlotsAvailable()).isEqualTo(8);
@@ -403,6 +441,17 @@ class JobServiceTest {
 
     @Test
     void removeJobSchedule_shouldDeleteSchedule() {
+        JobSchedule existing = new JobSchedule();
+        existing.setId(1L);
+        existing.setJobId(100L);
+        when(jobScheduleMapper.findById(1L)).thenReturn(Optional.of(existing));
+
+        Job syncJob = new Job();
+        syncJob.setId(100L);
+        syncJob.setCompanyId(1L);
+        when(jobMapper.findById(100L)).thenReturn(Optional.of(syncJob));
+        when(jobScheduleMapper.findByJobId(100L)).thenReturn(List.of());
+
         jobService.removeJobSchedule(1L);
         verify(jobScheduleMapper).delete(1L);
     }

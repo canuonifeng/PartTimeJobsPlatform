@@ -34,9 +34,11 @@ public class JobController {
             @Parameter(description = "岗位分类ID") @RequestParam(required = false) Long categoryId,
             @Parameter(description = "工作地点") @RequestParam(required = false) String location,
             @Parameter(description = "最低薪资") @RequestParam(required = false) BigDecimal minRate,
-            @Parameter(description = "最高薪资") @RequestParam(required = false) BigDecimal maxRate) {
+            @Parameter(description = "最高薪资") @RequestParam(required = false) BigDecimal maxRate,
+            @Parameter(description = "当前位置纬度") @RequestParam(required = false) BigDecimal latitude,
+            @Parameter(description = "当前位置经度") @RequestParam(required = false) BigDecimal longitude) {
         log.info("job");
-        List<JobSummaryVO> results = jobService.searchJobs(keyword, categoryId, location, minRate, maxRate);
+        List<JobSummaryVO> results = jobService.searchJobs(keyword, categoryId, location, minRate, maxRate, latitude, longitude);
         return ResponseEntity.ok(results);
     }
 

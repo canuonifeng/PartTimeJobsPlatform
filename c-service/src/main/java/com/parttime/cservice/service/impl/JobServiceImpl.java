@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import jakarta.annotation.Resource;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -37,8 +38,16 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public List<JobSummaryVO> searchJobs(String keyword, Long categoryId, String location,
-                                        BigDecimal minRate, BigDecimal maxRate) {
+                                         BigDecimal minRate, BigDecimal maxRate,
+                                         BigDecimal latitude, BigDecimal longitude) {
         List<Job> jobs = jobMapper.search(keyword, location, categoryId);
+        if (latitude != null && longitude != null) {
+            jobs = jobs.stream()
+                    .sorted((a, b) -> Double.compare(
+                            distance(latitude, longitude, a.getLatitude(), a.getLongitude()),
+                            distance(latitude, longitude, b.getLatitude(), b.getLongitude())))
+                    .toList();
+        }
         return jobs.stream()
                 .filter(job -> {
                     if (minRate == null) return true;
@@ -50,8 +59,102 @@ public class JobServiceImpl implements JobService {
                     BigDecimal jobRate = job.getRateAmount() != null ? job.getRateAmount() : BigDecimal.ZERO;
                     return jobRate.compareTo(maxRate) <= 0;
                 })
-                .map(this::toSummary)
+                .map(job -> toSummary(job, latitude, longitude))
                 .toList();
+    }
+
+    @Override
+    public void addJob(Long id, String title, String description, String location, Long categoryId, String categoryName,
+                       List<JobRateInfoVO> rates, List<JobScheduleInfoVO> schedules,
+                       Integer headcount, Integer acceptedCount, LocalDateTime deadline, String status) {
+        Job job = new Job();
+        job.setId(id);
+        job.setJobId(id);
+        job.setCompanyId(companyIdForDemo(id));
+        job.setCompanyName(companyNameForDemo(job.getCompanyId()));
+        job.setCompanyLogo(companyLogoForDemo(job.getCompanyId()));
+        job.setLatitude(latitudeForDemo(id));
+        job.setLongitude(longitudeForDemo(id));
+        job.setTitle(title);
+        job.setDescription(description);
+        job.setLocation(location);
+        job.setCategoryId(categoryId);
+        job.setCategoryName(categoryName);
+        job.setHeadcount(headcount);
+        job.setAcceptedCount(acceptedCount);
+        job.setDeadline(deadline);
+        job.setStatus(status);
+        if (rates != null && !rates.isEmpty()) {
+            JobRateInfoVO first = rates.get(0);
+            job.setRateType(first.getType());
+            job.setRateAmount(first.getAmount());
+            job.setRates(rates);
+        }
+        if (schedules != null && !schedules.isEmpty()) {
+            job.setSchedules(schedules);
+        }
+        jobMapper.insert(job);
+    }
+
+    private Long companyIdForDemo(Long jobId) {
+        if (jobId == null) return null;
+        if (jobId <= 3) return 1L;
+        if (jobId <= 5) return 2L;
+        if (jobId <= 7) return 3L;
+        return 4L;
+    }
+
+    private String companyNameForDemo(Long companyId) {
+        if (companyId == null) return null;
+        return switch (companyId.intValue()) {
+            case 1 -> "美味餐饮管理有限公司";
+            case 2 -> "极速物流配送有限公司";
+            case 3 -> "洁新家政服务有限公司";
+            case 4 -> "卓越教育培训中心";
+            default -> null;
+        };
+    }
+
+    private String companyLogoForDemo(Long companyId) {
+        if (companyId == null) return null;
+        return switch (companyId.intValue()) {
+            case 1 -> "https://cdn.example.com/logos/meiwei.png";
+            case 2 -> "https://cdn.example.com/logos/jisu.png";
+            case 3 -> "https://cdn.example.com/logos/jiexin.png";
+            case 4 -> "https://cdn.example.com/logos/zhuoyue.png";
+            default -> null;
+        };
+    }
+
+    private BigDecimal latitudeForDemo(Long jobId) {
+        if (jobId == null) return null;
+        return switch (jobId.intValue()) {
+            case 1, 3 -> new BigDecimal("39.9");
+            case 2 -> new BigDecimal("31.2");
+            default -> null;
+        };
+    }
+
+    private BigDecimal longitudeForDemo(Long jobId) {
+        if (jobId == null) return null;
+        return switch (jobId.intValue()) {
+            case 1, 3 -> new BigDecimal("116.4");
+            case 2 -> new BigDecimal("121.5");
+            default -> null;
+        };
+    }
+
+    private double distance(BigDecimal lat1, BigDecimal lng1, BigDecimal lat2, BigDecimal lng2) {
+        if (lat2 == null || lng2 == null) return Double.MAX_VALUE;
+        double earthRadius = 6371000D;
+        double dLat = Math.toRadians(lat2.doubleValue() - lat1.doubleValue());
+        double dLng = Math.toRadians(lng2.doubleValue() - lng1.doubleValue());
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1.doubleValue()))
+                * Math.cos(Math.toRadians(lat2.doubleValue()))
+                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return earthRadius * c;
     }
 
     @Override
@@ -97,9 +200,14 @@ public class JobServiceImpl implements JobService {
         return List.of(resp);
     }
 
-    private JobSummaryVO toSummary(Job job) {
+    private JobSummaryVO toSummary(Job job, BigDecimal latitude, BigDecimal longitude) {
         BigDecimal rate = job.getRateAmount() != null ? job.getRateAmount() : BigDecimal.ZERO;
         List<String> rateTypes = job.getRateType() != null ? List.of(job.getRateType()) : List.of();
+        BigDecimal distanceKm = null;
+        if (latitude != null && longitude != null && job.getLatitude() != null && job.getLongitude() != null) {
+            distanceKm = BigDecimal.valueOf(distance(latitude, longitude, job.getLatitude(), job.getLongitude()) / 1000D)
+                    .setScale(1, RoundingMode.HALF_UP);
+        }
 
         JobSummaryVO summary = new JobSummaryVO();
         summary.setId(job.getId());
@@ -109,6 +217,9 @@ public class JobServiceImpl implements JobService {
         summary.setCity(job.getCity());
         summary.setDistrict(job.getDistrict());
         summary.setCategoryName(job.getCategoryName());
+        summary.setCompanyName(job.getCompanyName());
+        summary.setCompanyLogo(job.getCompanyLogo());
+        summary.setDistanceKm(distanceKm);
         summary.setMinRate(rate);
         summary.setMaxRate(rate);
         summary.setRateTypes(rateTypes);

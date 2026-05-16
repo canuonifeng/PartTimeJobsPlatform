@@ -1,0 +1,2 @@
+ALTER TABLE enterprises
+  ADD COLUMN company_logo VARCHAR(500) DEFAULT NULL COMMENT '企业logoURL';

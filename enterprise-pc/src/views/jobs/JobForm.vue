@@ -127,7 +127,7 @@ async function fetchDetail() {
       location: res.location || '',
       category: res.categoryId || '',
       headcount: res.headcount || 1,
-      deadline: res.deadline || '',
+      deadline: res.deadline ? res.deadline.slice(0, 10) : '',
       province: res.province || '',
       city: res.city || '',
       district: res.district || '',
@@ -156,7 +156,7 @@ function buildPayload() {
     longitude: form.value.longitude || null,
     categoryId: form.value.category || null,
     headcount: form.value.headcount,
-    deadline: form.value.deadline || null,
+    deadline: form.value.deadline ? `${form.value.deadline} 23:59:59` : null,
     rates: form.value.salaryRates.filter((r) => r.type && r.rate).map((r) => ({ type: r.type, amount: Number(r.rate), currency: 'CNY' })),
     schedules: form.value.scheduleSlots.filter((s) => s.dayOfWeek && s.startTime && s.endTime).map((s) => ({ scheduleDate: getScheduleDate(s.dayOfWeek), startTime: s.startTime, endTime: s.endTime, slotsAvailable: 1 }))
   }

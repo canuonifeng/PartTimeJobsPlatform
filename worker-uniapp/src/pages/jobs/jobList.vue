@@ -48,17 +48,26 @@
         class="job-card"
         @click="goDetail(job.id)"
       >
-        <view class="job-card-header">
-          <text class="job-title">{{ job.title }}</text>
-          <text class="job-pay">{{ job.minRate }}-{{ job.maxRate }}元/{{ job.rateUnit || '小时' }}</text>
-        </view>
-        <view class="job-tags">
-          <text v-if="job.jobType" class="tag">{{ job.jobType }}</text>
-          <text v-if="job.experience" class="tag">{{ job.experience }}</text>
-        </view>
-        <view class="job-card-footer">
-          <text class="job-location">{{ job.location }}</text>
-          <text class="job-company">{{ job.companyName }}</text>
+        <view class="job-card-top">
+          <image v-if="job.companyLogo" class="company-logo" :src="job.companyLogo" mode="aspectFill" />
+          <view v-else class="company-logo placeholder">
+            <text>{{ (job.companyName || '?').slice(0, 1) }}</text>
+          </view>
+          <view class="job-main">
+            <view class="job-card-header">
+              <text class="job-title">{{ job.title }}</text>
+              <text class="job-pay">{{ job.minRate }}-{{ job.maxRate }}元/{{ job.rateUnit || '小时' }}</text>
+            </view>
+            <view class="job-tags">
+              <text v-if="job.jobType" class="tag">{{ job.jobType }}</text>
+              <text v-if="job.experience" class="tag">{{ job.experience }}</text>
+            </view>
+            <view class="job-card-footer">
+              <text class="job-location">{{ job.location }}</text>
+              <text class="job-distance">{{ job.distanceKm != null ? `${job.distanceKm}km` : '' }}</text>
+            </view>
+            <text class="job-company">{{ job.companyName }}</text>
+          </view>
         </view>
       </view>
 
@@ -81,6 +90,7 @@ const hasMore = ref(true)
 const loading = ref(false)
 const loadingMore = ref(false)
 const refreshing = ref(false)
+const currentLocation = ref<{ latitude: number; longitude: number } | null>(null)
 
 const categories = [
   { id: undefined, name: '全部' },
@@ -100,7 +110,9 @@ async function fetchJobs(p: number, append: boolean = false) {
   try {
     const res: any = await getJobs({
       keyword: keyword.value || undefined,
-      categoryId: categoryId.value
+      categoryId: categoryId.value,
+      latitude: currentLocation.value?.latitude,
+      longitude: currentLocation.value?.longitude
     })
     const list = Array.isArray(res) ? res : (res.list || [])
     if (append) {
@@ -116,6 +128,22 @@ async function fetchJobs(p: number, append: boolean = false) {
     loadingMore.value = false
     refreshing.value = false
   }
+}
+
+function loadCurrentLocation() {
+  return new Promise<void>((resolve) => {
+    uni.getLocation({
+      type: 'wgs84',
+      success(res) {
+        currentLocation.value = { latitude: res.latitude, longitude: res.longitude }
+        resolve()
+      },
+      fail() {
+        currentLocation.value = null
+        resolve()
+      }
+    })
+  })
 }
 
 function onSearch(val?: string) {
@@ -146,7 +174,8 @@ function goDetail(id: number) {
   uni.navigateTo({ url: `/pages/jobs/jobDetail?id=${id}` })
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await loadCurrentLocation()
   fetchJobs(1)
 })
 </script>
@@ -214,6 +243,31 @@ onMounted(() => {
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
 }
 
+.job-card-top {
+  display: flex;
+  gap: 20rpx;
+}
+
+.company-logo {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 20rpx;
+  background: #f5f5f5;
+  flex-shrink: 0;
+}
+
+.company-logo.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: #999;
+}
+
+.job-main {
+  flex: 1;
+}
+
 .job-card-header {
   display: flex;
   justify-content: space-between;
@@ -264,5 +318,10 @@ onMounted(() => {
 .job-company {
   font-size: 24rpx;
   color: #999;
+}
+
+.job-distance {
+  font-size: 24rpx;
+  color: #07c160;
 }
 </style>

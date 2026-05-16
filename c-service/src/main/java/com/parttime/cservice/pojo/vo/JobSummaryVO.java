@@ -22,6 +22,12 @@ public class JobSummaryVO {
     private String district;
     @Schema(description = "分类名称")
     private String categoryName;
+    @Schema(description = "企业名称")
+    private String companyName;
+    @Schema(description = "企业logo")
+    private String companyLogo;
+    @Schema(description = "距离(公里)")
+    private BigDecimal distanceKm;
     @Schema(description = "最低薪资")
     private BigDecimal minRate;
     @Schema(description = "最高薪资")

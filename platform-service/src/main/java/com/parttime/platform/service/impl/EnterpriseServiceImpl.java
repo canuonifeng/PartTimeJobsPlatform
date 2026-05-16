@@ -1,5 +1,6 @@
 package com.parttime.platform.service.impl;
 import com.parttime.platform.exception.BusinessException;
+import com.parttime.platform.mapper.CJobMapper;
 import com.parttime.platform.mapper.EnterpriseMapper;
 import com.parttime.platform.pojo.cmd.EnterpriseCreateCmd;
 import com.parttime.platform.pojo.cmd.EnterpriseUpdateCmd;
@@ -16,6 +17,9 @@ public class EnterpriseServiceImpl implements EnterpriseService {
 
     @Resource
     private EnterpriseMapper enterpriseMapper;
+
+    @Resource
+    private CJobMapper cJobMapper;
 
     @Override
     public List<EnterpriseVO> list(String status) {
@@ -39,6 +43,7 @@ public class EnterpriseServiceImpl implements EnterpriseService {
     public EnterpriseVO create(EnterpriseCreateCmd cmd) {
         Enterprise e = new Enterprise();
         e.setCompanyName(cmd.getCompanyName());
+        e.setCompanyLogo(cmd.getCompanyLogo());
         e.setContactName(cmd.getContactName());
         e.setContactPhone(cmd.getContactPhone());
         e.setCompanyAddress(cmd.getCompanyAddress());
@@ -53,11 +58,13 @@ public class EnterpriseServiceImpl implements EnterpriseService {
         Enterprise e = enterpriseMapper.findById(cmd.getId())
                 .orElseThrow(() -> new BusinessException("Enterprise not found: " + cmd.getId()));
         if (cmd.getCompanyName() != null) e.setCompanyName(cmd.getCompanyName());
+        if (cmd.getCompanyLogo() != null) e.setCompanyLogo(cmd.getCompanyLogo());
         if (cmd.getContactName() != null) e.setContactName(cmd.getContactName());
         if (cmd.getContactPhone() != null) e.setContactPhone(cmd.getContactPhone());
         if (cmd.getCompanyAddress() != null) e.setCompanyAddress(cmd.getCompanyAddress());
         if (cmd.getBusinessLicense() != null) e.setBusinessLicense(cmd.getBusinessLicense());
         enterpriseMapper.update(e);
+        cJobMapper.updateCompanyLogoByCompanyId(e.getId(), e.getCompanyLogo());
         return toVO(e);
     }
 
@@ -85,6 +92,7 @@ public class EnterpriseServiceImpl implements EnterpriseService {
         EnterpriseVO vo = new EnterpriseVO();
         vo.setId(e.getId());
         vo.setCompanyName(e.getCompanyName());
+        vo.setCompanyLogo(e.getCompanyLogo());
         vo.setContactName(e.getContactName());
         vo.setContactPhone(e.getContactPhone());
         vo.setCompanyAddress(e.getCompanyAddress());

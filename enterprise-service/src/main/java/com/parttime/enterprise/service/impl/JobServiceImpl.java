@@ -18,7 +18,6 @@ import com.parttime.enterprise.pojo.vo.JobRateVO;
 import com.parttime.enterprise.pojo.vo.JobScheduleVO;
 import com.parttime.enterprise.pojo.vo.JobVO;
 import com.parttime.enterprise.service.JobService;
-import com.parttime.enterprise.pojo.vo.JobScheduleVO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -159,8 +158,9 @@ public class JobServiceImpl implements JobService {
             List<JobScheduleVO> scheduleVOs = toScheduleResponses(schedules);
             String scheduleInfo = objectMapper.writeValueAsString(scheduleVOs);
             String companyName = enterpriseMapper.findCompanyNameById(job.getCompanyId());
+            String companyLogo = enterpriseMapper.findCompanyLogoById(job.getCompanyId());
             cJobMapper.upsert(
-                    job.getId(), job.getCompanyId(), companyName,
+                    job.getId(), job.getCompanyId(), companyName, companyLogo,
                     job.getTitle(), job.getDescription(), job.getLocation(),
                     job.getProvince(), job.getCity(), job.getDistrict(), job.getAddress(),
                     job.getLatitude(), job.getLongitude(),

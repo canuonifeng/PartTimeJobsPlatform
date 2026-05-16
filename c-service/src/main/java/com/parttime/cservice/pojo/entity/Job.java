@@ -19,6 +19,8 @@ public class Job {
     private Long companyId;
     @Schema(description = "企业名称")
     private String companyName;
+    @Schema(description = "企业logoURL")
+    private String companyLogo;
     @Schema(description = "岗位标题")
     private String title;
     @Schema(description = "岗位描述")
@@ -76,6 +78,7 @@ public class Job {
         this.title = title;
         this.description = description;
         this.location = location;
+        this.companyLogo = null;
         this.categoryId = categoryId;
         this.categoryName = categoryName;
         this.rates = rates;
