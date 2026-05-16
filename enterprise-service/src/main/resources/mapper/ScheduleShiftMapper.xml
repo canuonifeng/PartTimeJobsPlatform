@@ -54,6 +54,15 @@
         ORDER BY shift_date, start_time
     </select>
 
+    <update id="update">
+        UPDATE schedule_shifts
+        SET job_id = #{jobId}, template_slot_id = #{templateSlotId}, worker_id = #{workerId},
+            shift_date = #{shiftDate}, start_time = #{startTime}, end_time = #{endTime},
+            location_lat = #{locationLat}, location_lng = #{locationLng},
+            location_radius = #{locationRadius}, location_name = #{locationName}
+        WHERE id = #{id}
+    </update>
+
     <update id="updateStatus">
         UPDATE schedule_shifts SET status = #{status} WHERE id = #{id}
     </update>

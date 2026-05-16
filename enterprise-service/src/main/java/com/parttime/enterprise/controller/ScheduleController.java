@@ -72,6 +72,13 @@ public class ScheduleController {
         return scheduleService.getShifts(jobId, workerId, shiftDate);
     }
 
+    @Operation(summary = "更新班次", description = "更新指定的班次信息")
+    @PutMapping("/schedule-shifts")
+    public ScheduleShiftVO updateShift(@Parameter(description = "班次ID") @RequestParam Long id,
+                                        @RequestBody ScheduleShiftCmd request) {
+        return scheduleService.updateShift(id, request);
+    }
+
     @Operation(summary = "删除班次", description = "删除指定的班次")
     @DeleteMapping("/schedule-shifts")
     @ResponseStatus(HttpStatus.NO_CONTENT)

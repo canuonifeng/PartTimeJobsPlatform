@@ -28,6 +28,8 @@ public interface ScheduleShiftMapper {
 
     List<ScheduleShift> findByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 
+    int update(ScheduleShift shift);
+
     int updateStatus(@Param("id") Long id, @Param("status") String status);
 
     int delete(Long id);

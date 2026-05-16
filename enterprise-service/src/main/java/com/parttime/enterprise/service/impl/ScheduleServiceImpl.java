@@ -141,6 +141,24 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
+    public ScheduleShiftVO updateShift(Long id, ScheduleShiftCmd request) {
+        ScheduleShift shift = shiftMapper.findById(id)
+                .orElseThrow(() -> new RuntimeException("ScheduleShift not found: " + id));
+        shift.setJobId(request.getJobId());
+        shift.setTemplateSlotId(request.getTemplateSlotId());
+        shift.setWorkerId(request.getWorkerId());
+        shift.setShiftDate(request.getShiftDate());
+        shift.setStartTime(request.getStartTime());
+        shift.setEndTime(request.getEndTime());
+        shift.setLocationLat(request.getLocationLat());
+        shift.setLocationLng(request.getLocationLng());
+        shift.setLocationRadius(request.getLocationRadius());
+        shift.setLocationName(request.getLocationName());
+        shiftMapper.update(shift);
+        return toShiftResponse(shift);
+    }
+
+    @Override
     public void removeShift(Long id) {
         shiftMapper.delete(id);
     }

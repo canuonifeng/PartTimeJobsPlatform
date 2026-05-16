@@ -23,6 +23,8 @@ public interface ScheduleService {
 
     ScheduleShiftVO assignShift(ScheduleShiftCmd request);
 
+    ScheduleShiftVO updateShift(Long id, ScheduleShiftCmd request);
+
     List<ScheduleShiftVO> getShifts(Long jobId, Long workerId, LocalDate shiftDate);
 
     void removeShift(Long id);

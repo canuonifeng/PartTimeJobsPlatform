@@ -100,11 +100,9 @@ async function fetchJobs(p: number, append: boolean = false) {
   try {
     const res: any = await getJobs({
       keyword: keyword.value || undefined,
-      categoryId: categoryId.value,
-      page: p,
-      pageSize
+      categoryId: categoryId.value
     })
-    const list = res.list || []
+    const list = Array.isArray(res) ? res : (res.list || [])
     if (append) {
       jobList.value.push(...list)
     } else {

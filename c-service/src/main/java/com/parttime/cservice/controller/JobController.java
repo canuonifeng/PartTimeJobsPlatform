@@ -7,6 +7,7 @@ import com.parttime.cservice.pojo.vo.JobSummaryVO;
 import com.parttime.cservice.service.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,6 +19,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/jobs")
 public class JobController {
@@ -33,6 +35,7 @@ public class JobController {
             @Parameter(description = "工作地点") @RequestParam(required = false) String location,
             @Parameter(description = "最低薪资") @RequestParam(required = false) BigDecimal minRate,
             @Parameter(description = "最高薪资") @RequestParam(required = false) BigDecimal maxRate) {
+        log.info("job");
         List<JobSummaryVO> results = jobService.searchJobs(keyword, categoryId, location, minRate, maxRate);
         return ResponseEntity.ok(results);
     }
