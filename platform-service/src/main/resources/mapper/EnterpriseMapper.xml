@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.EnterpriseMapper">
+
+    <resultMap id="EnterpriseResultMap" type="com.parttime.platform.pojo.entity.Enterprise">
+        <id property="id" column="id"/>
+        <result property="companyName" column="company_name"/>
+        <result property="contactName" column="contact_name"/>
+        <result property="contactPhone" column="contact_phone"/>
+        <result property="companyAddress" column="company_address"/>
+        <result property="businessLicense" column="business_license"/>
+        <result property="status" column="status"/>
+        <result property="registrationId" column="registration_id"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="EnterpriseResultMap">
+        SELECT * FROM enterprises ORDER BY created_at DESC
+    </select>
+
+    <select id="findByStatus" resultMap="EnterpriseResultMap">
+        SELECT * FROM enterprises WHERE status = #{status} ORDER BY created_at DESC
+    </select>
+
+    <select id="findById" resultMap="EnterpriseResultMap">
+        SELECT * FROM enterprises WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO enterprises (company_name, contact_name, contact_phone, company_address, business_license, status, registration_id)
+        VALUES (#{companyName}, #{contactName}, #{contactPhone}, #{companyAddress}, #{businessLicense}, #{status}, #{registrationId})
+    </insert>
+
+    <update id="update">
+        UPDATE enterprises
+        SET company_name = #{companyName},
+            contact_name = #{contactName},
+            contact_phone = #{contactPhone},
+            company_address = #{companyAddress},
+            business_license = #{businessLicense}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE enterprises SET status = #{status} WHERE id = #{id}
+    </update>
+
+</mapper>
