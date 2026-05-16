@@ -36,7 +36,7 @@
         <text class="section-title">薪资说明</text>
         <view class="salary-table" v-if="job.rates?.length">
           <view class="salary-row" v-for="rate in job.rates" :key="rate.id">
-            <text class="salary-type">{{ rate.type }}</text>
+            <text class="salary-type">{{ rateTypeLabel(rate.type) }}</text>
             <text class="salary-amount">{{ rate.amount }}元/{{ rateUnit(rate.type) }}</text>
           </view>
         </view>
@@ -79,6 +79,11 @@ import { getJobDetail, applyJob } from '@/api/jobs'
 function rateUnit(type) {
   const map = { HOURLY: '小时', DAILY: '日', PIECEWORK: '件', PIECE: '单', MONTHLY: '月' }
   return map[type] || '小时'
+}
+
+function rateTypeLabel(type) {
+  const map = { HOURLY: '时薪', DAILY: '日薪', PIECEWORK: '计件', PIECE: '计件', MONTHLY: '月薪' }
+  return map[type] || type || '-'
 }
 
 const job = ref<any>(null)

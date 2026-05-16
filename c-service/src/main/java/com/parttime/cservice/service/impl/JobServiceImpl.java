@@ -11,8 +11,7 @@ import com.parttime.cservice.pojo.vo.JobRateInfoVO;
 import com.parttime.cservice.pojo.vo.JobScheduleInfoVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
 import com.parttime.cservice.service.JobService;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.parttime.cservice.utils.JsonConverter;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
@@ -116,8 +115,6 @@ public class JobServiceImpl implements JobService {
         return summary;
     }
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-
     private JobDetailVO toDetail(Job job) {
         JobDetailVO detail = new JobDetailVO();
         detail.setId(job.getId());
@@ -130,8 +127,11 @@ public class JobServiceImpl implements JobService {
         detail.setAddress(job.getAddress());
         detail.setLatitude(job.getLatitude());
         detail.setLongitude(job.getLongitude());
+        detail.setCompanyName(job.getCompanyName());
         detail.setCategoryName(job.getCategoryName());
         detail.setStatus(job.getStatus());
+        detail.setHeadcount(job.getHeadcount());
+        detail.setDeadline(job.getDeadline());
         if (job.getRateType() != null && job.getRateAmount() != null) {
             JobRateInfoVO rate = new JobRateInfoVO();
             rate.setType(job.getRateType());
@@ -140,7 +140,7 @@ public class JobServiceImpl implements JobService {
         }
         if (job.getScheduleInfo() != null) {
             try {
-                List<JobScheduleInfoVO> schedules = MAPPER.readValue(job.getScheduleInfo(), new TypeReference<List<JobScheduleInfoVO>>() {});
+                List<JobScheduleInfoVO> schedules = JsonConverter.create().toArray(job.getScheduleInfo(), JobScheduleInfoVO.class);
                 detail.setSchedules(schedules);
             } catch (Exception e) {
                 detail.setSchedules(emptyList());

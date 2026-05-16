@@ -161,16 +161,32 @@ INSERT INTO worker_resumes (worker_id, file_name, file_url) VALUES
 -- ========================
 -- 9. C端: 工作数据 (c_job)
 -- ========================
-INSERT INTO c_job (job_id, company_id, company_name, title, description, location, category_id, category_name, rate_type, rate_amount, status) VALUES
-(1, 1, '美味餐饮管理有限公司', '餐厅服务员', '负责餐厅日常接待、点餐、上菜等工作。', '北京市朝阳区建国路88号', 1, '餐饮服务', 'HOURLY', 25.00, 'PUBLISHED'),
-(2, 1, '美味餐饮管理有限公司', '洗碗工', '负责餐厅餐具清洗消毒。', '北京市朝阳区建国路88号', 1, '餐饮服务', 'HOURLY', 20.00, 'PUBLISHED'),
-(3, 1, '美味餐饮管理有限公司', '传菜员', '负责菜品传送。', '北京市朝阳区建国路88号', 1, '餐饮服务', 'HOURLY', 22.00, 'PUBLISHED'),
-(4, 2, '极速物流配送有限公司', '外卖配送员', '负责外卖配送，按单计酬。', '上海市浦东新区陆家嘴路100号', 2, '物流配送', 'PIECE', 5.00, 'PUBLISHED'),
-(5, 2, '极速物流配送有限公司', '仓库分拣员', '负责仓库分拣打包。', '上海市浦东新区陆家嘴路100号', 2, '物流配送', 'HOURLY', 28.00, 'PUBLISHED'),
-(6, 3, '洁新家政服务有限公司', '家庭保洁员', '负责家庭日常保洁。', '广州市天河区天河路200号', 3, '家政保洁', 'HOURLY', 35.00, 'PUBLISHED'),
-(7, 3, '洁新家政服务有限公司', '家电清洗师', '负责家电清洗。', '广州市天河区天河路200号', 3, '家政保洁', 'HOURLY', 40.00, 'PUBLISHED'),
-(8, 4, '卓越教育培训中心', '兼职家教(小学)', '辅导小学生作业。', '深圳市南山区科技园路300号', 5, '教育培训', 'HOURLY', 60.00, 'PUBLISHED'),
-(9, 4, '卓越教育培训中心', '课程顾问', '负责课程咨询推广。', '深圳市南山区科技园路300号', 5, '教育培训', 'MONTHLY', 3500.00, 'PUBLISHED');
+INSERT INTO c_job (job_id, company_id, company_name, title, description, location, category_id, category_name, rate_type, rate_amount, status, headcount, deadline) VALUES
+(1, 1, '美味餐饮管理有限公司', '餐厅服务员', '负责餐厅日常接待、点餐、上菜等工作。', '北京市朝阳区建国路88号', 1, '餐饮服务', 'HOURLY', 25.00, 'PUBLISHED', 10, DATE_ADD(NOW(), INTERVAL 30 DAY)),
+(2, 1, '美味餐饮管理有限公司', '洗碗工', '负责餐厅餐具清洗消毒。', '北京市朝阳区建国路88号', 1, '餐饮服务', 'HOURLY', 20.00, 'PUBLISHED', 5, DATE_ADD(NOW(), INTERVAL 20 DAY)),
+(3, 1, '美味餐饮管理有限公司', '传菜员', '负责菜品传送。', '北京市朝阳区建国路88号', 1, '餐饮服务', 'HOURLY', 22.00, 'PUBLISHED', 8, DATE_ADD(NOW(), INTERVAL 25 DAY)),
+(4, 2, '极速物流配送有限公司', '外卖配送员', '负责外卖配送，按单计酬。', '上海市浦东新区陆家嘴路100号', 2, '物流配送', 'PIECE', 5.00, 'PUBLISHED', 20, DATE_ADD(NOW(), INTERVAL 15 DAY)),
+(5, 2, '极速物流配送有限公司', '仓库分拣员', '负责仓库分拣打包。', '上海市浦东新区陆家嘴路100号', 2, '物流配送', 'HOURLY', 28.00, 'PUBLISHED', 15, DATE_ADD(NOW(), INTERVAL 30 DAY)),
+(6, 3, '洁新家政服务有限公司', '家庭保洁员', '负责家庭日常保洁。', '广州市天河区天河路200号', 3, '家政保洁', 'HOURLY', 35.00, 'PUBLISHED', 12, DATE_ADD(NOW(), INTERVAL 60 DAY)),
+(7, 3, '洁新家政服务有限公司', '家电清洗师', '负责家电清洗。', '广州市天河区天河路200号', 3, '家政保洁', 'HOURLY', 40.00, 'PUBLISHED', 6, DATE_ADD(NOW(), INTERVAL 45 DAY)),
+(8, 4, '卓越教育培训中心', '兼职家教(小学)', '辅导小学生作业。', '深圳市南山区科技园路300号', 5, '教育培训', 'HOURLY', 60.00, 'PUBLISHED', 5, DATE_ADD(NOW(), INTERVAL 90 DAY)),
+(9, 4, '卓越教育培训中心', '课程顾问', '负责课程咨询推广。', '深圳市南山区科技园路300号', 5, '教育培训', 'MONTHLY', 3500.00, 'PUBLISHED', 3, DATE_ADD(NOW(), INTERVAL 30 DAY));
+
+UPDATE c_job
+SET schedule_info = JSON_ARRAY(
+    JSON_OBJECT('date', DATE_FORMAT(CURDATE(), '%Y-%m-%d'), 'startTime', '08:00', 'endTime', '12:00', 'slotsAvailable', 3),
+    JSON_OBJECT('date', DATE_FORMAT(CURDATE(), '%Y-%m-%d'), 'startTime', '12:00', 'endTime', '16:00', 'slotsAvailable', 2),
+    JSON_OBJECT('date', DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '%Y-%m-%d'), 'startTime', '08:00', 'endTime', '12:00', 'slotsAvailable', 3),
+    JSON_OBJECT('date', DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '%Y-%m-%d'), 'startTime', '12:00', 'endTime', '16:00', 'slotsAvailable', 2)
+)
+WHERE job_id = 1;
+
+UPDATE c_job
+SET schedule_info = JSON_ARRAY(
+    JSON_OBJECT('date', DATE_FORMAT(CURDATE(), '%Y-%m-%d'), 'startTime', '07:00', 'endTime', '11:00', 'slotsAvailable', 3),
+    JSON_OBJECT('date', DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL 1 DAY), '%Y-%m-%d'), 'startTime', '07:00', 'endTime', '11:00', 'slotsAvailable', 3)
+)
+WHERE job_id = 2;
 
 -- ========================
 -- 10. C端: 申请和班次数据

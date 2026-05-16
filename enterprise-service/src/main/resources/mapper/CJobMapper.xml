@@ -3,14 +3,17 @@
 <mapper namespace="com.parttime.enterprise.mapper.CJobMapper">
 
     <insert id="upsert">
-        INSERT INTO c_job (job_id, company_id, title, description, location,
+        INSERT INTO c_job (job_id, company_id, company_name, title, description, location,
                            province, city, district, address, latitude, longitude,
-                           category_id, rate_type, rate_amount, status, schedule_info)
-        VALUES (#{jobId}, #{companyId}, #{title}, #{description}, #{location},
+                           category_id, rate_type, rate_amount, status, schedule_info,
+                           headcount, deadline)
+        VALUES (#{jobId}, #{companyId}, #{companyName}, #{title}, #{description}, #{location},
                 #{province}, #{city}, #{district}, #{address}, #{latitude}, #{longitude},
-                #{categoryId}, #{rateType}, #{rateAmount}, #{status}, #{scheduleInfo})
+                #{categoryId}, #{rateType}, #{rateAmount}, #{status}, #{scheduleInfo},
+                #{headcount}, #{deadline})
         ON DUPLICATE KEY UPDATE
             company_id = VALUES(company_id),
+            company_name = VALUES(company_name),
             title = VALUES(title),
             description = VALUES(description),
             location = VALUES(location),
@@ -24,7 +27,9 @@
             rate_type = VALUES(rate_type),
             rate_amount = VALUES(rate_amount),
             status = VALUES(status),
-            schedule_info = VALUES(schedule_info)
+            schedule_info = VALUES(schedule_info),
+            headcount = VALUES(headcount),
+            deadline = VALUES(deadline)
     </insert>
 
 </mapper>

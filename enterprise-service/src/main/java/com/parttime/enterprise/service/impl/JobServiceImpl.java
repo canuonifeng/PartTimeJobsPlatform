@@ -3,6 +3,7 @@ package com.parttime.enterprise.service.impl;
 import com.parttime.enterprise.enums.JobRateType;
 import com.parttime.enterprise.enums.JobStatus;
 import com.parttime.enterprise.mapper.CJobMapper;
+import com.parttime.enterprise.mapper.EnterpriseMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.JobRateMapper;
 import com.parttime.enterprise.mapper.JobScheduleMapper;
@@ -17,10 +18,10 @@ import com.parttime.enterprise.pojo.vo.JobRateVO;
 import com.parttime.enterprise.pojo.vo.JobScheduleVO;
 import com.parttime.enterprise.pojo.vo.JobVO;
 import com.parttime.enterprise.service.JobService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.parttime.enterprise.pojo.vo.JobScheduleVO;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.annotation.Resource;
 
@@ -38,8 +39,11 @@ public class JobServiceImpl implements JobService {
     private JobScheduleMapper jobScheduleMapper;
     @Resource
     private CJobMapper cJobMapper;
+    @Resource
+    private EnterpriseMapper enterpriseMapper;
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    @Resource
+    private ObjectMapper objectMapper;
 
     @Override
     public JobVO createJob(JobCreateCmd request) {
@@ -153,16 +157,19 @@ public class JobServiceImpl implements JobService {
         try {
             List<JobSchedule> schedules = jobScheduleMapper.findByJobId(jobId);
             List<JobScheduleVO> scheduleVOs = toScheduleResponses(schedules);
-            String scheduleInfo = MAPPER.writeValueAsString(scheduleVOs);
+            String scheduleInfo = objectMapper.writeValueAsString(scheduleVOs);
+            String companyName = enterpriseMapper.findCompanyNameById(job.getCompanyId());
             cJobMapper.upsert(
-                    job.getId(), job.getCompanyId(),
+                    job.getId(), job.getCompanyId(), companyName,
                     job.getTitle(), job.getDescription(), job.getLocation(),
                     job.getProvince(), job.getCity(), job.getDistrict(), job.getAddress(),
                     job.getLatitude(), job.getLongitude(),
                     job.getCategoryId(),
                     null, null,
                     job.getStatus(),
-                    scheduleInfo
+                    scheduleInfo,
+                    job.getHeadcount(),
+                    job.getDeadline()
             );
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Failed to serialize schedule info", e);
@@ -178,7 +185,7 @@ public class JobServiceImpl implements JobService {
         }
         jobMapper.updateStatus(id, "PUBLISHED");
         job.setStatus("PUBLISHED");
-        syncToCJob(job);
+        syncToCJob(job.getId());
         JobVO response = toResponse(job);
         response.setRates(toRateResponses(jobRateMapper.findByJobId(id)));
         response.setSchedules(toScheduleResponses(jobScheduleMapper.findByJobId(id)));

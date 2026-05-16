@@ -29,6 +29,8 @@ public class JobDetailVO {
     private BigDecimal latitude;
     @Schema(description = "经度")
     private BigDecimal longitude;
+    @Schema(description = "发布企业")
+    private String companyName;
     @Schema(description = "分类名称")
     private String categoryName;
     @Schema(description = "薪资规则列表")

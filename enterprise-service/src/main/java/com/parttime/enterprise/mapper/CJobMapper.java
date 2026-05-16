@@ -10,6 +10,7 @@ public interface CJobMapper {
 
     void upsert(@Param("jobId") Long jobId,
                 @Param("companyId") Long companyId,
+                @Param("companyName") String companyName,
                 @Param("title") String title,
                 @Param("description") String description,
                 @Param("location") String location,
@@ -23,5 +24,7 @@ public interface CJobMapper {
                 @Param("rateType") String rateType,
                 @Param("rateAmount") BigDecimal rateAmount,
                 @Param("status") String status,
-                @Param("scheduleInfo") String scheduleInfo);
+                @Param("scheduleInfo") String scheduleInfo,
+                @Param("headcount") Integer headcount,
+                @Param("deadline") java.time.LocalDateTime deadline);
 }
