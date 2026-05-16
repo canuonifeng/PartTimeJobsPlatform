@@ -1,0 +1,251 @@
+[
+  {
+    "value": "北京市",
+    "label": "北京市",
+    "children": [
+      { "value": "朝阳区", "label": "朝阳区" },
+      { "value": "海淀区", "label": "海淀区" },
+      { "value": "东城区", "label": "东城区" },
+      { "value": "西城区", "label": "西城区" },
+      { "value": "丰台区", "label": "丰台区" },
+      { "value": "通州区", "label": "通州区" }
+    ]
+  },
+  {
+    "value": "上海市",
+    "label": "上海市",
+    "children": [
+      { "value": "黄浦区", "label": "黄浦区" },
+      { "value": "静安区", "label": "静安区" },
+      { "value": "浦东新区", "label": "浦东新区" },
+      { "value": "徐汇区", "label": "徐汇区" },
+      { "value": "长宁区", "label": "长宁区" },
+      { "value": "闵行区", "label": "闵行区" }
+    ]
+  },
+  {
+    "value": "天津市",
+    "label": "天津市",
+    "children": [
+      { "value": "和平区", "label": "和平区" },
+      { "value": "河东区", "label": "河东区" },
+      { "value": "河西区", "label": "河西区" }
+    ]
+  },
+  {
+    "value": "重庆市",
+    "label": "重庆市",
+    "children": [
+      { "value": "渝中区", "label": "渝中区" },
+      { "value": "江北区", "label": "江北区" },
+      { "value": "沙坪坝区", "label": "沙坪坝区" }
+    ]
+  },
+  {
+    "value": "广东省",
+    "label": "广东省",
+    "children": [
+      {
+        "value": "广州市",
+        "label": "广州市",
+        "children": [
+          { "value": "天河区", "label": "天河区" },
+          { "value": "越秀区", "label": "越秀区" },
+          { "value": "海珠区", "label": "海珠区" },
+          { "value": "白云区", "label": "白云区" },
+          { "value": "番禺区", "label": "番禺区" }
+        ]
+      },
+      {
+        "value": "深圳市",
+        "label": "深圳市",
+        "children": [
+          { "value": "南山区", "label": "南山区" },
+          { "value": "福田区", "label": "福田区" },
+          { "value": "罗湖区", "label": "罗湖区" },
+          { "value": "宝安区", "label": "宝安区" },
+          { "value": "龙岗区", "label": "龙岗区" }
+        ]
+      },
+      {
+        "value": "东莞市",
+        "label": "东莞市"
+      }
+    ]
+  },
+  {
+    "value": "浙江省",
+    "label": "浙江省",
+    "children": [
+      {
+        "value": "杭州市",
+        "label": "杭州市",
+        "children": [
+          { "value": "西湖区", "label": "西湖区" },
+          { "value": "上城区", "label": "上城区" },
+          { "value": "拱墅区", "label": "拱墅区" },
+          { "value": "滨江区", "label": "滨江区" },
+          { "value": "余杭区", "label": "余杭区" }
+        ]
+      },
+      {
+        "value": "宁波市",
+        "label": "宁波市",
+        "children": [
+          { "value": "海曙区", "label": "海曙区" },
+          { "value": "鄞州区", "label": "鄞州区" }
+        ]
+      }
+    ]
+  },
+  {
+    "value": "江苏省",
+    "label": "江苏省",
+    "children": [
+      {
+        "value": "南京市",
+        "label": "南京市",
+        "children": [
+          { "value": "鼓楼区", "label": "鼓楼区" },
+          { "value": "玄武区", "label": "玄武区" },
+          { "value": "秦淮区", "label": "秦淮区" },
+          { "value": "建邺区", "label": "建邺区" }
+        ]
+      },
+      {
+        "value": "苏州市",
+        "label": "苏州市",
+        "children": [
+          { "value": "姑苏区", "label": "姑苏区" },
+          { "value": "虎丘区", "label": "虎丘区" },
+          { "value": "吴中区", "label": "吴中区" }
+        ]
+      }
+    ]
+  },
+  {
+    "value": "四川省",
+    "label": "四川省",
+    "children": [
+      {
+        "value": "成都市",
+        "label": "成都市",
+        "children": [
+          { "value": "武侯区", "label": "武侯区" },
+          { "value": "锦江区", "label": "锦江区" },
+          { "value": "青羊区", "label": "青羊区" },
+          { "value": "金牛区", "label": "金牛区" },
+          { "value": "高新区", "label": "高新区" }
+        ]
+      }
+    ]
+  },
+  {
+    "value": "福建省",
+    "label": "福建省",
+    "children": [
+      {
+        "value": "福州市",
+        "label": "福州市",
+        "children": [
+          { "value": "鼓楼区", "label": "鼓楼区" },
+          { "value": "台江区", "label": "台江区" },
+          { "value": "仓山区", "label": "仓山区" }
+        ]
+      },
+      {
+        "value": "厦门市",
+        "label": "厦门市",
+        "children": [
+          { "value": "思明区", "label": "思明区" },
+          { "value": "湖里区", "label": "湖里区" },
+          { "value": "集美区", "label": "集美区" }
+        ]
+      }
+    ]
+  },
+  {
+    "value": "湖北省",
+    "label": "湖北省",
+    "children": [
+      {
+        "value": "武汉市",
+        "label": "武汉市",
+        "children": [
+          { "value": "武昌区", "label": "武昌区" },
+          { "value": "江汉区", "label": "江汉区" },
+          { "value": "洪山区", "label": "洪山区" },
+          { "value": "汉阳区", "label": "汉阳区" }
+        ]
+      }
+    ]
+  },
+  {
+    "value": "湖南省",
+    "label": "湖南省",
+    "children": [
+      {
+        "value": "长沙市",
+        "label": "长沙市",
+        "children": [
+          { "value": "岳麓区", "label": "岳麓区" },
+          { "value": "芙蓉区", "label": "芙蓉区" },
+          { "value": "天心区", "label": "天心区" }
+        ]
+      }
+    ]
+  },
+  {
+    "value": "山东省",
+    "label": "山东省",
+    "children": [
+      {
+        "value": "济南市",
+        "label": "济南市",
+        "children": [
+          { "value": "历下区", "label": "历下区" },
+          { "value": "市中区", "label": "市中区" },
+          { "value": "槐荫区", "label": "槐荫区" }
+        ]
+      },
+      {
+        "value": "青岛市",
+        "label": "青岛市",
+        "children": [
+          { "value": "市南区", "label": "市南区" },
+          { "value": "市北区", "label": "市北区" },
+          { "value": "崂山区", "label": "崂山区" }
+        ]
+      }
+    ]
+  },
+  {
+    "value": "河南省",
+    "label": "河南省",
+    "children": [
+      {
+        "value": "郑州市",
+        "label": "郑州市",
+        "children": [
+          { "value": "金水区", "label": "金水区" },
+          { "value": "中原区", "label": "中原区" },
+          { "value": "二七区", "label": "二七区" }
+        ]
+      }
+    ]
+  },
+  {
+    "value": "河北省",
+    "label": "河北省",
+    "children": [
+      {
+        "value": "石家庄市",
+        "label": "石家庄市",
+        "children": [
+          { "value": "长安区", "label": "长安区" },
+          { "value": "桥西区", "label": "桥西区" }
+        ]
+      }
+    ]
+  }
+]

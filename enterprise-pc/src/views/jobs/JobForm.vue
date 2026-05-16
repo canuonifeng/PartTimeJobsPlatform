@@ -1,8 +1,10 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getJob, createJob, updateJob } from '../../api/job'
+import regions from '../../assets/regions.json'
+import LocationPicker from '../../components/LocationPicker.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -17,6 +19,12 @@ const form = ref({
   category: '',
   headcount: 1,
   deadline: '',
+  province: '',
+  city: '',
+  district: '',
+  address: '',
+  latitude: null,
+  longitude: null,
   salaryRates: [{ type: '', rate: '' }],
   scheduleSlots: [{ dayOfWeek: '', startTime: '', endTime: '' }],
   status: 'DRAFT'
@@ -45,6 +53,34 @@ const dayOfWeekOptions = [
   { value: 'SATURDAY', label: '周六' },
   { value: 'SUNDAY', label: '周日' }
 ]
+
+const showLocationPicker = ref(false)
+
+const regionSelected = computed({
+  get: () => {
+    const arr = []
+    if (form.value.province) arr.push(form.value.province)
+    if (form.value.city) arr.push(form.value.city)
+    if (form.value.district) arr.push(form.value.district)
+    return arr
+  },
+  set: (val) => {
+    if (!val || val.length === 0) {
+      form.value.province = ''
+      form.value.city = ''
+      form.value.district = ''
+      return
+    }
+    form.value.province = val[0] || ''
+    form.value.city = val[1] || ''
+    form.value.district = val[2] || ''
+  }
+})
+
+function onLocationConfirm(pos) {
+  form.value.latitude = pos.latitude
+  form.value.longitude = pos.longitude
+}
 
 function addSalaryRate() {
   form.value.salaryRates.push({ type: '', rate: '' })
@@ -110,8 +146,15 @@ onMounted(() => {
         <el-form-item label="职位描述" prop="description">
           <el-input v-model="form.description" type="textarea" :rows="4" />
         </el-form-item>
-        <el-form-item label="工作地点" prop="location" :rules="[{ required: true, message: '请输入工作地点' }]">
-          <el-input v-model="form.location" />
+        <el-form-item label="省/市/区" prop="province" :rules="[{ required: true, message: '请选择省市区' }]">
+          <el-cascader v-model="regionSelected" :options="regions" placeholder="选择省/市/区" style="width: 100%" />
+        </el-form-item>
+        <el-form-item label="详细地址" prop="address">
+          <el-input v-model="form.address" placeholder="街道、门牌号" />
+        </el-form-item>
+        <el-form-item label="坐标定位">
+          <el-button @click="showLocationPicker = true">选择位置</el-button>
+          <span v-if="form.latitude" style="margin-left:12px;color:#999">{{ form.latitude.toFixed(6) }}, {{ form.longitude.toFixed(6) }}</span>
         </el-form-item>
         <el-form-item label="类别" prop="category">
           <el-select v-model="form.category" style="width: 200px">
@@ -163,6 +206,7 @@ onMounted(() => {
           <el-button type="primary" :loading="loading" @click="handleSubmit">保存</el-button>
           <el-button @click="router.push('/jobs')">取消</el-button>
         </el-form-item>
+        <LocationPicker v-model="showLocationPicker" :latitude="form.latitude || 39.9042" :longitude="form.longitude || 116.4074" @confirm="onLocationConfirm" />
       </el-form>
     </el-card>
   </div>
