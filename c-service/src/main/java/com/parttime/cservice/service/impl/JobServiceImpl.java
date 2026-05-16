@@ -33,11 +33,32 @@ public class JobServiceImpl implements JobService {
     private CompanyWorkerInsertMapper companyWorkerInsertMapper;
 
     @Override
-    public Job addJob(Long id, String title, String description, String location, Long categoryId,
-                      String categoryName, List<JobRateInfoVO> rates, List<JobScheduleInfoVO> schedules,
+    public Job addJob(Long id, String title, String description, String location,
+                      String province, String city, String district, String address,
+                      BigDecimal latitude, BigDecimal longitude,
+                      Long categoryId, String categoryName,
+                      List<JobRateInfoVO> rates, List<JobScheduleInfoVO> schedules,
                       Integer headcount, Integer acceptedCount, LocalDateTime deadline, String status) {
-        Job job = new Job(id, title, description, location, categoryId, categoryName,
-                rates, schedules, headcount, acceptedCount, deadline, status);
+        Job job = new Job();
+        job.setJobId(id);
+        job.setId(id);
+        job.setTitle(title);
+        job.setDescription(description);
+        job.setLocation(location);
+        job.setProvince(province);
+        job.setCity(city);
+        job.setDistrict(district);
+        job.setAddress(address);
+        job.setLatitude(latitude);
+        job.setLongitude(longitude);
+        job.setCategoryId(categoryId);
+        job.setCategoryName(categoryName);
+        job.setRates(rates);
+        job.setSchedules(schedules);
+        job.setHeadcount(headcount);
+        job.setAcceptedCount(acceptedCount);
+        job.setDeadline(deadline);
+        job.setStatus(status);
         if (rates != null && !rates.isEmpty()) {
             job.setRateType(rates.get(0).getType());
             job.setRateAmount(rates.get(0).getAmount());
@@ -119,6 +140,9 @@ public class JobServiceImpl implements JobService {
         summary.setId(job.getId());
         summary.setTitle(job.getTitle());
         summary.setLocation(job.getLocation());
+        summary.setProvince(job.getProvince());
+        summary.setCity(job.getCity());
+        summary.setDistrict(job.getDistrict());
         summary.setCategoryName(job.getCategoryName());
         summary.setMinRate(rate);
         summary.setMaxRate(rate);
@@ -132,6 +156,12 @@ public class JobServiceImpl implements JobService {
         detail.setTitle(job.getTitle());
         detail.setDescription(job.getDescription());
         detail.setLocation(job.getLocation());
+        detail.setProvince(job.getProvince());
+        detail.setCity(job.getCity());
+        detail.setDistrict(job.getDistrict());
+        detail.setAddress(job.getAddress());
+        detail.setLatitude(job.getLatitude());
+        detail.setLongitude(job.getLongitude());
         detail.setCategoryName(job.getCategoryName());
         detail.setStatus(job.getStatus());
         if (job.getRateType() != null && job.getRateAmount() != null) {

@@ -4,9 +4,11 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO c_job (job_id, company_id, company_name, title, description, location,
+                           province, city, district, address, latitude, longitude,
                            category_id, category_name, rate_type, rate_amount, status, published_at,
                            created_at, updated_at)
         VALUES (#{jobId}, #{companyId}, #{companyName}, #{title}, #{description}, #{location},
+                #{province}, #{city}, #{district}, #{address}, #{latitude}, #{longitude},
                 #{categoryId}, #{categoryName}, #{rateType}, #{rateAmount}, #{status}, #{publishedAt},
                 #{createdAt}, #{updatedAt})
     </insert>
@@ -44,6 +46,8 @@
     <update id="update">
         UPDATE c_job
         SET title = #{title}, description = #{description}, location = #{location},
+            province = #{province}, city = #{city}, district = #{district}, address = #{address},
+            latitude = #{latitude}, longitude = #{longitude},
             category_id = #{categoryId}, category_name = #{categoryName},
             rate_type = #{rateType}, rate_amount = #{rateAmount},
             status = #{status}
