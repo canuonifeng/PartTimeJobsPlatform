@@ -40,6 +40,20 @@ public class JobServiceImpl implements JobService {
         job.setTitle(request.getTitle());
         job.setDescription(request.getDescription());
         job.setLocation(request.getLocation());
+        job.setProvince(request.getProvince());
+        job.setCity(request.getCity());
+        job.setDistrict(request.getDistrict());
+        job.setAddress(request.getAddress());
+        job.setLatitude(request.getLatitude());
+        job.setLongitude(request.getLongitude());
+        if (request.getProvince() != null || request.getCity() != null || request.getDistrict() != null || request.getAddress() != null) {
+            StringBuilder sb = new StringBuilder();
+            if (request.getProvince() != null) sb.append(request.getProvince());
+            if (request.getCity() != null) sb.append(' ').append(request.getCity());
+            if (request.getDistrict() != null) sb.append(' ').append(request.getDistrict());
+            if (request.getAddress() != null) sb.append(' ').append(request.getAddress());
+            job.setLocation(sb.toString().trim());
+        }
         job.setCategoryId(request.getCategoryId());
         job.setHeadcount(request.getHeadcount());
         job.setStatus("DRAFT");
@@ -81,6 +95,12 @@ public class JobServiceImpl implements JobService {
         if (request.getTitle() != null) job.setTitle(request.getTitle());
         if (request.getDescription() != null) job.setDescription(request.getDescription());
         if (request.getLocation() != null) job.setLocation(request.getLocation());
+        if (request.getProvince() != null) job.setProvince(request.getProvince());
+        if (request.getCity() != null) job.setCity(request.getCity());
+        if (request.getDistrict() != null) job.setDistrict(request.getDistrict());
+        if (request.getAddress() != null) job.setAddress(request.getAddress());
+        if (request.getLatitude() != null) job.setLatitude(request.getLatitude());
+        if (request.getLongitude() != null) job.setLongitude(request.getLongitude());
         if (request.getCategoryId() != null) job.setCategoryId(request.getCategoryId());
         if (request.getHeadcount() != null) job.setHeadcount(request.getHeadcount());
         if (request.getDeadline() != null) job.setDeadline(request.getDeadline());
@@ -283,6 +303,12 @@ public class JobServiceImpl implements JobService {
         response.setTitle(job.getTitle());
         response.setDescription(job.getDescription());
         response.setLocation(job.getLocation());
+        response.setProvince(job.getProvince());
+        response.setCity(job.getCity());
+        response.setDistrict(job.getDistrict());
+        response.setAddress(job.getAddress());
+        response.setLatitude(job.getLatitude());
+        response.setLongitude(job.getLongitude());
         response.setCategoryId(job.getCategoryId());
         response.setHeadcount(job.getHeadcount());
         response.setStatus(JobStatus.valueOf(job.getStatus()));
