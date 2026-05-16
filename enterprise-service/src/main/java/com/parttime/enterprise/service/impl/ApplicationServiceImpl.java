@@ -2,6 +2,7 @@ package com.parttime.enterprise.service.impl;
 
 import com.parttime.enterprise.enums.ApplicationStatus;
 import com.parttime.enterprise.exception.BusinessException;
+import com.parttime.enterprise.mapper.CWorkerMapper;
 import com.parttime.enterprise.mapper.JobApplicationMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.pojo.entity.Job;
@@ -22,6 +23,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     private JobApplicationMapper applicationMapper;
     @Resource
     private JobMapper jobMapper;
+    @Resource
+    private CWorkerMapper cWorkerMapper;
 
     @Override
     public List<JobApplicationVO> getApplicationsByJob(Long jobId, String jobTitle, String status) {
@@ -85,6 +88,13 @@ public class ApplicationServiceImpl implements ApplicationService {
         response.setStatus(ApplicationStatus.valueOf(app.getStatus()));
         response.setAppliedAt(app.getAppliedAt());
         response.setUpdatedAt(app.getUpdatedAt());
+
+        Job job = jobMapper.findById(app.getJobId()).orElse(null);
+        if (job != null) {
+            response.setJobTitle(job.getTitle());
+        }
+        response.setWorkerName(cWorkerMapper.findWorkerNameById(app.getWorkerId()));
+
         return response;
     }
 }

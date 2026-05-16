@@ -12,8 +12,12 @@ public class JobApplicationVO {
     private Long id;
     @Schema(description = "岗位ID")
     private Long jobId;
+    @Schema(description = "岗位标题")
+    private String jobTitle;
     @Schema(description = "工人ID")
     private Long workerId;
+    @Schema(description = "工人姓名")
+    private String workerName;
     @Schema(description = "申请状态")
     private ApplicationStatus status;
     @Schema(description = "申请时间")

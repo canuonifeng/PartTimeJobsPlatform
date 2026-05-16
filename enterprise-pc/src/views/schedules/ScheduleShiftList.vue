@@ -24,7 +24,7 @@ async function fetchData() {
   loading.value = true
   try {
     const res = await listShifts(searchForm.value)
-    shifts.value = res.data.records || res.data || []
+    shifts.value = Array.isArray(res) ? res : (res.records || [])
   } finally {
     loading.value = false
   }

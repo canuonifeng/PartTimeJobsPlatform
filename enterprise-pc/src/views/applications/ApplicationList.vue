@@ -27,8 +27,9 @@ async function fetchData() {
   loading.value = true
   try {
     const res = await listApplications(searchForm.value)
-    applications.value = res.data.records || res.data || []
-    total.value = res.data.total || 0
+    const data = Array.isArray(res) ? res : (res.records || [])
+    applications.value = data
+    total.value = Array.isArray(res) ? res.length : (res.total || 0)
   } finally {
     loading.value = false
   }

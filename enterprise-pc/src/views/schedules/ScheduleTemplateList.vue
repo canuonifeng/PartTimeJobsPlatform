@@ -32,7 +32,7 @@ async function fetchData() {
   loading.value = true
   try {
     const res = await listTemplates()
-    templates.value = res.data.records || res.data || []
+    templates.value = Array.isArray(res) ? res : (res.records || [])
   } finally {
     loading.value = false
   }

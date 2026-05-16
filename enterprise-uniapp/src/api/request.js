@@ -1,3 +1,4 @@
+// 修改此处 BASE_URL 为实际部署地址（真机调试需改为电脑局域网IP）
 const BASE_URL = 'http://localhost:8081/api'
 
 export function request(method, url, data = null) {
