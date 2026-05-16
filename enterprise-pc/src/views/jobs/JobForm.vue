@@ -103,7 +103,23 @@ async function fetchDetail() {
   loading.value = true
   try {
     const res = await getJob(route.params.id)
-    form.value = { ...res }
+    form.value = {
+      title: res.title || '',
+      description: res.description || '',
+      location: res.location || '',
+      category: res.categoryId || '',
+      headcount: res.headcount || 1,
+      deadline: res.deadline || '',
+      province: res.province || '',
+      city: res.city || '',
+      district: res.district || '',
+      address: res.address || '',
+      latitude: res.latitude || null,
+      longitude: res.longitude || null,
+      salaryRates: (res.rates || []).map((r) => ({ type: r.type || '', rate: r.amount || '' })),
+      scheduleSlots: (res.schedules || []).map((s) => ({ dayOfWeek: '', startTime: s.startTime || '', endTime: s.endTime || '' })),
+      status: res.status || 'DRAFT'
+    }
   } finally {
     loading.value = false
   }
