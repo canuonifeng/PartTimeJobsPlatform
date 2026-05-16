@@ -27,6 +27,11 @@
         </view>
       </view>
 
+      <view class="map-section" v-if="job.latitude && job.longitude">
+        <map :latitude="job.latitude" :longitude="job.longitude" :markers="markers" style="width:100%;height:300rpx;border-radius:16rpx" />
+        <text class="map-address">{{ job.province }} {{ job.city }} {{ job.district }} {{ job.address }}</text>
+      </view>
+
       <view class="section">
         <text class="section-title">薪资说明</text>
         <view class="salary-table" v-if="job.rates?.length">
@@ -68,12 +73,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { getJobDetail, applyJob } from '@/api/jobs'
 
 const job = ref<any>(null)
 const loading = ref(true)
 const appliedStatus = ref<string | null>(null)
+const markers = computed(() => {
+  if (!job.value?.latitude || !job.value?.longitude) return []
+  return [{
+    latitude: job.value.latitude,
+    longitude: job.value.longitude,
+    title: job.value.title || ''
+  }]
+})
 
 async function loadDetail() {
   const pages = getCurrentPages()
@@ -241,6 +254,19 @@ onMounted(loadDetail)
   font-size: 26rpx;
   color: #666;
   line-height: 1.6;
+}
+
+.map-section {
+  margin-bottom: 20rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+.map-address {
+  display: block;
+  padding: 12rpx 16rpx;
+  background: #fff;
+  font-size: 24rpx;
+  color: #666;
 }
 
 .bottom-bar {
