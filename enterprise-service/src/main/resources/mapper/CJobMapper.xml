@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.enterprise.mapper.CJobMapper">
+
+    <insert id="upsert">
+        INSERT INTO c_job (job_id, company_id, title, description, location,
+                           province, city, district, address, latitude, longitude,
+                           category_id, rate_type, rate_amount, status, schedule_info)
+        VALUES (#{jobId}, #{companyId}, #{title}, #{description}, #{location},
+                #{province}, #{city}, #{district}, #{address}, #{latitude}, #{longitude},
+                #{categoryId}, #{rateType}, #{rateAmount}, #{status}, #{scheduleInfo})
+        ON DUPLICATE KEY UPDATE
+            company_id = VALUES(company_id),
+            title = VALUES(title),
+            description = VALUES(description),
+            location = VALUES(location),
+            province = VALUES(province),
+            city = VALUES(city),
+            district = VALUES(district),
+            address = VALUES(address),
+            latitude = VALUES(latitude),
+            longitude = VALUES(longitude),
+            category_id = VALUES(category_id),
+            rate_type = VALUES(rate_type),
+            rate_amount = VALUES(rate_amount),
+            status = VALUES(status),
+            schedule_info = VALUES(schedule_info)
+    </insert>
+
+</mapper>

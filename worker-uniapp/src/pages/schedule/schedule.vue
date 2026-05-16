@@ -1,9 +1,9 @@
 <template>
   <view class="schedule-page">
     <view class="week-nav">
-      <view class="nav-arrow" @click="prevWeek">&lt;</view>
+      <view class="nav-arrow" @click="prevWeek">‹</view>
       <view class="week-label">{{ weekLabel }}</view>
-      <view class="nav-arrow" @click="nextWeek">&gt;</view>
+      <view class="nav-arrow" @click="nextWeek">›</view>
     </view>
 
     <view class="week-days">

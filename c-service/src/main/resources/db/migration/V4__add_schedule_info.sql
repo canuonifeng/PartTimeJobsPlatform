@@ -1,0 +1,2 @@
+ALTER TABLE c_job
+  ADD COLUMN schedule_info TEXT DEFAULT NULL COMMENT '排班JSON';

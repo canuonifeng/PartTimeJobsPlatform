@@ -15,3 +15,10 @@ export function checkOut(data) {
     data
   })
 }
+
+export function getMyAttendance() {
+  return request({
+    url: '/api/attendance/my',
+    method: 'GET'
+  })
+}

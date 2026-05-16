@@ -30,7 +30,7 @@
     <view class="section">
       <view class="section-header">
         <text class="section-title">热门零工</text>
-        <text class="section-more" @click="navTo('/pages/jobs/jobList')">查看更多 &gt;</text>
+        <text class="section-more" @click="navTo('/pages/jobs/jobList')">查看更多 ›</text>
       </view>
       <view class="hot-jobs">
         <view v-for="job in hotJobs" :key="job.id" class="hot-job-card" @click="navTo(`/pages/jobs/jobDetail?id=${job.id}`)">

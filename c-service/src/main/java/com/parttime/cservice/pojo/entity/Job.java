@@ -47,6 +47,8 @@ public class Job {
     private BigDecimal rateAmount;
     @Schema(description = "岗位状态")
     private String status;
+    @Schema(description = "排班JSON")
+    private String scheduleInfo;
     @Schema(description = "发布时间")
     private LocalDateTime publishedAt;
     @Schema(description = "薪资规则列表")

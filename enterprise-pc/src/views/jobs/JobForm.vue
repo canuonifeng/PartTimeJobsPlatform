@@ -62,6 +62,18 @@ function dateToDayOfWeek(dateStr) {
   return map[new Date(dateStr).getDay()]
 }
 
+function getScheduleDate(dayOfWeek) {
+  const now = new Date()
+  const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
+  const targetDay = dayNames.indexOf(dayOfWeek)
+  if (targetDay === -1) return null
+  
+  const diff = targetDay - now.getDay()
+  const result = new Date(now)
+  result.setDate(now.getDate() + diff)
+  return result.toISOString().split('T')[0]
+}
+
 const regionSelected = computed({
   get: () => {
     const arr = []
@@ -146,7 +158,7 @@ function buildPayload() {
     headcount: form.value.headcount,
     deadline: form.value.deadline || null,
     rates: form.value.salaryRates.filter((r) => r.type && r.rate).map((r) => ({ type: r.type, amount: Number(r.rate), currency: 'CNY' })),
-    schedules: form.value.scheduleSlots.filter((s) => s.dayOfWeek && s.startTime && s.endTime).map((s) => ({ scheduleDate: null, startTime: s.startTime, endTime: s.endTime, slotsAvailable: 1 }))
+    schedules: form.value.scheduleSlots.filter((s) => s.dayOfWeek && s.startTime && s.endTime).map((s) => ({ scheduleDate: getScheduleDate(s.dayOfWeek), startTime: s.startTime, endTime: s.endTime, slotsAvailable: 1 }))
   }
 }
 

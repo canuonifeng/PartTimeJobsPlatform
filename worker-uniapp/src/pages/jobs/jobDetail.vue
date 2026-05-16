@@ -5,7 +5,7 @@
     <template v-if="job">
       <view class="detail-header">
         <text class="job-title">{{ job.title }}</text>
-        <text class="job-pay">{{ job.rates?.[0]?.amount ?? '-' }}元/{{ job.rates?.[0]?.type === 'MONTHLY' ? '月' : '小时' }}</text>
+        <text class="job-pay">{{ job.rates?.[0]?.amount ?? '-' }}元/{{ rateUnit(job.rates?.[0]?.type) }}</text>
       </view>
 
       <view class="info-section">
@@ -37,7 +37,7 @@
         <view class="salary-table" v-if="job.rates?.length">
           <view class="salary-row" v-for="rate in job.rates" :key="rate.id">
             <text class="salary-type">{{ rate.type }}</text>
-            <text class="salary-amount">{{ rate.amount }}元/{{ rate.type === 'MONTHLY' ? '月' : rate.type === 'PIECE' ? '单' : '小时' }}</text>
+            <text class="salary-amount">{{ rate.amount }}元/{{ rateUnit(rate.type) }}</text>
           </view>
         </view>
       </view>
@@ -75,6 +75,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { getJobDetail, applyJob } from '@/api/jobs'
+
+function rateUnit(type) {
+  const map = { HOURLY: '小时', DAILY: '日', PIECEWORK: '件', PIECE: '单', MONTHLY: '月' }
+  return map[type] || '小时'
+}
 
 const job = ref<any>(null)
 const loading = ref(true)

@@ -49,6 +49,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { getMyAttendance } from '@/api/attendance'
+import { getMyWithdrawals } from '@/api/earnings'
 
 interface Transaction {
   id: number
@@ -85,24 +87,8 @@ async function loadData() {
   loading.value = true
   try {
     const [attendanceRes, withdrawalsRes] = await Promise.all([
-      new Promise<any>((resolve, reject) => {
-        uni.request({
-          url: '/api/attendance/my',
-          method: 'GET',
-          header: { Authorization: `Bearer ${uni.getStorageSync('token')}` },
-          success: (r) => resolve(r.data),
-          fail: (e) => reject(e)
-        })
-      }),
-      new Promise<any>((resolve, reject) => {
-        uni.request({
-          url: '/api/withdrawals/my',
-          method: 'GET',
-          header: { Authorization: `Bearer ${uni.getStorageSync('token')}` },
-          success: (r) => resolve(r.data),
-          fail: (e) => reject(e)
-        })
-      })
+      getMyAttendance(),
+      getMyWithdrawals()
     ])
 
     if (attendanceRes.summary) {

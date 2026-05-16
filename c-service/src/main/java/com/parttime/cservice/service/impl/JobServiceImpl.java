@@ -11,6 +11,8 @@ import com.parttime.cservice.pojo.vo.JobRateInfoVO;
 import com.parttime.cservice.pojo.vo.JobScheduleInfoVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
 import com.parttime.cservice.service.JobService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
@@ -22,6 +24,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import static java.util.Collections.emptyList;
+
 @Service
 public class JobServiceImpl implements JobService {
 
@@ -31,44 +35,6 @@ public class JobServiceImpl implements JobService {
     private JobApplicationMapper jobApplicationMapper;
     @Resource
     private CompanyWorkerInsertMapper companyWorkerInsertMapper;
-
-    @Override
-    public Job addJob(Long id, String title, String description, String location,
-                      String province, String city, String district, String address,
-                      BigDecimal latitude, BigDecimal longitude,
-                      Long categoryId, String categoryName,
-                      List<JobRateInfoVO> rates, List<JobScheduleInfoVO> schedules,
-                      Integer headcount, Integer acceptedCount, LocalDateTime deadline, String status) {
-        Job job = new Job();
-        job.setJobId(id);
-        job.setId(id);
-        job.setTitle(title);
-        job.setDescription(description);
-        job.setLocation(location);
-        job.setProvince(province);
-        job.setCity(city);
-        job.setDistrict(district);
-        job.setAddress(address);
-        job.setLatitude(latitude);
-        job.setLongitude(longitude);
-        job.setCategoryId(categoryId);
-        job.setCategoryName(categoryName);
-        job.setRates(rates);
-        job.setSchedules(schedules);
-        job.setHeadcount(headcount);
-        job.setAcceptedCount(acceptedCount);
-        job.setDeadline(deadline);
-        job.setStatus(status);
-        if (rates != null && !rates.isEmpty()) {
-            job.setRateType(rates.get(0).getType());
-            job.setRateAmount(rates.get(0).getAmount());
-        }
-        job.setPublishedAt(LocalDateTime.now());
-        job.setCreatedAt(LocalDateTime.now());
-        job.setUpdatedAt(LocalDateTime.now());
-        jobMapper.insert(job);
-        return job;
-    }
 
     @Override
     public List<JobSummaryVO> searchJobs(String keyword, Long categoryId, String location,
@@ -150,6 +116,8 @@ public class JobServiceImpl implements JobService {
         return summary;
     }
 
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+
     private JobDetailVO toDetail(Job job) {
         JobDetailVO detail = new JobDetailVO();
         detail.setId(job.getId());
@@ -169,6 +137,14 @@ public class JobServiceImpl implements JobService {
             rate.setType(job.getRateType());
             rate.setAmount(job.getRateAmount());
             detail.setRates(List.of(rate));
+        }
+        if (job.getScheduleInfo() != null) {
+            try {
+                List<JobScheduleInfoVO> schedules = MAPPER.readValue(job.getScheduleInfo(), new TypeReference<List<JobScheduleInfoVO>>() {});
+                detail.setSchedules(schedules);
+            } catch (Exception e) {
+                detail.setSchedules(emptyList());
+            }
         }
         return detail;
     }

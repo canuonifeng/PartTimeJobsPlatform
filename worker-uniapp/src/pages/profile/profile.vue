@@ -23,19 +23,19 @@
     <view class="menu-list">
       <view class="menu-item" @click="navTo('/pages/profile/edit')">
         <text>编辑资料</text>
-        <text class="arrow">&gt;</text>
+        <text class="arrow">›</text>
       </view>
       <view class="menu-item" @click="navTo('/pages/schedule/schedule')">
         <text>我的排班</text>
-        <text class="arrow">&gt;</text>
+        <text class="arrow">›</text>
       </view>
       <view class="menu-item" @click="navTo('/pages/attendance/clockIn')">
         <text>打卡记录</text>
-        <text class="arrow">&gt;</text>
+        <text class="arrow">›</text>
       </view>
       <view class="menu-item" @click="navTo('/pages/earnings/earnings')">
         <text>我的收入</text>
-        <text class="arrow">&gt;</text>
+        <text class="arrow">›</text>
       </view>
     </view>
 
