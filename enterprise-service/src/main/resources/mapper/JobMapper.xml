@@ -8,6 +8,12 @@
         <result property="title" column="title"/>
         <result property="description" column="description"/>
         <result property="location" column="location"/>
+        <result property="province" column="province"/>
+        <result property="city" column="city"/>
+        <result property="district" column="district"/>
+        <result property="address" column="address"/>
+        <result property="latitude" column="latitude"/>
+        <result property="longitude" column="longitude"/>
         <result property="categoryId" column="category_id"/>
         <result property="headcount" column="headcount"/>
         <result property="status" column="status"/>
@@ -17,8 +23,8 @@
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO jobs (company_id, title, description, location, category_id, headcount, status, deadline)
-        VALUES (#{companyId}, #{title}, #{description}, #{location}, #{categoryId}, #{headcount}, #{status}, #{deadline})
+        INSERT INTO jobs (company_id, title, description, location, province, city, district, address, latitude, longitude, category_id, headcount, status, deadline)
+        VALUES (#{companyId}, #{title}, #{description}, #{location}, #{province}, #{city}, #{district}, #{address}, #{latitude}, #{longitude}, #{categoryId}, #{headcount}, #{status}, #{deadline})
     </insert>
 
     <select id="findById" resultMap="JobResultMap">
@@ -48,6 +54,8 @@
     <update id="update">
         UPDATE jobs
         SET title = #{title}, description = #{description}, location = #{location},
+            province = #{province}, city = #{city}, district = #{district}, address = #{address},
+            latitude = #{latitude}, longitude = #{longitude},
             category_id = #{categoryId}, headcount = #{headcount}, deadline = #{deadline}
         WHERE id = #{id}
     </update>
