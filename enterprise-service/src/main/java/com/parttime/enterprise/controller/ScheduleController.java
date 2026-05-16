@@ -33,7 +33,8 @@ public class ScheduleController {
 
     @Operation(summary = "获取企业排班模板列表", description = "根据企业ID获取所有排班模板")
     @GetMapping("/schedule-templates")
-    public List<ScheduleTemplateVO> getTemplates(@Parameter(description = "企业ID") @RequestParam Long companyId) {
+    public List<ScheduleTemplateVO> getTemplates(@Parameter(description = "企业ID") @RequestParam(required = false) Long companyId) {
+        if (companyId == null) companyId = 1L;
         return scheduleService.getTemplatesByCompany(companyId);
     }
 
@@ -68,7 +69,9 @@ public class ScheduleController {
     public List<ScheduleShiftVO> getShifts(
             @Parameter(description = "岗位ID") @RequestParam(required = false) Long jobId,
             @Parameter(description = "工人ID") @RequestParam(required = false) Long workerId,
-            @Parameter(description = "班次日期") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate shiftDate) {
+            @Parameter(description = "班次日期") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate shiftDate,
+            @Parameter(hidden = true) @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        if (shiftDate == null && date != null) shiftDate = date;
         return scheduleService.getShifts(jobId, workerId, shiftDate);
     }
 

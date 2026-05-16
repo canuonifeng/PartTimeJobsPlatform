@@ -14,6 +14,8 @@ public interface JobApplicationMapper {
 
     Optional<JobApplication> findById(Long id);
 
+    List<JobApplication> findAll();
+
     List<JobApplication> findByJobId(Long jobId);
 
     List<JobApplication> findByWorkerId(Long workerId);

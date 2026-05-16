@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface ApplicationService {
 
-    List<JobApplicationVO> getApplicationsByJob(Long jobId);
+    List<JobApplicationVO> getApplicationsByJob(Long jobId, String jobTitle, String status);
 
     List<JobApplicationVO> getApplicationsByWorker(Long workerId);
 

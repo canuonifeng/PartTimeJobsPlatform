@@ -24,8 +24,20 @@ public class ApplicationServiceImpl implements ApplicationService {
     private JobMapper jobMapper;
 
     @Override
-    public List<JobApplicationVO> getApplicationsByJob(Long jobId) {
-        return applicationMapper.findByJobId(jobId).stream()
+    public List<JobApplicationVO> getApplicationsByJob(Long jobId, String jobTitle, String status) {
+        List<JobApplication> apps;
+        if (jobId != null) {
+            apps = applicationMapper.findByJobId(jobId);
+        } else {
+            apps = applicationMapper.findAll();
+        }
+        return apps.stream()
+                .filter(app -> status == null || status.isEmpty() || status.equals(app.getStatus()))
+                .filter(app -> {
+                    if (jobTitle == null || jobTitle.isEmpty()) return true;
+                    Job job = jobMapper.findById(app.getJobId()).orElse(null);
+                    return job != null && job.getTitle() != null && job.getTitle().contains(jobTitle);
+                })
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }

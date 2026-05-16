@@ -60,7 +60,8 @@ public class PayrollController {
 
     @Operation(summary = "获取企业薪资批次列表", description = "根据企业ID获取所有薪资批次")
     @GetMapping("/batches")
-    public List<PayrollBatchVO> getBatchesByCompany(@Parameter(description = "企业ID") @RequestParam Long companyId) {
+    public List<PayrollBatchVO> getBatchesByCompany(@Parameter(description = "企业ID") @RequestParam(required = false) Long companyId) {
+        if (companyId == null) companyId = 1L;
         return payrollService.getBatchesByCompany(companyId);
     }
 

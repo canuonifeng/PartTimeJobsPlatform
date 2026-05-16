@@ -24,8 +24,11 @@ public class ApplicationController {
 
     @Operation(summary = "获取岗位申请列表", description = "根据岗位ID获取所有申请记录")
     @GetMapping
-    public List<JobApplicationVO> getApplicationsByJob(@Parameter(description = "岗位ID") @RequestParam Long jobId) {
-        return applicationService.getApplicationsByJob(jobId);
+    public List<JobApplicationVO> getApplicationsByJob(
+            @Parameter(description = "岗位ID") @RequestParam(required = false) Long jobId,
+            @Parameter(description = "岗位标题") @RequestParam(required = false) String jobTitle,
+            @Parameter(description = "状态") @RequestParam(required = false) String status) {
+        return applicationService.getApplicationsByJob(jobId, jobTitle, status);
     }
 
     @Operation(summary = "通过申请", description = "通过工人的岗位申请")
