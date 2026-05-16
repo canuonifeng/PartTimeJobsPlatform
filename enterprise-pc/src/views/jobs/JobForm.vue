@@ -103,7 +103,7 @@ async function fetchDetail() {
   loading.value = true
   try {
     const res = await getJob(route.params.id)
-    form.value = { ...res.data }
+    form.value = { ...res }
   } finally {
     loading.value = false
   }
