@@ -207,7 +207,11 @@ onMounted(() => {
         <el-divider>薪资标准</el-divider>
         <el-form-item v-for="(item, index) in form.salaryRates" :key="index" :label="`薪资 ${index + 1}`">
           <div style="display: flex; gap: 8px; align-items: center">
-            <el-input v-model="item.type" placeholder="类型（如：时薪）" style="width: 140px" />
+            <el-select v-model="item.type" placeholder="薪资类型" style="width: 140px">
+              <el-option label="时薪" value="HOURLY" />
+              <el-option label="日薪" value="DAILY" />
+              <el-option label="计件" value="PIECEWORK" />
+            </el-select>
             <el-input-number v-model="item.rate" :min="0" :precision="2" placeholder="金额" />
             <el-button v-if="form.salaryRates.length > 1" type="danger" :icon="Delete" circle @click="removeSalaryRate(index)" />
           </div>
