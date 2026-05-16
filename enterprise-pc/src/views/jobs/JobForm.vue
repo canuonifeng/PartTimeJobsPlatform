@@ -125,17 +125,38 @@ async function fetchDetail() {
   }
 }
 
+function buildPayload() {
+  return {
+    title: form.value.title,
+    description: form.value.description,
+    location: form.value.location,
+    province: form.value.province,
+    city: form.value.city,
+    district: form.value.district,
+    address: form.value.address,
+    latitude: form.value.latitude,
+    longitude: form.value.longitude,
+    categoryId: form.value.category,
+    headcount: form.value.headcount,
+    deadline: form.value.deadline,
+    status: form.value.status,
+    rates: form.value.salaryRates.filter((r) => r.type && r.rate).map((r) => ({ type: r.type, amount: Number(r.rate), currency: 'CNY' })),
+    schedules: form.value.scheduleSlots.filter((s) => s.dayOfWeek && s.startTime && s.endTime).map((s) => ({ scheduleDate: null, startTime: s.startTime, endTime: s.endTime, slotsAvailable: 1 }))
+  }
+}
+
 async function handleSubmit() {
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid) return
 
   loading.value = true
   try {
+    const payload = buildPayload()
     if (isEdit) {
-      await updateJob(route.params.id, form.value)
+      await updateJob(route.params.id, payload)
       ElMessage.success('更新成功')
     } else {
-      await createJob(form.value)
+      await createJob(payload)
       ElMessage.success('创建成功')
     }
     router.push('/jobs')
@@ -162,7 +183,7 @@ onMounted(() => {
         <el-form-item label="职位描述" prop="description">
           <el-input v-model="form.description" type="textarea" :rows="4" />
         </el-form-item>
-        <el-form-item label="省/市/区" prop="province" :rules="[{ required: true, message: '请选择省市区' }]">
+        <el-form-item label="省/市/区" prop="province">
           <el-cascader v-model="regionSelected" :options="regions" placeholder="选择省/市/区" style="width: 100%" />
         </el-form-item>
         <el-form-item label="详细地址" prop="address">
