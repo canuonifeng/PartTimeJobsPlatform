@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { createJob, updateJob, getJob, getCategories, createRate, createSchedule, getRates, getSchedules } from '@/api/jobs'
+import regions from '@/assets/regions.json'
 
 const isEdit = ref(false)
 const jobId = ref('')
@@ -12,6 +13,12 @@ const formData = ref({
   title: '',
   description: '',
   location: '',
+  province: '',
+  city: '',
+  district: '',
+  address: '',
+  latitude: null,
+  longitude: null,
   categoryId: '',
   headcount: 1,
   deadline: ''
@@ -24,6 +31,54 @@ const rateTypeLabels = ['时薪', '日薪', '计件']
 const rateTypeValues = ['HOURLY', 'DAILY', 'PIECEWORK']
 
 const categoryNames = ref([])
+
+const provinceList = regions.map(r => r.label)
+
+function getCitiesForProvince(pIdx) {
+  return regions[pIdx]?.children?.map(c => c.label) || []
+}
+
+function getDistrictsForProvinceCity(pIdx, cIdx) {
+  return regions[pIdx]?.children?.[cIdx]?.children?.map(d => d.label) || []
+}
+
+const cityList = ref([])
+const districtList = ref([])
+const regionIndexes = ref([0, 0, 0])
+
+function onRegionChange(e) {
+  regionIndexes.value = e.detail.value
+  const [pIdx, cIdx, dIdx] = e.detail.value
+  const province = regions[pIdx]
+  if (province) {
+    formData.value.province = province.label
+    cityList.value = getCitiesForProvince(pIdx)
+    const city = province.children?.[cIdx]
+    if (city) {
+      formData.value.city = city.label
+      districtList.value = getDistrictsForProvinceCity(pIdx, cIdx)
+      const district = city.children?.[dIdx]
+      if (district) {
+        formData.value.district = district.label
+      }
+    }
+  }
+}
+
+function chooseLocation() {
+  uni.chooseLocation({
+    success: (res) => {
+      formData.value.latitude = res.latitude
+      formData.value.longitude = res.longitude
+      if (res.address && !formData.value.address) {
+        formData.value.address = res.address
+      }
+    },
+    fail: () => {
+      uni.showToast({ title: '定位失败', icon: 'none' })
+    }
+  })
+}
 
 onLoad(async (params) => {
   if (params.id) {
@@ -54,6 +109,12 @@ async function loadJobDetail() {
       title: job.title || '',
       description: job.description || '',
       location: job.location || '',
+      province: job.province || '',
+      city: job.city || '',
+      district: job.district || '',
+      address: job.address || '',
+      latitude: job.latitude || null,
+      longitude: job.longitude || null,
       categoryId: job.categoryId || '',
       headcount: job.headcount || 1,
       deadline: job.deadline || ''
@@ -170,8 +231,24 @@ async function handleSave() {
         </view>
 
         <view class="form-item">
-          <text class="label">工作地点</text>
-          <input v-model="formData.location" class="input" placeholder="请输入工作地点" />
+          <text class="label">省/市/区</text>
+          <picker mode="multiSelector" :range="[provinceList, cityList, districtList]" :value="regionIndexes" @columnchange="onRegionChange">
+            <view class="picker">
+              <text v-if="formData.province" class="picker-value">{{ formData.province }} {{ formData.city }} {{ formData.district }}</text>
+              <text v-else class="picker-placeholder">请选择省/市/区</text>
+            </view>
+          </picker>
+        </view>
+
+        <view class="form-item">
+          <text class="label">详细地址</text>
+          <input v-model="formData.address" class="input" placeholder="街道、门牌号" />
+        </view>
+
+        <view class="form-item">
+          <text class="label">坐标定位</text>
+          <button class="location-btn" @click="chooseLocation">选择位置</button>
+          <text v-if="formData.latitude" class="location-coords">{{ formData.latitude }}, {{ formData.longitude }}</text>
         </view>
 
         <view class="form-item">
@@ -428,5 +505,19 @@ async function handleSave() {
 }
 .save-btn::after {
   border: none;
+}
+.location-btn {
+  height: 60rpx;
+  line-height: 60rpx;
+  font-size: 24rpx;
+  background: #007aff;
+  color: #fff;
+  border-radius: 8rpx;
+  padding: 0 20rpx;
+}
+.location-coords {
+  font-size: 22rpx;
+  color: #999;
+  margin-left: 12rpx;
 }
 </style>
