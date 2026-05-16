@@ -34,13 +34,25 @@ const routes = [
     component: () => import('../views/configs/SystemConfigList.vue'),
     meta: { requiresAuth: true }
   },
-  {
-    path: '/categories',
-    name: 'Categories',
-    component: () => import('../views/categories/JobCategoryList.vue'),
-    meta: { requiresAuth: true }
-  }
-]
+    {
+      path: '/categories',
+      name: 'Categories',
+      component: () => import('../views/categories/JobCategoryList.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/enterprises',
+      name: 'Enterprises',
+      component: () => import('../views/enterprises/EnterpriseList.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/admin/workers',
+      name: 'WorkerList',
+      component: () => import('../views/workers/WorkerList.vue'),
+      meta: { requiresAuth: true }
+    }
+  ]
 
 const router = createRouter({
   history: createWebHistory(),

@@ -2,6 +2,8 @@ package com.parttime.enterprise.config;
 
 import com.parttime.enterprise.config.JwtTokenProvider;
 import com.parttime.enterprise.filter.JwtAuthenticationFilter;
+import com.parttime.enterprise.service.EnterpriseUserDetailsService;
+import jakarta.annotation.Resource;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,11 +17,9 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -33,6 +33,9 @@ import jakarta.servlet.http.HttpServletResponse;
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
+
+    @Resource
+    private EnterpriseUserDetailsService enterpriseUserDetailsService;
 
     public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
         this.jwtTokenProvider = jwtTokenProvider;
@@ -83,23 +86,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
-        var admin = User.withUsername("admin")
-                .password(passwordEncoder.encode("admin123"))
-                .roles("ADMIN")
-                .build();
-        var hr = User.withUsername("hr")
-                .password(passwordEncoder.encode("hr123"))
-                .roles("HR")
-                .build();
-        var manager = User.withUsername("manager")
-                .password(passwordEncoder.encode("manager123"))
-                .roles("MANAGER")
-                .build();
-        var finance = User.withUsername("finance")
-                .password(passwordEncoder.encode("finance123"))
-                .roles("FINANCE")
-                .build();
-        return new InMemoryUserDetailsManager(admin, hr, manager, finance);
+    public UserDetailsService userDetailsService() {
+        return enterpriseUserDetailsService;
     }
 }

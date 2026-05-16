@@ -176,11 +176,11 @@ INSERT INTO c_job (job_id, company_id, company_name, title, description, locatio
 -- 10. C端: 申请和班次数据
 -- ========================
 INSERT INTO c_job_application (worker_id, job_id, company_id, status, applied_at) VALUES
-(1, 1, 1, 'APPROVED', NOW()),
+(1, 1, 1, 'ACCEPTED', NOW()),
 (1, 4, 2, 'PENDING', NOW()),
-(2, 6, 3, 'APPROVED', NOW()),
-(3, 4, 2, 'APPROVED', NOW()),
-(4, 8, 4, 'APPROVED', NOW()),
+(2, 6, 3, 'ACCEPTED', NOW()),
+(3, 4, 2, 'ACCEPTED', NOW()),
+(4, 8, 4, 'ACCEPTED', NOW()),
 (5, 2, 1, 'PENDING', NOW());
 
 INSERT INTO c_shift (worker_id, job_id, company_id, shift_date, start_time, end_time, location_name, status) VALUES
@@ -220,11 +220,11 @@ INSERT INTO schedule_shifts (job_id, worker_id, shift_date, start_time, end_time
 (8, 4, DATE_ADD(CURDATE(), INTERVAL 1 DAY), '09:00:00', '11:00:00', '科技园路300号', 'SCHEDULED');
 
 INSERT INTO job_applications (job_id, worker_id, status, applied_at) VALUES
-(1, 1, 'APPROVED', NOW()),
+(1, 1, 'ACCEPTED', NOW()),
 (4, 1, 'PENDING', NOW()),
-(6, 2, 'APPROVED', NOW()),
-(4, 3, 'APPROVED', NOW()),
-(8, 4, 'APPROVED', NOW()),
+(6, 2, 'ACCEPTED', NOW()),
+(4, 3, 'ACCEPTED', NOW()),
+(8, 4, 'ACCEPTED', NOW()),
 (2, 5, 'PENDING', NOW());
 
 -- ========================
@@ -287,3 +287,21 @@ INSERT INTO worker_evaluations (company_id, job_id, worker_id, rating, comment) 
 INSERT INTO job_reports (job_id, reporter_id, reason, description, status) VALUES
 (5, 1, '虚假招聘', '该岗位描述的薪资与实际不符。', 'PENDING'),
 (9, 2, '信息不实', '联系电话打不通。', 'DISMISSED');
+
+-- ========================
+-- 18. 企业信息 (enterprises)
+-- ========================
+INSERT INTO enterprises (id, company_name, contact_name, contact_phone, company_address, business_license, status, registration_id) VALUES
+(1, '北京迅捷物流有限公司', '王经理', '13800138001', '北京市朝阳区建国路88号', 'BL-2024001', 'ACTIVE', 1),
+(2, '上海丰盛餐饮管理有限公司', '李店长', '13900139002', '上海市浦东新区陆家嘴路100号', 'BL-2024002', 'ACTIVE', 2),
+(3, '广州天汇商贸有限公司', '陈主管', '13700137003', '广州市天河区天河路200号', 'BL-2024003', 'ACTIVE', 3),
+(4, '深圳创想科技有限公司', '张总', '13600136004', '深圳市南山区科技园路300号', 'BL-2024004', 'ACTIVE', 4);
+
+-- ========================
+-- 19. 企业端登录账号 (enterprise_accounts)
+-- ========================
+INSERT INTO enterprise_accounts (enterprise_id, username, password, display_name, role, status) VALUES
+(1, 'admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '企业管理员', 'ADMIN', 'ACTIVE'),
+(1, 'hr', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '人力资源', 'HR', 'ACTIVE'),
+(1, 'manager', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '运营经理', 'MANAGER', 'ACTIVE'),
+(1, 'finance', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '财务', 'FINANCE', 'ACTIVE');

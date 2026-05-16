@@ -7,6 +7,7 @@ import com.parttime.enterprise.pojo.cmd.UpdateJobCmd;
 import com.parttime.enterprise.pojo.vo.JobRateVO;
 import com.parttime.enterprise.pojo.vo.JobScheduleVO;
 import com.parttime.enterprise.pojo.vo.JobVO;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 

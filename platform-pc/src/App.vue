@@ -3,28 +3,34 @@
   <el-container v-else class="layout-container">
     <el-aside width="220px">
       <el-menu :default-active="currentRoute" router background-color="#304156" text-color="#bfcbd9" active-text-color="#409eff">
-        <div class="sidebar-logo">Admin Panel</div>
+        <div class="sidebar-logo">管理后台</div>
         <el-menu-item index="/dashboard">
-          <el-icon><DataAnalysis /></el-icon><span>Dashboard</span>
+          <el-icon><DataAnalysis /></el-icon><span>仪表盘</span>
         </el-menu-item>
         <el-menu-item index="/registrations">
-          <el-icon><DocumentChecked /></el-icon><span>Registrations</span>
+          <el-icon><DocumentChecked /></el-icon><span>注册审核</span>
         </el-menu-item>
         <el-menu-item index="/job-reports">
-          <el-icon><Warning /></el-icon><span>Job Reports</span>
+          <el-icon><Warning /></el-icon><span>职位举报</span>
         </el-menu-item>
         <el-menu-item index="/configs">
-          <el-icon><Setting /></el-icon><span>System Config</span>
+          <el-icon><Setting /></el-icon><span>系统配置</span>
         </el-menu-item>
         <el-menu-item index="/categories">
-          <el-icon><Folder /></el-icon><span>Job Categories</span>
+          <el-icon><Folder /></el-icon><span>职位分类</span>
+        </el-menu-item>
+        <el-menu-item index="/enterprises">
+          <el-icon><OfficeBuilding /></el-icon><span>企业管理</span>
+        </el-menu-item>
+        <el-menu-item index="/admin/workers">
+          <el-icon><User /></el-icon><span>兼职管理</span>
         </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>
       <el-header class="layout-header">
-        <span class="header-title">Admin Dashboard</span>
-        <el-button type="danger" size="small" @click="handleLogout">Logout</el-button>
+        <span class="header-title">管理后台</span>
+        <el-button type="danger" size="small" @click="handleLogout">退出登录</el-button>
       </el-header>
       <el-main class="layout-main">
         <router-view />
@@ -37,7 +43,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
-import { DataAnalysis, DocumentChecked, Warning, Setting, Folder } from '@element-plus/icons-vue'
+import { DataAnalysis, DocumentChecked, Warning, Setting, Folder, OfficeBuilding, User } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -90,5 +96,7 @@ html, body, #app {
 }
 .el-aside {
   overflow: auto;
+  height: 100%;
+  background: #304156;
 }
 </style>

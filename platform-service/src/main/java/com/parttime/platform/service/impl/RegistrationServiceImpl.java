@@ -1,8 +1,10 @@
 package com.parttime.platform.service.impl;
 
 import com.parttime.platform.exception.BusinessException;
+import com.parttime.platform.mapper.EnterpriseMapper;
 import com.parttime.platform.mapper.EnterpriseRegistrationMapper;
 import com.parttime.platform.pojo.cmd.ReviewRegistrationCmd;
+import com.parttime.platform.pojo.entity.Enterprise;
 import com.parttime.platform.pojo.entity.EnterpriseRegistration;
 import com.parttime.platform.pojo.vo.RegistrationListVO;
 import com.parttime.platform.pojo.vo.RegistrationVO;
@@ -19,6 +21,9 @@ public class RegistrationServiceImpl implements RegistrationService {
 
     @Resource
     private EnterpriseRegistrationMapper registrationMapper;
+
+    @Resource
+    private EnterpriseMapper enterpriseMapper;
 
     @Override
     public RegistrationListVO getRegistrations(String status) {
@@ -55,6 +60,17 @@ public class RegistrationServiceImpl implements RegistrationService {
         registration.setReviewerId(reviewerId);
         registration.setReviewedAt(LocalDateTime.now());
         registrationMapper.update(registration);
+
+        Enterprise enterprise = new Enterprise();
+        enterprise.setCompanyName(registration.getCompanyName());
+        enterprise.setContactName(registration.getContactName());
+        enterprise.setContactPhone(registration.getContactPhone());
+        enterprise.setCompanyAddress(registration.getCompanyAddress());
+        enterprise.setBusinessLicense(registration.getBusinessLicense());
+        enterprise.setStatus("ACTIVE");
+        enterprise.setRegistrationId(registration.getId());
+        enterpriseMapper.insert(enterprise);
+
         return toVO(registration);
     }
 

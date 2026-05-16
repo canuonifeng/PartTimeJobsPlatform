@@ -9,7 +9,7 @@
       </el-col>
     </el-row>
     <el-card shadow="hover" class="chart-card">
-      <template #header><span>Trend</span></template>
+      <template #header><span>趋势</span></template>
       <v-chart :option="chartOption" style="height:400px" autoresize />
     </el-card>
   </div>
@@ -27,22 +27,22 @@ import { getDashboardStats } from '../api/dashboard'
 use([CanvasRenderer, LineChart, GridComponent, TooltipComponent, LegendComponent])
 
 const statCards = ref([
-  { label: 'Companies', value: 0 },
-  { label: 'Jobs', value: 0 },
-  { label: 'Workers', value: 0 },
-  { label: 'Shifts', value: 0 },
-  { label: 'Revenue', value: '¥0' }
+  { label: '企业数', value: 0 },
+  { label: '岗位数', value: 0 },
+  { label: '工人数', value: 0 },
+  { label: '班次数', value: 0 },
+  { label: '营收', value: '¥0' }
 ])
 
 const chartOption = ref({
   tooltip: { trigger: 'axis' },
-  legend: { data: ['Jobs', 'Workers'] },
+  legend: { data: ['岗位', '工人'] },
   grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
   xAxis: { type: 'category', boundaryGap: false, data: [] },
   yAxis: { type: 'value' },
   series: [
-    { name: 'Jobs', type: 'line', smooth: true, data: [] },
-    { name: 'Workers', type: 'line', smooth: true, data: [] }
+    { name: '岗位', type: 'line', smooth: true, data: [] },
+    { name: '工人', type: 'line', smooth: true, data: [] }
   ]
 })
 
@@ -51,11 +51,11 @@ onMounted(async () => {
     const data = await getDashboardStats()
     if (data) {
       statCards.value = [
-        { label: 'Companies', value: data.totalCompanies ?? 0 },
-        { label: 'Jobs', value: data.totalJobs ?? 0 },
-        { label: 'Workers', value: data.totalWorkers ?? 0 },
-        { label: 'Shifts', value: data.totalShifts ?? 0 },
-        { label: 'Revenue', value: `¥${data.totalRevenue ?? 0}` }
+        { label: '企业数', value: data.totalCompanies ?? 0 },
+        { label: '岗位数', value: data.totalJobs ?? 0 },
+        { label: '工人数', value: data.totalWorkers ?? 0 },
+        { label: '班次数', value: data.totalShifts ?? 0 },
+        { label: '营收', value: `¥${data.totalRevenue ?? 0}` }
       ]
       if (data.trendLabels) {
         chartOption.value.xAxis.data = data.trendLabels

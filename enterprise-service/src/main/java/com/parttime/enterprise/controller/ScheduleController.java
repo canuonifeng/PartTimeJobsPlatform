@@ -1,5 +1,6 @@
 package com.parttime.enterprise.controller;
 
+import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
 import com.parttime.enterprise.pojo.cmd.ScheduleTemplateCmd;
 import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
@@ -33,8 +34,8 @@ public class ScheduleController {
 
     @Operation(summary = "获取企业排班模板列表", description = "根据企业ID获取所有排班模板")
     @GetMapping("/schedule-templates")
-    public List<ScheduleTemplateVO> getTemplates(@Parameter(description = "企业ID") @RequestParam(required = false) Long companyId) {
-        if (companyId == null) companyId = 1L;
+    public List<ScheduleTemplateVO> getTemplates() {
+        Long companyId = SecurityUtil.getCurrentCompanyId();
         return scheduleService.getTemplatesByCompany(companyId);
     }
 

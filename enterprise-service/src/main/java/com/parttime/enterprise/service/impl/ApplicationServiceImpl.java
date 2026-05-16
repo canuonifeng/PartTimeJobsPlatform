@@ -2,6 +2,7 @@ package com.parttime.enterprise.service.impl;
 
 import com.parttime.enterprise.enums.ApplicationStatus;
 import com.parttime.enterprise.exception.BusinessException;
+import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.CWorkerMapper;
 import com.parttime.enterprise.mapper.JobApplicationMapper;
 import com.parttime.enterprise.mapper.JobMapper;
@@ -25,6 +26,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     private JobMapper jobMapper;
     @Resource
     private CWorkerMapper cWorkerMapper;
+    @Resource
+    private CompanyWorkerMapper companyWorkerMapper;
 
     @Override
     public List<JobApplicationVO> getApplicationsByJob(Long jobId, String jobTitle, String status) {
@@ -67,6 +70,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         applicationMapper.updateStatus(applicationId, "ACCEPTED");
         app.setStatus("ACCEPTED");
+        companyWorkerMapper.upsert(job.getCompanyId(), app.getWorkerId());
         return toResponse(app);
     }
 

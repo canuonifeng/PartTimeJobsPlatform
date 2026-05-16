@@ -1,5 +1,6 @@
 package com.parttime.enterprise.controller;
 
+import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.pojo.cmd.PayrollBatchCmd;
 import com.parttime.enterprise.pojo.vo.PayrollBatchVO;
 import com.parttime.enterprise.pojo.vo.PayrollItemVO;
@@ -60,8 +61,8 @@ public class PayrollController {
 
     @Operation(summary = "获取企业薪资批次列表", description = "根据企业ID获取所有薪资批次")
     @GetMapping("/batches")
-    public List<PayrollBatchVO> getBatchesByCompany(@Parameter(description = "企业ID") @RequestParam(required = false) Long companyId) {
-        if (companyId == null) companyId = 1L;
+    public List<PayrollBatchVO> getBatchesByCompany() {
+        Long companyId = SecurityUtil.getCurrentCompanyId();
         return payrollService.getBatchesByCompany(companyId);
     }
 

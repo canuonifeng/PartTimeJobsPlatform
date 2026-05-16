@@ -1,21 +1,21 @@
 <template>
   <el-card>
-    <template #header><span class="card-title">System Configuration</span></template>
+    <template #header><span class="card-title">系统配置</span></template>
     <el-table :data="configs" v-loading="loading" stripe style="width:100%">
-      <el-table-column prop="configKey" label="Key" min-width="200" />
-      <el-table-column label="Value" min-width="300">
+      <el-table-column prop="configKey" label="配置键" min-width="200" />
+      <el-table-column label="配置值" min-width="300">
         <template #default="{ row, $index }">
           <template v-if="editingIndex === $index">
             <el-input v-model="editValue" size="small" style="width:200px" />
-            <el-button type="primary" size="small" @click="confirmEdit(row, $index)">Save</el-button>
-            <el-button size="small" @click="cancelEdit">Cancel</el-button>
+            <el-button type="primary" size="small" @click="confirmEdit(row, $index)">保存</el-button>
+            <el-button size="small" @click="cancelEdit">取消</el-button>
           </template>
           <span v-else>{{ row.configValue }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="Actions" width="80">
+      <el-table-column label="操作" width="80">
         <template #default="{ $index }">
-          <el-button type="primary" size="small" text @click="startEdit($index)">Edit</el-button>
+          <el-button type="primary" size="small" text @click="startEdit($index)">编辑</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -35,7 +35,8 @@ const editValue = ref('')
 async function fetchData() {
   loading.value = true
   try {
-    configs.value = await getConfigs()
+    const data = await getConfigs()
+    configs.value = Array.isArray(data) ? data : (data.records || [])
   } finally {
     loading.value = false
   }
@@ -53,7 +54,7 @@ function cancelEdit() {
 
 async function confirmEdit(row, index) {
   await updateConfig(row.configKey, editValue.value)
-  ElMessage.success('Config updated')
+  ElMessage.success('配置已更新')
   configs.value[index].configValue = editValue.value
   cancelEdit()
 }

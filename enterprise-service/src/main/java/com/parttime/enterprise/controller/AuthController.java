@@ -1,5 +1,6 @@
 package com.parttime.enterprise.controller;
 
+import com.parttime.enterprise.config.CompanyUserDetails;
 import com.parttime.enterprise.config.JwtTokenProvider;
 import com.parttime.enterprise.pojo.cmd.LoginCmd;
 import com.parttime.enterprise.pojo.vo.LoginVO;
@@ -38,7 +39,11 @@ public class AuthController {
             List<String> roles = auth.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .toList();
-            String token = jwtTokenProvider.generateToken(auth.getName(), roles);
+            Long companyId = 1L;
+            if (auth.getPrincipal() instanceof CompanyUserDetails details) {
+                companyId = details.getCompanyId();
+            }
+            String token = jwtTokenProvider.generateToken(auth.getName(), roles, companyId);
             return ResponseEntity.ok(new LoginVO(token));
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

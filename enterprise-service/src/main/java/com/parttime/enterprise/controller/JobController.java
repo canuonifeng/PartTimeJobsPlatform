@@ -1,5 +1,6 @@
 package com.parttime.enterprise.controller;
 
+import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.pojo.cmd.JobCreateCmd;
 import com.parttime.enterprise.pojo.cmd.JobRateCmd;
 import com.parttime.enterprise.pojo.cmd.JobScheduleCmd;
@@ -35,9 +36,8 @@ public class JobController {
 
     @Operation(summary = "获取岗位列表")
     @GetMapping
-    public List<JobVO> listJobs(@RequestParam(required = false) Long companyId,
-                                @RequestParam(required = false) String status) {
-        if (companyId == null) companyId = 1L;
+    public List<JobVO> listJobs(@RequestParam(required = false) String status) {
+        Long companyId = SecurityUtil.getCurrentCompanyId();
         return jobService.getJobsByCompany(companyId, status);
     }
 

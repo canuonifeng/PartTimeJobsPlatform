@@ -1,12 +1,15 @@
 package com.parttime.enterprise.service.impl;
 
 import com.parttime.enterprise.mapper.AttendanceRecordMapper;
+import com.parttime.enterprise.mapper.CompanyWorkerMapper;
+import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
 import com.parttime.enterprise.mapper.ScheduleTemplateMapper;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
 import com.parttime.enterprise.pojo.cmd.ScheduleTemplateCmd;
 import com.parttime.enterprise.pojo.cmd.ScheduleTemplateSlotCmd;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
+import com.parttime.enterprise.pojo.entity.Job;
 import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.entity.ScheduleTemplate;
 import com.parttime.enterprise.pojo.entity.ScheduleTemplateSlot;
@@ -32,6 +35,10 @@ public class ScheduleServiceImpl implements ScheduleService {
     private ScheduleShiftMapper shiftMapper;
     @Resource
     private AttendanceRecordMapper attendanceRecordMapper;
+    @Resource
+    private JobMapper jobMapper;
+    @Resource
+    private CompanyWorkerMapper companyWorkerMapper;
 
     @Override
     public ScheduleTemplateVO createTemplate(ScheduleTemplateCmd request) {
@@ -122,6 +129,12 @@ public class ScheduleServiceImpl implements ScheduleService {
         shift.setLocationName(request.getLocationName());
         shift.setStatus("SCHEDULED");
         shiftMapper.insert(shift);
+        if (shift.getWorkerId() != null) {
+            Job job = jobMapper.findById(shift.getJobId()).orElse(null);
+            if (job != null) {
+                companyWorkerMapper.upsert(job.getCompanyId(), shift.getWorkerId());
+            }
+        }
         return toShiftResponse(shift);
     }
 

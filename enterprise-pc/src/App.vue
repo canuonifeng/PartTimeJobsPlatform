@@ -54,6 +54,14 @@ function handleMenuSelect(index) {
           <el-icon><Money /></el-icon>
           <span>薪资管理</span>
         </el-menu-item>
+        <el-menu-item index="/workers">
+          <el-icon><User /></el-icon>
+          <span>兼职管理</span>
+        </el-menu-item>
+        <el-menu-item index="/accounts">
+          <el-icon><Setting /></el-icon>
+          <span>账号管理</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>

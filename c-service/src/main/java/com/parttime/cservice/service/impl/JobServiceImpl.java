@@ -1,5 +1,6 @@
 package com.parttime.cservice.service.impl;
 
+import com.parttime.cservice.mapper.CompanyWorkerInsertMapper;
 import com.parttime.cservice.mapper.JobApplicationMapper;
 import com.parttime.cservice.mapper.JobMapper;
 import com.parttime.cservice.pojo.entity.Job;
@@ -28,6 +29,8 @@ public class JobServiceImpl implements JobService {
     private JobMapper jobMapper;
     @Resource
     private JobApplicationMapper jobApplicationMapper;
+    @Resource
+    private CompanyWorkerInsertMapper companyWorkerInsertMapper;
 
     @Override
     public Job addJob(Long id, String title, String description, String location, Long categoryId,
@@ -86,6 +89,10 @@ public class JobServiceImpl implements JobService {
         app.setCreatedAt(LocalDateTime.now());
         app.setUpdatedAt(LocalDateTime.now());
         jobApplicationMapper.insert(app);
+        Job job = jobMapper.findByJobId(jobId).orElse(null);
+        if (job != null) {
+            companyWorkerInsertMapper.upsert(job.getCompanyId(), workerId);
+        }
         return true;
     }
 

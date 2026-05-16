@@ -66,6 +66,18 @@ const routes = [
     component: () => import('../views/payroll/PayrollBatchDetail.vue'),
     meta: { requiresAuth: true, title: '批次详情' },
     props: true
+  },
+  {
+    path: '/workers',
+    name: 'WorkerList',
+    component: () => import('../views/workers/WorkerList.vue'),
+    meta: { requiresAuth: true, title: '兼职管理' }
+  },
+  {
+    path: '/accounts',
+    name: 'AccountList',
+    component: () => import('../views/accounts/AccountList.vue'),
+    meta: { requiresAuth: true, title: '账号管理' }
   }
 ]
 

@@ -11,7 +11,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -29,13 +31,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (token != null && jwtTokenProvider.validateToken(token)) {
             String userId = jwtTokenProvider.getUserIdFromToken(token);
             List<String> roles = jwtTokenProvider.getRolesFromToken(token);
+            Long companyId = jwtTokenProvider.getCompanyIdFromToken(token);
 
             List<SimpleGrantedAuthority> authorities = roles.stream()
                     .map(SimpleGrantedAuthority::new)
                     .toList();
 
+            Map<String, Object> details = new HashMap<>();
+            details.put("companyId", companyId);
+
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(userId, null, authorities);
+            authentication.setDetails(details);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 

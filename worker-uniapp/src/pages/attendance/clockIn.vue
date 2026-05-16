@@ -54,6 +54,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { getMyShifts } from '@/api/schedule'
+import { checkIn, checkOut } from '@/api/attendance'
 
 interface Shift {
   id: number
@@ -86,11 +88,11 @@ const todayName = computed(() => {
 
 function getStatusText(status: string): string {
   const map: Record<string, string> = {
-    pending: '待上岗',
-    checked_in: '已签到',
-    checked_out: '已签退',
-    absent: '缺勤',
-    late: '迟到'
+    SCHEDULED: '待上岗',
+    CHECKED_IN: '已签到',
+    CHECKED_OUT: '已签退',
+    ABSENT: '缺勤',
+    LATE: '迟到'
   }
   return map[status] || status
 }
@@ -112,26 +114,16 @@ function getLocation(): Promise<{ latitude: number; longitude: number }> {
 async function handleCheckIn(shift: Shift) {
   try {
     const location = await getLocation()
-    const res: any = await new Promise((resolve, reject) => {
-      uni.request({
-        url: '/api/attendance/check-in',
-        method: 'POST',
-        data: {
-          shiftId: shift.id,
-          latitude: location.latitude,
-          longitude: location.longitude
-        },
-        header: { Authorization: `Bearer ${uni.getStorageSync('token')}` },
-        success: (r) => resolve(r.data),
-        fail: (e) => reject(e)
-      })
+    await checkIn({
+      shiftId: shift.id,
+      latitude: location.latitude,
+      longitude: location.longitude
     })
     shift.checkedIn = true
     shift.status = 'checked_in'
-    shift.attendanceId = res.id
     uni.showToast({ title: '签到成功', icon: 'success' })
   } catch (err: any) {
-    if (err.errMsg?.includes('距离')) {
+    if (err.message?.includes('距离')) {
       uni.showToast({ title: '不在打卡范围内', icon: 'none' })
     } else {
       uni.showToast({ title: err.message || '签到失败', icon: 'none' })
@@ -142,26 +134,17 @@ async function handleCheckIn(shift: Shift) {
 async function handleCheckOut(shift: Shift) {
   try {
     const location = await getLocation()
-    await new Promise((resolve, reject) => {
-      uni.request({
-        url: '/api/attendance/check-out',
-        method: 'POST',
-        data: {
-          shiftId: shift.id,
-          attendanceId: shift.attendanceId,
-          latitude: location.latitude,
-          longitude: location.longitude
-        },
-        header: { Authorization: `Bearer ${uni.getStorageSync('token')}` },
-        success: (r) => resolve(r.data),
-        fail: (e) => reject(e)
-      })
+    await checkOut({
+      shiftId: shift.id,
+      attendanceId: shift.attendanceId,
+      latitude: location.latitude,
+      longitude: location.longitude
     })
     shift.checkedOut = true
     shift.status = 'checked_out'
     uni.showToast({ title: '签退成功', icon: 'success' })
   } catch (err: any) {
-    if (err.errMsg?.includes('距离')) {
+    if (err.message?.includes('距离')) {
       uni.showToast({ title: '不在打卡范围内', icon: 'none' })
     } else {
       uni.showToast({ title: err.message || '签退失败', icon: 'none' })
@@ -178,22 +161,21 @@ async function loadTodayShifts() {
     const d = String(today.getDate()).padStart(2, '0')
     const dateStr = `${y}-${m}-${d}`
 
-    const res: any = await new Promise((resolve, reject) => {
-      uni.request({
-        url: `/api/schedule-shifts/my?startDate=${dateStr}&endDate=${dateStr}`,
-        method: 'GET',
-        header: { Authorization: `Bearer ${uni.getStorageSync('token')}` },
-        success: (r) => resolve(r.data),
-        fail: (e) => reject(e)
-      })
-    })
-    shifts.value = (res.list || []).map((s: any) => ({
-      ...s,
-      checkedIn: s.status === 'checked_in' || s.status === 'checked_out',
-      checkedOut: s.status === 'checked_out'
+    const res: any = await getMyShifts({ startDate: dateStr, endDate: dateStr })
+    const list = Array.isArray(res) ? res : (res.list || [])
+    shifts.value = list.map((s: any) => ({
+      id: s.shiftId,
+      jobTitle: s.jobTitle,
+      location: s.jobLocation || s.locationName,
+      startTime: s.startTime,
+      endTime: s.endTime,
+      date: s.shiftDate,
+      status: s.status || '',
+      checkedIn: s.status === 'CHECKED_IN' || s.status === 'CHECKED_OUT',
+      checkedOut: s.status === 'CHECKED_OUT'
     }))
-  } catch {
-    uni.showToast({ title: '加载失败', icon: 'none' })
+  } catch (err: any) {
+    uni.showToast({ title: err.message || '加载失败', icon: 'none' })
   } finally {
     loading.value = false
   }
@@ -251,6 +233,7 @@ onMounted(loadTodayShifts)
   margin-bottom: 20rpx;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
   position: relative;
+  overflow: hidden;
 }
 
 .shift-header {
@@ -327,17 +310,17 @@ onMounted(loadTodayShifts)
   border-radius: 6rpx;
 }
 
-.shift-status.pending {
+.shift-status.SCHEDULED {
   background: #fff7e6;
   color: #fa8c16;
 }
 
-.shift-status.checked_in {
+.shift-status.CHECKED_IN {
   background: #e6f7ff;
   color: #1890ff;
 }
 
-.shift-status.checked_out {
+.shift-status.CHECKED_OUT {
   background: #f6ffed;
   color: #52c41a;
 }

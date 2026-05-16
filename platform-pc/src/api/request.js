@@ -20,10 +20,10 @@ request.interceptors.response.use(response => response.data, error => {
       localStorage.removeItem('token')
       window.location.href = '/login'
     } else {
-      ElMessage.error(error.response.data?.message || 'Request failed')
+      ElMessage.error(error.response.data?.message || '请求失败')
     }
   } else {
-    ElMessage.error('Network error')
+    ElMessage.error('网络错误')
   }
   return Promise.reject(error)
 })
