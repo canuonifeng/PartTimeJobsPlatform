@@ -56,6 +56,12 @@ const dayOfWeekOptions = [
 
 const showLocationPicker = ref(false)
 
+function dateToDayOfWeek(dateStr) {
+  if (!dateStr) return ''
+  const map = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
+  return map[new Date(dateStr).getDay()]
+}
+
 const regionSelected = computed({
   get: () => {
     const arr = []
@@ -117,7 +123,7 @@ async function fetchDetail() {
       latitude: res.latitude || null,
       longitude: res.longitude || null,
       salaryRates: (res.rates || []).map((r) => ({ type: r.type || '', rate: r.amount || '' })),
-      scheduleSlots: (res.schedules || []).map((s) => ({ dayOfWeek: '', startTime: s.startTime || '', endTime: s.endTime || '' })),
+      scheduleSlots: (res.schedules || []).map((s) => ({ dayOfWeek: dateToDayOfWeek(s.scheduleDate), startTime: s.startTime || '', endTime: s.endTime || '' })),
       status: res.status || 'DRAFT'
     }
   } finally {
