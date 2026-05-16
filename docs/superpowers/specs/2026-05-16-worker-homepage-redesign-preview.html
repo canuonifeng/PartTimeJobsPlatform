@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>工人端首页设计稿</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --green: #07c160;
+      --green-dark: #05964d;
+      --blue: #2f80ed;
+      --orange: #f59e0b;
+      --red: #ef4444;
+      --border: #e5e7eb;
+      --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(180deg, #ecfff4 0%, var(--bg) 220px);
+      color: var(--text);
+    }
+
+    .phone {
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding: 16px 14px 24px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #07c160, #0ea763);
+      color: #fff;
+      border-radius: 24px;
+      padding: 22px 18px 18px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -28px;
+      top: -30px;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      position: relative;
+      z-index: 1;
+    }
+
+    .greeting {
+      font-size: 15px;
+      opacity: 0.92;
+      margin-bottom: 6px;
+    }
+
+    .name {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+
+    .sub {
+      font-size: 13px;
+      opacity: 0.9;
+    }
+
+    .hero-chip {
+      background: rgba(255,255,255,0.16);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(229,231,235,0.9);
+      margin-top: 14px;
+      overflow: hidden;
+    }
+
+    .card-hd {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 16px 10px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .card-sub {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .today-wrap {
+      padding: 0 16px 16px;
+    }
+
+    .today-main {
+      border-radius: 18px;
+      padding: 16px;
+      background: linear-gradient(180deg, #f7fff9 0%, #ffffff 100%);
+      border: 1px solid #d7f5e2;
+    }
+
+    .today-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--green-dark);
+      background: #e9fdf1;
+      padding: 6px 10px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .today-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .today-meta {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 14px;
+      color: #374151;
+      font-size: 14px;
+    }
+
+    .today-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .today-label {
+      color: var(--muted);
+      font-size: 12px;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .today-value {
+      font-weight: 600;
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .status-pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .status-wait { background: #fff7e6; color: #d97706; }
+    .status-in { background: #e8f3ff; color: #2563eb; }
+    .status-out { background: #ecfdf5; color: #059669; }
+
+    .action-btn {
+      width: 100%;
+      border: none;
+      border-radius: 16px;
+      background: var(--green);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 14px 16px;
+      margin-top: 4px;
+      box-shadow: 0 12px 18px rgba(7,193,96,0.2);
+    }
+
+    .action-btn.secondary {
+      background: #fff;
+      color: var(--green);
+      border: 1px solid #b7efd0;
+      box-shadow: none;
+      margin-top: 10px;
+    }
+
+    .mini-list {
+      padding: 0 16px 16px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .mini-item {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .mini-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .mini-name {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .mini-time {
+      font-size: 12px;
+      color: var(--green-dark);
+      background: #ecfdf5;
+      padding: 4px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .mini-meta {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .quick-grid {
+      padding: 0 16px 16px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .quick-item {
+      background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px 12px;
+      min-height: 82px;
+    }
+
+    .quick-name {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .quick-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .footer-note {
+      text-align: center;
+      font-size: 12px;
+      color: #9ca3af;
+      padding: 14px 0 4px;
+    }
+  </style>
+</head>
+<body>
+  <main class="phone">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <div class="greeting">上午好，</div>
+          <div class="name">小明</div>
+          <div class="sub">今天有 2 个班次，先完成签到再出发</div>
+        </div>
+        <div class="hero-chip">05月16日 · 星期六</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-hd">
+        <div>
+          <div class="card-title">今日排班</div>
+          <div class="card-sub">重点展示签到状态和签到操作</div>
+        </div>
+        <div class="status-pill status-wait">待签到</div>
+      </div>
+      <div class="today-wrap">
+        <div class="today-main">
+          <div class="today-badge">今日第 1 个班次</div>
+          <div class="today-title">餐厅服务员</div>
+          <div class="today-meta">
+            <div class="today-row">
+              <div>
+                <span class="today-label">时间</span>
+                <span class="today-value">08:00 - 12:00</span>
+              </div>
+              <div>
+                <span class="today-label">地点</span>
+                <span class="today-value">北京市朝阳区建国路 88 号</span>
+              </div>
+            </div>
+            <div class="today-row">
+              <div>
+                <span class="today-label">签到状态</span>
+                <span class="today-value">未签到</span>
+              </div>
+              <div>
+                <span class="today-label">签到范围</span>
+                <span class="today-value">500 米内</span>
+              </div>
+            </div>
+          </div>
+          <button class="action-btn">去签到</button>
+          <button class="action-btn secondary">查看今日全部排班</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-hd">
+        <div>
+          <div class="card-title">我的未来排班</div>
+          <div class="card-sub">未来 5 条，首页只看重点</div>
+        </div>
+        <div class="card-sub">查看全部</div>
+      </div>
+      <div class="mini-list">
+        <div class="mini-item">
+          <div class="mini-top">
+            <div class="mini-name">外卖配送员</div>
+            <div class="mini-time">今天 14:00-18:00</div>
+          </div>
+          <div class="mini-meta">
+            <div>上海市浦东新区陆家嘴路 100 号</div>
+            <div>状态：待签到</div>
+          </div>
+        </div>
+        <div class="mini-item">
+          <div class="mini-top">
+            <div class="mini-name">仓库分拣员</div>
+            <div class="mini-time">明天 09:00-13:00</div>
+          </div>
+          <div class="mini-meta">
+            <div>上海市浦东新区陆家嘴路 100 号</div>
+            <div>状态：待上岗</div>
+          </div>
+        </div>
+        <div class="mini-item">
+          <div class="mini-top">
+            <div class="mini-name">家庭保洁员</div>
+            <div class="mini-time">后天 08:00-12:00</div>
+          </div>
+          <div class="mini-meta">
+            <div>广州市天河区天河路 200 号</div>
+            <div>状态：待上岗</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-hd">
+        <div>
+          <div class="card-title">快捷入口</div>
+          <div class="card-sub">找活放到底部入口，不再占首页焦点</div>
+        </div>
+      </div>
+      <div class="quick-grid">
+        <div class="quick-item">
+          <div class="quick-name">我的排班</div>
+          <div class="quick-desc">查看本周和未来排班</div>
+        </div>
+        <div class="quick-item">
+          <div class="quick-name">打卡</div>
+          <div class="quick-desc">进入今日签到/签退</div>
+        </div>
+        <div class="quick-item">
+          <div class="quick-name">我的收入</div>
+          <div class="quick-desc">查看工时与工资</div>
+        </div>
+        <div class="quick-item">
+          <div class="quick-name">消息</div>
+          <div class="quick-desc">查看通知和提醒</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer-note">示意稿：欢迎语保留，首页聚焦今日排班与签到操作</div>
+  </main>
+</body>
+</html>
