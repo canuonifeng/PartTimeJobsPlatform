@@ -35,7 +35,7 @@
       <view class="hot-jobs">
         <view v-for="job in hotJobs" :key="job.id" class="hot-job-card" @click="navTo(`/pages/jobs/jobDetail?id=${job.id}`)">
           <text class="hot-job-title">{{ job.title }}</text>
-          <text class="hot-job-pay">{{ job.minRate }}-{{ job.maxRate }}元/{{ job.rateUnit }}</text>
+          <text class="hot-job-pay">{{ job.minRate }}-{{ job.maxRate }}元/{{ job.rateUnit || '小时' }}</text>
           <text class="hot-job-location">{{ job.location }}</text>
         </view>
       </view>

@@ -1,7 +1,9 @@
 package com.parttime.enterprise.controller;
 
+import com.parttime.enterprise.pojo.cmd.JobCreateCmd;
 import com.parttime.enterprise.pojo.cmd.JobRateCmd;
 import com.parttime.enterprise.pojo.cmd.JobScheduleCmd;
+import com.parttime.enterprise.pojo.cmd.UpdateJobCmd;
 import com.parttime.enterprise.pojo.vo.JobRateVO;
 import com.parttime.enterprise.pojo.vo.JobScheduleVO;
 import com.parttime.enterprise.pojo.vo.JobVO;
@@ -30,6 +32,40 @@ public class JobController {
 
     @Resource
     private JobService jobService;
+
+    @Operation(summary = "获取岗位列表")
+    @GetMapping
+    public List<JobVO> listJobs(@RequestParam(required = false) Long companyId,
+                                @RequestParam(required = false) String status) {
+        if (companyId == null) companyId = 1L;
+        return jobService.getJobsByCompany(companyId, status);
+    }
+
+    @Operation(summary = "获取岗位详情")
+    @GetMapping(params = "id")
+    public JobVO getJob(@RequestParam Long id) {
+        return jobService.getJobById(id);
+    }
+
+    @Operation(summary = "创建岗位")
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public JobVO createJob(@RequestBody JobCreateCmd request) {
+        return jobService.createJob(request);
+    }
+
+    @Operation(summary = "更新岗位")
+    @PutMapping
+    public JobVO updateJob(@RequestParam Long id, @RequestBody UpdateJobCmd request) {
+        return jobService.updateJob(id, request);
+    }
+
+    @Operation(summary = "删除岗位")
+    @DeleteMapping
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteJob(@RequestParam Long id) {
+        jobService.deleteJob(id);
+    }
 
     @Operation(summary = "发布岗位", description = "将草稿状态的岗位发布为已发布状态")
     @PutMapping("/publish")

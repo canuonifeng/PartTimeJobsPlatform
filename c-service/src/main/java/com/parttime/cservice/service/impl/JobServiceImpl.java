@@ -16,6 +16,7 @@ import jakarta.annotation.Resource;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -126,6 +127,12 @@ public class JobServiceImpl implements JobService {
         detail.setLocation(job.getLocation());
         detail.setCategoryName(job.getCategoryName());
         detail.setStatus(job.getStatus());
+        if (job.getRateType() != null && job.getRateAmount() != null) {
+            JobRateInfoVO rate = new JobRateInfoVO();
+            rate.setType(job.getRateType());
+            rate.setAmount(job.getRateAmount());
+            detail.setRates(List.of(rate));
+        }
         return detail;
     }
 }

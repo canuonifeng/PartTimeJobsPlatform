@@ -76,11 +76,21 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public JobVO updateJob(Long id, UpdateJobCmd request) {
-        return null;
+        Job job = jobMapper.findById(id)
+                .orElseThrow(() -> new RuntimeException("Job not found: " + id));
+        if (request.getTitle() != null) job.setTitle(request.getTitle());
+        if (request.getDescription() != null) job.setDescription(request.getDescription());
+        if (request.getLocation() != null) job.setLocation(request.getLocation());
+        if (request.getCategoryId() != null) job.setCategoryId(request.getCategoryId());
+        if (request.getHeadcount() != null) job.setHeadcount(request.getHeadcount());
+        if (request.getDeadline() != null) job.setDeadline(request.getDeadline());
+        jobMapper.update(job);
+        return toResponse(job);
     }
 
     @Override
     public void deleteJob(Long id) {
+        jobMapper.delete(id);
     }
 
     @Override
@@ -95,7 +105,18 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public List<JobVO> getJobsByCompany(Long companyId, String status) {
-        return List.of();
+        List<Job> jobs;
+        if (status != null && !status.isEmpty()) {
+            jobs = jobMapper.findByCompanyIdAndStatus(companyId, status);
+        } else {
+            jobs = jobMapper.findByCompanyId(companyId);
+        }
+        return jobs.stream().map(job -> {
+            JobVO response = toResponse(job);
+            response.setRates(toRateResponses(jobRateMapper.findByJobId(job.getId())));
+            response.setSchedules(toScheduleResponses(jobScheduleMapper.findByJobId(job.getId())));
+            return response;
+        }).collect(Collectors.toList());
     }
 
     @Override

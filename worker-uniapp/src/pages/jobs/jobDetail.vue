@@ -5,7 +5,7 @@
     <template v-if="job">
       <view class="detail-header">
         <text class="job-title">{{ job.title }}</text>
-        <text class="job-pay">{{ job.minRate }}-{{ job.maxRate }}元/{{ job.rateUnit || '小时' }}</text>
+        <text class="job-pay">{{ job.rates?.[0]?.amount ?? '-' }}元/{{ job.rates?.[0]?.type === 'MONTHLY' ? '月' : '小时' }}</text>
       </view>
 
       <view class="info-section">
@@ -29,18 +29,18 @@
 
       <view class="section">
         <text class="section-title">薪资说明</text>
-        <view class="salary-table" v-if="job.salaryRates?.length">
-          <view class="salary-row" v-for="rate in job.salaryRates" :key="rate.id">
+        <view class="salary-table" v-if="job.rates?.length">
+          <view class="salary-row" v-for="rate in job.rates" :key="rate.id">
             <text class="salary-type">{{ rate.type }}</text>
-            <text class="salary-amount">{{ rate.rate }}元/{{ rate.unit }}</text>
+            <text class="salary-amount">{{ rate.amount }}元/{{ rate.type === 'MONTHLY' ? '月' : rate.type === 'PIECE' ? '单' : '小时' }}</text>
           </view>
         </view>
       </view>
 
       <view class="section">
         <text class="section-title">工作时段</text>
-        <view class="schedule-slots" v-if="job.scheduleSlots?.length">
-          <view class="slot" v-for="slot in job.scheduleSlots" :key="slot.id">
+        <view class="schedule-slots" v-if="job.schedules?.length">
+          <view class="slot" v-for="slot in job.schedules" :key="slot.id">
             <text class="slot-date">{{ slot.date }}</text>
             <text class="slot-time">{{ slot.startTime }}-{{ slot.endTime }}</text>
           </view>

@@ -85,6 +85,9 @@ class JobServiceTest {
         assertThat(detail.getLocation()).isEqualTo("Beijing");
         assertThat(detail.getCategoryName()).isEqualTo("Technology");
         assertThat(detail.getStatus()).isEqualTo("PUBLISHED");
+        assertThat(detail.getRates()).isNotEmpty();
+        assertThat(detail.getRates().get(0).getType()).isEqualTo("HOURLY");
+        assertThat(detail.getRates().get(0).getAmount()).isEqualByComparingTo(new BigDecimal("50.00"));
     }
 
     @Test
