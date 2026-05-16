@@ -25,6 +25,18 @@ public class Job {
     private String description;
     @Schema(description = "工作地点")
     private String location;
+    @Schema(description = "省")
+    private String province;
+    @Schema(description = "市")
+    private String city;
+    @Schema(description = "区")
+    private String district;
+    @Schema(description = "详细地址（街道门牌号）")
+    private String address;
+    @Schema(description = "纬度")
+    private BigDecimal latitude;
+    @Schema(description = "经度")
+    private BigDecimal longitude;
     @Schema(description = "岗位分类ID")
     private Long categoryId;
     @Schema(description = "分类名称")

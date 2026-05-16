@@ -14,6 +14,12 @@ public class JobSummaryVO {
     private String title;
     @Schema(description = "工作地点")
     private String location;
+    @Schema(description = "省")
+    private String province;
+    @Schema(description = "市")
+    private String city;
+    @Schema(description = "区")
+    private String district;
     @Schema(description = "分类名称")
     private String categoryName;
     @Schema(description = "最低薪资")
