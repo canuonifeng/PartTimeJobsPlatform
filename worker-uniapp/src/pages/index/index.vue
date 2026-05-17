@@ -14,7 +14,7 @@
       <button class="primary-btn" @click="loadShifts">重试</button>
     </view>
 
-    <view v-else-if="!authStore.workerInfo" class="empty-card">
+    <view v-else-if="!authStore.token" class="empty-card">
       <text class="empty-title">请先登录</text>
       <text class="empty-desc">登录后可以看到今日排班和签到状态</text>
       <button class="primary-btn" @click="navTo('/pages/login/login')">去登录</button>
@@ -117,6 +117,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useAuthStore } from '@/store'
 import { getMyShifts } from '@/api/schedule'
 
@@ -124,6 +125,7 @@ const authStore = useAuthStore()
 const loading = ref(false)
 const loadError = ref('')
 const shifts = ref<any[]>([])
+const hasSession = computed(() => !!authStore.token)
 
 type Shift = {
   id: number
@@ -220,12 +222,13 @@ const futureShifts = computed(() => {
 const todayShift = computed(() => todayShifts.value[0] || null)
 
 const todayShiftSummary = computed(() => {
-  if (!authStore.workerInfo) return '登录后查看排班'
+  if (!hasSession.value) return '登录后查看排班'
   if (!todayShifts.value.length) return '今天暂无排班'
   return `今天 ${todayShifts.value.length} 个班次`
 })
 
 async function loadShifts() {
+  if (!authStore.token) return
   loading.value = true
   loadError.value = ''
   try {
@@ -245,7 +248,13 @@ function navTo(url: string) {
   uni.navigateTo({ url })
 }
 
-onMounted(loadShifts)
+async function refreshHome() {
+  await authStore.loadSession()
+  await loadShifts()
+}
+
+onMounted(refreshHome)
+onShow(refreshHome)
 </script>
 
 <style scoped>

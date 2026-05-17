@@ -8,12 +8,34 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isLoggedIn = computed(() => !!token.value)
 
-  async function loadToken() {
-    const stored = uni.getStorageSync('token')
-    if (stored) {
-      token.value = stored
+  function readStoredWorkerInfo() {
+    const stored = uni.getStorageSync('workerInfo')
+    if (!stored) return null
+    if (typeof stored === 'object') return stored
+    try {
+      return JSON.parse(stored)
+    } catch {
+      return null
     }
-    return stored
+  }
+
+  async function loadSession() {
+    const storedToken = uni.getStorageSync('token')
+    if (storedToken) {
+      token.value = storedToken
+    }
+
+    const storedWorkerInfo = readStoredWorkerInfo()
+    if (storedWorkerInfo) {
+      workerInfo.value = storedWorkerInfo
+      return storedWorkerInfo
+    }
+
+    if (storedToken) {
+      return await loadWorkerInfo()
+    }
+
+    return null
   }
 
   async function wechatLogin() {
@@ -29,11 +51,8 @@ export const useAuthStore = defineStore('auth', () => {
               data: { code }
             })
             token.value = data.token
-            workerInfo.value = data.worker
             uni.setStorageSync('token', data.token)
-            if (data.worker) {
-              uni.setStorageSync('workerInfo', JSON.stringify(data.worker))
-            }
+            workerInfo.value = null
             resolve(data)
           } catch (err) {
             reject(err)
@@ -50,7 +69,7 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return null
     try {
       const data = await request({
-        url: '/api/profile',
+        url: '/api/auth/profile',
         method: 'GET'
       })
       workerInfo.value = data
@@ -78,7 +97,7 @@ export const useAuthStore = defineStore('auth', () => {
     token,
     workerInfo,
     isLoggedIn,
-    loadToken,
+    loadSession,
     wechatLogin,
     loadWorkerInfo,
     setWorkerInfo,

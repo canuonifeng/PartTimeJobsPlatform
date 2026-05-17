@@ -317,7 +317,7 @@ INSERT INTO enterprises (id, company_name, company_logo, contact_name, contact_p
 -- 19. 企业端登录账号 (enterprise_accounts)
 -- ========================
 INSERT INTO enterprise_accounts (enterprise_id, username, password, display_name, role, status) VALUES
-(1, 'admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '企业管理员', 'ADMIN', 'ACTIVE'),
-(1, 'hr', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '人力资源', 'HR', 'ACTIVE'),
-(1, 'manager', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '运营经理', 'MANAGER', 'ACTIVE'),
-(1, 'finance', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '财务', 'FINANCE', 'ACTIVE');
+(1, 'admin', '$2a$10$8vrqAxFepsl8LK.QDyWcCuUc42ZGVEsAiiio1RsJN5FeiaNZu7dhy', '企业管理员', 'ADMIN', 'ACTIVE'),
+(1, 'hr', '$2a$10$8vrqAxFepsl8LK.QDyWcCuUc42ZGVEsAiiio1RsJN5FeiaNZu7dhy', '人力资源', 'HR', 'ACTIVE'),
+(1, 'manager', '$2a$10$8vrqAxFepsl8LK.QDyWcCuUc42ZGVEsAiiio1RsJN5FeiaNZu7dhy', '运营经理', 'MANAGER', 'ACTIVE'),
+(1, 'finance', '$2a$10$8vrqAxFepsl8LK.QDyWcCuUc42ZGVEsAiiio1RsJN5FeiaNZu7dhy', '财务', 'FINANCE', 'ACTIVE');

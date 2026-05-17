@@ -34,6 +34,7 @@ async function handleLogin() {
   loading.value = true
   try {
     await authStore.wechatLogin()
+    await authStore.loadWorkerInfo()
     uni.switchTab({ url: '/pages/index/index' })
   } catch (err) {
     uni.showToast({ title: '登录失败，请重试', icon: 'none' })

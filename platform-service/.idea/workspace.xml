@@ -5,13 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="83de3c72-8e48-4706-bea2-b2f826d046c4" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/../c-service/src/main/java/com/parttime/cservice/utils/JsonConverter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../c-service/src/main/java/com/parttime/cservice/config/JwtConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/../c-service/src/main/java/com/parttime/cservice/config/JwtConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../c-service/src/main/java/com/parttime/cservice/service/impl/JobServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../c-service/src/main/java/com/parttime/cservice/service/impl/JobServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/service/impl/JobServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/service/impl/JobServiceImpl.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../scripts/seed-data.sql" beforeDir="false" afterPath="$PROJECT_DIR$/../scripts/seed-data.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../worker-uniapp/src/pages/jobs/jobDetail.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../worker-uniapp/src/pages/jobs/jobDetail.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../worker-uniapp/src/App.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../worker-uniapp/src/App.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../worker-uniapp/src/pages/index/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../worker-uniapp/src/pages/index/index.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../worker-uniapp/src/pages/login/login.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../worker-uniapp/src/pages/login/login.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../worker-uniapp/src/store/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/../worker-uniapp/src/store/index.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

@@ -35,7 +35,7 @@ public class EnterpriseUserDetailsService implements UserDetailsService {
         } catch (Exception e) {
             if ("admin".equals(username)) {
                 return new CompanyUserDetails("admin",
-                        "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy",
+                        "$2a$10$8vrqAxFepsl8LK.QDyWcCuUc42ZGVEsAiiio1RsJN5FeiaNZu7dhy",
                         List.of(new SimpleGrantedAuthority("ROLE_ADMIN")), 1L);
             }
             throw new UsernameNotFoundException("User not found: " + username);

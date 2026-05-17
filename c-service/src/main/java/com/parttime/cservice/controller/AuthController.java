@@ -11,6 +11,7 @@ import com.parttime.cservice.service.WorkerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -59,6 +60,9 @@ public class AuthController {
     @GetMapping("/profile")
     public ResponseEntity<WorkerVO> profile() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         Long workerId = Long.valueOf(authentication.getName());
         WorkerVO worker = workerService.getWorkerById(workerId);
         return ResponseEntity.ok(worker);
@@ -68,6 +72,9 @@ public class AuthController {
     @PutMapping("/profile")
     public ResponseEntity<WorkerVO> updateProfile(@Parameter(description = "更新信息") @RequestBody RegisterCmd request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
         Long workerId = Long.valueOf(authentication.getName());
         WorkerVO worker = workerService.updateProfile(workerId, request);
         return ResponseEntity.ok(worker);

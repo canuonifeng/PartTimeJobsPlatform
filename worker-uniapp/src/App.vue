@@ -1,8 +1,12 @@
 <script setup>
 import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
+import { useAuthStore } from './store'
+
+const authStore = useAuthStore()
 
 onLaunch(() => {
   console.log('App Launch')
+  authStore.loadSession()
 })
 onShow(() => {
   console.log('App Show')

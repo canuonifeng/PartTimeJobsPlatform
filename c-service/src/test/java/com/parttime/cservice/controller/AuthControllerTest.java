@@ -101,6 +101,14 @@ class AuthControllerTest {
     }
 
     @Test
+    void getProfile_shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
+        SecurityContextHolder.clearContext();
+
+        mockMvc.perform(get("/api/auth/profile"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void wechatLogin_shouldReturn200WithToken() throws Exception {
         LoginVO wechatResponse = new LoginVO("wechat.jwt.token", 1L, "openid_123", "nickname");
 
