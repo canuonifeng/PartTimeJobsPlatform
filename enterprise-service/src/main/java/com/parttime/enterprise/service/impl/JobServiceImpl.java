@@ -2,11 +2,11 @@ package com.parttime.enterprise.service.impl;
 
 import com.parttime.enterprise.enums.JobRateType;
 import com.parttime.enterprise.enums.JobStatus;
-import com.parttime.enterprise.mapper.CJobMapper;
 import com.parttime.enterprise.mapper.EnterpriseMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.JobRateMapper;
 import com.parttime.enterprise.mapper.JobScheduleMapper;
+import com.parttime.enterprise.mapper.JobSyncMapper;
 import com.parttime.enterprise.pojo.cmd.JobCreateCmd;
 import com.parttime.enterprise.pojo.cmd.JobRateCmd;
 import com.parttime.enterprise.pojo.cmd.JobScheduleCmd;
@@ -37,7 +37,7 @@ public class JobServiceImpl implements JobService {
     @Resource
     private JobScheduleMapper jobScheduleMapper;
     @Resource
-    private CJobMapper cJobMapper;
+    private JobSyncMapper jobSyncMapper;
     @Resource
     private EnterpriseMapper enterpriseMapper;
 
@@ -116,6 +116,31 @@ public class JobServiceImpl implements JobService {
         if (request.getHeadcount() != null) job.setHeadcount(request.getHeadcount());
         if (request.getDeadline() != null) job.setDeadline(request.getDeadline());
         jobMapper.update(job);
+        if (request.getRates() != null) {
+            jobRateMapper.deleteByJobId(id);
+            for (JobRateCmd rateReq : request.getRates()) {
+                JobRate rate = new JobRate();
+                rate.setJobId(id);
+                rate.setType(rateReq.getType().name());
+                rate.setAmount(rateReq.getAmount());
+                rate.setCurrency(rateReq.getCurrency());
+                rate.setRules(rateReq.getRules());
+                jobRateMapper.insert(rate);
+            }
+        }
+        if (request.getSchedules() != null) {
+            jobScheduleMapper.deleteByJobId(id);
+            for (JobScheduleCmd scheduleReq : request.getSchedules()) {
+                JobSchedule schedule = new JobSchedule();
+                schedule.setJobId(id);
+                schedule.setScheduleDate(scheduleReq.getScheduleDate());
+                schedule.setStartTime(scheduleReq.getStartTime());
+                schedule.setEndTime(scheduleReq.getEndTime());
+                schedule.setSlotsAvailable(scheduleReq.getSlotsAvailable());
+                jobScheduleMapper.insert(schedule);
+            }
+        }
+        syncJob(job.getId());
         return toResponse(job);
     }
 
@@ -150,22 +175,30 @@ public class JobServiceImpl implements JobService {
         }).collect(Collectors.toList());
     }
 
-    private void syncToCJob(Long jobId) {
+    private void syncJob(Long jobId) {
         Job job = jobMapper.findById(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found: " + jobId));
         try {
+            List<JobRate> rates = jobRateMapper.findByJobId(jobId);
             List<JobSchedule> schedules = jobScheduleMapper.findByJobId(jobId);
             List<JobScheduleVO> scheduleVOs = toScheduleResponses(schedules);
             String scheduleInfo = objectMapper.writeValueAsString(scheduleVOs);
+            String rateType = null;
+            java.math.BigDecimal rateAmount = null;
+            if (!rates.isEmpty()) {
+                JobRate firstRate = rates.get(0);
+                rateType = firstRate.getType();
+                rateAmount = firstRate.getAmount();
+            }
             String companyName = enterpriseMapper.findCompanyNameById(job.getCompanyId());
             String companyLogo = enterpriseMapper.findCompanyLogoById(job.getCompanyId());
-            cJobMapper.upsert(
+            jobSyncMapper.upsert(
                     job.getId(), job.getCompanyId(), companyName, companyLogo,
                     job.getTitle(), job.getDescription(), job.getLocation(),
                     job.getProvince(), job.getCity(), job.getDistrict(), job.getAddress(),
                     job.getLatitude(), job.getLongitude(),
                     job.getCategoryId(),
-                    null, null,
+                    rateType, rateAmount,
                     job.getStatus(),
                     scheduleInfo,
                     job.getHeadcount(),
@@ -185,7 +218,7 @@ public class JobServiceImpl implements JobService {
         }
         jobMapper.updateStatus(id, "PUBLISHED");
         job.setStatus("PUBLISHED");
-        syncToCJob(job.getId());
+        syncJob(job.getId());
         JobVO response = toResponse(job);
         response.setRates(toRateResponses(jobRateMapper.findByJobId(id)));
         response.setSchedules(toScheduleResponses(jobScheduleMapper.findByJobId(id)));
@@ -280,7 +313,7 @@ public class JobServiceImpl implements JobService {
         schedule.setEndTime(request.getEndTime());
         schedule.setSlotsAvailable(request.getSlotsAvailable());
         jobScheduleMapper.insert(schedule);
-        syncToCJob(jobId);
+        syncJob(jobId);
         return toScheduleResponse(schedule);
     }
 
@@ -294,7 +327,7 @@ public class JobServiceImpl implements JobService {
         schedule.setEndTime(request.getEndTime());
         schedule.setSlotsAvailable(request.getSlotsAvailable());
         jobScheduleMapper.update(schedule);
-        syncToCJob(jobId);
+        syncJob(jobId);
         return toScheduleResponse(schedule);
     }
 
@@ -304,7 +337,7 @@ public class JobServiceImpl implements JobService {
                 .orElseThrow(() -> new RuntimeException("JobSchedule not found: " + scheduleId));
         Long jobId = schedule.getJobId();
         jobScheduleMapper.delete(scheduleId);
-        syncToCJob(jobId);
+        syncJob(jobId);
     }
 
     private List<JobRateVO> toRateResponses(List<JobRate> rates) {

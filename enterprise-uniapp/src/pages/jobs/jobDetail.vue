@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import { getJob, publishJob, closeJob, reopenJob, deleteJob, getRates, getSchedules } from '@/api/jobs'
+import { getJob, publishJob, closeJob, reopenJob, deleteJob, getRates, getSchedules, getJobShareLink } from '@/api/jobs'
 
 const job = ref(null)
 const rates = ref([])
@@ -33,6 +33,27 @@ async function loadDetail(id) {
     uni.showToast({ title: '加载失败', icon: 'none' })
   } finally {
     loading.value = false
+  }
+}
+
+async function handleShareCode() {
+  if (!job.value?.id) return
+  try {
+    const res = await getJobShareLink(job.value.id)
+    const link = res?.link || res?.data?.link || ''
+    if (!link) {
+      throw new Error('empty link')
+    }
+    await new Promise((resolve, reject) => {
+      uni.setClipboardData({
+        data: link,
+        success: resolve,
+        fail: reject
+      })
+    })
+    uni.showToast({ title: '链接已复制', icon: 'success' })
+  } catch {
+    uni.showToast({ title: '复制失败', icon: 'none' })
   }
 }
 
@@ -180,6 +201,10 @@ function rateTypeLabel(t) {
         class="bottom-btn outline-btn"
         @click="handleEdit"
       >编辑</button>
+      <button
+        class="bottom-btn primary-btn"
+        @click="handleShareCode"
+      >复制链接</button>
       <button
         class="bottom-btn danger-btn"
         @click="handleDelete"

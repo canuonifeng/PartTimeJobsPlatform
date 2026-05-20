@@ -4,7 +4,7 @@
 
 **Goal:** Let enterprise staff share jobs from the enterprise mini program and generate a real QR code that opens the worker mini program job detail page.
 
-**Architecture:** Keep enterprise job publishing as-is, but add a dedicated job-share backend path that asks WeChat for a worker mini-program code image and returns it as base64 JSON. On the enterprise mini program side, add share handlers on list/detail pages plus a QR preview modal on the detail page. The worker mini program already accepts `id` on the job detail route, so no worker code change is expected unless the smoke test proves otherwise.
+**Architecture:** Keep enterprise job publishing as-is, but add a dedicated job-share backend path that asks WeChat for a worker mini-program code image and returns it as base64 JSON. On the enterprise mini program side, add share handlers on list/detail pages plus a QR preview modal on the detail page. The worker mini program accepts `id` and `scene` on the job detail route, so the QR can safely use `scene`.
 
 **Tech Stack:** Spring Boot 3.2.5, MyBatis, Spring MVC, Vue 3, uni-app, WeChat mini-program `onShareAppMessage`, WeChat `getwxacodeunlimit` API.
 
@@ -27,12 +27,12 @@ Create `enterprise-service/src/test/java/com/parttime/enterprise/controller/JobS
 ```java
 @Test
 void getShareCode_returns_jobId_path_and_base64_image() throws Exception {
-    when(jobShareService.getShareCode(42L)).thenReturn(new JobShareCodeVO(42L, "/pages/jobs/jobDetail?id=42", "iVBORw0KGgoAAA"));
+  when(jobShareService.getShareCode(42L)).thenReturn(new JobShareCodeVO(42L, "/pages/jobs/jobDetail?scene=42", "iVBORw0KGgoAAA"));
 
     mockMvc.perform(get("/api/jobs/share-code").param("id", "42"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.jobId").value(42))
-            .andExpect(jsonPath("$.path").value("/pages/jobs/jobDetail?id=42"))
+            .andExpect(jsonPath("$.path").value("/pages/jobs/jobDetail?scene=42"))
             .andExpect(jsonPath("$.imageBase64").value("iVBORw0KGgoAAA"));
 }
 ```
@@ -48,7 +48,7 @@ Expected: FAIL because `/api/jobs/share-code` and the share service do not exist
 Add a dedicated service that:
 - loads the enterprise job by `id`
 - rejects non-`PUBLISHED` jobs with a `400` or business exception
-- builds the worker path exactly as `/pages/jobs/jobDetail?id={jobId}`
+- builds the worker path exactly as `/pages/jobs/jobDetail?scene={jobId}`
 - fetches a WeChat access token using `wechat.worker-app-id` and `wechat.worker-app-secret`
 - calls `https://api.weixin.qq.com/wxa/getwxacodeunlimit`
 - converts the returned PNG bytes to a base64 string
@@ -101,6 +101,12 @@ and the share card path must be:
 
 ```js
 `/pages/jobs/jobDetail?id=${job.id}`
+```
+
+For the QR API, the backend path should use `scene` rather than `id` so WeChat can open the worker mini program code directly:
+
+```js
+`/pages/jobs/jobDetail?scene=${job.id}`
 ```
 
 For the page handlers, use this share payload shape:

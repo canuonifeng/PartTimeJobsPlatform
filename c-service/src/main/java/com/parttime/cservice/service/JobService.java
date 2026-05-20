@@ -22,6 +22,7 @@ public interface JobService {
                 List<JobRateInfoVO> rates, List<JobScheduleInfoVO> schedules,
                 Integer headcount, Integer acceptedCount, LocalDateTime deadline, String status);
     JobDetailVO getJobDetail(Long jobId);
+    JobDetailVO getJobDetail(Long jobId, Long workerId);
     boolean applyForJob(Long workerId, Long jobId, List<Long> scheduleIds);
     List<ApplicationVO> getApplicationStatus(Long workerId, Long jobId);
 }

@@ -31,7 +31,17 @@ function request(config) {
         if (res.statusCode === 401) {
           uni.removeStorageSync('token')
           uni.removeStorageSync('workerInfo')
-          uni.reLaunch({ url: '/pages/login/login' })
+          const pages = getCurrentPages()
+          const currentPage = pages[pages.length - 1]
+          const route = currentPage?.route ? `/${currentPage.route}` : ''
+          const options = currentPage?.options || {}
+          const query = Object.entries(options)
+            .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+            .join('&')
+          const redirect = route ? `${route}${query ? `?${query}` : ''}` : '/pages/index/index'
+          if (route !== '/pages/login/login') {
+            uni.reLaunch({ url: `/pages/login/login?redirect=${encodeURIComponent(redirect)}` })
+          }
           reject(new Error('登录已过期'))
           return
         }

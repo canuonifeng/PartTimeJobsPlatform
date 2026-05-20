@@ -52,6 +52,13 @@ jwt:
   secret: parttime-enterprise-jwt-secret-key-must-be-at-least-256-bits
   expiration: 86400000
 
+wechat:
+  worker-app-id: mock_worker_app_id
+  worker-app-secret: mock_worker_app_secret
+  customer-app-id: wx3fdcd5b95534d8f8
+  token-url: https://api.weixin.qq.com/cgi-bin/token
+  code-url: https://api.weixin.qq.com/wxa/getwxacodeunlimit
+
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
   type-aliases-package: com.parttime.enterprise.pojo.entity

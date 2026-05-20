@@ -47,4 +47,7 @@ public class JobDetailVO {
     private LocalDateTime deadline;
     @Schema(description = "岗位状态")
     private String status;
+
+    @Schema(description = "当前工人的申请状态")
+    private String applyStatus;
 }

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import { createJob, updateJob, getJob, getCategories, createRate, createSchedule, getRates, getSchedules } from '@/api/jobs'
+import { createJob, updateJob, getJob, getCategories, getRates, getSchedules } from '@/api/jobs'
 import regions from '@/assets/regions.json'
 
 const isEdit = ref(false)
@@ -121,14 +121,59 @@ async function loadJobDetail() {
     }
     try {
       const rateRes = await getRates(jobId.value)
-      rates.value = Array.isArray(rateRes) ? rateRes : []
+      rates.value = Array.isArray(rateRes)
+        ? rateRes.map(rate => ({
+            type: rate.type || 'HOURLY',
+            amount: rate.amount ?? '',
+            currency: rate.currency || 'CNY'
+          }))
+        : []
     } catch {}
     try {
       const schedRes = await getSchedules(jobId.value)
-      schedules.value = Array.isArray(schedRes) ? schedRes : []
+      schedules.value = Array.isArray(schedRes)
+        ? schedRes.map(sched => ({
+            date: sched.scheduleDate || sched.date || '',
+            startTime: sched.startTime || '',
+            endTime: sched.endTime || '',
+            slots: sched.slotsAvailable ?? sched.slots ?? 1
+          }))
+        : []
     } catch {}
   } catch (e) {
     uni.showToast({ title: '加载失败', icon: 'none' })
+  }
+}
+
+function buildPayload() {
+  return {
+    title: formData.value.title,
+    description: formData.value.description,
+    location: formData.value.location,
+    province: formData.value.province || null,
+    city: formData.value.city || null,
+    district: formData.value.district || null,
+    address: formData.value.address || null,
+    latitude: formData.value.latitude ?? null,
+    longitude: formData.value.longitude ?? null,
+    categoryId: formData.value.categoryId || null,
+    headcount: formData.value.headcount,
+    deadline: formData.value.deadline ? `${formData.value.deadline} 23:59:59` : null,
+    rates: rates.value
+      .filter(rate => rate.amount)
+      .map(rate => ({
+        type: rate.type,
+        amount: Number(rate.amount),
+        currency: rate.currency || 'CNY'
+      })),
+    schedules: schedules.value
+      .filter(sched => sched.date && sched.startTime && sched.endTime)
+      .map(sched => ({
+        scheduleDate: sched.date,
+        startTime: sched.startTime,
+        endTime: sched.endTime,
+        slotsAvailable: Number(sched.slots) || 1
+      }))
   }
 }
 
@@ -179,29 +224,13 @@ async function handleSave() {
   saving.value = true
   try {
     let id = jobId.value
+    const payload = buildPayload()
 
     if (isEdit.value) {
-      await updateJob(id, formData.value)
+      await updateJob(id, payload)
     } else {
-      const res = await createJob(formData.value)
+      const res = await createJob(payload)
       id = res.id || res.data?.id || ''
-    }
-
-    for (const rate of rates.value) {
-      if (rate.amount) {
-        await createRate(id, { type: rate.type, amount: Number(rate.amount), currency: rate.currency || 'CNY' })
-      }
-    }
-
-    for (const sched of schedules.value) {
-      if (sched.date && sched.startTime && sched.endTime) {
-        await createSchedule(id, {
-          date: sched.date,
-          startTime: sched.startTime,
-          endTime: sched.endTime,
-          slots: Number(sched.slots) || 1
-        })
-      }
     }
 
     uni.showToast({ title: '保存成功', icon: 'success' })

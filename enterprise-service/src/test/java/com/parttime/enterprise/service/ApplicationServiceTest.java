@@ -2,10 +2,10 @@ package com.parttime.enterprise.service;
 
 import com.parttime.enterprise.enums.ApplicationStatus;
 import com.parttime.enterprise.exception.BusinessException;
-import com.parttime.enterprise.mapper.CWorkerMapper;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.JobApplicationMapper;
 import com.parttime.enterprise.mapper.JobMapper;
+import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.entity.Job;
 import com.parttime.enterprise.pojo.entity.JobApplication;
 import com.parttime.enterprise.pojo.vo.JobApplicationVO;
@@ -35,7 +35,7 @@ class ApplicationServiceTest {
     private JobMapper jobMapper;
 
     @Mock
-    private CWorkerMapper cWorkerMapper;
+    private WorkerSyncMapper workerSyncMapper;
 
     @Mock
     private CompanyWorkerMapper companyWorkerMapper;

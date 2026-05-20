@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { onPullDownRefresh } from '@dcloudio/uni-app'
-import { getJobs, publishJob, closeJob, reopenJob, deleteJob } from '@/api/jobs'
+import { getJobs, publishJob, closeJob, reopenJob, deleteJob, getJobShareLink } from '@/api/jobs'
 import { useAuthStore } from '@/store'
 
 const authStore = useAuthStore()
@@ -54,6 +54,26 @@ function navigateToEdit(id) {
 
 function navigateToDetail(id) {
   uni.navigateTo({ url: `/pages/jobs/jobDetail?id=${id}` })
+}
+
+async function handleShare(id) {
+  try {
+    const res = await getJobShareLink(id)
+    const link = res?.link || res?.data?.link || ''
+    if (!link) {
+      throw new Error('empty link')
+    }
+    await new Promise((resolve, reject) => {
+      uni.setClipboardData({
+        data: link,
+        success: resolve,
+        fail: reject
+      })
+    })
+    uni.showToast({ title: '链接已复制', icon: 'success' })
+  } catch (e) {
+    uni.showToast({ title: '复制失败', icon: 'none' })
+  }
 }
 
 async function handlePublish(id) {
@@ -163,6 +183,10 @@ function statusClass(s) {
             <text class="info">截止日期：{{ job.deadline || '不限' }}</text>
           </view>
           <view class="card-footer" @click.stop>
+            <button
+              class="action-btn share-btn"
+              @click.stop="handleShare(job.id)"
+            >复制链接</button>
             <button
               v-if="job.status === 'DRAFT'"
               class="action-btn publish-btn"
@@ -318,6 +342,10 @@ function statusClass(s) {
   border: none;
 }
 .publish-btn {
+  border-color: #34c759;
+  color: #34c759;
+}
+.share-btn {
   border-color: #34c759;
   color: #34c759;
 }

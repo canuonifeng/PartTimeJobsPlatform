@@ -1,6 +1,6 @@
 package com.parttime.platform.service.impl;
 import com.parttime.platform.exception.BusinessException;
-import com.parttime.platform.mapper.CJobMapper;
+import com.parttime.platform.mapper.JobSyncMapper;
 import com.parttime.platform.mapper.EnterpriseMapper;
 import com.parttime.platform.pojo.cmd.EnterpriseCreateCmd;
 import com.parttime.platform.pojo.cmd.EnterpriseUpdateCmd;
@@ -19,7 +19,7 @@ public class EnterpriseServiceImpl implements EnterpriseService {
     private EnterpriseMapper enterpriseMapper;
 
     @Resource
-    private CJobMapper cJobMapper;
+    private JobSyncMapper jobSyncMapper;
 
     @Override
     public List<EnterpriseVO> list(String status) {
@@ -64,7 +64,7 @@ public class EnterpriseServiceImpl implements EnterpriseService {
         if (cmd.getCompanyAddress() != null) e.setCompanyAddress(cmd.getCompanyAddress());
         if (cmd.getBusinessLicense() != null) e.setBusinessLicense(cmd.getBusinessLicense());
         enterpriseMapper.update(e);
-        cJobMapper.updateCompanyLogoByCompanyId(e.getId(), e.getCompanyLogo());
+        jobSyncMapper.updateCompanyLogoByCompanyId(e.getId(), e.getCompanyLogo());
         return toVO(e);
     }
 

@@ -2,14 +2,15 @@ package com.parttime.enterprise.service;
 
 import com.parttime.enterprise.enums.JobRateType;
 import com.parttime.enterprise.enums.JobStatus;
-import com.parttime.enterprise.mapper.CJobMapper;
 import com.parttime.enterprise.mapper.EnterpriseMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.JobRateMapper;
 import com.parttime.enterprise.mapper.JobScheduleMapper;
+import com.parttime.enterprise.mapper.JobSyncMapper;
 import com.parttime.enterprise.pojo.cmd.JobCreateCmd;
 import com.parttime.enterprise.pojo.cmd.JobRateCmd;
 import com.parttime.enterprise.pojo.cmd.JobScheduleCmd;
+import com.parttime.enterprise.pojo.cmd.UpdateJobCmd;
 import com.parttime.enterprise.pojo.entity.Job;
 import com.parttime.enterprise.pojo.entity.JobRate;
 import com.parttime.enterprise.pojo.entity.JobSchedule;
@@ -61,7 +62,7 @@ class JobServiceTest {
     private EnterpriseMapper enterpriseMapper;
 
     @Mock
-    private CJobMapper cJobMapper;
+    private JobSyncMapper jobSyncMapper;
 
     @Mock
     private ObjectMapper objectMapper;
@@ -181,13 +182,86 @@ class JobServiceTest {
     }
 
     @Test
+    void updateJob_shouldUpdateJobReplaceChildrenAndSync() throws Exception {
+        Job existing = new Job();
+        existing.setId(1L);
+        existing.setCompanyId(1L);
+        existing.setTitle("Old Title");
+        existing.setDescription("Old Description");
+        existing.setLocation("Old Location");
+        existing.setStatus("DRAFT");
+
+        JobRateCmd rateRequest = new JobRateCmd();
+        rateRequest.setType(JobRateType.DAILY);
+        rateRequest.setAmount(new BigDecimal("300.00"));
+        rateRequest.setCurrency("CNY");
+
+        JobScheduleCmd scheduleRequest = new JobScheduleCmd();
+        scheduleRequest.setScheduleDate(LocalDate.of(2026, 6, 1));
+        scheduleRequest.setStartTime(LocalTime.of(9, 0));
+        scheduleRequest.setEndTime(LocalTime.of(18, 0));
+        scheduleRequest.setSlotsAvailable(8);
+
+        JobRate syncedRate = new JobRate();
+        syncedRate.setId(21L);
+        syncedRate.setJobId(1L);
+        syncedRate.setType("DAILY");
+        syncedRate.setAmount(new BigDecimal("300.00"));
+        syncedRate.setCurrency("CNY");
+
+        UpdateJobCmd request = new UpdateJobCmd();
+        request.setTitle("New Title");
+        request.setDescription("New Description");
+        request.setLocation("New Location");
+        request.setCategoryId(10L);
+        request.setHeadcount(5);
+        request.setDeadline(LocalDateTime.of(2026, 7, 1, 23, 59, 59));
+        request.setRates(List.of(rateRequest));
+        request.setSchedules(List.of(scheduleRequest));
+
+        when(jobMapper.findById(1L)).thenReturn(Optional.of(existing));
+        when(jobRateMapper.findByJobId(1L)).thenReturn(List.of(syncedRate));
+        when(jobScheduleMapper.findByJobId(1L)).thenReturn(List.of());
+        when(enterpriseMapper.findCompanyNameById(1L)).thenReturn("美味餐饮管理有限公司");
+        when(enterpriseMapper.findCompanyLogoById(1L)).thenReturn("https://cdn.example.com/logos/meiwei.png");
+        doReturn("[]").when(objectMapper).writeValueAsString(any());
+
+        JobVO response = jobService.updateJob(1L, request);
+
+        assertThat(response.getTitle()).isEqualTo("New Title");
+        verify(jobMapper).update(existing);
+        verify(jobRateMapper).deleteByJobId(1L);
+        verify(jobRateMapper).insert(rateCaptor.capture());
+        assertThat(rateCaptor.getValue().getType()).isEqualTo("DAILY");
+        verify(jobScheduleMapper).deleteByJobId(1L);
+        verify(jobScheduleMapper).insert(scheduleCaptor.capture());
+        assertThat(scheduleCaptor.getValue().getSlotsAvailable()).isEqualTo(8);
+        verify(jobSyncMapper).upsert(
+                eq(1L), eq(1L), eq("美味餐饮管理有限公司"), eq("https://cdn.example.com/logos/meiwei.png"),
+                eq("New Title"), eq("New Description"), eq("New Location"),
+                isNull(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), eq(10L), eq("DAILY"), eq(new BigDecimal("300.00")),
+                eq("DRAFT"), eq("[]"), eq(5), eq(LocalDateTime.of(2026, 7, 1, 23, 59, 59))
+        );
+    }
+
+    @Test
     void publishJob_shouldTransitionFromDraftToPublished() throws Exception {
         Job job = new Job();
         job.setId(1L);
         job.setCompanyId(1L);
         job.setStatus("DRAFT");
 
+        JobRate rate = new JobRate();
+        rate.setId(11L);
+        rate.setJobId(1L);
+        rate.setType("HOURLY");
+        rate.setAmount(new BigDecimal("25.00"));
+        rate.setCurrency("CNY");
+
         when(jobMapper.findById(1L)).thenReturn(Optional.of(job));
+        when(jobRateMapper.findByJobId(1L)).thenReturn(List.of(rate));
+        when(jobScheduleMapper.findByJobId(1L)).thenReturn(List.of());
         when(enterpriseMapper.findCompanyNameById(1L)).thenReturn("美味餐饮管理有限公司");
         when(enterpriseMapper.findCompanyLogoById(1L)).thenReturn("https://cdn.example.com/logos/meiwei.png");
         doReturn("[]").when(objectMapper).writeValueAsString(any());
@@ -196,10 +270,11 @@ class JobServiceTest {
 
         assertThat(response.getStatus()).isEqualTo(JobStatus.PUBLISHED);
         verify(jobMapper).updateStatus(1L, "PUBLISHED");
-        verify(cJobMapper).upsert(
+        verify(jobSyncMapper).upsert(
                 eq(1L), eq(1L), eq("美味餐饮管理有限公司"), eq("https://cdn.example.com/logos/meiwei.png"),
                 isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(),
-                isNull(), isNull(), isNull(), isNull(), isNull(), eq("PUBLISHED"), eq("[]"), isNull(), isNull()
+                isNull(), isNull(), isNull(), eq("HOURLY"), eq(new BigDecimal("25.00")),
+                eq("PUBLISHED"), eq("[]"), isNull(), isNull()
         );
     }
 
@@ -400,6 +475,7 @@ class JobServiceTest {
         syncJob.setId(100L);
         syncJob.setCompanyId(1L);
         when(jobMapper.findById(100L)).thenReturn(Optional.of(syncJob));
+        when(jobRateMapper.findByJobId(100L)).thenReturn(List.of());
         when(jobScheduleMapper.findByJobId(100L)).thenReturn(List.of());
 
         JobScheduleVO response = jobService.addJobSchedule(100L, request);
@@ -431,6 +507,7 @@ class JobServiceTest {
         syncJob.setId(100L);
         syncJob.setCompanyId(1L);
         when(jobMapper.findById(100L)).thenReturn(Optional.of(syncJob));
+        when(jobRateMapper.findByJobId(100L)).thenReturn(List.of());
         when(jobScheduleMapper.findByJobId(100L)).thenReturn(List.of());
 
         JobScheduleVO response = jobService.updateJobSchedule(1L, request);
@@ -450,6 +527,7 @@ class JobServiceTest {
         syncJob.setId(100L);
         syncJob.setCompanyId(1L);
         when(jobMapper.findById(100L)).thenReturn(Optional.of(syncJob));
+        when(jobRateMapper.findByJobId(100L)).thenReturn(List.of());
         when(jobScheduleMapper.findByJobId(100L)).thenReturn(List.of());
 
         jobService.removeJobSchedule(1L);

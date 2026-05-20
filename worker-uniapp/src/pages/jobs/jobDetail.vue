@@ -25,6 +25,10 @@
           <text class="info-label">发布企业</text>
           <text class="info-value">{{ job.companyName }}</text>
         </view>
+        <view v-if="applyStatusText" class="info-row">
+          <text class="info-label">报名状态</text>
+          <text class="info-value">{{ displayApplyStatus(applyStatusText) }}</text>
+        </view>
       </view>
 
       <view class="map-section" v-if="job.latitude && job.longitude">
@@ -65,11 +69,11 @@
         <button
           class="apply-btn"
           type="primary"
-          :disabled="!!appliedStatus"
-          :class="{ applied: !!appliedStatus }"
+          :disabled="!!applyStatusText"
+          :class="{ applied: !!applyStatusText }"
           @click="handleApply"
         >
-          {{ appliedStatus || '立即报名' }}
+          {{ applyButtonText }}
         </button>
       </view>
     </template>
@@ -77,8 +81,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { getJobDetail, applyJob } from '@/api/jobs'
+import { useAuthStore } from '@/store'
 
 function rateUnit(type) {
   const map = { HOURLY: '小时', DAILY: '日', PIECEWORK: '件', PIECE: '单', MONTHLY: '月' }
@@ -93,6 +99,7 @@ function rateTypeLabel(type) {
 const job = ref<any>(null)
 const loading = ref(true)
 const appliedStatus = ref<string | null>(null)
+const authStore = useAuthStore()
 const markers = computed(() => {
   if (!job.value?.latitude || !job.value?.longitude) return []
   return [{
@@ -102,10 +109,34 @@ const markers = computed(() => {
   }]
 })
 
+const applyStatusText = computed(() => job.value?.applyStatus || appliedStatus.value || '')
+
+const applyButtonText = computed(() => {
+  if (applyStatusText.value) return applyStatusText.value
+  return authStore.isLoggedIn ? '立即报名' : '登录报名'
+})
+
+function buildRedirectUrl() {
+  const pages = getCurrentPages()
+  const page = pages[pages.length - 1] as any
+  const route = page?.route ? `/${page.route}` : '/pages/jobs/jobDetail'
+  const options = page?.options || {}
+  const query = Object.entries(options)
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+    .join('&')
+  return `${route}${query ? `?${query}` : ''}`
+}
+
+function goToLogin() {
+  uni.navigateTo({
+    url: `/pages/login/login?redirect=${encodeURIComponent(buildRedirectUrl())}`
+  })
+}
+
 async function loadDetail() {
   const pages = getCurrentPages()
   const page = pages[pages.length - 1] as any
-  const id = page?.options?.id
+  const id = page?.options?.id || page?.options?.scene
   if (!id) {
     uni.showToast({ title: '参数错误', icon: 'none' })
     return
@@ -115,9 +146,7 @@ async function loadDetail() {
     const res: any = await getJobDetail(id)
     job.value = res
     if (res.applyStatus) {
-      appliedStatus.value = res.applyStatus === 'approved' ? '已通过'
-        : res.applyStatus === 'rejected' ? '未通过'
-        : '已报名'
+      appliedStatus.value = res.applyStatus
     }
   } catch {
     uni.showToast({ title: '加载失败', icon: 'none' })
@@ -127,14 +156,30 @@ async function loadDetail() {
 }
 
 async function handleApply() {
-  if (appliedStatus.value || !job.value) return
+  if (!job.value) return
+  if (!authStore.isLoggedIn) {
+    goToLogin()
+    return
+  }
+  if (applyStatusText.value) return
   try {
-    await applyJob(job.value.id)
+    await applyJob(job.value.id, {
+      jobId: job.value.id,
+      scheduleIds: []
+    })
     appliedStatus.value = '已报名'
+    job.value.applyStatus = '已报名'
     uni.showToast({ title: '报名成功', icon: 'success' })
   } catch {
     uni.showToast({ title: '报名失败', icon: 'none' })
   }
+}
+
+function displayApplyStatus(status?: string) {
+  if (status === 'PENDING') return '已报名'
+  if (status === 'ACCEPTED') return '已通过'
+  if (status === 'REJECTED') return '未通过'
+  return status || ''
 }
 
 function handleOpenLocation() {
@@ -150,7 +195,7 @@ function handleOpenLocation() {
   })
 }
 
-onMounted(loadDetail)
+onLoad(loadDetail)
 </script>
 
 <style scoped>

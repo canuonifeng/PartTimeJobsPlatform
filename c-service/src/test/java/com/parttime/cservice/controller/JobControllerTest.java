@@ -127,7 +127,7 @@ class JobControllerTest {
         detail.setDeadline(LocalDateTime.of(2026, 6, 30, 23, 59));
         detail.setStatus("PUBLISHED");
 
-        when(jobService.getJobDetail(1L)).thenReturn(detail);
+        when(jobService.getJobDetail(1L, null)).thenReturn(detail);
 
         mockMvc.perform(get("/api/jobs/detail?id=1"))
                 .andExpect(status().isOk())
@@ -138,6 +138,24 @@ class JobControllerTest {
                 .andExpect(jsonPath("$.status").value("PUBLISHED"))
                 .andExpect(jsonPath("$.rates[0].type").value("HOURLY"))
                 .andExpect(jsonPath("$.schedules[0].date").value("2026-06-01"));
+    }
+
+    @Test
+    void getJobDetail_withAuth_shouldIncludeApplyStatus() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("1", null, List.of()));
+
+        JobDetailVO detail = new JobDetailVO();
+        detail.setId(1L);
+        detail.setTitle("Software Engineer");
+        detail.setStatus("PUBLISHED");
+        detail.setApplyStatus("已报名");
+
+        when(jobService.getJobDetail(1L, 1L)).thenReturn(detail);
+
+        mockMvc.perform(get("/api/jobs/detail?id=1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.applyStatus").value("已报名"));
     }
 
     @Test

@@ -3,7 +3,6 @@ package com.parttime.cservice.pojo.entity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 public class JobApplication {
@@ -13,16 +12,10 @@ public class JobApplication {
     private Long workerId;
     @Schema(description = "岗位ID")
     private Long jobId;
-    @Schema(description = "企业ID")
-    private Long companyId;
-    @Schema(description = "申请的排班ID列表")
-    private List<Long> scheduleIds;
     @Schema(description = "申请状态: PENDING-待处理, ACCEPTED-已通过, REJECTED-已拒绝")
     private String status;
     @Schema(description = "申请时间")
     private LocalDateTime appliedAt;
-    @Schema(description = "创建时间")
-    private LocalDateTime createdAt;
     @Schema(description = "更新时间")
     private LocalDateTime updatedAt;
 

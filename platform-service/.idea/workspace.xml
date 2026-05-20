@@ -5,11 +5,28 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="83de3c72-8e48-4706-bea2-b2f826d046c4" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../worker-uniapp/src/App.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../worker-uniapp/src/App.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../worker-uniapp/src/pages/index/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../worker-uniapp/src/pages/index/index.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../worker-uniapp/src/pages/login/login.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../worker-uniapp/src/pages/login/login.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../worker-uniapp/src/store/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/../worker-uniapp/src/store/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docs/superpowers/plans/2026-05-17-enterprise-share-qr.md" beforeDir="false" afterPath="$PROJECT_DIR$/../docs/superpowers/plans/2026-05-17-enterprise-share-qr.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../docs/superpowers/specs/2026-05-17-enterprise-share-qr-design.md" beforeDir="false" afterPath="$PROJECT_DIR$/../docs/superpowers/specs/2026-05-17-enterprise-share-qr-design.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/mapper/CJobMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/mapper/CWorkerMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/service/impl/ApplicationServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/service/impl/ApplicationServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/service/impl/CompanyWorkerServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/service/impl/CompanyWorkerServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/service/impl/JobServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/service/impl/JobServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/main/resources/mapper/CJobMapper.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/test/java/com/parttime/enterprise/service/ApplicationServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/test/java/com/parttime/enterprise/service/ApplicationServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/test/java/com/parttime/enterprise/service/JobServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/test/java/com/parttime/enterprise/service/JobServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../enterprise-uniapp/src/api/jobs.js" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-uniapp/src/api/jobs.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../enterprise-uniapp/src/pages.json" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-uniapp/src/pages.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../enterprise-uniapp/src/pages/jobs/jobDetail.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-uniapp/src/pages/jobs/jobDetail.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../enterprise-uniapp/src/pages/jobs/jobForm.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-uniapp/src/pages/jobs/jobForm.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../enterprise-uniapp/src/pages/jobs/jobList.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-uniapp/src/pages/jobs/jobList.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/parttime/platform/mapper/CJobMapper.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/parttime/platform/service/impl/EnterpriseServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/parttime/platform/service/impl/EnterpriseServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/mapper/CJobMapper.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/parttime/platform/service/EnterpriseServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/parttime/platform/service/EnterpriseServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../todo.md" beforeDir="false" afterPath="$PROJECT_DIR$/../todo.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../worker-uniapp/src/pages/jobs/jobDetail.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../worker-uniapp/src/pages/jobs/jobDetail.vue" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

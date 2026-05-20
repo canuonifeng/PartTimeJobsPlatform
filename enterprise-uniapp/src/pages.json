@@ -1,9 +1,9 @@
 {
   "pages": [
     {"path": "pages/login/login", "style": {"navigationBarTitleText": "登录"}},
-    {"path": "pages/jobs/jobList", "style": {"navigationBarTitleText": "职位管理", "enablePullDownRefresh": true}},
+    {"path": "pages/jobs/jobList", "style": {"navigationBarTitleText": "职位管理", "enablePullDownRefresh": true, "enableShareAppMessage": true}},
     {"path": "pages/jobs/jobForm", "style": {"navigationBarTitleText": "职位表单"}},
-    {"path": "pages/jobs/jobDetail", "style": {"navigationBarTitleText": "职位详情"}}
+    {"path": "pages/jobs/jobDetail", "style": {"navigationBarTitleText": "职位详情", "enableShareAppMessage": true, "enableShareTimeline": true}}
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",

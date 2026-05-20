@@ -45,7 +45,12 @@ public class JobController {
     @Operation(summary = "获取岗位详情", description = "根据ID获取岗位详细信息，包括薪资规则和排班")
     @GetMapping("/detail")
     public ResponseEntity<JobDetailVO> getJobDetail(@Parameter(description = "岗位ID") @RequestParam Long id) {
-        JobDetailVO detail = jobService.getJobDetail(id);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Long workerId = null;
+        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() != null && !"anonymousUser".equals(auth.getPrincipal())) {
+            workerId = Long.valueOf(auth.getName());
+        }
+        JobDetailVO detail = jobService.getJobDetail(id, workerId);
         return ResponseEntity.ok(detail);
     }
 

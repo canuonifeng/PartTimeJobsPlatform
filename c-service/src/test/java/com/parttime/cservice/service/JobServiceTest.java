@@ -111,6 +111,15 @@ class JobServiceTest {
     }
 
     @Test
+    void getJobDetail_withWorkerId_setsApplyStatusWhenApplicationExists() {
+        jobService.applyForJob(100L, 1L, List.of(1L));
+
+        JobDetailVO detail = jobService.getJobDetail(1L, 100L);
+
+        assertThat(detail.getApplyStatus()).isEqualTo("已报名");
+    }
+
+    @Test
     void getJobDetail_withNonExistentId_throwsException() {
         assertThatThrownBy(() -> jobService.getJobDetail(999L))
                 .isInstanceOf(RuntimeException.class)

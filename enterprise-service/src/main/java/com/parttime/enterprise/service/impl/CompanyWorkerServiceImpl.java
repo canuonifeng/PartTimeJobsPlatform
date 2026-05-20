@@ -2,7 +2,7 @@ package com.parttime.enterprise.service.impl;
 
 import com.parttime.enterprise.exception.BusinessException;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
-import com.parttime.enterprise.mapper.CWorkerMapper;
+import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.entity.CompanyWorker;
 import com.parttime.enterprise.pojo.vo.WorkerListVO;
 import com.parttime.enterprise.service.CompanyWorkerService;
@@ -18,7 +18,7 @@ public class CompanyWorkerServiceImpl implements CompanyWorkerService {
     @Resource
     private CompanyWorkerMapper companyWorkerMapper;
     @Resource
-    private CWorkerMapper cWorkerMapper;
+    private WorkerSyncMapper workerSyncMapper;
 
     @Override
     public List<WorkerListVO> list(Long companyId, String keyword) {
@@ -59,7 +59,7 @@ public class CompanyWorkerServiceImpl implements CompanyWorkerService {
         vo.setStatus(cw.getStatus());
         vo.setFirstContactAt(cw.getFirstContactAt());
         vo.setLastContactAt(cw.getLastContactAt());
-        String name = cWorkerMapper.findWorkerNameById(cw.getWorkerId());
+        String name = workerSyncMapper.findWorkerNameById(cw.getWorkerId());
         vo.setName(name);
         return vo;
     }

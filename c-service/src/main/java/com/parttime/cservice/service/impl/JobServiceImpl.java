@@ -159,9 +159,14 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public JobDetailVO getJobDetail(Long jobId) {
+        return getJobDetail(jobId, null);
+    }
+
+    @Override
+    public JobDetailVO getJobDetail(Long jobId, Long workerId) {
         Job job = jobMapper.findByJobId(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
-        return toDetail(job);
+        return toDetail(job, workerId);
     }
 
     @Override
@@ -170,16 +175,15 @@ public class JobServiceImpl implements JobService {
         if (!existing.isEmpty()) {
             return false;
         }
+        Job job = jobMapper.findByJobId(jobId).orElse(null);
         JobApplication app = new JobApplication();
         app.setWorkerId(workerId);
         app.setJobId(jobId);
         app.setStatus("PENDING");
         app.setAppliedAt(LocalDateTime.now());
-        app.setCreatedAt(LocalDateTime.now());
         app.setUpdatedAt(LocalDateTime.now());
         jobApplicationMapper.insert(app);
-        Job job = jobMapper.findByJobId(jobId).orElse(null);
-        if (job != null) {
+        if (job != null && job.getCompanyId() != null) {
             companyWorkerInsertMapper.upsert(job.getCompanyId(), workerId);
         }
         return true;
@@ -226,7 +230,7 @@ public class JobServiceImpl implements JobService {
         return summary;
     }
 
-    private JobDetailVO toDetail(Job job) {
+    private JobDetailVO toDetail(Job job, Long workerId) {
         JobDetailVO detail = new JobDetailVO();
         detail.setId(job.getId());
         detail.setTitle(job.getTitle());
@@ -257,6 +261,28 @@ public class JobServiceImpl implements JobService {
                 detail.setSchedules(emptyList());
             }
         }
+        if (workerId != null) {
+            List<JobApplication> applications = jobApplicationMapper.findByWorkerIdAndJobId(workerId, job.getJobId());
+            if (!applications.isEmpty()) {
+                detail.setApplyStatus(mapApplyStatus(applications.get(0).getStatus()));
+            }
+        }
         return detail;
+    }
+
+    private String mapApplyStatus(String status) {
+        if (status == null) {
+            return null;
+        }
+        if ("PENDING".equals(status)) {
+            return "已报名";
+        }
+        if ("ACCEPTED".equals(status)) {
+            return "已通过";
+        }
+        if ("REJECTED".equals(status)) {
+            return "未通过";
+        }
+        return status;
     }
 }

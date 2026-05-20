@@ -3,9 +3,9 @@ package com.parttime.enterprise.service.impl;
 import com.parttime.enterprise.enums.ApplicationStatus;
 import com.parttime.enterprise.exception.BusinessException;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
-import com.parttime.enterprise.mapper.CWorkerMapper;
 import com.parttime.enterprise.mapper.JobApplicationMapper;
 import com.parttime.enterprise.mapper.JobMapper;
+import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.entity.Job;
 import com.parttime.enterprise.pojo.entity.JobApplication;
 import com.parttime.enterprise.pojo.vo.JobApplicationVO;
@@ -25,7 +25,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Resource
     private JobMapper jobMapper;
     @Resource
-    private CWorkerMapper cWorkerMapper;
+    private WorkerSyncMapper workerSyncMapper;
     @Resource
     private CompanyWorkerMapper companyWorkerMapper;
 
@@ -97,7 +97,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (job != null) {
             response.setJobTitle(job.getTitle());
         }
-        response.setWorkerName(cWorkerMapper.findWorkerNameById(app.getWorkerId()));
+        response.setWorkerName(workerSyncMapper.findWorkerNameById(app.getWorkerId()));
 
         return response;
     }

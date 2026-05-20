@@ -24,10 +24,36 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import { useAuthStore } from '@/store'
 
 const authStore = useAuthStore()
 const loading = ref(false)
+const redirect = ref('')
+
+const TAB_PAGES = new Set([
+  '/pages/index/index',
+  '/pages/jobs/jobList',
+  '/pages/message/message',
+  '/pages/profile/profile'
+])
+
+onLoad((params) => {
+  redirect.value = typeof params?.redirect === 'string' ? decodeURIComponent(params.redirect) : ''
+})
+
+function goAfterLogin() {
+  if (!redirect.value) {
+    uni.switchTab({ url: '/pages/index/index' })
+    return
+  }
+  const targetPath = redirect.value.split('?')[0]
+  if (TAB_PAGES.has(targetPath)) {
+    uni.switchTab({ url: targetPath })
+    return
+  }
+  uni.redirectTo({ url: redirect.value })
+}
 
 async function handleLogin() {
   if (loading.value) return
@@ -35,7 +61,7 @@ async function handleLogin() {
   try {
     await authStore.wechatLogin()
     await authStore.loadWorkerInfo()
-    uni.switchTab({ url: '/pages/index/index' })
+    goAfterLogin()
   } catch (err) {
     uni.showToast({ title: '登录失败，请重试', icon: 'none' })
   } finally {

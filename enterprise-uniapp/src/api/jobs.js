@@ -22,6 +22,14 @@ export function deleteJob(id) {
   return request('DELETE', `/jobs?id=${id}`)
 }
 
+export function getJobShareCode(id) {
+  return request('GET', `/jobs/share-code?id=${id}`)
+}
+
+export function getJobShareLink(id) {
+  return request('GET', `/jobs/share-link?id=${id}`)
+}
+
 export function publishJob(id) {
   return request('PUT', `/jobs/publish?id=${id}`)
 }
