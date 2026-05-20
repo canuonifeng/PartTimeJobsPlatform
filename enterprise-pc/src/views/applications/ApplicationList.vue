@@ -1,15 +1,23 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { listApplications, acceptApplication, rejectApplication } from '../../api/application'
 
+const route = useRoute()
 const applications = ref([])
-const total = ref(0)
 const loading = ref(false)
+const loadingMore = ref(false)
+const page = ref(1)
+const pageSize = 20
+const hasMore = ref(true)
 const searchForm = ref({
+  jobId: undefined,
   jobTitle: '',
   status: ''
 })
+
+const jobTitleHint = ref('')
 
 const statusOptions = [
   { value: 'PENDING', label: '待处理' },
@@ -26,21 +34,37 @@ const statusMap = {
 async function fetchData() {
   loading.value = true
   try {
-    const res = await listApplications(searchForm.value)
+    const res = await listApplications({
+      ...searchForm.value,
+      page: page.value,
+      pageSize
+    })
     const data = Array.isArray(res) ? res : (res.records || [])
-    applications.value = data
-    total.value = Array.isArray(res) ? res.length : (res.total || 0)
+    applications.value = page.value === 1 ? data : applications.value.concat(data)
+    hasMore.value = data.length >= pageSize
   } finally {
     loading.value = false
+    loadingMore.value = false
   }
 }
 
+function loadMore() {
+  if (loading.value || loadingMore.value || !hasMore.value) return
+  loadingMore.value = true
+  page.value += 1
+  fetchData()
+}
+
 function handleSearch() {
+  page.value = 1
+  hasMore.value = true
   fetchData()
 }
 
 function handleReset() {
-  searchForm.value = { jobTitle: '', status: '' }
+  searchForm.value = { jobId: route.query.jobId ? Number(route.query.jobId) : undefined, jobTitle: '', status: '' }
+  page.value = 1
+  hasMore.value = true
   fetchData()
 }
 
@@ -63,6 +87,9 @@ async function handleReject(row) {
 }
 
 onMounted(() => {
+  searchForm.value.jobId = route.query.jobId ? Number(route.query.jobId) : undefined
+  searchForm.value.jobTitle = route.query.jobTitle ? String(route.query.jobTitle) : ''
+  jobTitleHint.value = searchForm.value.jobTitle
   fetchData()
 })
 </script>
@@ -70,6 +97,7 @@ onMounted(() => {
 <template>
   <div class="application-list">
     <el-card>
+      <div v-if="jobTitleHint" class="job-hint">当前职位：{{ jobTitleHint }}</div>
       <el-form :model="searchForm" inline>
         <el-form-item label="职位名称">
           <el-input v-model="searchForm.jobTitle" placeholder="请输入" clearable />
@@ -90,6 +118,7 @@ onMounted(() => {
       <el-table :data="applications" v-loading="loading" stripe style="width: 100%">
         <el-table-column prop="jobTitle" label="职位" min-width="160" />
         <el-table-column prop="workerName" label="应聘者" width="120" />
+        <el-table-column prop="workerPhone" label="手机号" width="140" />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="statusMap[row.status] || 'info'">
@@ -108,6 +137,10 @@ onMounted(() => {
           </template>
         </el-table-column>
       </el-table>
+      <div class="load-more-wrap">
+        <el-button v-if="hasMore" :loading="loadingMore" @click="loadMore">加载更多</el-button>
+        <el-tag v-else type="info">没有更多了</el-tag>
+      </div>
     </el-card>
   </div>
 </template>
@@ -115,5 +148,16 @@ onMounted(() => {
 <style scoped>
 .application-list {
   padding: 20px;
+}
+
+.job-hint {
+  margin-bottom: 12px;
+  color: #666;
+}
+
+.load-more-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0 4px;
 }
 </style>

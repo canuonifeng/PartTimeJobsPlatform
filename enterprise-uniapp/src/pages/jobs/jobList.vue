@@ -56,6 +56,10 @@ function navigateToDetail(id) {
   uni.navigateTo({ url: `/pages/jobs/jobDetail?id=${id}` })
 }
 
+function navigateToApplications(job) {
+  uni.navigateTo({ url: `/pages/jobs/applicationList?jobId=${job.id}&jobTitle=${encodeURIComponent(job.title || '')}` })
+}
+
 async function handleShare(id) {
   try {
     const res = await getJobShareLink(id)
@@ -180,36 +184,43 @@ function statusClass(s) {
           </view>
           <view class="card-body">
             <text class="info">招聘人数：{{ job.headcount }}</text>
+            <text class="info">总报名数：{{ job.applicationCount ?? 0 }}</text>
+            <text class="info">待审核：{{ job.pendingApplicationCount ?? 0 }}</text>
             <text class="info">截止日期：{{ job.deadline || '不限' }}</text>
           </view>
           <view class="card-footer" @click.stop>
             <button
+              class="action-btn record-btn"
+              @click.stop="navigateToApplications(job)"
+            >报名记录</button>
+            <button
               class="action-btn share-btn"
               @click.stop="handleShare(job.id)"
-            >复制链接</button>
+            >邀请报名</button>
             <button
-              v-if="job.status === 'DRAFT'"
-              class="action-btn publish-btn"
-              @click="handlePublish(job.id)"
-            >发布</button>
+              class="action-btn edit-btn"
+              @click="navigateToEdit(job.id)"
+            >编辑</button>
             <button
               v-if="job.status === 'PUBLISHED'"
               class="action-btn close-btn"
               @click="handleClose(job.id)"
             >关闭</button>
             <button
+              v-if="job.status === 'CLOSED' && (job.applicationCount ?? 0) === 0"
+              class="action-btn delete-btn"
+              @click="handleDelete(job.id)"
+            >删除</button>
+            <button
+              v-if="job.status === 'DRAFT'"
+              class="action-btn publish-btn"
+              @click="handlePublish(job.id)"
+            >发布</button>
+            <button
               v-if="job.status === 'CLOSED'"
               class="action-btn reopen-btn"
               @click="handleReopen(job.id)"
             >重新发布</button>
-            <button
-              class="action-btn edit-btn"
-              @click="navigateToEdit(job.id)"
-            >编辑</button>
-            <button
-              class="action-btn delete-btn"
-              @click="handleDelete(job.id)"
-            >删除</button>
           </view>
         </view>
       </view>
@@ -340,6 +351,10 @@ function statusClass(s) {
 }
 .action-btn::after {
   border: none;
+}
+.record-btn {
+  border-color: #007aff;
+  color: #007aff;
 }
 .publish-btn {
   border-color: #34c759;

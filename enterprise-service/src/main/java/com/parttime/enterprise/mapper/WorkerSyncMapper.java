@@ -8,4 +8,7 @@ public interface WorkerSyncMapper {
 
     @Select("SELECT name FROM c_worker WHERE id = #{id}")
     String findWorkerNameById(Long id);
+
+    @Select("SELECT phone FROM c_worker WHERE id = #{id}")
+    String findWorkerPhoneById(Long id);
 }

@@ -27,8 +27,10 @@ public class ApplicationController {
     public List<JobApplicationVO> getApplicationsByJob(
             @Parameter(description = "岗位ID") @RequestParam(required = false) Long jobId,
             @Parameter(description = "岗位标题") @RequestParam(required = false) String jobTitle,
-            @Parameter(description = "状态") @RequestParam(required = false) String status) {
-        return applicationService.getApplicationsByJob(jobId, jobTitle, status);
+            @Parameter(description = "状态") @RequestParam(required = false) String status,
+            @Parameter(description = "页码") @RequestParam(required = false, defaultValue = "1") Integer page,
+            @Parameter(description = "每页数量") @RequestParam(required = false, defaultValue = "20") Integer pageSize) {
+        return applicationService.getApplicationsByJob(jobId, jobTitle, status, page, pageSize);
     }
 
     @Operation(summary = "通过申请", description = "通过工人的岗位申请")

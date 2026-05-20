@@ -39,6 +39,10 @@ public class JobVO {
     private Integer headcount;
     @Schema(description = "岗位状态")
     private JobStatus status;
+    @Schema(description = "总报名人数")
+    private Integer applicationCount;
+    @Schema(description = "待审核报名数")
+    private Integer pendingApplicationCount;
     @Schema(description = "报名截止时间")
     @JsonFormat(pattern = "yyyy-MM-dd", timezone = "Asia/Shanghai")
     private LocalDateTime deadline;

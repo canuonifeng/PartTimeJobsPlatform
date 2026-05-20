@@ -2,7 +2,9 @@ package com.parttime.enterprise.service;
 
 import com.parttime.enterprise.enums.JobRateType;
 import com.parttime.enterprise.enums.JobStatus;
+import com.parttime.enterprise.exception.BusinessException;
 import com.parttime.enterprise.mapper.EnterpriseMapper;
+import com.parttime.enterprise.mapper.JobApplicationMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.JobRateMapper;
 import com.parttime.enterprise.mapper.JobScheduleMapper;
@@ -65,6 +67,9 @@ class JobServiceTest {
     private JobSyncMapper jobSyncMapper;
 
     @Mock
+    private JobApplicationMapper jobApplicationMapper;
+
+    @Mock
     private ObjectMapper objectMapper;
 
     @Captor
@@ -124,6 +129,80 @@ class JobServiceTest {
 
         assertThat(response.getSchedules()).hasSize(1);
         assertThat(response.getSchedules().get(0).getSlotsAvailable()).isEqualTo(5);
+    }
+
+    @Test
+    void getJobsByCompany_shouldIncludeApplicationCounts() {
+        Job first = new Job();
+        first.setId(1L);
+        first.setCompanyId(1L);
+        first.setTitle("First Job");
+        first.setStatus("PUBLISHED");
+
+        Job second = new Job();
+        second.setId(2L);
+        second.setCompanyId(1L);
+        second.setTitle("Second Job");
+        second.setStatus("PUBLISHED");
+
+        when(jobMapper.findByCompanyId(1L)).thenReturn(List.of(first, second));
+        when(jobRateMapper.findByJobId(1L)).thenReturn(List.of());
+        when(jobRateMapper.findByJobId(2L)).thenReturn(List.of());
+        when(jobScheduleMapper.findByJobId(1L)).thenReturn(List.of());
+        when(jobScheduleMapper.findByJobId(2L)).thenReturn(List.of());
+        when(jobApplicationMapper.countByJobId(1L)).thenReturn(8);
+        when(jobApplicationMapper.countByJobId(2L)).thenReturn(3);
+        when(jobApplicationMapper.countByJobIdAndStatus(1L, "PENDING")).thenReturn(2);
+        when(jobApplicationMapper.countByJobIdAndStatus(2L, "PENDING")).thenReturn(1);
+
+        List<JobVO> jobs = jobService.getJobsByCompany(1L, null, null, null);
+
+        assertThat(jobs).hasSize(2);
+        assertThat(jobs.get(0).getApplicationCount()).isEqualTo(8);
+        assertThat(jobs.get(0).getPendingApplicationCount()).isEqualTo(2);
+        assertThat(jobs.get(1).getApplicationCount()).isEqualTo(3);
+        assertThat(jobs.get(1).getPendingApplicationCount()).isEqualTo(1);
+    }
+
+    @Test
+    void deleteJob_shouldDeleteWhenClosedAndNoApplications() {
+        Job job = new Job();
+        job.setId(1L);
+        job.setStatus("CLOSED");
+
+        when(jobMapper.findById(1L)).thenReturn(Optional.of(job));
+        when(jobApplicationMapper.countByJobId(1L)).thenReturn(0);
+
+        jobService.deleteJob(1L);
+
+        verify(jobMapper).delete(1L);
+    }
+
+    @Test
+    void deleteJob_shouldThrowWhenJobIsNotClosed() {
+        Job job = new Job();
+        job.setId(1L);
+        job.setStatus("PUBLISHED");
+
+        when(jobMapper.findById(1L)).thenReturn(Optional.of(job));
+
+        assertThatThrownBy(() -> jobService.deleteJob(1L))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("只有关闭后的职位才能删除");
+    }
+
+    @Test
+    void deleteJob_shouldThrowWhenJobHasApplications() {
+        Job job = new Job();
+        job.setId(1L);
+        job.setStatus("CLOSED");
+
+        when(jobMapper.findById(1L)).thenReturn(Optional.of(job));
+        when(jobApplicationMapper.countByJobId(1L)).thenReturn(2);
+
+        assertThatThrownBy(() -> jobService.deleteJob(1L))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage("已有报名记录的职位不能删除");
     }
 
     @Test

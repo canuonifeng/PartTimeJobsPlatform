@@ -53,6 +53,9 @@ class ApplicationServiceTest {
         app.setAppliedAt(LocalDateTime.of(2026, 5, 1, 10, 0));
 
         when(applicationMapper.findByJobId(100L)).thenReturn(List.of(app));
+        when(workerSyncMapper.findWorkerNameById(10L)).thenReturn("张三");
+        when(workerSyncMapper.findWorkerPhoneById(10L)).thenReturn("13800000000");
+        when(jobMapper.findById(100L)).thenReturn(Optional.of(new Job()));
 
         List<JobApplicationVO> result = applicationService.getApplicationsByJob(100L, null, null);
 
@@ -60,7 +63,35 @@ class ApplicationServiceTest {
         assertThat(result.get(0).getId()).isEqualTo(1L);
         assertThat(result.get(0).getJobId()).isEqualTo(100L);
         assertThat(result.get(0).getWorkerId()).isEqualTo(10L);
+        assertThat(result.get(0).getWorkerPhone()).isEqualTo("13800000000");
         assertThat(result.get(0).getStatus()).isEqualTo(ApplicationStatus.PENDING);
+    }
+
+    @Test
+    void getApplicationsByJob_shouldApplyPagination() {
+        JobApplication first = new JobApplication();
+        first.setId(1L);
+        first.setJobId(100L);
+        first.setWorkerId(10L);
+        first.setStatus("PENDING");
+        first.setAppliedAt(LocalDateTime.of(2026, 5, 1, 10, 0));
+
+        JobApplication second = new JobApplication();
+        second.setId(2L);
+        second.setJobId(100L);
+        second.setWorkerId(11L);
+        second.setStatus("PENDING");
+        second.setAppliedAt(LocalDateTime.of(2026, 5, 1, 9, 0));
+
+        when(applicationMapper.findByJobId(100L)).thenReturn(List.of(first, second));
+        when(workerSyncMapper.findWorkerNameById(10L)).thenReturn("张三");
+        when(workerSyncMapper.findWorkerPhoneById(10L)).thenReturn("13800000000");
+        when(jobMapper.findById(100L)).thenReturn(Optional.of(new Job()));
+
+        List<JobApplicationVO> result = applicationService.getApplicationsByJob(100L, null, null, 1, 1);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getId()).isEqualTo(1L);
     }
 
     @Test
@@ -92,8 +123,12 @@ class ApplicationServiceTest {
         app.setJobId(100L);
         app.setWorkerId(10L);
         app.setStatus("PENDING");
+        app.setAppliedAt(LocalDateTime.of(2026, 5, 1, 10, 0));
 
         when(applicationMapper.findById(1L)).thenReturn(Optional.of(app));
+        when(jobMapper.findById(100L)).thenReturn(Optional.of(new Job()));
+        when(workerSyncMapper.findWorkerNameById(10L)).thenReturn("张三");
+        when(workerSyncMapper.findWorkerPhoneById(10L)).thenReturn("13800000000");
 
         JobApplicationVO result = applicationService.rejectApplication(1L);
 

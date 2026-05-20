@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import { getJob, publishJob, closeJob, reopenJob, deleteJob, getRates, getSchedules, getJobShareLink } from '@/api/jobs'
+import { getJob, getRates, getSchedules } from '@/api/jobs'
 
 const job = ref(null)
 const rates = ref([])
@@ -34,79 +34,6 @@ async function loadDetail(id) {
   } finally {
     loading.value = false
   }
-}
-
-async function handleShareCode() {
-  if (!job.value?.id) return
-  try {
-    const res = await getJobShareLink(job.value.id)
-    const link = res?.link || res?.data?.link || ''
-    if (!link) {
-      throw new Error('empty link')
-    }
-    await new Promise((resolve, reject) => {
-      uni.setClipboardData({
-        data: link,
-        success: resolve,
-        fail: reject
-      })
-    })
-    uni.showToast({ title: '链接已复制', icon: 'success' })
-  } catch {
-    uni.showToast({ title: '复制失败', icon: 'none' })
-  }
-}
-
-async function handlePublish() {
-  try {
-    await publishJob(job.value.id)
-    uni.showToast({ title: '已发布', icon: 'success' })
-    loadDetail(job.value.id)
-  } catch {
-    uni.showToast({ title: '操作失败', icon: 'none' })
-  }
-}
-
-async function handleClose() {
-  try {
-    await closeJob(job.value.id)
-    uni.showToast({ title: '已关闭', icon: 'success' })
-    loadDetail(job.value.id)
-  } catch {
-    uni.showToast({ title: '操作失败', icon: 'none' })
-  }
-}
-
-async function handleReopen() {
-  try {
-    await reopenJob(job.value.id)
-    uni.showToast({ title: '已重新发布', icon: 'success' })
-    loadDetail(job.value.id)
-  } catch {
-    uni.showToast({ title: '操作失败', icon: 'none' })
-  }
-}
-
-function handleDelete() {
-  uni.showModal({
-    title: '确认删除',
-    content: '确定要删除该职位吗？此操作不可恢复。',
-    success: async (res) => {
-      if (res.confirm) {
-        try {
-          await deleteJob(job.value.id)
-          uni.showToast({ title: '已删除', icon: 'success' })
-          setTimeout(() => uni.navigateBack(), 1500)
-        } catch {
-          uni.showToast({ title: '删除失败', icon: 'none' })
-        }
-      }
-    }
-  })
-}
-
-function handleEdit() {
-  uni.navigateTo({ url: `/pages/jobs/jobForm?id=${job.value.id}` })
 }
 
 function statusLabel(s) {
@@ -176,40 +103,12 @@ function rateTypeLabel(t) {
             </text>
           </view>
         </view>
+
       </view>
 
       <view v-else class="state-msg">暂无数据</view>
     </scroll-view>
 
-    <view v-if="job && !loading" class="bottom-actions">
-      <button
-        v-if="job.status === 'DRAFT'"
-        class="bottom-btn primary-btn"
-        @click="handlePublish"
-      >发布</button>
-      <button
-        v-if="job.status === 'PUBLISHED'"
-        class="bottom-btn warning-btn"
-        @click="handleClose"
-      >关闭</button>
-      <button
-        v-if="job.status === 'CLOSED'"
-        class="bottom-btn primary-btn"
-        @click="handleReopen"
-      >重新发布</button>
-      <button
-        class="bottom-btn outline-btn"
-        @click="handleEdit"
-      >编辑</button>
-      <button
-        class="bottom-btn primary-btn"
-        @click="handleShareCode"
-      >复制链接</button>
-      <button
-        class="bottom-btn danger-btn"
-        @click="handleDelete"
-      >删除</button>
-    </view>
   </view>
 </template>
 
@@ -217,7 +116,6 @@ function rateTypeLabel(t) {
 .page {
   min-height: 100vh;
   background: #f5f5f5;
-  padding-bottom: 120rpx;
 }
 .detail-scroll {
   padding: 24rpx 32rpx;
@@ -290,46 +188,65 @@ function rateTypeLabel(t) {
   color: #333;
   flex: 1;
 }
-.bottom-actions {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #fff;
-  padding: 16rpx 32rpx;
+.application-list {
   display: flex;
+  flex-direction: column;
   gap: 16rpx;
-  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.05);
-  z-index: 100;
 }
-.bottom-btn {
-  flex: 1;
-  height: 80rpx;
-  line-height: 80rpx;
-  font-size: 28rpx;
+.application-item {
+  border: 1rpx solid #eee;
   border-radius: 12rpx;
-  text-align: center;
-  min-width: 0;
+  padding: 20rpx;
+  background: #fafafa;
 }
-.bottom-btn::after {
-  border: none;
+.application-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
 }
-.primary-btn {
-  background: #007aff;
-  color: #fff;
+.application-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-.warning-btn {
-  background: #ff9500;
-  color: #fff;
+.application-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333;
 }
-.outline-btn {
-  background: #fff;
+.application-status {
+  font-size: 22rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 999rpx;
+  background: #eef6ff;
   color: #007aff;
-  border: 2rpx solid #007aff;
 }
-.danger-btn {
+.application-phone,
+.application-time {
+  font-size: 24rpx;
+  color: #666;
+}
+.application-actions {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+.application-actions .action-btn {
+  flex: 1;
+  height: 64rpx;
+  line-height: 64rpx;
+  font-size: 24rpx;
+  border-radius: 8rpx;
+  border: 2rpx solid #ddd;
   background: #fff;
+  color: #333;
+}
+.accept-btn {
+  border-color: #34c759;
+  color: #34c759;
+}
+.reject-btn {
+  border-color: #ff3b30;
   color: #ff3b30;
-  border: 2rpx solid #ff3b30;
 }
 </style>

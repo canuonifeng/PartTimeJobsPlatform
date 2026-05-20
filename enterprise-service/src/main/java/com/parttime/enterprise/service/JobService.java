@@ -21,7 +21,11 @@ public interface JobService {
 
     JobVO getJobById(Long id);
 
-    List<JobVO> getJobsByCompany(Long companyId, String status);
+    default List<JobVO> getJobsByCompany(Long companyId, String status) {
+        return getJobsByCompany(companyId, status, null, null);
+    }
+
+    List<JobVO> getJobsByCompany(Long companyId, String status, Integer page, Integer pageSize);
 
     JobVO publishJob(Long id);
 

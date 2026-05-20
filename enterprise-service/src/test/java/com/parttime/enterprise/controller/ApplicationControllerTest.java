@@ -50,15 +50,33 @@ class ApplicationControllerTest {
         app.setId(1L);
         app.setJobId(100L);
         app.setWorkerId(10L);
+        app.setWorkerPhone("13800000000");
         app.setStatus(ApplicationStatus.PENDING);
         app.setAppliedAt(LocalDateTime.of(2026, 5, 1, 10, 0));
 
-        when(applicationService.getApplicationsByJob(100L, null, null)).thenReturn(List.of(app));
+        when(applicationService.getApplicationsByJob(100L, null, null, 1, 20)).thenReturn(List.of(app));
 
         mockMvc.perform(get("/api/applications").param("jobId", "100"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1L))
+                .andExpect(jsonPath("$[0].workerPhone").value("13800000000"))
                 .andExpect(jsonPath("$[0].status").value("PENDING"));
+    }
+
+    @Test
+    void getApplicationsByJob_shouldSupportPageParams() throws Exception {
+        JobApplicationVO app = new JobApplicationVO();
+        app.setId(1L);
+        app.setJobId(100L);
+        app.setWorkerId(10L);
+        app.setStatus(ApplicationStatus.PENDING);
+        app.setAppliedAt(LocalDateTime.of(2026, 5, 1, 10, 0));
+
+        when(applicationService.getApplicationsByJob(100L, null, null, 2, 20)).thenReturn(List.of(app));
+
+        mockMvc.perform(get("/api/applications").param("jobId", "100").param("page", "2").param("pageSize", "20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1L));
     }
 
     @Test

@@ -18,7 +18,11 @@ public interface JobApplicationMapper {
 
     List<JobApplication> findByJobId(Long jobId);
 
+    List<JobApplication> findByJobIdPaged(@Param("jobId") Long jobId, @Param("offset") int offset, @Param("limit") int limit);
+
     List<JobApplication> findByWorkerId(Long workerId);
+
+    int countByJobId(Long jobId);
 
     int countByJobIdAndStatus(@Param("jobId") Long jobId, @Param("status") String status);
 

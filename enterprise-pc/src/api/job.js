@@ -8,6 +8,10 @@ export function getJob(id) {
   return request.get('/jobs', { params: { id } })
 }
 
+export function getJobShareLink(id) {
+  return request.get('/jobs/share-link', { params: { id } })
+}
+
 export function createJob(data) {
   return request.post('/jobs', data)
 }

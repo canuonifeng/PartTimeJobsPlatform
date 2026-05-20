@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { listJobs, deleteJob, publishJob, closeJob, reopenJob } from '../../api/job'
+import { listJobs, deleteJob, publishJob, closeJob, reopenJob, getJobShareLink } from '../../api/job'
 
 const router = useRouter()
 const jobs = ref([])
@@ -44,6 +44,22 @@ function handleEdit(row) {
 
 function handleView(row) {
   router.push(`/jobs/${row.id}/edit`)
+}
+
+function handleApplications(row) {
+  router.push({ path: '/applications', query: { jobId: row.id, jobTitle: row.title } })
+}
+
+async function handleInvite(row) {
+  try {
+    const res = await getJobShareLink(row.id)
+    const link = res?.link || res?.data?.link || ''
+    if (!link) throw new Error('empty link')
+    await navigator.clipboard.writeText(link)
+    ElMessage.success('邀请链接已复制')
+  } catch {
+    ElMessage.error('邀请失败')
+  }
 }
 
 async function handleDelete(row) {
@@ -124,6 +140,12 @@ onMounted(() => {
         <el-table-column prop="location" label="工作地点" width="140" />
         <el-table-column prop="category" label="类别" width="100" />
         <el-table-column prop="headcount" label="招聘人数" width="80" />
+        <el-table-column label="报名情况" width="140">
+          <template #default="{ row }">
+            <div>总数：{{ row.applicationCount ?? 0 }}</div>
+            <div>待审：{{ row.pendingApplicationCount ?? 0 }}</div>
+          </template>
+        </el-table-column>
         <el-table-column label="状态" width="100">
           <template #default="{ row }">
             <el-tag :type="statusMap[row.status] || 'info'">
@@ -133,11 +155,17 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
+            <el-button size="small" @click="handleApplications(row)">报名记录</el-button>
+            <el-button size="small" @click="handleInvite(row)">邀请报名</el-button>
             <el-button size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
-            <el-button v-if="row.status === 'DRAFT'" size="small" type="success" @click="handlePublish(row)">发布</el-button>
             <el-button v-if="row.status === 'PUBLISHED'" size="small" @click="handleClose(row)">关闭</el-button>
-            <el-button v-if="row.status === 'CLOSED'" size="small" type="warning" @click="handleReopen(row)">重新开启</el-button>
+            <el-button
+              v-if="row.status === 'CLOSED' && (row.applicationCount ?? 0) === 0"
+              size="small"
+              type="danger"
+              @click="handleDelete(row)"
+            >删除</el-button>
+            <el-button v-if="row.status === 'DRAFT'" size="small" type="success" @click="handlePublish(row)">发布</el-button>
           </template>
         </el-table-column>
       </el-table>

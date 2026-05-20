@@ -30,22 +30,30 @@ public class ApplicationServiceImpl implements ApplicationService {
     private CompanyWorkerMapper companyWorkerMapper;
 
     @Override
-    public List<JobApplicationVO> getApplicationsByJob(Long jobId, String jobTitle, String status) {
+    public List<JobApplicationVO> getApplicationsByJob(Long jobId, String jobTitle, String status, Integer page, Integer pageSize) {
         List<JobApplication> apps;
         if (jobId != null) {
             apps = applicationMapper.findByJobId(jobId);
         } else {
             apps = applicationMapper.findAll();
         }
-        return apps.stream()
+        List<JobApplication> filtered = apps.stream()
                 .filter(app -> status == null || status.isEmpty() || status.equals(app.getStatus()))
                 .filter(app -> {
                     if (jobTitle == null || jobTitle.isEmpty()) return true;
                     Job job = jobMapper.findById(app.getJobId()).orElse(null);
                     return job != null && job.getTitle() != null && job.getTitle().contains(jobTitle);
                 })
-                .map(this::toResponse)
                 .collect(Collectors.toList());
+        if (page != null && pageSize != null) {
+            int fromIndex = Math.max(page - 1, 0) * pageSize;
+            if (fromIndex >= filtered.size()) {
+                return List.of();
+            }
+            int toIndex = Math.min(fromIndex + pageSize, filtered.size());
+            filtered = filtered.subList(fromIndex, toIndex);
+        }
+        return filtered.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     @Override
@@ -98,6 +106,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             response.setJobTitle(job.getTitle());
         }
         response.setWorkerName(workerSyncMapper.findWorkerNameById(app.getWorkerId()));
+        response.setWorkerPhone(workerSyncMapper.findWorkerPhoneById(app.getWorkerId()));
 
         return response;
     }

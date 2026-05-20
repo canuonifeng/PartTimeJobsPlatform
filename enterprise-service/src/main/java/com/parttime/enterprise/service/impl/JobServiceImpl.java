@@ -2,7 +2,9 @@ package com.parttime.enterprise.service.impl;
 
 import com.parttime.enterprise.enums.JobRateType;
 import com.parttime.enterprise.enums.JobStatus;
+import com.parttime.enterprise.exception.BusinessException;
 import com.parttime.enterprise.mapper.EnterpriseMapper;
+import com.parttime.enterprise.mapper.JobApplicationMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.JobRateMapper;
 import com.parttime.enterprise.mapper.JobScheduleMapper;
@@ -40,6 +42,8 @@ public class JobServiceImpl implements JobService {
     private JobSyncMapper jobSyncMapper;
     @Resource
     private EnterpriseMapper enterpriseMapper;
+    @Resource
+    private JobApplicationMapper jobApplicationMapper;
 
     @Resource
     private ObjectMapper objectMapper;
@@ -146,6 +150,14 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public void deleteJob(Long id) {
+        Job job = jobMapper.findById(id)
+                .orElseThrow(() -> new RuntimeException("Job not found: " + id));
+        if (!"CLOSED".equals(job.getStatus())) {
+            throw new BusinessException("只有关闭后的职位才能删除");
+        }
+        if (jobApplicationMapper.countByJobId(id) > 0) {
+            throw new BusinessException("已有报名记录的职位不能删除");
+        }
         jobMapper.delete(id);
     }
 
@@ -160,7 +172,7 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public List<JobVO> getJobsByCompany(Long companyId, String status) {
+    public List<JobVO> getJobsByCompany(Long companyId, String status, Integer page, Integer pageSize) {
         List<Job> jobs;
         if (status != null && !status.isEmpty()) {
             jobs = jobMapper.findByCompanyIdAndStatus(companyId, status);
@@ -390,6 +402,8 @@ public class JobServiceImpl implements JobService {
         response.setCategoryId(job.getCategoryId());
         response.setHeadcount(job.getHeadcount());
         response.setStatus(JobStatus.valueOf(job.getStatus()));
+        response.setApplicationCount(jobApplicationMapper.countByJobId(job.getId()));
+        response.setPendingApplicationCount(jobApplicationMapper.countByJobIdAndStatus(job.getId(), "PENDING"));
         response.setDeadline(job.getDeadline());
         response.setCreatedAt(job.getCreatedAt());
         response.setUpdatedAt(job.getUpdatedAt());

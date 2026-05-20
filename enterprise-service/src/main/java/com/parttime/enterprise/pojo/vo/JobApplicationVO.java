@@ -18,6 +18,8 @@ public class JobApplicationVO {
     private Long workerId;
     @Schema(description = "工人姓名")
     private String workerName;
+    @Schema(description = "工人手机号")
+    private String workerPhone;
     @Schema(description = "申请状态")
     private ApplicationStatus status;
     @Schema(description = "申请时间")

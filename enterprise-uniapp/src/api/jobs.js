@@ -30,6 +30,23 @@ export function getJobShareLink(id) {
   return request('GET', `/jobs/share-link?id=${id}`)
 }
 
+export function getApplications(jobId, params = {}) {
+  const query = []
+  if (jobId != null) query.push(`jobId=${jobId}`)
+  if (params.status) query.push(`status=${encodeURIComponent(params.status)}`)
+  if (params.page != null) query.push(`page=${params.page}`)
+  if (params.pageSize != null) query.push(`pageSize=${params.pageSize}`)
+  return request('GET', `/applications${query.length ? `?${query.join('&')}` : ''}`)
+}
+
+export function acceptApplication(applicationId) {
+  return request('PUT', `/applications/accept?applicationId=${applicationId}`)
+}
+
+export function rejectApplication(applicationId) {
+  return request('PUT', `/applications/reject?applicationId=${applicationId}`)
+}
+
 export function publishJob(id) {
   return request('PUT', `/jobs/publish?id=${id}`)
 }
