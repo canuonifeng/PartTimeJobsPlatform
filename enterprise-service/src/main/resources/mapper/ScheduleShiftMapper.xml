@@ -5,6 +5,10 @@
     <resultMap id="ShiftResultMap" type="com.parttime.enterprise.pojo.entity.ScheduleShift">
         <id property="id" column="id"/>
         <result property="jobId" column="job_id"/>
+        <result property="applicationId" column="application_id"/>
+        <result property="salaryType" column="salary_type"/>
+        <result property="salaryAmount" column="salary_amount"/>
+        <result property="salaryCurrency" column="salary_currency"/>
         <result property="templateSlotId" column="template_slot_id"/>
         <result property="workerId" column="worker_id"/>
         <result property="shiftDate" column="shift_date"/>
@@ -20,9 +24,11 @@
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO schedule_shifts (job_id, template_slot_id, worker_id, shift_date, start_time, end_time,
+        INSERT INTO schedule_shifts (job_id, application_id, salary_type, salary_amount, salary_currency,
+                                     template_slot_id, worker_id, shift_date, start_time, end_time,
                                      location_lat, location_lng, location_radius, location_name, status)
-        VALUES (#{jobId}, #{templateSlotId}, #{workerId}, #{shiftDate}, #{startTime}, #{endTime},
+        VALUES (#{jobId}, #{applicationId}, #{salaryType}, #{salaryAmount}, #{salaryCurrency},
+                #{templateSlotId}, #{workerId}, #{shiftDate}, #{startTime}, #{endTime},
                 #{locationLat}, #{locationLng}, #{locationRadius}, #{locationName}, 'SCHEDULED')
     </insert>
 
@@ -56,7 +62,9 @@
 
     <update id="update">
         UPDATE schedule_shifts
-        SET job_id = #{jobId}, template_slot_id = #{templateSlotId}, worker_id = #{workerId},
+        SET job_id = #{jobId}, application_id = #{applicationId}, salary_type = #{salaryType},
+            salary_amount = #{salaryAmount}, salary_currency = #{salaryCurrency},
+            template_slot_id = #{templateSlotId}, worker_id = #{workerId},
             shift_date = #{shiftDate}, start_time = #{startTime}, end_time = #{endTime},
             location_lat = #{locationLat}, location_lng = #{locationLng},
             location_radius = #{locationRadius}, location_name = #{locationName}

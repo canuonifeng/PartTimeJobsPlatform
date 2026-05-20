@@ -14,6 +14,14 @@ public class ScheduleShift {
     private Long id;
     @Schema(description = "岗位ID")
     private Long jobId;
+    @Schema(description = "报名ID快照")
+    private Long applicationId;
+    @Schema(description = "薪资类型快照")
+    private String salaryType;
+    @Schema(description = "薪资金额快照")
+    private BigDecimal salaryAmount;
+    @Schema(description = "薪资币种快照")
+    private String salaryCurrency;
     @Schema(description = "模板时段ID")
     private Long templateSlotId;
     @Schema(description = "工人ID")

@@ -129,6 +129,9 @@ public class ScheduleServiceImpl implements ScheduleService {
         shift.setLocationName(request.getLocationName());
         shift.setStatus("SCHEDULED");
         shiftMapper.insert(shift);
+        Long shiftId = shift.getId();
+        shift = shiftMapper.findById(shiftId)
+                .orElseThrow(() -> new RuntimeException("ScheduleShift not found: " + shiftId));
         if (shift.getWorkerId() != null) {
             Job job = jobMapper.findById(shift.getJobId()).orElse(null);
             if (job != null) {
@@ -168,6 +171,8 @@ public class ScheduleServiceImpl implements ScheduleService {
         shift.setLocationRadius(request.getLocationRadius());
         shift.setLocationName(request.getLocationName());
         shiftMapper.update(shift);
+        shift = shiftMapper.findById(id)
+                .orElseThrow(() -> new RuntimeException("ScheduleShift not found: " + id));
         return toShiftResponse(shift);
     }
 
@@ -264,6 +269,10 @@ public class ScheduleServiceImpl implements ScheduleService {
         ScheduleShiftVO response = new ScheduleShiftVO();
         response.setId(shift.getId());
         response.setJobId(shift.getJobId());
+        response.setApplicationId(shift.getApplicationId());
+        response.setSalaryType(shift.getSalaryType());
+        response.setSalaryAmount(shift.getSalaryAmount());
+        response.setSalaryCurrency(shift.getSalaryCurrency());
         response.setTemplateSlotId(shift.getTemplateSlotId());
         response.setWorkerId(shift.getWorkerId());
         response.setShiftDate(shift.getShiftDate());

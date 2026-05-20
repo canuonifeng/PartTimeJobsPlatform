@@ -1,6 +1,8 @@
 package com.parttime.enterprise.service;
 
 import com.parttime.enterprise.mapper.AttendanceRecordMapper;
+import com.parttime.enterprise.mapper.CompanyWorkerMapper;
+import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
 import com.parttime.enterprise.mapper.ScheduleTemplateMapper;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
@@ -11,6 +13,7 @@ import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.entity.ScheduleTemplate;
 import com.parttime.enterprise.pojo.entity.ScheduleTemplateSlot;
 import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
+import com.parttime.enterprise.pojo.vo.AttendanceRecordVO;
 import com.parttime.enterprise.pojo.vo.ScheduleShiftVO;
 import com.parttime.enterprise.pojo.vo.ScheduleTemplateVO;
 import com.parttime.enterprise.service.impl.ScheduleServiceImpl;
@@ -24,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +48,12 @@ class ScheduleServiceTest {
 
     @Mock
     private AttendanceRecordMapper attendanceRecordMapper;
+
+    @Mock
+    private JobMapper jobMapper;
+
+    @Mock
+    private CompanyWorkerMapper companyWorkerMapper;
 
     @Captor
     private ArgumentCaptor<ScheduleTemplate> templateCaptor;
@@ -196,16 +206,45 @@ class ScheduleServiceTest {
             s.setId(99L);
             return 1;
         }).when(shiftMapper).insert(any(ScheduleShift.class));
+        ScheduleShift stored = new ScheduleShift();
+        stored.setId(99L);
+        stored.setJobId(10L);
+        stored.setApplicationId(88L);
+        stored.setWorkerId(20L);
+        stored.setStatus("SCHEDULED");
+        stored.setSalaryType("HOURLY");
+        stored.setSalaryAmount(new BigDecimal("25.50"));
+        stored.setSalaryCurrency("CNY");
+        stored.setCreatedAt(java.time.LocalDateTime.of(2026, 6, 1, 9, 0));
+        stored.setUpdatedAt(java.time.LocalDateTime.of(2026, 6, 1, 9, 0));
+        when(shiftMapper.findById(99L)).thenReturn(Optional.of(stored));
+        when(jobMapper.findById(10L)).thenReturn(Optional.empty());
 
         ScheduleShiftVO response = scheduleService.assignShift(request);
 
         assertThat(response.getId()).isEqualTo(99L);
         assertThat(response.getJobId()).isEqualTo(10L);
         assertThat(response.getWorkerId()).isEqualTo(20L);
+        assertThat(response.getApplicationId()).isEqualTo(88L);
+        assertThat(response.getSalaryType()).isEqualTo("HOURLY");
+        assertThat(response.getSalaryAmount()).isEqualByComparingTo(new BigDecimal("25.50"));
+        assertThat(response.getSalaryCurrency()).isEqualTo("CNY");
+        assertThat(response.getCreatedAt()).isEqualTo(java.time.LocalDateTime.of(2026, 6, 1, 9, 0));
+        assertThat(response.getUpdatedAt()).isEqualTo(java.time.LocalDateTime.of(2026, 6, 1, 9, 0));
         assertThat(response.getStatus()).isEqualTo("SCHEDULED");
 
         verify(shiftMapper).insert(shiftCaptor.capture());
         assertThat(shiftCaptor.getValue().getStatus()).isEqualTo("SCHEDULED");
+    }
+
+    @Test
+    void attendanceRecordVO_shouldExposePaySnapshotFields() {
+        AttendanceRecordVO response = new AttendanceRecordVO();
+        response.setPayAmount(new BigDecimal("123.45"));
+        response.setCalculatedAt(LocalDateTime.of(2026, 6, 1, 18, 30));
+
+        assertThat(response.getPayAmount()).isEqualByComparingTo(new BigDecimal("123.45"));
+        assertThat(response.getCalculatedAt()).isEqualTo(LocalDateTime.of(2026, 6, 1, 18, 30));
     }
 
     @Test
