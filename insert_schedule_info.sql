@@ -1,1 +1,0 @@
-UPDATE c_job SET schedule_info = '[{"date":"2026-05-18","startTime":"08:00","endTime":"12:00","slotsAvailable":3}' WHERE job_id = 1;

@@ -107,9 +107,7 @@ cd platform-pc && npm install && npm run dev
 ├── enterprise-pc/           # 企业 PC 前端
 ├── platform-pc/             # 平台 PC 前端
 ├── worker-uniapp/           # 工人端小程序
-├── enterprise-uniapp/       # 企业端小程序
-├── openspec/                # 规范驱动开发配置
-└── docs/                    # 设计文档
+└── enterprise-uniapp/       # 企业端小程序
 ```
 
 ## 数据库
