@@ -5,6 +5,7 @@ import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
 import com.parttime.enterprise.mapper.ScheduleTemplateMapper;
+import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
 import com.parttime.enterprise.pojo.cmd.ScheduleTemplateCmd;
 import com.parttime.enterprise.pojo.cmd.ScheduleTemplateSlotCmd;
@@ -39,6 +40,8 @@ public class ScheduleServiceImpl implements ScheduleService {
     private JobMapper jobMapper;
     @Resource
     private CompanyWorkerMapper companyWorkerMapper;
+    @Resource
+    private WorkerSyncMapper workerSyncMapper;
 
     @Override
     public ScheduleTemplateVO createTemplate(ScheduleTemplateCmd request) {
@@ -142,7 +145,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
-    public List<ScheduleShiftVO> getShifts(Long jobId, Long workerId, LocalDate shiftDate) {
+    public Map<String, Object> getShifts(Long jobId, Long workerId, LocalDate shiftDate, Integer page, Integer pageSize) {
         List<ScheduleShift> shifts;
         if (jobId != null && shiftDate != null) {
             shifts = shiftMapper.findByJobIdAndDate(jobId, shiftDate);
@@ -151,9 +154,34 @@ public class ScheduleServiceImpl implements ScheduleService {
         } else if (workerId != null) {
             shifts = shiftMapper.findByWorkerId(workerId);
         } else {
-            shifts = Collections.emptyList();
+            shifts = shiftMapper.findAll();
         }
-        return shifts.stream().map(this::toShiftResponse).collect(Collectors.toList());
+
+        int total = shifts.size();
+        if (page != null && pageSize != null && pageSize > 0) {
+            int fromIndex = Math.max(page - 1, 0) * pageSize;
+            if (fromIndex >= total) {
+                shifts = List.of();
+            } else {
+                int toIndex = Math.min(fromIndex + pageSize, total);
+                shifts = shifts.subList(fromIndex, toIndex);
+            }
+        }
+
+        List<Long> shiftIds = shifts.stream().map(ScheduleShift::getId).collect(Collectors.toList());
+        Map<Long, AttendanceRecord> recordMap = new HashMap<>();
+        if (!shiftIds.isEmpty()) {
+            attendanceRecordMapper.findByShiftIds(shiftIds)
+                    .forEach(r -> recordMap.put(r.getShiftId(), r));
+        }
+
+        List<ScheduleShiftVO> voList = shifts.stream()
+                .map(s -> toShiftResponse(s, recordMap.get(s.getId())))
+                .collect(Collectors.toList());
+        Map<String, Object> result = new HashMap<>();
+        result.put("records", voList);
+        result.put("total", total);
+        return result;
     }
 
     @Override
@@ -266,9 +294,15 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     private ScheduleShiftVO toShiftResponse(ScheduleShift shift) {
+        return toShiftResponse(shift, null);
+    }
+
+    private ScheduleShiftVO toShiftResponse(ScheduleShift shift, AttendanceRecord record) {
         ScheduleShiftVO response = new ScheduleShiftVO();
         response.setId(shift.getId());
         response.setJobId(shift.getJobId());
+        response.setJobTitle(jobMapper.findById(shift.getJobId()).map(Job::getTitle).orElse(null));
+        response.setWorkerName(workerSyncMapper.findWorkerNameById(shift.getWorkerId()));
         response.setApplicationId(shift.getApplicationId());
         response.setSalaryType(shift.getSalaryType());
         response.setSalaryAmount(shift.getSalaryAmount());
@@ -285,6 +319,21 @@ public class ScheduleServiceImpl implements ScheduleService {
         response.setStatus(shift.getStatus());
         response.setCreatedAt(shift.getCreatedAt());
         response.setUpdatedAt(shift.getUpdatedAt());
+
+        if (record != null) {
+            response.setCheckInTime(record.getCheckInTime());
+            response.setCheckOutTime(record.getCheckOutTime());
+            if (record.getCheckOutTime() != null) {
+                response.setAttendanceStatus("CHECKED_OUT");
+            } else if (record.getCheckInTime() != null) {
+                response.setAttendanceStatus("CHECKED_IN");
+            } else {
+                response.setAttendanceStatus("NO_CHECK_IN");
+            }
+        } else {
+            response.setAttendanceStatus("NO_CHECK_IN");
+        }
+
         return response;
     }
 }

@@ -19,6 +19,10 @@ public class AttendanceVO {
     private LocalDateTime checkOutTime;
     @Schema(description = "总工时")
     private BigDecimal totalHours;
+    @Schema(description = "工资")
+    private BigDecimal payAmount;
+    @Schema(description = "工资计算时间")
+    private LocalDateTime calculatedAt;
     @Schema(description = "考勤状态")
     private String status;
 }

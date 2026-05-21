@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -121,8 +122,21 @@ public class AttendanceServiceImpl implements AttendanceService {
         BigDecimal hours = BigDecimal.valueOf(duration.toMinutes() / 60.0)
                 .setScale(2, RoundingMode.HALF_UP);
 
+        BigDecimal payAmount = BigDecimal.ZERO;
+        String rateType = shift.getSalaryType() != null ? shift.getSalaryType() : "HOURLY";
+        BigDecimal rateAmount = shift.getSalaryAmount();
+        if (rateAmount != null && rateAmount.compareTo(BigDecimal.ZERO) > 0) {
+            if ("HOURLY".equals(rateType)) {
+                payAmount = hours.multiply(rateAmount).setScale(2, RoundingMode.HALF_UP);
+            } else if ("DAILY".equals(rateType)) {
+                payAmount = rateAmount.setScale(2, RoundingMode.HALF_UP);
+            }
+        }
+
         record.setCheckOutTime(checkOutTime);
         record.setTotalHours(hours);
+        record.setPayAmount(payAmount);
+        record.setCalculatedAt(LocalDateTime.now());
         record.setStatus("CHECKED_OUT");
         record.setUpdatedAt(LocalDateTime.now());
         attendanceRecordMapper.update(record);
@@ -154,13 +168,13 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     private WorkerShiftVO toWorkerShiftResponse(ShiftEntity shift) {
         WorkerShiftVO resp = new WorkerShiftVO();
-        resp.setShiftId(shift.getId());
+        resp.setId(shift.getId());
         resp.setJobId(shift.getJobId());
         resp.setJobTitle(shift.getJobTitle());
-        resp.setJobLocation(shift.getJobLocation());
-        resp.setShiftDate(shift.getShiftDate());
-        resp.setStartTime(shift.getStartTime());
-        resp.setEndTime(shift.getEndTime());
+        resp.setLocation(shift.getJobLocation());
+        resp.setDate(shift.getShiftDate());
+        resp.setStartTime(shift.getStartTime() != null ? shift.getStartTime().toString() : null);
+        resp.setEndTime(shift.getEndTime() != null ? shift.getEndTime().toString() : null);
         resp.setStatus(shift.getStatus());
         resp.setLocationLat(shift.getLocationLat());
         resp.setLocationLng(shift.getLocationLng());
@@ -176,6 +190,8 @@ public class AttendanceServiceImpl implements AttendanceService {
         resp.setCheckInTime(record.getCheckInTime());
         resp.setCheckOutTime(record.getCheckOutTime());
         resp.setTotalHours(record.getTotalHours());
+        resp.setPayAmount(record.getPayAmount());
+        resp.setCalculatedAt(record.getCalculatedAt());
         resp.setStatus(record.getStatus());
         return resp;
     }

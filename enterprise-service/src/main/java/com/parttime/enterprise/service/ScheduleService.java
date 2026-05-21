@@ -25,7 +25,7 @@ public interface ScheduleService {
 
     ScheduleShiftVO updateShift(Long id, ScheduleShiftCmd request);
 
-    List<ScheduleShiftVO> getShifts(Long jobId, Long workerId, LocalDate shiftDate);
+    java.util.Map<String, Object> getShifts(Long jobId, Long workerId, LocalDate shiftDate, Integer page, Integer pageSize);
 
     void removeShift(Long id);
 

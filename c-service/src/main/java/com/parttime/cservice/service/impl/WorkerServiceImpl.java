@@ -2,8 +2,10 @@ package com.parttime.cservice.service.impl;
 
 import com.parttime.cservice.config.JwtTokenProvider;
 import com.parttime.cservice.mapper.WorkerMapper;
+import com.parttime.cservice.mapper.WorkerProfileMapper;
 import com.parttime.cservice.pojo.cmd.RegisterCmd;
 import com.parttime.cservice.pojo.entity.Worker;
+import com.parttime.cservice.pojo.entity.WorkerProfile;
 import com.parttime.cservice.pojo.vo.LoginVO;
 import com.parttime.cservice.pojo.vo.WorkerVO;
 import com.parttime.cservice.service.WorkerService;
@@ -21,6 +23,8 @@ public class WorkerServiceImpl implements WorkerService {
     @Resource
     private WorkerMapper workerMapper;
     @Resource
+    private WorkerProfileMapper workerProfileMapper;
+    @Resource
     private JwtTokenProvider jwtTokenProvider;
 
     @Override
@@ -35,6 +39,7 @@ public class WorkerServiceImpl implements WorkerService {
         worker.setCreatedAt(LocalDateTime.now());
         worker.setUpdatedAt(LocalDateTime.now());
         workerMapper.insert(worker);
+        createProfile(worker);
         return toResponse(worker);
     }
 
@@ -51,6 +56,7 @@ public class WorkerServiceImpl implements WorkerService {
             worker.setCreatedAt(LocalDateTime.now());
             worker.setUpdatedAt(LocalDateTime.now());
             workerMapper.insert(worker);
+            createProfile(worker);
             workerId = worker.getId();
         }
         return jwtTokenProvider.generateToken(String.valueOf(workerId), List.of("ROLE_WORKER"));
@@ -72,6 +78,7 @@ public class WorkerServiceImpl implements WorkerService {
             worker.setCreatedAt(LocalDateTime.now());
             worker.setUpdatedAt(LocalDateTime.now());
             workerMapper.insert(worker);
+            createProfile(worker);
             workerId = worker.getId();
         }
         String token = jwtTokenProvider.generateToken(String.valueOf(workerId), List.of("ROLE_WORKER"));
@@ -109,6 +116,13 @@ public class WorkerServiceImpl implements WorkerService {
         worker.setUpdatedAt(LocalDateTime.now());
         workerMapper.update(worker);
         return toResponse(worker);
+    }
+
+    private void createProfile(Worker worker) {
+        WorkerProfile profile = new WorkerProfile(worker.getId(), worker.getName(), worker.getPhone(), worker.getAvatarUrl());
+        profile.setCreatedAt(LocalDateTime.now());
+        profile.setUpdatedAt(LocalDateTime.now());
+        workerProfileMapper.insert(profile);
     }
 
     private String exchangeWechatCode(String code) {

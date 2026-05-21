@@ -3,15 +3,16 @@ package com.parttime.cservice.service.impl;
 import com.parttime.cservice.mapper.CompanyWorkerInsertMapper;
 import com.parttime.cservice.mapper.JobApplicationMapper;
 import com.parttime.cservice.mapper.JobMapper;
+import com.parttime.cservice.mapper.JobScheduleMapper;
 import com.parttime.cservice.pojo.entity.Job;
 import com.parttime.cservice.pojo.entity.JobApplication;
+import com.parttime.cservice.pojo.entity.JobSchedule;
 import com.parttime.cservice.pojo.vo.ApplicationVO;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
 import com.parttime.cservice.pojo.vo.JobRateInfoVO;
 import com.parttime.cservice.pojo.vo.JobScheduleInfoVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
 import com.parttime.cservice.service.JobService;
-import com.parttime.cservice.utils.JsonConverter;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
@@ -35,6 +36,8 @@ public class JobServiceImpl implements JobService {
     private JobApplicationMapper jobApplicationMapper;
     @Resource
     private CompanyWorkerInsertMapper companyWorkerInsertMapper;
+    @Resource
+    private JobScheduleMapper jobScheduleMapper;
 
     @Override
     public List<JobSummaryVO> searchJobs(String keyword, Long categoryId, String location,
@@ -51,11 +54,19 @@ public class JobServiceImpl implements JobService {
         return jobs.stream()
                 .filter(job -> {
                     if (minRate == null) return true;
+                    List<JobRateInfoVO> rates = job.getRates();
+                    if (rates != null && !rates.isEmpty()) {
+                        return rates.stream().anyMatch(r -> r.getAmount().compareTo(minRate) >= 0);
+                    }
                     BigDecimal jobRate = job.getRateAmount() != null ? job.getRateAmount() : BigDecimal.ZERO;
                     return jobRate.compareTo(minRate) >= 0;
                 })
                 .filter(job -> {
                     if (maxRate == null) return true;
+                    List<JobRateInfoVO> rates = job.getRates();
+                    if (rates != null && !rates.isEmpty()) {
+                        return rates.stream().anyMatch(r -> r.getAmount().compareTo(maxRate) <= 0);
+                    }
                     BigDecimal jobRate = job.getRateAmount() != null ? job.getRateAmount() : BigDecimal.ZERO;
                     return jobRate.compareTo(maxRate) <= 0;
                 })
@@ -71,8 +82,6 @@ public class JobServiceImpl implements JobService {
         job.setId(id);
         job.setJobId(id);
         job.setCompanyId(companyIdForDemo(id));
-        job.setCompanyName(companyNameForDemo(job.getCompanyId()));
-        job.setCompanyLogo(companyLogoForDemo(job.getCompanyId()));
         job.setLatitude(latitudeForDemo(id));
         job.setLongitude(longitudeForDemo(id));
         job.setTitle(title);
@@ -92,6 +101,15 @@ public class JobServiceImpl implements JobService {
         }
         if (schedules != null && !schedules.isEmpty()) {
             job.setSchedules(schedules);
+            for (JobScheduleInfoVO s : schedules) {
+                JobSchedule js = new JobSchedule();
+                js.setJobId(id);
+                js.setScheduleDate(s.getDate());
+                js.setStartTime(java.time.LocalTime.parse(s.getStartTime()));
+                js.setEndTime(java.time.LocalTime.parse(s.getEndTime()));
+                js.setSlotsAvailable(s.getSlotsAvailable());
+                jobScheduleMapper.insert(js);
+            }
         }
         jobMapper.insert(job);
     }
@@ -102,28 +120,6 @@ public class JobServiceImpl implements JobService {
         if (jobId <= 5) return 2L;
         if (jobId <= 7) return 3L;
         return 4L;
-    }
-
-    private String companyNameForDemo(Long companyId) {
-        if (companyId == null) return null;
-        return switch (companyId.intValue()) {
-            case 1 -> "美味餐饮管理有限公司";
-            case 2 -> "极速物流配送有限公司";
-            case 3 -> "洁新家政服务有限公司";
-            case 4 -> "卓越教育培训中心";
-            default -> null;
-        };
-    }
-
-    private String companyLogoForDemo(Long companyId) {
-        if (companyId == null) return null;
-        return switch (companyId.intValue()) {
-            case 1 -> "https://cdn.example.com/logos/meiwei.png";
-            case 2 -> "https://cdn.example.com/logos/jisu.png";
-            case 3 -> "https://cdn.example.com/logos/jiexin.png";
-            case 4 -> "https://cdn.example.com/logos/zhuoyue.png";
-            default -> null;
-        };
     }
 
     private BigDecimal latitudeForDemo(Long jobId) {
@@ -205,8 +201,19 @@ public class JobServiceImpl implements JobService {
     }
 
     private JobSummaryVO toSummary(Job job, BigDecimal latitude, BigDecimal longitude) {
-        BigDecimal rate = job.getRateAmount() != null ? job.getRateAmount() : BigDecimal.ZERO;
-        List<String> rateTypes = job.getRateType() != null ? List.of(job.getRateType()) : List.of();
+        List<JobRateInfoVO> rates = job.getRates();
+        BigDecimal minRate;
+        BigDecimal maxRate;
+        List<String> rateTypes;
+        if (rates != null && !rates.isEmpty()) {
+            minRate = rates.stream().map(JobRateInfoVO::getAmount).min(BigDecimal::compareTo).orElse(BigDecimal.ZERO);
+            maxRate = rates.stream().map(JobRateInfoVO::getAmount).max(BigDecimal::compareTo).orElse(BigDecimal.ZERO);
+            rateTypes = rates.stream().map(JobRateInfoVO::getType).toList();
+        } else {
+            minRate = job.getRateAmount() != null ? job.getRateAmount() : BigDecimal.ZERO;
+            maxRate = minRate;
+            rateTypes = job.getRateType() != null ? List.of(job.getRateType()) : List.of();
+        }
         BigDecimal distanceKm = null;
         if (latitude != null && longitude != null && job.getLatitude() != null && job.getLongitude() != null) {
             distanceKm = BigDecimal.valueOf(distance(latitude, longitude, job.getLatitude(), job.getLongitude()) / 1000D)
@@ -224,10 +231,24 @@ public class JobServiceImpl implements JobService {
         summary.setCompanyName(job.getCompanyName());
         summary.setCompanyLogo(job.getCompanyLogo());
         summary.setDistanceKm(distanceKm);
-        summary.setMinRate(rate);
-        summary.setMaxRate(rate);
+        summary.setMinRate(minRate);
+        summary.setMaxRate(maxRate);
         summary.setRateTypes(rateTypes);
+        summary.setRates(rates);
         return summary;
+    }
+
+    private List<JobScheduleInfoVO> toScheduleVOs(List<JobSchedule> entities) {
+        if (entities == null || entities.isEmpty()) return emptyList();
+        return entities.stream().map(e -> {
+            JobScheduleInfoVO vo = new JobScheduleInfoVO();
+            vo.setId(e.getId());
+            vo.setDate(e.getScheduleDate());
+            vo.setStartTime(e.getStartTime() != null ? e.getStartTime().toString() : null);
+            vo.setEndTime(e.getEndTime() != null ? e.getEndTime().toString() : null);
+            vo.setSlotsAvailable(e.getSlotsAvailable());
+            return vo;
+        }).toList();
     }
 
     private JobDetailVO toDetail(Job job, Long workerId) {
@@ -247,22 +268,17 @@ public class JobServiceImpl implements JobService {
         detail.setStatus(job.getStatus());
         detail.setHeadcount(job.getHeadcount());
         detail.setDeadline(job.getDeadline());
-        if (job.getRateType() != null && job.getRateAmount() != null) {
+        if (job.getRates() != null && !job.getRates().isEmpty()) {
+            detail.setRates(job.getRates());
+        } else if (job.getRateType() != null && job.getRateAmount() != null) {
             JobRateInfoVO rate = new JobRateInfoVO();
             rate.setType(job.getRateType());
             rate.setAmount(job.getRateAmount());
             detail.setRates(List.of(rate));
         }
-        if (job.getScheduleInfo() != null) {
-            try {
-                List<JobScheduleInfoVO> schedules = JsonConverter.create().toArray(job.getScheduleInfo(), JobScheduleInfoVO.class);
-                detail.setSchedules(schedules);
-            } catch (Exception e) {
-                detail.setSchedules(emptyList());
-            }
-        }
+        detail.setSchedules(toScheduleVOs(jobScheduleMapper.findByJobId(job.getId())));
         if (workerId != null) {
-            List<JobApplication> applications = jobApplicationMapper.findByWorkerIdAndJobId(workerId, job.getJobId());
+            List<JobApplication> applications = jobApplicationMapper.findByWorkerIdAndJobId(workerId, job.getId());
             if (!applications.isEmpty()) {
                 detail.setApplyStatus(mapApplyStatus(applications.get(0).getStatus()));
             }

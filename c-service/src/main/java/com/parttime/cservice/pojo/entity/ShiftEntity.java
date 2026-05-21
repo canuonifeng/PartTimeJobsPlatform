@@ -37,6 +37,10 @@ public class ShiftEntity {
     private Integer locationRadius;
     @Schema(description = "打卡地点名称")
     private String locationName;
+    @Schema(description = "薪资快照类型(HOURLY/DAILY)")
+    private String salaryType;
+    @Schema(description = "薪资快照金额")
+    private BigDecimal salaryAmount;
     @Schema(description = "班次状态")
     private String status;
     @Schema(description = "创建时间")

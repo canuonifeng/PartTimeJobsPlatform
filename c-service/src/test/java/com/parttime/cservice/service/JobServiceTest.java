@@ -27,6 +27,7 @@ class JobServiceTest {
         MockitoAnnotations.openMocks(this);
         ReflectionTestUtils.setField(jobService, "jobMapper", InMemoryMappers.createJobMapper());
         ReflectionTestUtils.setField(jobService, "jobApplicationMapper", InMemoryMappers.createJobApplicationMapper());
+        ReflectionTestUtils.setField(jobService, "jobScheduleMapper", InMemoryMappers.createJobScheduleMapper());
         ReflectionTestUtils.setField(jobService, "companyWorkerInsertMapper", new CompanyWorkerInsertMapper() {
             @Override
             public int upsert(Long companyId, Long workerId) {
@@ -102,7 +103,6 @@ class JobServiceTest {
         assertThat(detail.getLocation()).isEqualTo("Beijing");
         assertThat(detail.getCategoryName()).isEqualTo("Technology");
         assertThat(detail.getStatus()).isEqualTo("PUBLISHED");
-        assertThat(detail.getCompanyName()).isEqualTo("美味餐饮管理有限公司");
         assertThat(detail.getHeadcount()).isEqualTo(10);
         assertThat(detail.getDeadline()).isNotNull();
         assertThat(detail.getRates()).isNotEmpty();

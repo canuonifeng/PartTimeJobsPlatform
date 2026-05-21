@@ -1,29 +1,30 @@
 package com.parttime.cservice.pojo.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalTime;
 
 @Data
 public class WorkerShiftVO {
 
     @Schema(description = "班次ID")
-    private Long shiftId;
+    private Long id;
     @Schema(description = "岗位ID")
     private Long jobId;
     @Schema(description = "岗位标题")
     private String jobTitle;
     @Schema(description = "岗位地点")
-    private String jobLocation;
+    private String location;
     @Schema(description = "班次日期")
-    private LocalDate shiftDate;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate date;
     @Schema(description = "开始时间")
-    private LocalTime startTime;
+    private String startTime;
     @Schema(description = "结束时间")
-    private LocalTime endTime;
+    private String endTime;
     @Schema(description = "班次状态")
     private String status;
     @Schema(description = "打卡纬度")

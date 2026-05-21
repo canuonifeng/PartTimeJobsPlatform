@@ -56,7 +56,7 @@
           <view class="job-main">
             <view class="job-card-header">
               <text class="job-title">{{ job.title }}</text>
-              <text class="job-pay">{{ job.minRate }}-{{ job.maxRate }}元/{{ job.rateUnit || '小时' }}</text>
+              <text class="job-pay">{{ formatRates(job.rates, job.minRate, job.maxRate) }}</text>
             </view>
             <view class="job-tags">
               <text v-if="job.jobType" class="tag">{{ job.jobType }}</text>
@@ -172,6 +172,21 @@ function onRefresh() {
 
 function goDetail(id: number) {
   uni.navigateTo({ url: `/pages/jobs/jobDetail?id=${id}` })
+}
+
+function rateUnit(type) {
+  const map = { HOURLY: '小时', DAILY: '日', PIECEWORK: '件', PIECE: '单', MONTHLY: '月' }
+  return map[type] || '小时'
+}
+
+function formatRates(rates, fallbackMin, fallbackMax) {
+  if (rates && rates.length > 0) {
+    return rates.map(r => `${r.amount}元/${rateUnit(r.type)}`).join(' + ')
+  }
+  if (fallbackMin && fallbackMax && fallbackMin !== fallbackMax) {
+    return `${fallbackMin}-${fallbackMax}元/小时`
+  }
+  return `${fallbackMin || fallbackMax || 0}元/小时`
 }
 
 onMounted(async () => {

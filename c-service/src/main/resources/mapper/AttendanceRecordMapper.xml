@@ -3,28 +3,29 @@
 <mapper namespace="com.parttime.cservice.mapper.AttendanceRecordMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO c_attendance_record (shift_id, worker_id, check_in_time, check_out_time,
-                                         total_hours, status, remark, created_at, updated_at)
+        INSERT INTO attendance_records (shift_id, worker_id, check_in_time, check_out_time,
+                                         total_hours, pay_amount, calculated_at, status, remark, created_at, updated_at)
         VALUES (#{shiftId}, #{workerId}, #{checkInTime}, #{checkOutTime},
-                #{totalHours}, #{status}, #{remark}, #{createdAt}, #{updatedAt})
+                #{totalHours}, #{payAmount}, #{calculatedAt}, #{status}, #{remark}, #{createdAt}, #{updatedAt})
     </insert>
 
     <select id="findById" resultType="com.parttime.cservice.pojo.entity.AttendanceRecordEntity">
-        SELECT * FROM c_attendance_record WHERE id = #{id}
+        SELECT * FROM attendance_records WHERE id = #{id}
     </select>
 
     <select id="findByShiftId" resultType="com.parttime.cservice.pojo.entity.AttendanceRecordEntity">
-        SELECT * FROM c_attendance_record WHERE shift_id = #{shiftId}
+        SELECT * FROM attendance_records WHERE shift_id = #{shiftId}
     </select>
 
     <select id="findByWorkerId" resultType="com.parttime.cservice.pojo.entity.AttendanceRecordEntity">
-        SELECT * FROM c_attendance_record WHERE worker_id = #{workerId}
+        SELECT * FROM attendance_records WHERE worker_id = #{workerId}
     </select>
 
     <update id="update">
-        UPDATE c_attendance_record
+        UPDATE attendance_records
         SET check_in_time = #{checkInTime}, check_out_time = #{checkOutTime},
-            total_hours = #{totalHours}, status = #{status}, remark = #{remark}
+            total_hours = #{totalHours}, pay_amount = #{payAmount}, calculated_at = #{calculatedAt},
+            status = #{status}, remark = #{remark}
         WHERE id = #{id}
     </update>
 

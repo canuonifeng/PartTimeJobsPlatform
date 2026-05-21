@@ -1,7 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { listTemplates, createTemplate, updateTemplate, deleteTemplate } from '../../api/schedule'
+import { listTemplates, getTemplate, createTemplate, updateTemplate, deleteTemplate } from '../../api/schedule'
+
+const dayNumberMap = { MONDAY: 1, TUESDAY: 2, WEDNESDAY: 3, THURSDAY: 4, FRIDAY: 5, SATURDAY: 6, SUNDAY: 7 }
+const dayNameMap = { 1: 'MONDAY', 2: 'TUESDAY', 3: 'WEDNESDAY', 4: 'THURSDAY', 5: 'FRIDAY', 6: 'SATURDAY', 7: 'SUNDAY' }
 
 const templates = ref([])
 const loading = ref(false)
@@ -28,6 +31,18 @@ const dayOptions = [
   { value: 'SUNDAY', label: '周日' }
 ]
 
+function formatTime(t) {
+  if (!t) return ''
+  return t.length > 5 ? t.substring(0, 5) : t
+}
+
+function slotSummary(slots) {
+  if (!slots || slots.length === 0) return '-'
+  const days = [...new Set(slots.map(s => dayOptions.find(d => d.value === dayNameMap[s.dayOfWeek])?.label || ''))]
+  const time = slots.length > 0 ? `${formatTime(slots[0].startTime)}-${formatTime(slots[0].endTime)}` : ''
+  return `${days.join('、')} ${time}`
+}
+
 async function fetchData() {
   loading.value = true
   try {
@@ -45,10 +60,19 @@ function handleCreate() {
   dialogVisible.value = true
 }
 
-function handleEdit(row) {
+async function handleEdit(row) {
   isEdit.value = true
   dialogTitle.value = '编辑排班模板'
-  form.value = { ...row }
+  const res = await getTemplate(row.id)
+  const slots = res.slots || []
+  form.value = {
+    id: res.id,
+    name: res.name,
+    description: res.description,
+    workDays: slots.map(s => dayNameMap[s.dayOfWeek]).filter(Boolean),
+    startTime: formatTime(slots[0]?.startTime || ''),
+    endTime: formatTime(slots[0]?.endTime || '')
+  }
   dialogVisible.value = true
 }
 
@@ -56,12 +80,19 @@ async function handleSave() {
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid) return
 
+  const slots = form.value.workDays.map(day => ({
+    dayOfWeek: dayNumberMap[day],
+    startTime: form.value.startTime,
+    endTime: form.value.endTime
+  }))
+  const payload = { name: form.value.name, description: form.value.description, slots }
+
   try {
     if (isEdit.value) {
-      await updateTemplate(form.value.id, form.value)
+      await updateTemplate(form.value.id, payload)
       ElMessage.success('更新成功')
     } else {
-      await createTemplate(form.value)
+      await createTemplate(payload)
       ElMessage.success('创建成功')
     }
     dialogVisible.value = false
@@ -92,18 +123,6 @@ onMounted(() => {
       <el-table :data="templates" v-loading="loading" stripe style="width: 100%">
         <el-table-column prop="name" label="模板名称" min-width="160" />
         <el-table-column prop="description" label="描述" min-width="200" />
-        <el-table-column label="工作日" width="280">
-          <template #default="{ row }">
-            <el-tag v-for="day in row.workDays" :key="day" style="margin-right: 4px">
-              {{ dayOptions.find(d => d.value === day)?.label || day }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="时段" width="160">
-          <template #default="{ row }">
-            {{ row.startTime }} - {{ row.endTime }}
-          </template>
-        </el-table-column>
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="{ row }">
             <el-button size="small" @click="handleEdit(row)">编辑</el-button>

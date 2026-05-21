@@ -1,10 +1,13 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { listShifts, createShift, updateShift, deleteShift } from '../../api/schedule'
+import { listShifts, createShift, deleteShift } from '../../api/schedule'
 
 const shifts = ref([])
 const loading = ref(false)
+const total = ref(0)
+const page = ref(1)
+const pageSize = 20
 const dialogVisible = ref(false)
 const formRef = ref(null)
 const form = ref({
@@ -23,19 +26,23 @@ const searchForm = ref({
 async function fetchData() {
   loading.value = true
   try {
-    const res = await listShifts(searchForm.value)
-    shifts.value = Array.isArray(res) ? res : (res.records || [])
+    const res = await listShifts({ ...searchForm.value, page: page.value, pageSize })
+    const data = Array.isArray(res) ? res : (res.records || [])
+    shifts.value = data
+    total.value = Array.isArray(res) ? res.length : (res.total || 0)
   } finally {
     loading.value = false
   }
 }
 
 function handleSearch() {
+  page.value = 1
   fetchData()
 }
 
 function handleReset() {
   searchForm.value = { jobId: '', workerName: '', date: '' }
+  page.value = 1
   fetchData()
 }
 
@@ -63,6 +70,19 @@ async function handleDelete(row) {
     ElMessage.success('删除成功')
     fetchData()
   } catch {}
+}
+
+function formatTime(t) {
+  if (!t) return '-'
+  const d = new Date(t)
+  const h = String(d.getHours()).padStart(2, '0')
+  const m = String(d.getMinutes()).padStart(2, '0')
+  return `${h}:${m}`
+}
+
+function handlePageChange(val) {
+  page.value = val
+  fetchData()
 }
 
 onMounted(() => {
@@ -97,10 +117,22 @@ onMounted(() => {
       <el-table :data="shifts" v-loading="loading" stripe style="width: 100%">
         <el-table-column prop="jobTitle" label="职位" min-width="160" />
         <el-table-column prop="workerName" label="人员" width="120" />
-        <el-table-column prop="date" label="日期" width="120" />
+        <el-table-column prop="shiftDate" label="日期" width="120" />
         <el-table-column label="时段" width="160">
           <template #default="{ row }">
             {{ row.startTime }} - {{ row.endTime }}
+          </template>
+        </el-table-column>
+        <el-table-column label="签到" width="160">
+          <template #default="{ row }">
+            <template v-if="row.attendanceStatus === 'CHECKED_OUT'">
+              <div class="att-row">签退 {{ formatTime(row.checkOutTime) }}</div>
+              <div class="att-row att-sub">签到 {{ formatTime(row.checkInTime) }}</div>
+            </template>
+            <template v-else-if="row.attendanceStatus === 'CHECKED_IN'">
+              <div class="att-row">签到 {{ formatTime(row.checkInTime) }}</div>
+            </template>
+            <span v-else class="att-none">未签到</span>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="120" fixed="right">
@@ -109,6 +141,17 @@ onMounted(() => {
           </template>
         </el-table-column>
       </el-table>
+      <div class="pagination-wrap">
+        <el-pagination
+          v-if="total > pageSize"
+          background
+          layout="total, prev, pager, next"
+          :total="total"
+          :page-size="pageSize"
+          :current-page="page"
+          @current-change="handlePageChange"
+        />
+      </div>
     </el-card>
 
     <el-dialog v-model="dialogVisible" title="分配班次" width="500px">
@@ -143,5 +186,21 @@ onMounted(() => {
 }
 .toolbar {
   margin-bottom: 16px;
+}
+.pagination-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 16px 0 4px;
+}
+.att-row {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.att-sub {
+  color: #999;
+  font-size: 12px;
+}
+.att-none {
+  color: #999;
 }
 </style>

@@ -12,6 +12,8 @@ import com.parttime.enterprise.service.ScheduleService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
+
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -182,12 +184,15 @@ class ScheduleControllerTest {
         shift.setId(1L);
         shift.setJobId(10L);
 
-        when(scheduleService.getShifts(10L, null, null)).thenReturn(List.of(shift));
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("records", List.of(shift));
+        result.put("total", 1);
+        when(scheduleService.getShifts(10L, null, null, 1, 20)).thenReturn(result);
 
         mockMvc.perform(get("/api/schedule-shifts")
                         .param("jobId", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.records.length()").value(1));
     }
 
     @Test

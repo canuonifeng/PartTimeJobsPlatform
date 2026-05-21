@@ -25,6 +25,7 @@ class WorkerServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         ReflectionTestUtils.setField(workerService, "workerMapper", InMemoryMappers.createWorkerMapper());
+        ReflectionTestUtils.setField(workerService, "workerProfileMapper", InMemoryMappers.createWorkerProfileMapper());
         ReflectionTestUtils.setField(workerService, "jwtTokenProvider", new JwtTokenProvider(SECRET, EXPIRATION));
     }
 

@@ -128,7 +128,7 @@ async function loadShifts() {
       startDate: weekDays.value[0].fullDate,
       endDate: weekDays.value[6].fullDate
     })
-    allShifts.value = res.list || []
+    allShifts.value = Array.isArray(res) ? res : (res.list || [])
     buildWeekDays(currentWeekStart.value)
     selectDay(selectedIndex.value >= 0 ? selectedIndex.value : weekDays.value.findIndex((d) => d.isToday))
   } catch {

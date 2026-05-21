@@ -5,16 +5,25 @@ import com.parttime.enterprise.exception.BusinessException;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.JobApplicationMapper;
 import com.parttime.enterprise.mapper.JobMapper;
+import com.parttime.enterprise.mapper.JobRateMapper;
+import com.parttime.enterprise.mapper.JobScheduleMapper;
+import com.parttime.enterprise.mapper.ScheduleShiftMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.entity.Job;
 import com.parttime.enterprise.pojo.entity.JobApplication;
+import com.parttime.enterprise.pojo.entity.JobRate;
+import com.parttime.enterprise.pojo.entity.JobSchedule;
+import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.vo.JobApplicationVO;
 import com.parttime.enterprise.service.ApplicationService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.dao.DuplicateKeyException;
 
 import javax.annotation.Resource;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,6 +33,12 @@ public class ApplicationServiceImpl implements ApplicationService {
     private JobApplicationMapper applicationMapper;
     @Resource
     private JobMapper jobMapper;
+    @Resource
+    private JobScheduleMapper jobScheduleMapper;
+    @Resource
+    private JobRateMapper jobRateMapper;
+    @Resource
+    private ScheduleShiftMapper shiftMapper;
     @Resource
     private WorkerSyncMapper workerSyncMapper;
     @Resource
@@ -64,6 +79,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
+    @Transactional
     public JobApplicationVO acceptApplication(Long applicationId) {
         JobApplication app = applicationMapper.findById(applicationId)
                 .orElseThrow(() -> new RuntimeException("Application not found: " + applicationId));
@@ -71,15 +87,63 @@ public class ApplicationServiceImpl implements ApplicationService {
         Job job = jobMapper.findById(app.getJobId())
                 .orElseThrow(() -> new RuntimeException("Job not found: " + app.getJobId()));
 
-        int acceptedCount = applicationMapper.countByJobIdAndStatus(app.getJobId(), "ACCEPTED");
-        if (acceptedCount >= job.getHeadcount()) {
-            throw new BusinessException("岗位已录满");
+        if (!"ACCEPTED".equals(app.getStatus())) {
+            int acceptedCount = applicationMapper.countByJobIdAndStatus(app.getJobId(), "ACCEPTED");
+            if (acceptedCount >= job.getHeadcount()) {
+                throw new BusinessException("岗位已录满");
+            }
+
+            applicationMapper.updateStatus(applicationId, "ACCEPTED");
+            app.setStatus("ACCEPTED");
         }
 
-        applicationMapper.updateStatus(applicationId, "ACCEPTED");
-        app.setStatus("ACCEPTED");
+        ensureShifts(app);
         companyWorkerMapper.upsert(job.getCompanyId(), app.getWorkerId());
         return toResponse(app);
+    }
+
+    private void ensureShifts(JobApplication app) {
+        List<JobSchedule> schedules = jobScheduleMapper.findByJobId(app.getJobId());
+        JobRate rate = jobRateMapper.findByJobId(app.getJobId()).stream()
+                .findFirst()
+                .orElse(null);
+
+        Set<String> existingShiftKeys = shiftMapper.findByApplicationId(app.getId()).stream()
+                .map(this::shiftKey)
+                .collect(Collectors.toSet());
+
+        for (JobSchedule schedule : schedules) {
+            if (existingShiftKeys.contains(scheduleKey(schedule))) {
+                continue;
+            }
+
+            ScheduleShift shift = new ScheduleShift();
+            shift.setApplicationId(app.getId());
+            shift.setJobId(app.getJobId());
+            shift.setWorkerId(app.getWorkerId());
+            shift.setShiftDate(schedule.getScheduleDate());
+            shift.setStartTime(schedule.getStartTime());
+            shift.setEndTime(schedule.getEndTime());
+            if (rate != null) {
+                shift.setSalaryType(rate.getType());
+                shift.setSalaryAmount(rate.getAmount());
+                shift.setSalaryCurrency(rate.getCurrency());
+            }
+
+            try {
+                shiftMapper.insert(shift);
+            } catch (DuplicateKeyException ignored) {
+                // Another request inserted the same shift concurrently.
+            }
+        }
+    }
+
+    private String scheduleKey(JobSchedule schedule) {
+        return schedule.getScheduleDate() + "|" + schedule.getStartTime() + "|" + schedule.getEndTime();
+    }
+
+    private String shiftKey(ScheduleShift shift) {
+        return shift.getShiftDate() + "|" + shift.getStartTime() + "|" + shift.getEndTime();
     }
 
     @Override

@@ -3,12 +3,10 @@ package com.parttime.enterprise.service.impl;
 import com.parttime.enterprise.enums.JobRateType;
 import com.parttime.enterprise.enums.JobStatus;
 import com.parttime.enterprise.exception.BusinessException;
-import com.parttime.enterprise.mapper.EnterpriseMapper;
 import com.parttime.enterprise.mapper.JobApplicationMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.JobRateMapper;
 import com.parttime.enterprise.mapper.JobScheduleMapper;
-import com.parttime.enterprise.mapper.JobSyncMapper;
 import com.parttime.enterprise.pojo.cmd.JobCreateCmd;
 import com.parttime.enterprise.pojo.cmd.JobRateCmd;
 import com.parttime.enterprise.pojo.cmd.JobScheduleCmd;
@@ -20,9 +18,7 @@ import com.parttime.enterprise.pojo.vo.JobRateVO;
 import com.parttime.enterprise.pojo.vo.JobScheduleVO;
 import com.parttime.enterprise.pojo.vo.JobVO;
 import com.parttime.enterprise.service.JobService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.stereotype.Service;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.annotation.Resource;
 
@@ -39,14 +35,7 @@ public class JobServiceImpl implements JobService {
     @Resource
     private JobScheduleMapper jobScheduleMapper;
     @Resource
-    private JobSyncMapper jobSyncMapper;
-    @Resource
-    private EnterpriseMapper enterpriseMapper;
-    @Resource
     private JobApplicationMapper jobApplicationMapper;
-
-    @Resource
-    private ObjectMapper objectMapper;
 
     @Override
     public JobVO createJob(JobCreateCmd request) {
@@ -144,7 +133,6 @@ public class JobServiceImpl implements JobService {
                 jobScheduleMapper.insert(schedule);
             }
         }
-        syncJob(job.getId());
         return toResponse(job);
     }
 
@@ -187,40 +175,6 @@ public class JobServiceImpl implements JobService {
         }).collect(Collectors.toList());
     }
 
-    private void syncJob(Long jobId) {
-        Job job = jobMapper.findById(jobId)
-                .orElseThrow(() -> new RuntimeException("Job not found: " + jobId));
-        try {
-            List<JobRate> rates = jobRateMapper.findByJobId(jobId);
-            List<JobSchedule> schedules = jobScheduleMapper.findByJobId(jobId);
-            List<JobScheduleVO> scheduleVOs = toScheduleResponses(schedules);
-            String scheduleInfo = objectMapper.writeValueAsString(scheduleVOs);
-            String rateType = null;
-            java.math.BigDecimal rateAmount = null;
-            if (!rates.isEmpty()) {
-                JobRate firstRate = rates.get(0);
-                rateType = firstRate.getType();
-                rateAmount = firstRate.getAmount();
-            }
-            String companyName = enterpriseMapper.findCompanyNameById(job.getCompanyId());
-            String companyLogo = enterpriseMapper.findCompanyLogoById(job.getCompanyId());
-            jobSyncMapper.upsert(
-                    job.getId(), job.getCompanyId(), companyName, companyLogo,
-                    job.getTitle(), job.getDescription(), job.getLocation(),
-                    job.getProvince(), job.getCity(), job.getDistrict(), job.getAddress(),
-                    job.getLatitude(), job.getLongitude(),
-                    job.getCategoryId(),
-                    rateType, rateAmount,
-                    job.getStatus(),
-                    scheduleInfo,
-                    job.getHeadcount(),
-                    job.getDeadline()
-            );
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Failed to serialize schedule info", e);
-        }
-    }
-
     @Override
     public JobVO publishJob(Long id) {
         Job job = jobMapper.findById(id)
@@ -230,7 +184,6 @@ public class JobServiceImpl implements JobService {
         }
         jobMapper.updateStatus(id, "PUBLISHED");
         job.setStatus("PUBLISHED");
-        syncJob(job.getId());
         JobVO response = toResponse(job);
         response.setRates(toRateResponses(jobRateMapper.findByJobId(id)));
         response.setSchedules(toScheduleResponses(jobScheduleMapper.findByJobId(id)));
@@ -325,7 +278,6 @@ public class JobServiceImpl implements JobService {
         schedule.setEndTime(request.getEndTime());
         schedule.setSlotsAvailable(request.getSlotsAvailable());
         jobScheduleMapper.insert(schedule);
-        syncJob(jobId);
         return toScheduleResponse(schedule);
     }
 
@@ -339,7 +291,6 @@ public class JobServiceImpl implements JobService {
         schedule.setEndTime(request.getEndTime());
         schedule.setSlotsAvailable(request.getSlotsAvailable());
         jobScheduleMapper.update(schedule);
-        syncJob(jobId);
         return toScheduleResponse(schedule);
     }
 
@@ -349,7 +300,6 @@ public class JobServiceImpl implements JobService {
                 .orElseThrow(() -> new RuntimeException("JobSchedule not found: " + scheduleId));
         Long jobId = schedule.getJobId();
         jobScheduleMapper.delete(scheduleId);
-        syncJob(jobId);
     }
 
     private List<JobRateVO> toRateResponses(List<JobRate> rates) {

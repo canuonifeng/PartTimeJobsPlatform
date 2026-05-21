@@ -253,4 +253,25 @@ public class InMemoryMappers {
             }
         };
     }
+
+    public static JobScheduleMapper createJobScheduleMapper() {
+        return new JobScheduleMapper() {
+            private final ConcurrentHashMap<Long, JobSchedule> store = new ConcurrentHashMap<>();
+            private final AtomicLong idGen = new AtomicLong(1);
+
+            @Override public int insert(JobSchedule schedule) {
+                if (schedule.getId() == null) schedule.setId(idGen.getAndIncrement());
+                store.put(schedule.getId(), schedule);
+                return 1;
+            }
+
+            @Override public List<JobSchedule> findByJobId(Long jobId) {
+                return store.values().stream()
+                        .filter(s -> jobId.equals(s.getJobId()))
+                        .sorted(Comparator.comparing(JobSchedule::getScheduleDate)
+                                .thenComparing(JobSchedule::getStartTime))
+                        .collect(Collectors.toList());
+            }
+        };
+    }
 }

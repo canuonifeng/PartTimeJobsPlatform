@@ -15,6 +15,8 @@ public interface ScheduleShiftMapper {
 
     Optional<ScheduleShift> findById(Long id);
 
+    List<ScheduleShift> findAll();
+
     List<ScheduleShift> findByJobId(Long jobId);
 
     List<ScheduleShift> findByWorkerId(Long workerId);
@@ -25,6 +27,8 @@ public interface ScheduleShiftMapper {
             @Param("workerId") Long workerId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
+
+    List<ScheduleShift> findByApplicationId(Long applicationId);
 
     List<ScheduleShift> findByDateRange(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 

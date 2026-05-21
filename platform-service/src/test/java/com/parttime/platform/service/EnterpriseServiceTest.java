@@ -1,6 +1,5 @@
 package com.parttime.platform.service;
 
-import com.parttime.platform.mapper.JobSyncMapper;
 import com.parttime.platform.mapper.EnterpriseMapper;
 import com.parttime.platform.pojo.cmd.EnterpriseCreateCmd;
 import com.parttime.platform.pojo.cmd.EnterpriseUpdateCmd;
@@ -26,9 +25,6 @@ class EnterpriseServiceTest {
 
     @Mock
     private EnterpriseMapper enterpriseMapper;
-
-    @Mock
-    private JobSyncMapper jobSyncMapper;
 
     @InjectMocks
     private EnterpriseServiceImpl enterpriseService;
@@ -56,7 +52,7 @@ class EnterpriseServiceTest {
     }
 
     @Test
-    void update_shouldPersistLogoAndSyncCJob() {
+    void update_shouldPersistLogo() {
         Enterprise existing = new Enterprise();
         existing.setId(1L);
         existing.setCompanyName("Old Enterprise");
@@ -72,6 +68,5 @@ class EnterpriseServiceTest {
 
         assertThat(result.getCompanyLogo()).isEqualTo("https://cdn.example.com/new.png");
         verify(enterpriseMapper).update(existing);
-        verify(jobSyncMapper).updateCompanyLogoByCompanyId(1L, "https://cdn.example.com/new.png");
     }
 }

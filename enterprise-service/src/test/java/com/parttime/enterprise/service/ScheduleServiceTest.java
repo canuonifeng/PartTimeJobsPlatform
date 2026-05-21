@@ -5,6 +5,7 @@ import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
 import com.parttime.enterprise.mapper.ScheduleTemplateMapper;
+import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
 import com.parttime.enterprise.pojo.cmd.ScheduleTemplateCmd;
 import com.parttime.enterprise.pojo.cmd.ScheduleTemplateSlotCmd;
@@ -54,6 +55,9 @@ class ScheduleServiceTest {
 
     @Mock
     private CompanyWorkerMapper companyWorkerMapper;
+
+    @Mock
+    private WorkerSyncMapper workerSyncMapper;
 
     @Captor
     private ArgumentCaptor<ScheduleTemplate> templateCaptor;
@@ -219,6 +223,7 @@ class ScheduleServiceTest {
         stored.setUpdatedAt(java.time.LocalDateTime.of(2026, 6, 1, 9, 0));
         when(shiftMapper.findById(99L)).thenReturn(Optional.of(stored));
         when(jobMapper.findById(10L)).thenReturn(Optional.empty());
+        when(workerSyncMapper.findWorkerNameById(20L)).thenReturn("TestWorker");
 
         ScheduleShiftVO response = scheduleService.assignShift(request);
 
@@ -247,6 +252,7 @@ class ScheduleServiceTest {
         assertThat(response.getCalculatedAt()).isEqualTo(LocalDateTime.of(2026, 6, 1, 18, 30));
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void getShifts_shouldFilterByJobIdAndDate() {
         ScheduleShift shift = new ScheduleShift();
@@ -256,13 +262,18 @@ class ScheduleServiceTest {
 
         when(shiftMapper.findByJobIdAndDate(10L, LocalDate.of(2026, 6, 1)))
                 .thenReturn(List.of(shift));
+        when(jobMapper.findById(10L)).thenReturn(Optional.empty());
+        when(workerSyncMapper.findWorkerNameById(20L)).thenReturn("TestWorker");
 
-        List<ScheduleShiftVO> responses = scheduleService.getShifts(10L, null, LocalDate.of(2026, 6, 1));
+        java.util.Map<String, Object> result = scheduleService.getShifts(10L, null, LocalDate.of(2026, 6, 1), 1, 20);
 
+        assertThat(result.get("total")).isEqualTo(1);
+        List<ScheduleShiftVO> responses = (List<ScheduleShiftVO>) result.get("records");
         assertThat(responses).hasSize(1);
         assertThat(responses.get(0).getJobId()).isEqualTo(10L);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void getShifts_shouldFilterByWorkerId() {
         ScheduleShift shift = new ScheduleShift();
@@ -270,16 +281,25 @@ class ScheduleServiceTest {
         shift.setWorkerId(20L);
 
         when(shiftMapper.findByWorkerId(20L)).thenReturn(List.of(shift));
+        when(workerSyncMapper.findWorkerNameById(20L)).thenReturn("TestWorker");
 
-        List<ScheduleShiftVO> responses = scheduleService.getShifts(null, 20L, null);
+        java.util.Map<String, Object> result = scheduleService.getShifts(null, 20L, null, 1, 20);
 
+        assertThat(result.get("total")).isEqualTo(1);
+        List<ScheduleShiftVO> responses = (List<ScheduleShiftVO>) result.get("records");
         assertThat(responses).hasSize(1);
         assertThat(responses.get(0).getWorkerId()).isEqualTo(20L);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     void getShifts_shouldReturnEmptyWithoutFilters() {
-        List<ScheduleShiftVO> responses = scheduleService.getShifts(null, null, null);
+        when(shiftMapper.findAll()).thenReturn(List.of());
+
+        java.util.Map<String, Object> result = scheduleService.getShifts(null, null, null, 1, 20);
+
+        assertThat(result.get("total")).isEqualTo(0);
+        List<ScheduleShiftVO> responses = (List<ScheduleShiftVO>) result.get("records");
         assertThat(responses).isEmpty();
     }
 

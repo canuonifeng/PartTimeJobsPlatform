@@ -3,53 +3,79 @@
 <mapper namespace="com.parttime.cservice.mapper.JobMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO c_job (job_id, company_id, company_name, company_logo, title, description, location,
+        INSERT INTO jobs (company_id, title, description, location,
                            province, city, district, address, latitude, longitude,
-                           category_id, category_name, rate_type, rate_amount, status, published_at,
+                           category_id, rate_type, rate_amount, status, published_at,
                            created_at, updated_at)
-        VALUES (#{jobId}, #{companyId}, #{companyName}, #{companyLogo}, #{title}, #{description}, #{location},
+        VALUES (#{companyId}, #{title}, #{description}, #{location},
                 #{province}, #{city}, #{district}, #{address}, #{latitude}, #{longitude},
-                #{categoryId}, #{categoryName}, #{rateType}, #{rateAmount}, #{status}, #{publishedAt},
+                #{categoryId}, #{rateType}, #{rateAmount}, #{status}, #{publishedAt},
                 #{createdAt}, #{updatedAt})
     </insert>
 
-    <select id="findById" resultType="com.parttime.cservice.pojo.entity.Job">
-        SELECT * FROM c_job WHERE id = #{id}
+    <resultMap id="jobResultMap" type="com.parttime.cservice.pojo.entity.Job" autoMapping="true">
+        <id property="id" column="id"/>
+        <result property="companyName" column="company_name"/>
+        <result property="companyLogo" column="company_logo"/>
+        <result property="categoryName" column="category_name"/>
+        <collection property="rates" ofType="com.parttime.cservice.pojo.vo.JobRateInfoVO">
+            <id property="id" column="jr_id"/>
+            <result property="type" column="jr_type"/>
+            <result property="amount" column="jr_amount"/>
+            <result property="currency" column="jr_currency"/>
+        </collection>
+    </resultMap>
+
+    <sql id="jobSelectWithJoins">
+        SELECT j.*,
+               e.company_name, e.company_logo,
+               jc.name AS category_name,
+               jr.id AS jr_id,
+               jr.type AS jr_type,
+               jr.amount AS jr_amount,
+               jr.currency AS jr_currency
+        FROM jobs j
+        LEFT JOIN enterprises e ON j.company_id = e.id
+        LEFT JOIN job_categories jc ON j.category_id = jc.id
+        LEFT JOIN job_rates jr ON j.id = jr.job_id
+    </sql>
+
+    <select id="findById" resultMap="jobResultMap">
+        <include refid="jobSelectWithJoins"/> WHERE j.id = #{id}
     </select>
 
-    <select id="findByJobId" resultType="com.parttime.cservice.pojo.entity.Job">
-        SELECT * FROM c_job WHERE job_id = #{jobId}
+    <select id="findByJobId" resultMap="jobResultMap">
+        <include refid="jobSelectWithJoins"/> WHERE j.id = #{jobId}
     </select>
 
-    <select id="findAll" resultType="com.parttime.cservice.pojo.entity.Job">
-        SELECT * FROM c_job
+    <select id="findAll" resultMap="jobResultMap">
+        <include refid="jobSelectWithJoins"/>
     </select>
 
-    <select id="search" resultType="com.parttime.cservice.pojo.entity.Job">
-        SELECT * FROM c_job
-        WHERE status = 'PUBLISHED'
+    <select id="search" resultMap="jobResultMap">
+        <include refid="jobSelectWithJoins"/>
+        WHERE j.status = 'PUBLISHED'
         <if test="keyword != null and keyword != ''">
-            AND (title LIKE CONCAT('%', #{keyword}, '%') OR description LIKE CONCAT('%', #{keyword}, '%'))
+            AND (j.title LIKE CONCAT('%', #{keyword}, '%') OR j.description LIKE CONCAT('%', #{keyword}, '%'))
         </if>
         <if test="location != null and location != ''">
-            AND location LIKE CONCAT('%', #{location}, '%')
+            AND j.location LIKE CONCAT('%', #{location}, '%')
         </if>
         <if test="categoryId != null">
-            AND category_id = #{categoryId}
+            AND j.category_id = #{categoryId}
         </if>
     </select>
 
-    <select id="findByCompanyId" resultType="com.parttime.cservice.pojo.entity.Job">
-        SELECT * FROM c_job WHERE company_id = #{companyId}
+    <select id="findByCompanyId" resultMap="jobResultMap">
+        <include refid="jobSelectWithJoins"/> WHERE j.company_id = #{companyId}
     </select>
 
     <update id="update">
-        UPDATE c_job
+        UPDATE jobs
         SET title = #{title}, description = #{description}, location = #{location},
             province = #{province}, city = #{city}, district = #{district}, address = #{address},
             latitude = #{latitude}, longitude = #{longitude},
-            category_id = #{categoryId}, category_name = #{categoryName},
-            company_logo = #{companyLogo},
+            category_id = #{categoryId},
             rate_type = #{rateType}, rate_amount = #{rateAmount},
             status = #{status}
         WHERE id = #{id}

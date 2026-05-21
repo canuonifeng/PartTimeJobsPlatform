@@ -48,7 +48,7 @@ class AttendanceControllerTest {
                 new UsernamePasswordAuthenticationToken("1", null, List.of()));
 
         WorkerShiftVO shift = new WorkerShiftVO();
-        shift.setShiftId(100L);
+        shift.setId(100L);
         shift.setJobId(10L);
         shift.setJobTitle("Helper");
         shift.setStatus("SCHEDULED");

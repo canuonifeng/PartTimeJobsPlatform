@@ -116,8 +116,8 @@ async function handleCheckIn(shift: Shift) {
     const location = await getLocation()
     await checkIn({
       shiftId: shift.id,
-      latitude: location.latitude,
-      longitude: location.longitude
+      lat: location.latitude,
+      lng: location.longitude
     })
     shift.checkedIn = true
     shift.status = 'checked_in'
@@ -136,9 +136,8 @@ async function handleCheckOut(shift: Shift) {
     const location = await getLocation()
     await checkOut({
       shiftId: shift.id,
-      attendanceId: shift.attendanceId,
-      latitude: location.latitude,
-      longitude: location.longitude
+      lat: location.latitude,
+      lng: location.longitude
     })
     shift.checkedOut = true
     shift.status = 'checked_out'
@@ -164,12 +163,12 @@ async function loadTodayShifts() {
     const res: any = await getMyShifts({ startDate: dateStr, endDate: dateStr })
     const list = Array.isArray(res) ? res : (res.list || [])
     shifts.value = list.map((s: any) => ({
-      id: s.shiftId,
+      id: s.id,
       jobTitle: s.jobTitle,
-      location: s.jobLocation || s.locationName,
+      location: s.location || s.locationName,
       startTime: s.startTime,
       endTime: s.endTime,
-      date: s.shiftDate,
+      date: s.date,
       status: s.status || '',
       checkedIn: s.status === 'CHECKED_IN' || s.status === 'CHECKED_OUT',
       checkedOut: s.status === 'CHECKED_OUT'

@@ -26,17 +26,18 @@ const form = ref({
   latitude: null,
   longitude: null,
   salaryRates: [{ type: '', rate: '' }],
-  scheduleSlots: [{ dayOfWeek: '', startTime: '', endTime: '' }],
+  scheduleSlots: [{ date: '', startTime: '', endTime: '' }],
   status: 'DRAFT'
 })
 
 const categoryOptions = [
-  { value: 'RETAIL', label: '零售' },
-  { value: 'CATERING', label: '餐饮' },
-  { value: 'EDUCATION', label: '教育' },
-  { value: 'LOGISTICS', label: '物流' },
-  { value: 'EVENT', label: '活动' },
-  { value: 'OTHER', label: '其他' }
+  { value: 1, label: '餐饮服务' },
+  { value: 2, label: '物流配送' },
+  { value: 3, label: '家政保洁' },
+  { value: 4, label: '活动促销' },
+  { value: 5, label: '教育培训' },
+  { value: 6, label: '美容美发' },
+  { value: 7, label: '其他' }
 ]
 
 const statusOptions = [
@@ -44,35 +45,7 @@ const statusOptions = [
   { value: 'PUBLISHED', label: '发布' }
 ]
 
-const dayOfWeekOptions = [
-  { value: 'MONDAY', label: '周一' },
-  { value: 'TUESDAY', label: '周二' },
-  { value: 'WEDNESDAY', label: '周三' },
-  { value: 'THURSDAY', label: '周四' },
-  { value: 'FRIDAY', label: '周五' },
-  { value: 'SATURDAY', label: '周六' },
-  { value: 'SUNDAY', label: '周日' }
-]
-
 const showLocationPicker = ref(false)
-
-function dateToDayOfWeek(dateStr) {
-  if (!dateStr) return ''
-  const map = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
-  return map[new Date(dateStr).getDay()]
-}
-
-function getScheduleDate(dayOfWeek) {
-  const now = new Date()
-  const dayNames = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
-  const targetDay = dayNames.indexOf(dayOfWeek)
-  if (targetDay === -1) return null
-  
-  const diff = targetDay - now.getDay()
-  const result = new Date(now)
-  result.setDate(now.getDate() + diff)
-  return result.toISOString().split('T')[0]
-}
 
 const regionSelected = computed({
   get: () => {
@@ -109,7 +82,7 @@ function removeSalaryRate(index) {
 }
 
 function addScheduleSlot() {
-  form.value.scheduleSlots.push({ dayOfWeek: '', startTime: '', endTime: '' })
+  form.value.scheduleSlots.push({ date: '', startTime: '', endTime: '' })
 }
 
 function removeScheduleSlot(index) {
@@ -135,7 +108,7 @@ async function fetchDetail() {
       latitude: res.latitude || null,
       longitude: res.longitude || null,
       salaryRates: (res.rates || []).map((r) => ({ type: r.type || '', rate: r.amount || '' })),
-      scheduleSlots: (res.schedules || []).map((s) => ({ dayOfWeek: dateToDayOfWeek(s.scheduleDate), startTime: s.startTime || '', endTime: s.endTime || '' })),
+      scheduleSlots: (res.schedules || []).map((s) => ({ date: s.scheduleDate || '', startTime: s.startTime || '', endTime: s.endTime || '' })),
       status: res.status || 'DRAFT'
     }
   } finally {
@@ -158,7 +131,7 @@ function buildPayload() {
     headcount: form.value.headcount,
     deadline: form.value.deadline ? `${form.value.deadline} 23:59:59` : null,
     rates: form.value.salaryRates.filter((r) => r.type && r.rate).map((r) => ({ type: r.type, amount: Number(r.rate), currency: 'CNY' })),
-    schedules: form.value.scheduleSlots.filter((s) => s.dayOfWeek && s.startTime && s.endTime).map((s) => ({ scheduleDate: getScheduleDate(s.dayOfWeek), startTime: s.startTime, endTime: s.endTime, slotsAvailable: 1 }))
+    schedules: form.value.scheduleSlots.filter((s) => s.date && s.startTime && s.endTime).map((s) => ({ scheduleDate: s.date, startTime: s.startTime, endTime: s.endTime, slotsAvailable: 1 }))
   }
 }
 
@@ -241,9 +214,7 @@ onMounted(() => {
         <el-divider>排班时段</el-divider>
         <el-form-item v-for="(item, index) in form.scheduleSlots" :key="index" :label="`时段 ${index + 1}`">
           <div style="display: flex; gap: 8px; align-items: center">
-            <el-select v-model="item.dayOfWeek" placeholder="星期" style="width: 110px">
-              <el-option v-for="opt in dayOfWeekOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
-            </el-select>
+            <el-date-picker v-model="item.date" type="date" placeholder="选择日期" value-format="YYYY-MM-DD" style="width: 140px" />
             <el-time-picker v-model="item.startTime" placeholder="开始时间" value-format="HH:mm" style="width: 130px" />
             <el-time-picker v-model="item.endTime" placeholder="结束时间" value-format="HH:mm" style="width: 130px" />
             <el-button v-if="form.scheduleSlots.length > 1" type="danger" :icon="Delete" circle @click="removeScheduleSlot(index)" />

@@ -34,4 +34,6 @@ public class JobSummaryVO {
     private BigDecimal maxRate;
     @Schema(description = "薪资类型列表")
     private List<String> rateTypes;
+    @Schema(description = "薪资规则列表")
+    private List<JobRateInfoVO> rates;
 }

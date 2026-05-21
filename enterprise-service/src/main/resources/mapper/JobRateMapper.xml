@@ -23,7 +23,7 @@
     </select>
 
     <select id="findByJobId" resultMap="JobRateResultMap">
-        SELECT * FROM job_rates WHERE job_id = #{jobId}
+        SELECT * FROM job_rates WHERE job_id = #{jobId} ORDER BY id ASC
     </select>
 
     <select id="findAll" resultMap="JobRateResultMap">

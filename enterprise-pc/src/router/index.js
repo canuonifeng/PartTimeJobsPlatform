@@ -52,7 +52,7 @@ const routes = [
     path: '/schedules/shifts',
     name: 'ScheduleShiftList',
     component: () => import('../views/schedules/ScheduleShiftList.vue'),
-    meta: { requiresAuth: true, title: '班次管理' }
+    meta: { requiresAuth: true, title: '排班管理' }
   },
   {
     path: '/payroll',

@@ -2,44 +2,76 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.parttime.cservice.mapper.ShiftMapper">
 
+    <resultMap id="ShiftResultMap" type="com.parttime.cservice.pojo.entity.ShiftEntity">
+        <id property="id" column="id"/>
+        <result property="jobId" column="job_id"/>
+        <result property="jobTitle" column="job_title"/>
+        <result property="jobLocation" column="job_location"/>
+        <result property="workerId" column="worker_id"/>
+        <result property="companyId" column="company_id"/>
+        <result property="shiftDate" column="shift_date"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="locationLat" column="location_lat"/>
+        <result property="locationLng" column="location_lng"/>
+        <result property="locationRadius" column="location_radius"/>
+        <result property="locationName" column="location_name"/>
+        <result property="status" column="status"/>
+        <result property="salaryType" column="salary_type"/>
+        <result property="salaryAmount" column="salary_amount"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO c_shift (worker_id, job_id, company_id, shift_date, start_time, end_time,
-                             location_name, location_lat, location_lng, location_radius, status,
-                             created_at, updated_at)
+        INSERT INTO schedule_shifts (worker_id, job_id, company_id, shift_date, start_time, end_time,
+                                     location_name, location_lat, location_lng, location_radius, status,
+                                     created_at, updated_at)
         VALUES (#{workerId}, #{jobId}, #{companyId}, #{shiftDate}, #{startTime}, #{endTime},
                 #{locationName}, #{locationLat}, #{locationLng}, #{locationRadius}, #{status},
                 #{createdAt}, #{updatedAt})
     </insert>
 
-    <select id="findById" resultType="com.parttime.cservice.pojo.entity.ShiftEntity">
-        SELECT * FROM c_shift WHERE id = #{id}
+    <select id="findById" resultMap="ShiftResultMap">
+        SELECT ss.*, j.title AS job_title, j.location AS job_location
+        FROM schedule_shifts ss
+        LEFT JOIN jobs j ON ss.job_id = j.id
+        WHERE ss.id = #{id}
     </select>
 
-    <select id="findByWorkerId" resultType="com.parttime.cservice.pojo.entity.ShiftEntity">
-        SELECT * FROM c_shift WHERE worker_id = #{workerId}
+    <select id="findByWorkerId" resultMap="ShiftResultMap">
+        SELECT ss.*, j.title AS job_title, j.location AS job_location
+        FROM schedule_shifts ss
+        LEFT JOIN jobs j ON ss.job_id = j.id
+        WHERE ss.worker_id = #{workerId}
     </select>
 
-    <select id="findByWorkerIdAndDateRange" resultType="com.parttime.cservice.pojo.entity.ShiftEntity">
-        SELECT * FROM c_shift
-        WHERE worker_id = #{workerId}
+    <select id="findByWorkerIdAndDateRange" resultMap="ShiftResultMap">
+        SELECT ss.*, j.title AS job_title, j.location AS job_location
+        FROM schedule_shifts ss
+        LEFT JOIN jobs j ON ss.job_id = j.id
+        WHERE ss.worker_id = #{workerId}
         <if test="startDate != null">
-            AND shift_date >= #{startDate}
+            AND ss.shift_date >= #{startDate}
         </if>
         <if test="endDate != null">
-            AND shift_date &lt;= #{endDate}
+            AND ss.shift_date &lt;= #{endDate}
         </if>
     </select>
 
-    <select id="findByJobId" resultType="com.parttime.cservice.pojo.entity.ShiftEntity">
-        SELECT * FROM c_shift WHERE job_id = #{jobId}
+    <select id="findByJobId" resultMap="ShiftResultMap">
+        SELECT ss.*, j.title AS job_title, j.location AS job_location
+        FROM schedule_shifts ss
+        LEFT JOIN jobs j ON ss.job_id = j.id
+        WHERE ss.job_id = #{jobId}
     </select>
 
     <update id="updateStatus">
-        UPDATE c_shift SET status = #{status} WHERE id = #{id}
+        UPDATE schedule_shifts SET status = #{status} WHERE id = #{id}
     </update>
 
     <update id="update">
-        UPDATE c_shift
+        UPDATE schedule_shifts
         SET worker_id = #{workerId}, job_id = #{jobId}, company_id = #{companyId},
             shift_date = #{shiftDate}, start_time = #{startTime}, end_time = #{endTime},
             location_name = #{locationName}, location_lat = #{locationLat},

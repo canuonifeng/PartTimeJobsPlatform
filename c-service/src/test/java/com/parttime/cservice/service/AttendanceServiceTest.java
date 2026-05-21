@@ -66,7 +66,7 @@ class AttendanceServiceTest {
         List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L,
                 LocalDate.of(2026, 5, 1), LocalDate.of(2026, 6, 30));
         assertThat(shifts).hasSize(1);
-        assertThat(shifts.get(0).getShiftDate()).isEqualTo(LocalDate.of(2026, 6, 1));
+        assertThat(shifts.get(0).getDate()).isEqualTo(LocalDate.of(2026, 6, 1));
     }
 
     @Test
@@ -76,7 +76,7 @@ class AttendanceServiceTest {
                 null, null, null, null);
 
         List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
-        Long shiftId = shifts.get(0).getShiftId();
+        Long shiftId = shifts.get(0).getId();
 
         AttendanceVO response = attendanceService.checkIn(1L, shiftId, null, null);
         assertThat(response.getStatus()).isEqualTo("CHECKED_IN");
@@ -97,7 +97,7 @@ class AttendanceServiceTest {
                 null, null, null, null);
 
         List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
-        Long shiftId = shifts.get(0).getShiftId();
+        Long shiftId = shifts.get(0).getId();
 
         assertThatThrownBy(() -> attendanceService.checkIn(2L, shiftId, null, null))
                 .isInstanceOf(RuntimeException.class)
@@ -111,7 +111,7 @@ class AttendanceServiceTest {
                 null, null, null, null);
 
         List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
-        Long shiftId = shifts.get(0).getShiftId();
+        Long shiftId = shifts.get(0).getId();
 
         attendanceService.checkIn(1L, shiftId, null, null);
 
@@ -127,7 +127,7 @@ class AttendanceServiceTest {
                 new BigDecimal("31.2304"), new BigDecimal("121.4737"), 10, null);
 
         List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
-        Long shiftId = shifts.get(0).getShiftId();
+        Long shiftId = shifts.get(0).getId();
 
         assertThatThrownBy(() -> attendanceService.checkIn(1L, shiftId,
                 new BigDecimal("31.3000"), new BigDecimal("121.5000")))
@@ -142,7 +142,7 @@ class AttendanceServiceTest {
                 null, null, null, null);
 
         List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
-        Long shiftId = shifts.get(0).getShiftId();
+        Long shiftId = shifts.get(0).getId();
 
         attendanceService.checkIn(1L, shiftId, null, null);
         AttendanceVO response = attendanceService.checkOut(1L, shiftId, null, null);
@@ -159,7 +159,7 @@ class AttendanceServiceTest {
                 null, null, null, null);
 
         List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
-        Long shiftId = shifts.get(0).getShiftId();
+        Long shiftId = shifts.get(0).getId();
 
         assertThatThrownBy(() -> attendanceService.checkOut(1L, shiftId, null, null))
                 .isInstanceOf(RuntimeException.class)
@@ -173,7 +173,7 @@ class AttendanceServiceTest {
                 null, null, null, null);
 
         List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
-        Long shiftId = shifts.get(0).getShiftId();
+        Long shiftId = shifts.get(0).getId();
 
         attendanceService.checkIn(1L, shiftId, null, null);
 

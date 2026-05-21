@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -65,15 +66,17 @@ public class ScheduleController {
         return scheduleService.assignShift(request);
     }
 
-    @Operation(summary = "查询班次列表", description = "根据岗位、工人、日期等条件查询班次")
+    @Operation(summary = "查询班次列表", description = "根据岗位、工人、日期等条件查询班次，支持分页")
     @GetMapping("/schedule-shifts")
-    public List<ScheduleShiftVO> getShifts(
+    public Map<String, Object> getShifts(
             @Parameter(description = "岗位ID") @RequestParam(required = false) Long jobId,
             @Parameter(description = "工人ID") @RequestParam(required = false) Long workerId,
             @Parameter(description = "班次日期") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate shiftDate,
-            @Parameter(hidden = true) @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+            @Parameter(hidden = true) @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @Parameter(description = "页码") @RequestParam(required = false, defaultValue = "1") Integer page,
+            @Parameter(description = "每页数量") @RequestParam(required = false, defaultValue = "20") Integer pageSize) {
         if (shiftDate == null && date != null) shiftDate = date;
-        return scheduleService.getShifts(jobId, workerId, shiftDate);
+        return scheduleService.getShifts(jobId, workerId, shiftDate, page, pageSize);
     }
 
     @Operation(summary = "更新班次", description = "更新指定的班次信息")
