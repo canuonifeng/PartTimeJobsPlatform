@@ -1,0 +1,1 @@
+ALTER TABLE attendance_records ADD COLUMN is_paid TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否已发放';

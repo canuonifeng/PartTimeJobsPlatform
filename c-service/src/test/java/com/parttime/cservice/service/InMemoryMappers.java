@@ -274,4 +274,23 @@ public class InMemoryMappers {
             }
         };
     }
+
+    public static AttendanceCorrectionMapper createAttendanceCorrectionMapper() {
+        return new AttendanceCorrectionMapper() {
+            private final ConcurrentHashMap<Long, AttendanceCorrectionEntity> store = new ConcurrentHashMap<>();
+            private final AtomicLong idGen = new AtomicLong(1);
+
+            @Override public int insert(AttendanceCorrectionEntity c) {
+                if (c.getId() == null) c.setId(idGen.getAndIncrement());
+                store.put(c.getId(), c);
+                return 1;
+            }
+            @Override public java.util.Optional<AttendanceCorrectionEntity> findById(Long id) {
+                return java.util.Optional.ofNullable(store.get(id));
+            }
+            @Override public java.util.Optional<AttendanceCorrectionEntity> findByShiftId(Long shiftId) {
+                return store.values().stream().filter(c -> shiftId.equals(c.getShiftId())).findFirst();
+            }
+        };
+    }
 }

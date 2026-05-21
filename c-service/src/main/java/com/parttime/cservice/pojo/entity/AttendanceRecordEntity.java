@@ -13,6 +13,10 @@ public class AttendanceRecordEntity {
     private Long id;
     @Schema(description = "班次ID")
     private Long shiftId;
+    @Schema(description = "岗位ID")
+    private Long jobId;
+    @Schema(description = "企业ID")
+    private Long companyId;
     @Schema(description = "工人ID")
     private Long workerId;
     @Schema(description = "签到时间")
@@ -29,8 +33,8 @@ public class AttendanceRecordEntity {
     private BigDecimal checkOutLng;
     @Schema(description = "总工时")
     private BigDecimal totalHours;
-    @Schema(description = "工资")
-    private BigDecimal payAmount;
+    @Schema(description = "排班薪资")
+    private BigDecimal scheduledPay;
     @Schema(description = "工资计算时间")
     private LocalDateTime calculatedAt;
     @Schema(description = "考勤状态: NORMAL-正常, LATE-迟到, EARLY_LEAVE-早退, ABSENT-缺勤")

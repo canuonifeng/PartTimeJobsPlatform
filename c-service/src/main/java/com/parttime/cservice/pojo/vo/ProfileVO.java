@@ -3,6 +3,7 @@ package com.parttime.cservice.pojo.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class ProfileVO {
@@ -16,9 +17,9 @@ public class ProfileVO {
     @Schema(description = "头像URL")
     private String avatarUrl;
     @Schema(description = "技能特长")
-    private String skills;
+    private List<String> skills;
     @Schema(description = "可工作日期")
-    private String availableDays;
+    private List<String> availableDays;
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")

@@ -18,8 +18,8 @@ public class AttendanceRecordVO {
     private LocalDateTime checkOutTime;
     @Schema(description = "总工时")
     private BigDecimal totalHours;
-    @Schema(description = "应付金额")
-    private BigDecimal payAmount;
+    @Schema(description = "排班薪资")
+    private BigDecimal scheduledPay;
     @Schema(description = "结算计算时间")
     private LocalDateTime calculatedAt;
     @Schema(description = "考勤状态")

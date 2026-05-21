@@ -1,7 +1,10 @@
 package com.parttime.cservice.service.impl;
 
+import com.parttime.cservice.enums.ShiftStatus;
+import com.parttime.cservice.mapper.AttendanceCorrectionMapper;
 import com.parttime.cservice.mapper.AttendanceRecordMapper;
 import com.parttime.cservice.mapper.ShiftMapper;
+import com.parttime.cservice.pojo.entity.AttendanceCorrectionEntity;
 import com.parttime.cservice.pojo.entity.AttendanceRecordEntity;
 import com.parttime.cservice.pojo.entity.ShiftEntity;
 import com.parttime.cservice.pojo.vo.AttendanceVO;
@@ -28,6 +31,8 @@ public class AttendanceServiceImpl implements AttendanceService {
     private ShiftMapper shiftMapper;
     @Resource
     private AttendanceRecordMapper attendanceRecordMapper;
+    @Resource
+    private AttendanceCorrectionMapper correctionMapper;
 
     @Override
     public ShiftEntity addShift(Long jobId, String jobTitle, String jobLocation, Long workerId,
@@ -46,7 +51,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         shift.setLocationLng(locationLng);
         shift.setLocationRadius(locationRadius);
         shift.setLocationName(locationName);
-        shift.setStatus("SCHEDULED");
+        shift.setStatus(ShiftStatus.SCHEDULED.name());
         shift.setCreatedAt(LocalDateTime.now());
         shift.setUpdatedAt(LocalDateTime.now());
         shiftMapper.insert(shift);
@@ -68,7 +73,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         if (!shift.getWorkerId().equals(workerId)) {
             throw new RuntimeException("Shift does not belong to this worker");
         }
-        if (!"SCHEDULED".equals(shift.getStatus())) {
+        if (!ShiftStatus.SCHEDULED.name().equals(shift.getStatus())) {
             throw new RuntimeException("Cannot check in: shift status is " + shift.getStatus());
         }
 
@@ -85,15 +90,17 @@ public class AttendanceServiceImpl implements AttendanceService {
             }
         }
 
-        shift.setStatus("CHECKED_IN");
+        shift.setStatus(ShiftStatus.CHECKED_IN.name());
         shift.setUpdatedAt(LocalDateTime.now());
         shiftMapper.update(shift);
 
         AttendanceRecordEntity record = new AttendanceRecordEntity();
         record.setShiftId(shiftId);
+        record.setJobId(shift.getJobId());
+        record.setCompanyId(shift.getCompanyId());
         record.setWorkerId(workerId);
         record.setCheckInTime(LocalDateTime.now());
-        record.setStatus("CHECKED_IN");
+        record.setStatus(ShiftStatus.CHECKED_IN.name());
         record.setCreatedAt(LocalDateTime.now());
         record.setUpdatedAt(LocalDateTime.now());
         attendanceRecordMapper.insert(record);
@@ -122,26 +129,26 @@ public class AttendanceServiceImpl implements AttendanceService {
         BigDecimal hours = BigDecimal.valueOf(duration.toMinutes() / 60.0)
                 .setScale(2, RoundingMode.HALF_UP);
 
-        BigDecimal payAmount = BigDecimal.ZERO;
+        BigDecimal scheduledPay = BigDecimal.ZERO;
         String rateType = shift.getSalaryType() != null ? shift.getSalaryType() : "HOURLY";
         BigDecimal rateAmount = shift.getSalaryAmount();
         if (rateAmount != null && rateAmount.compareTo(BigDecimal.ZERO) > 0) {
             if ("HOURLY".equals(rateType)) {
-                payAmount = hours.multiply(rateAmount).setScale(2, RoundingMode.HALF_UP);
+                scheduledPay = hours.multiply(rateAmount).setScale(2, RoundingMode.HALF_UP);
             } else if ("DAILY".equals(rateType)) {
-                payAmount = rateAmount.setScale(2, RoundingMode.HALF_UP);
+                scheduledPay = rateAmount.setScale(2, RoundingMode.HALF_UP);
             }
         }
 
         record.setCheckOutTime(checkOutTime);
         record.setTotalHours(hours);
-        record.setPayAmount(payAmount);
+        record.setScheduledPay(scheduledPay);
         record.setCalculatedAt(LocalDateTime.now());
-        record.setStatus("CHECKED_OUT");
+        record.setStatus(ShiftStatus.CHECKED_OUT.name());
         record.setUpdatedAt(LocalDateTime.now());
         attendanceRecordMapper.update(record);
 
-        shift.setStatus("CHECKED_OUT");
+        shift.setStatus(ShiftStatus.CHECKED_OUT.name());
         shift.setUpdatedAt(LocalDateTime.now());
         shiftMapper.update(shift);
 
@@ -180,6 +187,8 @@ public class AttendanceServiceImpl implements AttendanceService {
         resp.setLocationLng(shift.getLocationLng());
         resp.setLocationRadius(shift.getLocationRadius());
         resp.setLocationName(shift.getLocationName());
+        correctionMapper.findByShiftId(shift.getId()).ifPresent(c ->
+                resp.setCorrectionStatus(c.getStatus()));
         return resp;
     }
 
@@ -190,7 +199,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         resp.setCheckInTime(record.getCheckInTime());
         resp.setCheckOutTime(record.getCheckOutTime());
         resp.setTotalHours(record.getTotalHours());
-        resp.setPayAmount(record.getPayAmount());
+        resp.setScheduledPay(record.getScheduledPay());
         resp.setCalculatedAt(record.getCalculatedAt());
         resp.setStatus(record.getStatus());
         return resp;

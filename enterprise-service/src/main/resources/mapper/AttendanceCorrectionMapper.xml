@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.enterprise.mapper.AttendanceCorrectionMapper">
+
+    <resultMap id="CorrectionResultMap" type="com.parttime.enterprise.pojo.entity.AttendanceCorrection">
+        <id property="id" column="id"/>
+        <result property="shiftId" column="shift_id"/>
+        <result property="workerId" column="worker_id"/>
+        <result property="reason" column="reason"/>
+        <result property="status" column="status"/>
+        <result property="rejectReason" column="reject_reason"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="processedAt" column="processed_at"/>
+        <result property="processorId" column="processor_id"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO attendance_corrections (shift_id, worker_id, reason, status, created_at)
+        VALUES (#{shiftId}, #{workerId}, #{reason}, #{status}, #{createdAt})
+    </insert>
+
+    <select id="findById" resultMap="CorrectionResultMap">
+        SELECT * FROM attendance_corrections WHERE id = #{id}
+    </select>
+
+    <select id="findByShiftId" resultMap="CorrectionResultMap">
+        SELECT * FROM attendance_corrections WHERE shift_id = #{shiftId}
+    </select>
+
+    <select id="findByWorkerId" resultMap="CorrectionResultMap">
+        SELECT * FROM attendance_corrections WHERE worker_id = #{workerId}
+    </select>
+
+    <select id="findByStatus" resultMap="CorrectionResultMap">
+        SELECT * FROM attendance_corrections WHERE status = #{status}
+    </select>
+
+    <select id="search" resultMap="CorrectionResultMap">
+        SELECT ac.* FROM attendance_corrections ac
+        LEFT JOIN schedule_shifts s ON ac.shift_id = s.id
+        LEFT JOIN jobs j ON s.job_id = j.id
+        WHERE 1=1
+        <if test="status != null and status != ''">AND ac.status = #{status}</if>
+        <if test="keyword != null and keyword != ''">AND j.title LIKE CONCAT('%', #{keyword}, '%')</if>
+        <if test="dateFrom != null and dateFrom != ''">AND ac.created_at >= #{dateFrom}</if>
+        <if test="dateTo != null and dateTo != ''">AND ac.created_at &lt;= #{dateTo}</if>
+        ORDER BY ac.created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countSearch" resultType="int">
+        SELECT COUNT(*) FROM attendance_corrections ac
+        LEFT JOIN schedule_shifts s ON ac.shift_id = s.id
+        LEFT JOIN jobs j ON s.job_id = j.id
+        WHERE 1=1
+        <if test="status != null and status != ''">AND ac.status = #{status}</if>
+        <if test="keyword != null and keyword != ''">AND j.title LIKE CONCAT('%', #{keyword}, '%')</if>
+        <if test="dateFrom != null and dateFrom != ''">AND ac.created_at >= #{dateFrom}</if>
+        <if test="dateTo != null and dateTo != ''">AND ac.created_at &lt;= #{dateTo}</if>
+    </select>
+
+    <update id="update">
+        UPDATE attendance_corrections
+        SET status = #{status}, reject_reason = #{rejectReason},
+            processed_at = #{processedAt}, processor_id = #{processorId}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

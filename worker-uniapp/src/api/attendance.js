@@ -22,3 +22,19 @@ export function getMyAttendance() {
     method: 'GET'
   })
 }
+
+export function submitCorrection(data) {
+  return request({
+    url: '/api/attendance/correction',
+    method: 'POST',
+    data
+  })
+}
+
+export function getCorrectionStatus(params) {
+  return request({
+    url: '/api/attendance/correction/status',
+    method: 'GET',
+    data: params
+  })
+}

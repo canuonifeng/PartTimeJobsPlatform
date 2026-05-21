@@ -35,17 +35,40 @@
           <text class="shift-title">{{ shift.jobTitle }}</text>
           <text class="shift-location">{{ shift.location }}</text>
         </view>
-        <view class="shift-status" :class="shift.status">
-          {{ shift.status === 'completed' ? '已完成' : shift.status === 'in_progress' ? '进行中' : '待上岗' }}
+        <view class="shift-actions">
+          <view class="shift-status" :class="statusClass(shift)">
+            {{ statusText(shift) }}
+          </view>
+          <view v-if="shift.correctionStatus === 'PENDING'" class="correction-tag pending">补卡审批中</view>
+          <view v-else-if="shift.correctionStatus === 'APPROVED'" class="correction-tag approved">补卡已通过</view>
+          <view v-else-if="shift.correctionStatus === 'REJECTED'" class="correction-tag rejected">补卡已拒绝</view>
+          <view v-else-if="shift.canApplyCorrection" class="correction-btn" @click="openCorrectionDialog(shift)">补卡</view>
         </view>
       </view>
     </scroll-view>
+
+    <!-- Correction dialog overlay -->
+    <view v-if="correctionDialogVisible" class="overlay" @click="correctionDialogVisible = false">
+      <view class="overlay-content" @click.stop>
+        <view class="dialog-title">补卡申请</view>
+        <view class="dialog-body">
+          <text class="dialog-label">补卡原因</text>
+          <textarea v-model="correctionReason" placeholder="请填写补卡原因" class="dialog-textarea" maxlength="500" />
+          <text class="dialog-hint">{{ correctionReason.length }}/500</text>
+        </view>
+        <view class="dialog-footer">
+          <view class="dialog-btn cancel" @click="correctionDialogVisible = false">取消</view>
+          <view class="dialog-btn confirm" @click="handleSubmitCorrection">{{ submitting ? '提交中...' : '提交' }}</view>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { getMyShifts } from '@/api/schedule'
+import { submitCorrection } from '@/api/attendance'
 
 interface DayInfo {
   name: string
@@ -63,6 +86,8 @@ interface Shift {
   endTime: string
   date: string
   status: string
+  correctionStatus?: string
+  canApplyCorrection: boolean
 }
 
 const loading = ref(false)
@@ -71,6 +96,11 @@ const allShifts = ref<Shift[]>([])
 const selectedIndex = ref(-1)
 const currentWeekStart = ref(getWeekStart(new Date()))
 const weekDays = ref<DayInfo[]>([])
+
+const correctionDialogVisible = ref(false)
+const correctionTarget = ref<Shift | null>(null)
+const correctionReason = ref('')
+const submitting = ref(false)
 
 function getWeekStart(date: Date): Date {
   const d = new Date(date)
@@ -92,6 +122,33 @@ function formatFullDate(d: Date): string {
   const m = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   return `${y}-${m}-${day}`
+}
+
+function isShiftEnded(shift: Shift): boolean {
+  if (!shift.date || !shift.endTime) return false
+  const [h, m] = shift.endTime.split(':').map(Number)
+  if (isNaN(h) || isNaN(m)) return false
+  const end = new Date(shift.date + 'T' + String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0'))
+  return new Date() > end
+}
+
+function canApplyCorrection(shift: Shift): boolean {
+  if (!isShiftEnded(shift)) return false
+  if (shift.status === 'CHECKED_OUT' || shift.status === 'ABSENT') return false
+  if (shift.correctionStatus) return false
+  return true
+}
+
+function statusClass(shift: Shift): string {
+  if (shift.status === 'CHECKED_OUT') return 'completed'
+  if (shift.status === 'CHECKED_IN') return 'in_progress'
+  return 'pending'
+}
+
+function statusText(shift: Shift): string {
+  if (shift.status === 'CHECKED_OUT') return '已完成'
+  if (shift.status === 'CHECKED_IN') return '进行中'
+  return '待上岗'
 }
 
 function buildWeekDays(start: Date) {
@@ -128,7 +185,17 @@ async function loadShifts() {
       startDate: weekDays.value[0].fullDate,
       endDate: weekDays.value[6].fullDate
     })
-    allShifts.value = Array.isArray(res) ? res : (res.list || [])
+    allShifts.value = (Array.isArray(res) ? res : (res.list || [])).map((s: any) => ({
+      id: s.id,
+      jobTitle: s.jobTitle,
+      location: s.location || s.locationName,
+      startTime: s.startTime,
+      endTime: s.endTime,
+      date: s.date,
+      status: s.status || '',
+      correctionStatus: s.correctionStatus || null,
+      canApplyCorrection: false
+    }))
     buildWeekDays(currentWeekStart.value)
     selectDay(selectedIndex.value >= 0 ? selectedIndex.value : weekDays.value.findIndex((d) => d.isToday))
   } catch {
@@ -143,7 +210,9 @@ function selectDay(index: number) {
   selectedIndex.value = index
   const day = weekDays.value[index]
   if (day) {
-    shifts.value = allShifts.value.filter((s) => s.date === day.fullDate)
+    shifts.value = allShifts.value
+      .filter((s) => s.date === day.fullDate)
+      .map((s) => ({ ...s, canApplyCorrection: canApplyCorrection(s) }))
   }
 }
 
@@ -161,6 +230,35 @@ function nextWeek() {
   currentWeekStart.value = d
   buildWeekDays(d)
   loadShifts()
+}
+
+function openCorrectionDialog(shift: Shift) {
+  correctionTarget.value = shift
+  correctionReason.value = ''
+  correctionDialogVisible.value = true
+}
+
+async function handleSubmitCorrection() {
+  if (!correctionReason.value.trim()) {
+    uni.showToast({ title: '请填写补卡原因', icon: 'none' })
+    return
+  }
+  if (submitting.value || !correctionTarget.value) return
+  submitting.value = true
+  try {
+    await submitCorrection({
+      shiftId: correctionTarget.value.id,
+      reason: correctionReason.value.trim()
+    })
+    uni.showToast({ title: '补卡申请已提交', icon: 'success' })
+    correctionDialogVisible.value = false
+    correctionTarget.value = null
+    loadShifts()
+  } catch (err: any) {
+    uni.showToast({ title: err?.data?.error || err.message || '提交失败', icon: 'none' })
+  } finally {
+    submitting.value = false
+  }
 }
 
 onMounted(() => {
@@ -307,6 +405,14 @@ onMounted(() => {
   color: #999;
 }
 
+.shift-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8rpx;
+  white-space: nowrap;
+}
+
 .shift-status {
   font-size: 24rpx;
   padding: 6rpx 16rpx;
@@ -327,5 +433,125 @@ onMounted(() => {
 .shift-status.completed {
   background: #f6ffed;
   color: #52c41a;
+}
+
+.correction-btn {
+  font-size: 22rpx;
+  color: #07c160;
+  background: #f0fdf4;
+  border: 1rpx solid #07c160;
+  border-radius: 8rpx;
+  padding: 4rpx 16rpx;
+  line-height: 1.6;
+}
+
+.correction-btn:active {
+  opacity: 0.7;
+}
+
+.correction-tag {
+  font-size: 22rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  white-space: nowrap;
+}
+
+.correction-tag.pending {
+  background: #fff7e6;
+  color: #fa8c16;
+}
+
+.correction-tag.approved {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.correction-tag.rejected {
+  background: #fff1f0;
+  color: #ff4d4f;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.overlay-content {
+  background: #fff;
+  border-radius: 16rpx;
+  width: 600rpx;
+  max-width: 85%;
+  overflow: hidden;
+}
+
+.dialog-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  padding: 30rpx 30rpx 0;
+}
+
+.dialog-body {
+  padding: 30rpx;
+}
+
+.dialog-label {
+  font-size: 28rpx;
+  color: #333;
+  display: block;
+  margin-bottom: 12rpx;
+}
+
+.dialog-textarea {
+  width: 100%;
+  min-height: 160rpx;
+  border: 1rpx solid #e0e0e0;
+  border-radius: 8rpx;
+  padding: 16rpx;
+  font-size: 26rpx;
+  box-sizing: border-box;
+}
+
+.dialog-hint {
+  font-size: 22rpx;
+  color: #999;
+  text-align: right;
+  display: block;
+  margin-top: 6rpx;
+}
+
+.dialog-footer {
+  display: flex;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.dialog-btn {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx 0;
+  font-size: 28rpx;
+}
+
+.dialog-btn:active {
+  opacity: 0.7;
+}
+
+.dialog-btn.cancel {
+  color: #999;
+  border-right: 1rpx solid #f0f0f0;
+}
+
+.dialog-btn.confirm {
+  color: #07c160;
+  font-weight: 500;
 }
 </style>

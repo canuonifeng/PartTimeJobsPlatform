@@ -14,7 +14,12 @@
 
       <view v-for="shift in shifts" :key="shift.id" class="shift-card">
         <view class="shift-header">
-          <text class="shift-title">{{ shift.jobTitle }}</text>
+          <view class="shift-title-row">
+            <text class="shift-title">{{ shift.jobTitle }}</text>
+            <text v-if="shift.status" class="shift-status" :class="shift.status">
+              {{ getStatusText(shift.status) }}
+            </text>
+          </view>
           <text class="shift-time">{{ shift.startTime }}-{{ shift.endTime }}</text>
         </view>
 
@@ -42,10 +47,6 @@
           >
             {{ shift.checkedOut ? '已签退' : '签退' }}
           </button>
-        </view>
-
-        <view v-if="shift.status" class="shift-status" :class="shift.status">
-          {{ getStatusText(shift.status) }}
         </view>
       </view>
     </scroll-view>
@@ -236,10 +237,14 @@ onMounted(loadTodayShifts)
 }
 
 .shift-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 16rpx;
+}
+
+.shift-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 8rpx;
 }
 
 .shift-title {
@@ -301,12 +306,10 @@ onMounted(loadTodayShifts)
 }
 
 .shift-status {
-  position: absolute;
-  top: 20rpx;
-  right: 20rpx;
   font-size: 22rpx;
   padding: 4rpx 12rpx;
   border-radius: 6rpx;
+  white-space: nowrap;
 }
 
 .shift-status.SCHEDULED {

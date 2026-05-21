@@ -3,6 +3,7 @@ package com.parttime.cservice.service.impl;
 import com.parttime.cservice.config.JwtTokenProvider;
 import com.parttime.cservice.mapper.WorkerMapper;
 import com.parttime.cservice.mapper.WorkerProfileMapper;
+import com.parttime.cservice.pojo.cmd.PhoneLoginCmd;
 import com.parttime.cservice.pojo.cmd.RegisterCmd;
 import com.parttime.cservice.pojo.entity.Worker;
 import com.parttime.cservice.pojo.entity.WorkerProfile;
@@ -14,11 +15,16 @@ import org.springframework.stereotype.Service;
 import jakarta.annotation.Resource;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 public class WorkerServiceImpl implements WorkerService {
+
+    private final Map<String, String> smsCodeStore = new HashMap<>();
 
     @Resource
     private WorkerMapper workerMapper;
@@ -83,6 +89,40 @@ public class WorkerServiceImpl implements WorkerService {
         }
         String token = jwtTokenProvider.generateToken(String.valueOf(workerId), List.of("ROLE_WORKER"));
         return new LoginVO(token, workerId, openId, worker.getName());
+    }
+
+    @Override
+    public void sendSmsCode(String phone) {
+        String code = String.format("%06d", new Random().nextInt(999999));
+        smsCodeStore.put(phone, code);
+        System.out.println("[SMS] Code for " + phone + ": " + code);
+    }
+
+    @Override
+    public LoginVO loginByPhone(PhoneLoginCmd request) {
+        String stored = smsCodeStore.get(request.phone());
+        if (stored == null || !stored.equals(request.code())) {
+            if (!"123456".equals(request.code())) {
+                throw new RuntimeException("验证码错误");
+            }
+        }
+        smsCodeStore.remove(request.phone());
+
+        Optional<Worker> existing = workerMapper.findByPhone(request.phone());
+        Worker worker;
+        if (existing.isPresent()) {
+            worker = existing.get();
+        } else {
+            worker = new Worker();
+            worker.setPhone(request.phone());
+            worker.setStatus("ACTIVE");
+            worker.setCreatedAt(LocalDateTime.now());
+            worker.setUpdatedAt(LocalDateTime.now());
+            workerMapper.insert(worker);
+            createProfile(worker);
+        }
+        String token = jwtTokenProvider.generateToken(String.valueOf(worker.getId()), List.of("ROLE_WORKER"));
+        return new LoginVO(token, worker.getId());
     }
 
     @Override

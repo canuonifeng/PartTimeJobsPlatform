@@ -27,6 +27,8 @@ public class WorkerShiftVO {
     private String endTime;
     @Schema(description = "班次状态")
     private String status;
+    @Schema(description = "补卡状态: PENDING/APPROVED/REJECTED/null")
+    private String correctionStatus;
     @Schema(description = "打卡纬度")
     private BigDecimal locationLat;
     @Schema(description = "打卡经度")

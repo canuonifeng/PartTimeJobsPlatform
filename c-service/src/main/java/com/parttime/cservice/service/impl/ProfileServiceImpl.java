@@ -1,5 +1,8 @@
 package com.parttime.cservice.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.parttime.cservice.mapper.WorkerProfileMapper;
 import com.parttime.cservice.mapper.WorkerResumeMapper;
 import com.parttime.cservice.pojo.cmd.ProfileUpdateCmd;
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Service;
 import jakarta.annotation.Resource;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,6 +28,8 @@ public class ProfileServiceImpl implements ProfileService {
     private WorkerProfileMapper workerProfileMapper;
     @Resource
     private WorkerResumeMapper workerResumeMapper;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ProfileVO updateProfile(Long workerId, ProfileUpdateCmd request) {
         Optional<WorkerProfile> existing = workerProfileMapper.findByWorkerId(workerId);
@@ -37,8 +43,8 @@ public class ProfileServiceImpl implements ProfileService {
         if (request.getName() != null) profile.setName(request.getName());
         if (request.getPhone() != null) profile.setPhone(request.getPhone());
         if (request.getAvatarUrl() != null) profile.setAvatarUrl(request.getAvatarUrl());
-        if (request.getSkills() != null) profile.setSkills(request.getSkills());
-        if (request.getAvailableDays() != null) profile.setAvailableDays(request.getAvailableDays());
+        if (request.getSkills() != null) profile.setSkills(toJson(request.getSkills()));
+        if (request.getAvailableDays() != null) profile.setAvailableDays(toJson(request.getAvailableDays()));
         profile.setUpdatedAt(LocalDateTime.now());
 
         if (existing.isPresent()) {
@@ -77,11 +83,30 @@ public class ProfileServiceImpl implements ProfileService {
         response.setName(profile.getName());
         response.setPhone(profile.getPhone());
         response.setAvatarUrl(profile.getAvatarUrl());
-        response.setSkills(profile.getSkills());
-        response.setAvailableDays(profile.getAvailableDays());
+        response.setSkills(fromJson(profile.getSkills()));
+        response.setAvailableDays(fromJson(profile.getAvailableDays()));
         response.setCreatedAt(profile.getCreatedAt());
         response.setUpdatedAt(profile.getUpdatedAt());
         return response;
+    }
+
+    private String toJson(List<String> list) {
+        try {
+            return objectMapper.writeValueAsString(list);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize list to JSON", e);
+        }
+    }
+
+    private List<String> fromJson(String json) {
+        if (json == null || json.isEmpty()) {
+            return Collections.emptyList();
+        }
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<String>>() {});
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to parse JSON list: " + json, e);
+        }
     }
 
     private ResumeVO toResumeResponse(WorkerResume resume) {

@@ -14,6 +14,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 
 class ProfileServiceTest {
 
@@ -33,8 +34,8 @@ class ProfileServiceTest {
         request.setName("John");
         request.setPhone("13800138000");
         request.setAvatarUrl("http://avatar.url");
-        request.setSkills("welding, plumbing");
-        request.setAvailableDays("[1,2,3,4,5]");
+        request.setSkills(List.of("welding", "plumbing"));
+        request.setAvailableDays(List.of("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"));
 
         ProfileVO response = profileService.updateProfile(1L, request);
 
@@ -42,8 +43,8 @@ class ProfileServiceTest {
         assertThat(response.getName()).isEqualTo("John");
         assertThat(response.getPhone()).isEqualTo("13800138000");
         assertThat(response.getAvatarUrl()).isEqualTo("http://avatar.url");
-        assertThat(response.getSkills()).isEqualTo("welding, plumbing");
-        assertThat(response.getAvailableDays()).isEqualTo("[1,2,3,4,5]");
+        assertThat(response.getSkills()).containsExactly("welding", "plumbing");
+        assertThat(response.getAvailableDays()).containsExactly("Monday", "Tuesday", "Wednesday", "Thursday", "Friday");
         assertThat(response.getCreatedAt()).isNotNull();
         assertThat(response.getUpdatedAt()).isNotNull();
     }

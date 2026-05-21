@@ -5,6 +5,9 @@
     <resultMap id="RecordResultMap" type="com.parttime.enterprise.pojo.entity.AttendanceRecord">
         <id property="id" column="id"/>
         <result property="shiftId" column="shift_id"/>
+        <result property="jobId" column="job_id"/>
+        <result property="companyId" column="company_id"/>
+        <result property="workerId" column="worker_id"/>
         <result property="checkInTime" column="check_in_time"/>
         <result property="checkInLat" column="check_in_lat"/>
         <result property="checkInLng" column="check_in_lng"/>
@@ -12,20 +15,19 @@
         <result property="checkOutLat" column="check_out_lat"/>
         <result property="checkOutLng" column="check_out_lng"/>
         <result property="totalHours" column="total_hours"/>
-        <result property="payAmount" column="pay_amount"/>
+        <result property="scheduledPay" column="scheduled_pay"/>
+        <result property="payablePay" column="payable_pay"/>
+        <result property="isPaid" column="is_paid"/>
         <result property="calculatedAt" column="calculated_at"/>
-        <result property="status" column="status"/>
-        <result property="createdAt" column="created_at"/>
-        <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO attendance_records (shift_id, check_in_time, check_in_lat, check_in_lng,
+        INSERT INTO attendance_records (shift_id, job_id, company_id, worker_id, check_in_time, check_in_lat, check_in_lng,
                                         check_out_time, check_out_lat, check_out_lng,
-                                        total_hours, pay_amount, calculated_at, status)
-        VALUES (#{shiftId}, #{checkInTime}, #{checkInLat}, #{checkInLng},
+                                        total_hours, scheduled_pay, payable_pay, is_paid, calculated_at, status, remark)
+        VALUES (#{shiftId}, #{jobId}, #{companyId}, #{workerId}, #{checkInTime}, #{checkInLat}, #{checkInLng},
                 #{checkOutTime}, #{checkOutLat}, #{checkOutLng},
-                #{totalHours}, #{payAmount}, #{calculatedAt}, #{status})
+                #{totalHours}, #{scheduledPay}, #{payablePay}, #{isPaid}, #{calculatedAt}, #{status}, #{remark})
     </insert>
 
     <select id="findById" resultMap="RecordResultMap">
@@ -45,10 +47,93 @@
 
     <update id="update">
         UPDATE attendance_records
-        SET check_in_time = #{checkInTime}, check_in_lat = #{checkInLat}, check_in_lng = #{checkInLng},
+        SET job_id = #{jobId}, company_id = #{companyId}, worker_id = #{workerId}, check_in_time = #{checkInTime},
+            check_in_lat = #{checkInLat}, check_in_lng = #{checkInLng},
             check_out_time = #{checkOutTime}, check_out_lat = #{checkOutLat}, check_out_lng = #{checkOutLng},
-            total_hours = #{totalHours}, pay_amount = #{payAmount}, calculated_at = #{calculatedAt}, status = #{status}
+            total_hours = #{totalHours}, scheduled_pay = #{scheduledPay}, payable_pay = #{payablePay}, is_paid = #{isPaid},
+            calculated_at = #{calculatedAt}, status = #{status}, remark = #{remark}
         WHERE id = #{id}
     </update>
+
+    <resultMap id="HoursResultMap" type="com.parttime.enterprise.pojo.vo.AttendanceHoursVO">
+        <id property="id" column="id"/>
+        <result property="workerId" column="worker_id"/>
+        <result property="workerName" column="worker_name"/>
+        <result property="jobId" column="job_id"/>
+        <result property="companyId" column="company_id"/>
+        <result property="jobTitle" column="job_title"/>
+        <result property="shiftDate" column="shift_date"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="salaryType" column="salary_type"/>
+        <result property="salaryAmount" column="salary_amount"/>
+        <result property="totalHours" column="total_hours"/>
+        <result property="scheduledPay" column="scheduled_pay"/>
+        <result property="payablePay" column="payable_pay"/>
+        <result property="isPaid" column="is_paid"/>
+        <result property="checkInTime" column="check_in_time"/>
+        <result property="checkOutTime" column="check_out_time"/>
+    </resultMap>
+
+    <select id="findHours" resultMap="HoursResultMap">
+        SELECT a.id, a.worker_id, w.name AS worker_name,
+               a.job_id, j.title AS job_title, s.shift_date, s.start_time, s.end_time,
+               s.salary_type, s.salary_amount, a.total_hours, a.scheduled_pay, a.payable_pay, a.is_paid,
+               a.check_in_time, a.check_out_time
+        FROM attendance_records a
+        JOIN schedule_shifts s ON a.shift_id = s.id
+        JOIN jobs j ON a.job_id = j.id
+        LEFT JOIN c_worker w ON a.worker_id = w.id
+        WHERE a.company_id = #{companyId}
+        <if test="workerName != null and workerName != ''">
+            AND w.name LIKE CONCAT('%', #{workerName}, '%')
+        </if>
+        <if test="dateFrom != null">
+            AND s.shift_date &gt;= #{dateFrom}
+        </if>
+        <if test="dateTo != null">
+            AND s.shift_date &lt;= #{dateTo}
+        </if>
+        <if test="isPaid != null">
+            AND a.is_paid = #{isPaid}
+        </if>
+        ORDER BY a.id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countHours" resultType="long">
+        SELECT COUNT(*)
+        FROM attendance_records a
+        JOIN schedule_shifts s ON a.shift_id = s.id
+        JOIN jobs j ON a.job_id = j.id
+        LEFT JOIN c_worker w ON a.worker_id = w.id
+        WHERE a.company_id = #{companyId}
+        <if test="workerName != null and workerName != ''">
+            AND w.name LIKE CONCAT('%', #{workerName}, '%')
+        </if>
+        <if test="dateFrom != null">
+            AND s.shift_date &gt;= #{dateFrom}
+        </if>
+        <if test="dateTo != null">
+            AND s.shift_date &lt;= #{dateTo}
+        </if>
+        <if test="isPaid != null">
+            AND a.is_paid = #{isPaid}
+        </if>
+    </select>
+
+    <update id="updatePaidStatus">
+        UPDATE attendance_records SET is_paid = #{isPaid} WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <delete id="deleteByIds">
+        DELETE FROM attendance_records WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
 
 </mapper>

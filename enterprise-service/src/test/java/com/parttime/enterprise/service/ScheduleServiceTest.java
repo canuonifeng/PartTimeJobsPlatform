@@ -245,10 +245,10 @@ class ScheduleServiceTest {
     @Test
     void attendanceRecordVO_shouldExposePaySnapshotFields() {
         AttendanceRecordVO response = new AttendanceRecordVO();
-        response.setPayAmount(new BigDecimal("123.45"));
+        response.setScheduledPay(new BigDecimal("123.45"));
         response.setCalculatedAt(LocalDateTime.of(2026, 6, 1, 18, 30));
 
-        assertThat(response.getPayAmount()).isEqualByComparingTo(new BigDecimal("123.45"));
+        assertThat(response.getScheduledPay()).isEqualByComparingTo(new BigDecimal("123.45"));
         assertThat(response.getCalculatedAt()).isEqualTo(LocalDateTime.of(2026, 6, 1, 18, 30));
     }
 

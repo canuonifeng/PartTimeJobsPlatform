@@ -1,5 +1,6 @@
 package com.parttime.enterprise.service.impl;
 
+import com.parttime.enterprise.enums.ShiftStatus;
 import com.parttime.enterprise.mapper.AttendanceRecordMapper;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.JobMapper;
@@ -130,7 +131,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         shift.setLocationLng(request.getLocationLng());
         shift.setLocationRadius(request.getLocationRadius());
         shift.setLocationName(request.getLocationName());
-        shift.setStatus("SCHEDULED");
+        shift.setStatus(ShiftStatus.SCHEDULED.name());
         shiftMapper.insert(shift);
         Long shiftId = shift.getId();
         shift = shiftMapper.findById(shiftId)

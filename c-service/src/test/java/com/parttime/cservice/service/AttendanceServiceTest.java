@@ -27,6 +27,7 @@ class AttendanceServiceTest {
         MockitoAnnotations.openMocks(this);
         ReflectionTestUtils.setField(attendanceService, "shiftMapper", InMemoryMappers.createShiftMapper());
         ReflectionTestUtils.setField(attendanceService, "attendanceRecordMapper", InMemoryMappers.createAttendanceRecordMapper());
+        ReflectionTestUtils.setField(attendanceService, "correctionMapper", InMemoryMappers.createAttendanceCorrectionMapper());
     }
 
     @Test

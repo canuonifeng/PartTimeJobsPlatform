@@ -21,4 +21,19 @@ public class SecurityUtil {
         }
         return 1L;
     }
+
+    @SuppressWarnings("unchecked")
+    public static Long getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return 0L;
+        }
+        if (auth.getDetails() instanceof Map<?, ?> details) {
+            Object userId = details.get("userId");
+            if (userId instanceof Number num) {
+                return num.longValue();
+            }
+        }
+        return 0L;
+    }
 }

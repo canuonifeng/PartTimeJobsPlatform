@@ -104,14 +104,14 @@ class SnapshotMapperTest {
         record.setCheckInTime(LocalDateTime.of(2026, 6, 1, 9, 0));
         record.setCheckOutTime(LocalDateTime.of(2026, 6, 1, 18, 0));
         record.setTotalHours(new BigDecimal("9.00"));
-        record.setPayAmount(new BigDecimal("225.00"));
+        record.setScheduledPay(new BigDecimal("225.00"));
         record.setCalculatedAt(LocalDateTime.of(2026, 6, 1, 18, 10));
         record.setStatus("CHECKED_OUT");
 
         attendanceRecordMapper.insert(record);
 
         AttendanceRecord loaded = attendanceRecordMapper.findByShiftId(shift.getId()).orElseThrow();
-        assertThat(loaded.getPayAmount()).isEqualByComparingTo(new BigDecimal("225.00"));
+        assertThat(loaded.getScheduledPay()).isEqualByComparingTo(new BigDecimal("225.00"));
         assertThat(loaded.getCalculatedAt()).isEqualTo(LocalDateTime.of(2026, 6, 1, 18, 10));
     }
 }

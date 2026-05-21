@@ -89,6 +89,13 @@
         DELETE FROM schedule_shifts WHERE id = #{id}
     </delete>
 
+    <select id="findByIds" resultMap="ShiftResultMap">
+        SELECT * FROM schedule_shifts WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
     <select id="findCompletedByWorkerIdAndCompanyId" resultMap="ShiftResultMap">
         SELECT ss.* FROM schedule_shifts ss
         JOIN jobs j ON ss.job_id = j.id

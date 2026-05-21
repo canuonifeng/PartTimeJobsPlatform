@@ -16,7 +16,7 @@
       </view>
       <view class="info-row">
         <text class="info-label">可工作日期</text>
-        <text class="info-value">{{ profile?.availableDays?.join('、') || '暂无' }}</text>
+        <text class="info-value">{{ profile?.availableDays?.map((d: string) => dayLabelMap[d] || d).join('、') || '暂无' }}</text>
       </view>
     </view>
 
@@ -49,6 +49,11 @@
 import { ref, onMounted } from 'vue'
 import { useAuthStore } from '@/store'
 import { getProfile } from '@/api/profile'
+
+const dayLabelMap: Record<string, string> = {
+  Monday: '周一', Tuesday: '周二', Wednesday: '周三', Thursday: '周四',
+  Friday: '周五', Saturday: '周六', Sunday: '周日'
+}
 
 const authStore = useAuthStore()
 const profile = ref<any>(null)

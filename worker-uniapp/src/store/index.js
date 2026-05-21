@@ -38,6 +38,26 @@ export const useAuthStore = defineStore('auth', () => {
     return null
   }
 
+  async function sendSmsCode(phone) {
+    await request({
+      url: '/api/auth/send-code',
+      method: 'POST',
+      data: { phone }
+    })
+  }
+
+  async function phoneLogin(phone, code) {
+    const data = await request({
+      url: '/api/auth/phone-login',
+      method: 'POST',
+      data: { phone, code }
+    })
+    token.value = data.token
+    uni.setStorageSync('token', data.token)
+    workerInfo.value = null
+    return data
+  }
+
   async function wechatLogin() {
     return new Promise((resolve, reject) => {
       uni.login({
@@ -99,6 +119,8 @@ export const useAuthStore = defineStore('auth', () => {
     isLoggedIn,
     loadSession,
     wechatLogin,
+    phoneLogin,
+    sendSmsCode,
     loadWorkerInfo,
     setWorkerInfo,
     logout

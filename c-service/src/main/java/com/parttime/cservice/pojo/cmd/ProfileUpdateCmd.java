@@ -3,6 +3,8 @@ package com.parttime.cservice.pojo.cmd;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class ProfileUpdateCmd {
 
@@ -13,7 +15,7 @@ public class ProfileUpdateCmd {
     @Schema(description = "头像URL")
     private String avatarUrl;
     @Schema(description = "技能特长")
-    private String skills;
+    private List<String> skills;
     @Schema(description = "可工作日期")
-    private String availableDays;
+    private List<String> availableDays;
 }

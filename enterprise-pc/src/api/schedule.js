@@ -39,3 +39,15 @@ export function deleteShift(id) {
 export function getAttendanceReport(params) {
   return request.get('/attendance/report', { params })
 }
+
+export function listCorrections(params) {
+  return request.get('/schedules/corrections', { params })
+}
+
+export function approveCorrection(id) {
+  return request.put(`/schedules/corrections/${id}/approve`)
+}
+
+export function rejectCorrection(id, data) {
+  return request.put(`/schedules/corrections/${id}/reject`, data)
+}

@@ -55,6 +55,12 @@ const routes = [
     meta: { requiresAuth: true, title: '排班管理' }
   },
   {
+    path: '/attendance/hours',
+    name: 'AttendanceHoursList',
+    component: () => import('../views/attendance/AttendanceHoursList.vue'),
+    meta: { requiresAuth: true, title: '考勤工时' }
+  },
+  {
     path: '/payroll',
     name: 'PayrollBatchList',
     component: () => import('../views/payroll/PayrollBatchList.vue'),

@@ -1,6 +1,7 @@
 package com.parttime.cservice.service;
 
 import com.parttime.cservice.pojo.cmd.LoginCmd;
+import com.parttime.cservice.pojo.cmd.PhoneLoginCmd;
 import com.parttime.cservice.pojo.cmd.RegisterCmd;
 import com.parttime.cservice.pojo.cmd.WeChatLoginCmd;
 import com.parttime.cservice.pojo.vo.LoginVO;
@@ -10,6 +11,8 @@ public interface WorkerService {
     WorkerVO register(RegisterCmd request);
     String login(String wechatCode);
     LoginVO loginWithWechat(String code);
+    LoginVO loginByPhone(PhoneLoginCmd request);
+    void sendSmsCode(String phone);
     WorkerVO getWorkerByOpenId(String openId);
     WorkerVO getWorkerById(Long id);
     WorkerVO updateProfile(Long id, RegisterCmd request);

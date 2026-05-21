@@ -3,9 +3,12 @@ package com.parttime.enterprise.controller;
 import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
 import com.parttime.enterprise.pojo.cmd.ScheduleTemplateCmd;
+import com.parttime.enterprise.pojo.dto.CorrectionRejectCmd;
 import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
+import com.parttime.enterprise.pojo.vo.CorrectionVO;
 import com.parttime.enterprise.pojo.vo.ScheduleShiftVO;
 import com.parttime.enterprise.pojo.vo.ScheduleTemplateVO;
+import com.parttime.enterprise.service.CorrectionService;
 import com.parttime.enterprise.service.ScheduleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -25,6 +28,8 @@ public class ScheduleController {
 
     @Resource
     private ScheduleService scheduleService;
+    @Resource
+    private CorrectionService correctionService;
 
     @Operation(summary = "创建排班模板", description = "创建新的排班模板，包含多个时段")
     @PostMapping("/schedule-templates")
@@ -100,5 +105,30 @@ public class ScheduleController {
             @Parameter(description = "班次ID") @RequestParam(required = false) Long shiftId,
             @Parameter(description = "日期") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return scheduleService.getAttendanceReport(jobId, shiftId, date);
+    }
+
+    @Operation(summary = "补卡申请列表", description = "查看补卡申请列表，支持分页和筛选")
+    @GetMapping("/schedules/corrections")
+    public Map<String, Object> listCorrections(
+            @Parameter(description = "状态") @RequestParam(required = false) String status,
+            @Parameter(description = "岗位关键词") @RequestParam(required = false) String keyword,
+            @Parameter(description = "开始日期") @RequestParam(required = false) String dateFrom,
+            @Parameter(description = "结束日期") @RequestParam(required = false) String dateTo,
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(description = "每页数量") @RequestParam(defaultValue = "20") Integer pageSize) {
+        return correctionService.listCorrections(status, keyword, dateFrom, dateTo, page, pageSize);
+    }
+
+    @Operation(summary = "通过补卡申请", description = "通过补卡申请并生成/更新考勤记录")
+    @PutMapping("/schedules/corrections/{id}/approve")
+    public void approveCorrection(@Parameter(description = "补卡申请ID") @PathVariable Long id) {
+        correctionService.approve(id, SecurityUtil.getCurrentUserId());
+    }
+
+    @Operation(summary = "拒绝补卡申请", description = "拒绝补卡申请")
+    @PutMapping("/schedules/corrections/{id}/reject")
+    public void rejectCorrection(@Parameter(description = "补卡申请ID") @PathVariable Long id,
+                                  @RequestBody CorrectionRejectCmd cmd) {
+        correctionService.reject(id, SecurityUtil.getCurrentUserId(), cmd.getRejectReason());
     }
 }
