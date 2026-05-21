@@ -35,6 +35,8 @@ public class JobVO {
     private BigDecimal longitude;
     @Schema(description = "岗位分类ID")
     private Long categoryId;
+    @Schema(description = "岗位分类名称")
+    private String categoryName;
     @Schema(description = "招聘人数")
     private Integer headcount;
     @Schema(description = "岗位状态")

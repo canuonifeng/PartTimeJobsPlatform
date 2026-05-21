@@ -93,7 +93,6 @@ public class EnterpriseServiceImpl implements EnterpriseService {
         vo.setCompanyAddress(e.getCompanyAddress());
         vo.setBusinessLicense(e.getBusinessLicense());
         vo.setStatus(e.getStatus());
-        vo.setRegistrationId(e.getRegistrationId());
         vo.setCreatedAt(e.getCreatedAt());
         vo.setUpdatedAt(e.getUpdatedAt());
         return vo;

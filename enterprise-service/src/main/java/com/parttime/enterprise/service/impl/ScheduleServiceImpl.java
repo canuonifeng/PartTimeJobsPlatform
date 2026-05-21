@@ -5,20 +5,13 @@ import com.parttime.enterprise.mapper.AttendanceRecordMapper;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
-import com.parttime.enterprise.mapper.ScheduleTemplateMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
-import com.parttime.enterprise.pojo.cmd.ScheduleTemplateCmd;
-import com.parttime.enterprise.pojo.cmd.ScheduleTemplateSlotCmd;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
 import com.parttime.enterprise.pojo.entity.Job;
 import com.parttime.enterprise.pojo.entity.ScheduleShift;
-import com.parttime.enterprise.pojo.entity.ScheduleTemplate;
-import com.parttime.enterprise.pojo.entity.ScheduleTemplateSlot;
 import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
 import com.parttime.enterprise.pojo.vo.ScheduleShiftVO;
-import com.parttime.enterprise.pojo.vo.ScheduleTemplateSlotVO;
-import com.parttime.enterprise.pojo.vo.ScheduleTemplateVO;
 import com.parttime.enterprise.service.ScheduleService;
 import org.springframework.stereotype.Service;
 
@@ -32,8 +25,6 @@ import java.util.stream.Collectors;
 public class ScheduleServiceImpl implements ScheduleService {
 
     @Resource
-    private ScheduleTemplateMapper templateMapper;
-    @Resource
     private ScheduleShiftMapper shiftMapper;
     @Resource
     private AttendanceRecordMapper attendanceRecordMapper;
@@ -45,84 +36,9 @@ public class ScheduleServiceImpl implements ScheduleService {
     private WorkerSyncMapper workerSyncMapper;
 
     @Override
-    public ScheduleTemplateVO createTemplate(ScheduleTemplateCmd request) {
-        ScheduleTemplate template = new ScheduleTemplate();
-        template.setCompanyId(request.getCompanyId());
-        template.setName(request.getName());
-        template.setDescription(request.getDescription());
-        templateMapper.insert(template);
-
-        if (request.getSlots() != null) {
-            for (ScheduleTemplateSlotCmd slotReq : request.getSlots()) {
-                ScheduleTemplateSlot slot = new ScheduleTemplateSlot();
-                slot.setTemplateId(template.getId());
-                slot.setDayOfWeek(slotReq.getDayOfWeek());
-                slot.setStartTime(slotReq.getStartTime());
-                slot.setEndTime(slotReq.getEndTime());
-                slot.setMaxWorkers(slotReq.getMaxWorkers());
-                slot.setLocationLat(slotReq.getLocationLat());
-                slot.setLocationLng(slotReq.getLocationLng());
-                slot.setLocationRadius(slotReq.getLocationRadius());
-                slot.setLocationName(slotReq.getLocationName());
-                templateMapper.insertSlot(slot);
-            }
-        }
-
-        return toTemplateResponse(template);
-    }
-
-    @Override
-    public ScheduleTemplateVO getTemplateById(Long id) {
-        ScheduleTemplate template = templateMapper.findById(id)
-                .orElseThrow(() -> new RuntimeException("ScheduleTemplate not found: " + id));
-        return toFullTemplateResponse(template);
-    }
-
-    @Override
-    public List<ScheduleTemplateVO> getTemplatesByCompany(Long companyId) {
-        return templateMapper.findByCompanyId(companyId).stream()
-                .map(this::toTemplateResponse)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public ScheduleTemplateVO updateTemplate(Long id, ScheduleTemplateCmd request) {
-        ScheduleTemplate template = templateMapper.findById(id)
-                .orElseThrow(() -> new RuntimeException("ScheduleTemplate not found: " + id));
-        template.setName(request.getName());
-        template.setDescription(request.getDescription());
-        templateMapper.update(template);
-
-        templateMapper.deleteSlotsByTemplateId(id);
-        if (request.getSlots() != null) {
-            for (ScheduleTemplateSlotCmd slotReq : request.getSlots()) {
-                ScheduleTemplateSlot slot = new ScheduleTemplateSlot();
-                slot.setTemplateId(id);
-                slot.setDayOfWeek(slotReq.getDayOfWeek());
-                slot.setStartTime(slotReq.getStartTime());
-                slot.setEndTime(slotReq.getEndTime());
-                slot.setMaxWorkers(slotReq.getMaxWorkers());
-                slot.setLocationLat(slotReq.getLocationLat());
-                slot.setLocationLng(slotReq.getLocationLng());
-                slot.setLocationRadius(slotReq.getLocationRadius());
-                slot.setLocationName(slotReq.getLocationName());
-                templateMapper.insertSlot(slot);
-            }
-        }
-
-        return toFullTemplateResponse(template);
-    }
-
-    @Override
-    public void deleteTemplate(Long id) {
-        templateMapper.delete(id);
-    }
-
-    @Override
     public ScheduleShiftVO assignShift(ScheduleShiftCmd request) {
         ScheduleShift shift = new ScheduleShift();
         shift.setJobId(request.getJobId());
-        shift.setTemplateSlotId(request.getTemplateSlotId());
         shift.setWorkerId(request.getWorkerId());
         shift.setShiftDate(request.getShiftDate());
         shift.setStartTime(request.getStartTime());
@@ -190,7 +106,6 @@ public class ScheduleServiceImpl implements ScheduleService {
         ScheduleShift shift = shiftMapper.findById(id)
                 .orElseThrow(() -> new RuntimeException("ScheduleShift not found: " + id));
         shift.setJobId(request.getJobId());
-        shift.setTemplateSlotId(request.getTemplateSlotId());
         shift.setWorkerId(request.getWorkerId());
         shift.setShiftDate(request.getShiftDate());
         shift.setStartTime(request.getStartTime());
@@ -258,42 +173,6 @@ public class ScheduleServiceImpl implements ScheduleService {
         }).collect(Collectors.toList());
     }
 
-    private ScheduleTemplateVO toTemplateResponse(ScheduleTemplate template) {
-        ScheduleTemplateVO response = new ScheduleTemplateVO();
-        response.setId(template.getId());
-        response.setCompanyId(template.getCompanyId());
-        response.setName(template.getName());
-        response.setDescription(template.getDescription());
-        response.setCreatedAt(template.getCreatedAt());
-        response.setUpdatedAt(template.getUpdatedAt());
-        return response;
-    }
-
-    private ScheduleTemplateVO toFullTemplateResponse(ScheduleTemplate template) {
-        ScheduleTemplateVO response = toTemplateResponse(template);
-        List<ScheduleTemplateSlotVO> slotResponses = templateMapper.findSlotsByTemplateId(template.getId())
-                .stream().map(this::toSlotResponse).collect(Collectors.toList());
-        response.setSlots(slotResponses);
-        return response;
-    }
-
-    private ScheduleTemplateSlotVO toSlotResponse(ScheduleTemplateSlot slot) {
-        ScheduleTemplateSlotVO response = new ScheduleTemplateSlotVO();
-        response.setId(slot.getId());
-        response.setTemplateId(slot.getTemplateId());
-        response.setDayOfWeek(slot.getDayOfWeek());
-        response.setStartTime(slot.getStartTime());
-        response.setEndTime(slot.getEndTime());
-        response.setMaxWorkers(slot.getMaxWorkers());
-        response.setLocationLat(slot.getLocationLat());
-        response.setLocationLng(slot.getLocationLng());
-        response.setLocationRadius(slot.getLocationRadius());
-        response.setLocationName(slot.getLocationName());
-        response.setCreatedAt(slot.getCreatedAt());
-        response.setUpdatedAt(slot.getUpdatedAt());
-        return response;
-    }
-
     private ScheduleShiftVO toShiftResponse(ScheduleShift shift) {
         return toShiftResponse(shift, null);
     }
@@ -308,7 +187,6 @@ public class ScheduleServiceImpl implements ScheduleService {
         response.setSalaryType(shift.getSalaryType());
         response.setSalaryAmount(shift.getSalaryAmount());
         response.setSalaryCurrency(shift.getSalaryCurrency());
-        response.setTemplateSlotId(shift.getTemplateSlotId());
         response.setWorkerId(shift.getWorkerId());
         response.setShiftDate(shift.getShiftDate());
         response.setStartTime(shift.getStartTime());

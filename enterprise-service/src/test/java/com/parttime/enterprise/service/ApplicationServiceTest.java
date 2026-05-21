@@ -78,7 +78,7 @@ class ApplicationServiceTest {
         when(workerSyncMapper.findWorkerPhoneById(10L)).thenReturn("13800000000");
         when(jobMapper.findById(100L)).thenReturn(Optional.of(new Job()));
 
-        List<JobApplicationVO> result = applicationService.getApplicationsByJob(100L, null, null);
+        List<JobApplicationVO> result = applicationService.getApplicationsByJob(1L, 100L, null, null);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo(1L);
@@ -109,7 +109,7 @@ class ApplicationServiceTest {
         when(workerSyncMapper.findWorkerPhoneById(10L)).thenReturn("13800000000");
         when(jobMapper.findById(100L)).thenReturn(Optional.of(new Job()));
 
-        List<JobApplicationVO> result = applicationService.getApplicationsByJob(100L, null, null, 1, 1);
+        List<JobApplicationVO> result = applicationService.getApplicationsByJob(1L, 100L, null, null, 1, 1);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getId()).isEqualTo(1L);

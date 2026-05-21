@@ -7,9 +7,6 @@
         <el-menu-item index="/dashboard">
           <el-icon><DataAnalysis /></el-icon><span>仪表盘</span>
         </el-menu-item>
-        <el-menu-item index="/registrations">
-          <el-icon><DocumentChecked /></el-icon><span>注册审核</span>
-        </el-menu-item>
         <el-menu-item index="/job-reports">
           <el-icon><Warning /></el-icon><span>职位举报</span>
         </el-menu-item>
@@ -43,7 +40,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
-import { DataAnalysis, DocumentChecked, Warning, Setting, Folder, OfficeBuilding, User } from '@element-plus/icons-vue'
+import { DataAnalysis, Warning, Setting, Folder, OfficeBuilding, User } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()

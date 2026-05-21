@@ -45,12 +45,12 @@ public class ApplicationServiceImpl implements ApplicationService {
     private CompanyWorkerMapper companyWorkerMapper;
 
     @Override
-    public List<JobApplicationVO> getApplicationsByJob(Long jobId, String jobTitle, String status, Integer page, Integer pageSize) {
+    public List<JobApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, String status, Integer page, Integer pageSize) {
         List<JobApplication> apps;
         if (jobId != null) {
             apps = applicationMapper.findByJobId(jobId);
         } else {
-            apps = applicationMapper.findAll();
+            apps = applicationMapper.findByCompanyId(companyId);
         }
         List<JobApplication> filtered = apps.stream()
                 .filter(app -> status == null || status.isEmpty() || status.equals(app.getStatus()))

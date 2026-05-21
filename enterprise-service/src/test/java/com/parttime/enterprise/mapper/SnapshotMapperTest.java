@@ -18,12 +18,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Sql(statements = {
         "DROP TABLE IF EXISTS attendance_records",
         "DROP TABLE IF EXISTS schedule_shifts",
-        "DROP TABLE IF EXISTS schedule_template_slots",
-        "CREATE TABLE schedule_template_slots (id BIGINT PRIMARY KEY AUTO_INCREMENT)",
         "CREATE TABLE schedule_shifts (" +
                 "id BIGINT PRIMARY KEY AUTO_INCREMENT, " +
                 "job_id BIGINT NOT NULL, " +
-                "template_slot_id BIGINT, " +
                 "application_id BIGINT, " +
                 "worker_id BIGINT NOT NULL, " +
                 "shift_date DATE NOT NULL, " +
@@ -38,8 +35,7 @@ import static org.assertj.core.api.Assertions.assertThat;
                 "location_name VARCHAR(255), " +
                 "status VARCHAR(20) NOT NULL DEFAULT 'SCHEDULED', " +
                 "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
-                "updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
-                "FOREIGN KEY (template_slot_id) REFERENCES schedule_template_slots(id))" ,
+                "updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)" ,
         "CREATE TABLE attendance_records (" +
                 "id BIGINT PRIMARY KEY AUTO_INCREMENT, " +
                 "shift_id BIGINT NOT NULL, " +

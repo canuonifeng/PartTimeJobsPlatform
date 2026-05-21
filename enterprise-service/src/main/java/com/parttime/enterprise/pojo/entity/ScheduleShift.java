@@ -22,8 +22,6 @@ public class ScheduleShift {
     private BigDecimal salaryAmount;
     @Schema(description = "薪资币种快照")
     private String salaryCurrency;
-    @Schema(description = "模板时段ID")
-    private Long templateSlotId;
     @Schema(description = "工人ID")
     private Long workerId;
     @Schema(description = "班次日期")

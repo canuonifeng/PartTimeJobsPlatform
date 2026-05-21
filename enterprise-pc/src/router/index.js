@@ -43,12 +43,6 @@ const routes = [
     meta: { requiresAuth: true, title: '应聘管理' }
   },
   {
-    path: '/schedules/templates',
-    name: 'ScheduleTemplateList',
-    component: () => import('../views/schedules/ScheduleTemplateList.vue'),
-    meta: { requiresAuth: true, title: '排班模板' }
-  },
-  {
     path: '/schedules/shifts',
     name: 'ScheduleShiftList',
     component: () => import('../views/schedules/ScheduleShiftList.vue'),

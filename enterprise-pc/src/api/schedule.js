@@ -1,25 +1,5 @@
 import request from './request'
 
-export function listTemplates(params) {
-  return request.get('/schedule-templates', { params })
-}
-
-export function getTemplate(id) {
-  return request.get('/schedule-templates', { params: { id } })
-}
-
-export function createTemplate(data) {
-  return request.post('/schedule-templates', data)
-}
-
-export function updateTemplate(id, data) {
-  return request.put('/schedule-templates', data, { params: { id } })
-}
-
-export function deleteTemplate(id) {
-  return request.delete('/schedule-templates', { params: { id } })
-}
-
 export function listShifts(params) {
   return request.get('/schedule-shifts', { params })
 }

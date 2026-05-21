@@ -1,5 +1,6 @@
 package com.parttime.enterprise.controller;
 
+import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.pojo.vo.JobApplicationVO;
 import com.parttime.enterprise.service.ApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,7 +23,7 @@ public class ApplicationController {
     @Resource
     private ApplicationService applicationService;
 
-    @Operation(summary = "获取岗位申请列表", description = "根据岗位ID获取所有申请记录")
+    @Operation(summary = "获取岗位申请列表", description = "根据企业ID获取所有申请记录")
     @GetMapping
     public List<JobApplicationVO> getApplicationsByJob(
             @Parameter(description = "岗位ID") @RequestParam(required = false) Long jobId,
@@ -30,7 +31,8 @@ public class ApplicationController {
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "页码") @RequestParam(required = false, defaultValue = "1") Integer page,
             @Parameter(description = "每页数量") @RequestParam(required = false, defaultValue = "20") Integer pageSize) {
-        return applicationService.getApplicationsByJob(jobId, jobTitle, status, page, pageSize);
+        Long companyId = SecurityUtil.getCurrentCompanyId();
+        return applicationService.getApplicationsByJob(companyId, jobId, jobTitle, status, page, pageSize);
     }
 
     @Operation(summary = "通过申请", description = "通过工人的岗位申请")

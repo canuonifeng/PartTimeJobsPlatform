@@ -61,6 +61,8 @@ public class CompanyWorkerServiceImpl implements CompanyWorkerService {
         vo.setLastContactAt(cw.getLastContactAt());
         String name = workerSyncMapper.findWorkerNameById(cw.getWorkerId());
         vo.setName(name);
+        String phone = workerSyncMapper.findWorkerPhoneById(cw.getWorkerId());
+        vo.setPhone(phone);
         return vo;
     }
 }

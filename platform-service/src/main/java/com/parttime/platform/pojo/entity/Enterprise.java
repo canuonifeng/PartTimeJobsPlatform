@@ -22,8 +22,6 @@ public class Enterprise {
     private String businessLicense;
     @Schema(description = "状态: ACTIVE/SUSPENDED")
     private String status;
-    @Schema(description = "关联注册申请ID")
-    private Long registrationId;
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")

@@ -9,7 +9,6 @@
         <result property="salaryType" column="salary_type"/>
         <result property="salaryAmount" column="salary_amount"/>
         <result property="salaryCurrency" column="salary_currency"/>
-        <result property="templateSlotId" column="template_slot_id"/>
         <result property="workerId" column="worker_id"/>
         <result property="shiftDate" column="shift_date"/>
         <result property="startTime" column="start_time"/>
@@ -25,10 +24,10 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO schedule_shifts (job_id, application_id, salary_type, salary_amount, salary_currency,
-                                     template_slot_id, worker_id, shift_date, start_time, end_time,
+                                     worker_id, shift_date, start_time, end_time,
                                      location_lat, location_lng, location_radius, location_name, status)
         VALUES (#{jobId}, #{applicationId}, #{salaryType}, #{salaryAmount}, #{salaryCurrency},
-                #{templateSlotId}, #{workerId}, #{shiftDate}, #{startTime}, #{endTime},
+                #{workerId}, #{shiftDate}, #{startTime}, #{endTime},
                 #{locationLat}, #{locationLng}, #{locationRadius}, #{locationName}, 'SCHEDULED')
     </insert>
 
@@ -74,7 +73,7 @@
         UPDATE schedule_shifts
         SET job_id = #{jobId}, application_id = #{applicationId}, salary_type = #{salaryType},
             salary_amount = #{salaryAmount}, salary_currency = #{salaryCurrency},
-            template_slot_id = #{templateSlotId}, worker_id = #{workerId},
+            worker_id = #{workerId},
             shift_date = #{shiftDate}, start_time = #{startTime}, end_time = #{endTime},
             location_lat = #{locationLat}, location_lng = #{locationLng},
             location_radius = #{locationRadius}, location_name = #{locationName}

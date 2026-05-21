@@ -2,17 +2,14 @@ package com.parttime.enterprise.controller;
 
 import com.parttime.enterprise.config.JwtTokenProvider;
 import com.parttime.enterprise.config.SecurityConfig;
-import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
-import com.parttime.enterprise.pojo.cmd.ScheduleTemplateCmd;
-import com.parttime.enterprise.pojo.cmd.ScheduleTemplateSlotCmd;
 import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
 import com.parttime.enterprise.pojo.vo.ScheduleShiftVO;
-import com.parttime.enterprise.pojo.vo.ScheduleTemplateVO;
 import com.parttime.enterprise.service.ScheduleService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -49,104 +46,6 @@ class ScheduleControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void createTemplate_shouldReturnCreated() throws Exception {
-        ScheduleTemplateVO response = new ScheduleTemplateVO();
-        response.setId(100L);
-        response.setCompanyId(1L);
-        response.setName("Morning Shift");
-
-        when(scheduleService.createTemplate(any())).thenReturn(response);
-
-        String json = """
-                {
-                    "companyId": 1,
-                    "name": "Morning Shift",
-                    "description": "Weekday morning",
-                    "slots": [
-                        {
-                            "dayOfWeek": 1,
-                            "startTime": "09:00:00",
-                            "endTime": "18:00:00",
-                            "maxWorkers": 5
-                        }
-                    ]
-                }
-                """;
-
-        mockMvc.perform(post("/api/schedule-templates")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(100))
-                .andExpect(jsonPath("$.name").value("Morning Shift"));
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void getTemplates_shouldReturnList() throws Exception {
-        ScheduleTemplateVO t1 = new ScheduleTemplateVO();
-        t1.setId(1L);
-        t1.setName("Morning");
-        ScheduleTemplateVO t2 = new ScheduleTemplateVO();
-        t2.setId(2L);
-        t2.setName("Evening");
-
-        when(scheduleService.getTemplatesByCompany(1L)).thenReturn(List.of(t1, t2));
-
-        mockMvc.perform(get("/api/schedule-templates")
-                        .param("companyId", "1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void getTemplateById_shouldReturnTemplate() throws Exception {
-        ScheduleTemplateVO response = new ScheduleTemplateVO();
-        response.setId(100L);
-        response.setName("Morning Shift");
-
-        when(scheduleService.getTemplateById(100L)).thenReturn(response);
-
-        mockMvc.perform(get("/api/schedule-templates").param("id", "100"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(100));
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void updateTemplate_shouldReturnOk() throws Exception {
-        ScheduleTemplateVO response = new ScheduleTemplateVO();
-        response.setId(100L);
-        response.setName("Updated Name");
-
-        when(scheduleService.updateTemplate(eq(100L), any())).thenReturn(response);
-
-        String json = """
-                {
-                    "companyId": 1,
-                    "name": "Updated Name",
-                    "description": "Updated"
-                }
-                """;
-
-        mockMvc.perform(put("/api/schedule-templates").param("id", "100")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated Name"));
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void deleteTemplate_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/schedule-templates").param("id", "100"))
-                .andExpect(status().isNoContent());
-        verify(scheduleService).deleteTemplate(100L);
-    }
 
     @Test
     @WithMockUser(roles = "ADMIN")

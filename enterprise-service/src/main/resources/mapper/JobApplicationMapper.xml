@@ -5,6 +5,7 @@
     <resultMap id="JobApplicationResultMap" type="com.parttime.enterprise.pojo.entity.JobApplication">
         <id property="id" column="id"/>
         <result property="jobId" column="job_id"/>
+        <result property="companyId" column="company_id"/>
         <result property="workerId" column="worker_id"/>
         <result property="status" column="status"/>
         <result property="appliedAt" column="applied_at"/>
@@ -12,8 +13,8 @@
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO job_applications (job_id, worker_id, status)
-        VALUES (#{jobId}, #{workerId}, #{status})
+        INSERT INTO job_applications (job_id, company_id, worker_id, status)
+        VALUES (#{jobId}, #{companyId}, #{workerId}, #{status})
     </insert>
 
     <select id="findById" resultMap="JobApplicationResultMap">
@@ -29,6 +30,10 @@
         WHERE job_id = #{jobId}
         ORDER BY applied_at DESC
         LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="findByCompanyId" resultMap="JobApplicationResultMap">
+        SELECT * FROM job_applications WHERE company_id = #{companyId} ORDER BY applied_at DESC
     </select>
 
     <select id="findByWorkerId" resultMap="JobApplicationResultMap">

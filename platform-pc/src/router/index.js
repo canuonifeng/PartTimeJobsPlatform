@@ -17,12 +17,6 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/registrations',
-    name: 'Registrations',
-    component: () => import('../views/registrations/RegistrationList.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
     path: '/job-reports',
     name: 'JobReports',
     component: () => import('../views/reports/JobReportList.vue'),

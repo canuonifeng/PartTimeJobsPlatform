@@ -4,6 +4,7 @@ import com.parttime.enterprise.enums.JobRateType;
 import com.parttime.enterprise.enums.JobStatus;
 import com.parttime.enterprise.exception.BusinessException;
 import com.parttime.enterprise.mapper.JobApplicationMapper;
+import com.parttime.enterprise.mapper.JobCategoryMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.JobRateMapper;
 import com.parttime.enterprise.mapper.JobScheduleMapper;
@@ -36,6 +37,8 @@ public class JobServiceImpl implements JobService {
     private JobScheduleMapper jobScheduleMapper;
     @Resource
     private JobApplicationMapper jobApplicationMapper;
+    @Resource
+    private JobCategoryMapper jobCategoryMapper;
 
     @Override
     public JobVO createJob(JobCreateCmd request) {
@@ -350,6 +353,12 @@ public class JobServiceImpl implements JobService {
         response.setLatitude(job.getLatitude());
         response.setLongitude(job.getLongitude());
         response.setCategoryId(job.getCategoryId());
+        if (job.getCategoryId() != null) {
+            String categoryName = jobCategoryMapper.findById(job.getCategoryId())
+                    .map(cat -> cat.getName())
+                    .orElse(null);
+            response.setCategoryName(categoryName);
+        }
         response.setHeadcount(job.getHeadcount());
         response.setStatus(JobStatus.valueOf(job.getStatus()));
         response.setApplicationCount(jobApplicationMapper.countByJobId(job.getId()));

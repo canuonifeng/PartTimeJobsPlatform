@@ -2,12 +2,10 @@ package com.parttime.enterprise.controller;
 
 import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
-import com.parttime.enterprise.pojo.cmd.ScheduleTemplateCmd;
 import com.parttime.enterprise.pojo.dto.CorrectionRejectCmd;
 import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
 import com.parttime.enterprise.pojo.vo.CorrectionVO;
 import com.parttime.enterprise.pojo.vo.ScheduleShiftVO;
-import com.parttime.enterprise.pojo.vo.ScheduleTemplateVO;
 import com.parttime.enterprise.service.CorrectionService;
 import com.parttime.enterprise.service.ScheduleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,39 +28,6 @@ public class ScheduleController {
     private ScheduleService scheduleService;
     @Resource
     private CorrectionService correctionService;
-
-    @Operation(summary = "创建排班模板", description = "创建新的排班模板，包含多个时段")
-    @PostMapping("/schedule-templates")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ScheduleTemplateVO createTemplate(@RequestBody ScheduleTemplateCmd request) {
-        return scheduleService.createTemplate(request);
-    }
-
-    @Operation(summary = "获取企业排班模板列表", description = "根据企业ID获取所有排班模板")
-    @GetMapping("/schedule-templates")
-    public List<ScheduleTemplateVO> getTemplates() {
-        Long companyId = SecurityUtil.getCurrentCompanyId();
-        return scheduleService.getTemplatesByCompany(companyId);
-    }
-
-    @Operation(summary = "获取排班模板详情", description = "根据ID获取排班模板详情")
-    @GetMapping(value = "/schedule-templates", params = "id")
-    public ScheduleTemplateVO getTemplate(@Parameter(description = "模板ID") @RequestParam Long id) {
-        return scheduleService.getTemplateById(id);
-    }
-
-    @Operation(summary = "更新排班模板", description = "更新排班模板信息")
-    @PutMapping("/schedule-templates")
-    public ScheduleTemplateVO updateTemplate(@Parameter(description = "模板ID") @RequestParam Long id, @RequestBody ScheduleTemplateCmd request) {
-        return scheduleService.updateTemplate(id, request);
-    }
-
-    @Operation(summary = "删除排班模板", description = "删除指定的排班模板")
-    @DeleteMapping("/schedule-templates")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTemplate(@Parameter(description = "模板ID") @RequestParam Long id) {
-        scheduleService.deleteTemplate(id);
-    }
 
     @Operation(summary = "分配班次", description = "为工人分配班次")
     @PostMapping("/schedule-shifts")

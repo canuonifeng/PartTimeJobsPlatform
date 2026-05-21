@@ -4,19 +4,13 @@ import com.parttime.enterprise.mapper.AttendanceRecordMapper;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
-import com.parttime.enterprise.mapper.ScheduleTemplateMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
-import com.parttime.enterprise.pojo.cmd.ScheduleTemplateCmd;
-import com.parttime.enterprise.pojo.cmd.ScheduleTemplateSlotCmd;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
 import com.parttime.enterprise.pojo.entity.ScheduleShift;
-import com.parttime.enterprise.pojo.entity.ScheduleTemplate;
-import com.parttime.enterprise.pojo.entity.ScheduleTemplateSlot;
 import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
 import com.parttime.enterprise.pojo.vo.AttendanceRecordVO;
 import com.parttime.enterprise.pojo.vo.ScheduleShiftVO;
-import com.parttime.enterprise.pojo.vo.ScheduleTemplateVO;
 import com.parttime.enterprise.service.impl.ScheduleServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,9 +36,6 @@ import static org.mockito.Mockito.*;
 class ScheduleServiceTest {
 
     @Mock
-    private ScheduleTemplateMapper templateMapper;
-
-    @Mock
     private ScheduleShiftMapper shiftMapper;
 
     @Mock
@@ -60,140 +51,10 @@ class ScheduleServiceTest {
     private WorkerSyncMapper workerSyncMapper;
 
     @Captor
-    private ArgumentCaptor<ScheduleTemplate> templateCaptor;
-
-    @Captor
-    private ArgumentCaptor<ScheduleTemplateSlot> slotCaptor;
-
-    @Captor
     private ArgumentCaptor<ScheduleShift> shiftCaptor;
 
     @InjectMocks
     private ScheduleServiceImpl scheduleService;
-
-    @Test
-    void createTemplate_shouldCreateAndReturnResponse() {
-        ScheduleTemplateSlotCmd slotReq = new ScheduleTemplateSlotCmd();
-        slotReq.setDayOfWeek(1);
-        slotReq.setStartTime(LocalTime.of(9, 0));
-        slotReq.setEndTime(LocalTime.of(18, 0));
-        slotReq.setMaxWorkers(5);
-        slotReq.setLocationName("Office A");
-
-        ScheduleTemplateCmd request = new ScheduleTemplateCmd();
-        request.setCompanyId(1L);
-        request.setName("Morning Shift");
-        request.setDescription("Weekday morning shift");
-        request.setSlots(List.of(slotReq));
-
-        doAnswer(invocation -> {
-            ScheduleTemplate t = invocation.getArgument(0);
-            t.setId(100L);
-            return 1;
-        }).when(templateMapper).insert(any(ScheduleTemplate.class));
-
-        ScheduleTemplateVO response = scheduleService.createTemplate(request);
-
-        assertThat(response.getId()).isEqualTo(100L);
-        assertThat(response.getName()).isEqualTo("Morning Shift");
-        assertThat(response.getCompanyId()).isEqualTo(1L);
-
-        verify(templateMapper).insert(templateCaptor.capture());
-        assertThat(templateCaptor.getValue().getName()).isEqualTo("Morning Shift");
-        assertThat(templateCaptor.getValue().getCompanyId()).isEqualTo(1L);
-
-        verify(templateMapper).insertSlot(slotCaptor.capture());
-        assertThat(slotCaptor.getValue().getDayOfWeek()).isEqualTo(1);
-        assertThat(slotCaptor.getValue().getStartTime()).isEqualTo(LocalTime.of(9, 0));
-    }
-
-    @Test
-    void getTemplateById_shouldReturnFullResponseWithSlots() {
-        ScheduleTemplate template = new ScheduleTemplate();
-        template.setId(100L);
-        template.setCompanyId(1L);
-        template.setName("Morning Shift");
-
-        ScheduleTemplateSlot slot = new ScheduleTemplateSlot();
-        slot.setId(1L);
-        slot.setTemplateId(100L);
-        slot.setDayOfWeek(1);
-        slot.setStartTime(LocalTime.of(9, 0));
-        slot.setEndTime(LocalTime.of(18, 0));
-
-        when(templateMapper.findById(100L)).thenReturn(Optional.of(template));
-        when(templateMapper.findSlotsByTemplateId(100L)).thenReturn(List.of(slot));
-
-        ScheduleTemplateVO response = scheduleService.getTemplateById(100L);
-
-        assertThat(response.getId()).isEqualTo(100L);
-        assertThat(response.getName()).isEqualTo("Morning Shift");
-        assertThat(response.getSlots()).hasSize(1);
-        assertThat(response.getSlots().get(0).getDayOfWeek()).isEqualTo(1);
-    }
-
-    @Test
-    void getTemplateById_shouldThrowWhenNotFound() {
-        when(templateMapper.findById(999L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> scheduleService.getTemplateById(999L))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("not found");
-    }
-
-    @Test
-    void getTemplatesByCompany_shouldReturnList() {
-        ScheduleTemplate t1 = new ScheduleTemplate();
-        t1.setId(1L);
-        t1.setCompanyId(1L);
-        t1.setName("Morning");
-
-        ScheduleTemplate t2 = new ScheduleTemplate();
-        t2.setId(2L);
-        t2.setCompanyId(1L);
-        t2.setName("Evening");
-
-        when(templateMapper.findByCompanyId(1L)).thenReturn(List.of(t1, t2));
-
-        List<ScheduleTemplateVO> responses = scheduleService.getTemplatesByCompany(1L);
-
-        assertThat(responses).hasSize(2);
-        assertThat(responses.get(0).getName()).isEqualTo("Morning");
-        assertThat(responses.get(1).getName()).isEqualTo("Evening");
-    }
-
-    @Test
-    void updateTemplate_shouldModifyFields() {
-        ScheduleTemplate existing = new ScheduleTemplate();
-        existing.setId(100L);
-        existing.setCompanyId(1L);
-        existing.setName("Old Name");
-
-        ScheduleTemplateSlotCmd slotReq = new ScheduleTemplateSlotCmd();
-        slotReq.setDayOfWeek(2);
-        slotReq.setStartTime(LocalTime.of(10, 0));
-        slotReq.setEndTime(LocalTime.of(19, 0));
-
-        ScheduleTemplateCmd request = new ScheduleTemplateCmd();
-        request.setName("New Name");
-        request.setDescription("Updated description");
-        request.setSlots(List.of(slotReq));
-
-        when(templateMapper.findById(100L)).thenReturn(Optional.of(existing));
-
-        ScheduleTemplateVO response = scheduleService.updateTemplate(100L, request);
-
-        assertThat(response.getName()).isEqualTo("New Name");
-        verify(templateMapper).update(existing);
-        verify(templateMapper).deleteSlotsByTemplateId(100L);
-        verify(templateMapper).insertSlot(any(ScheduleTemplateSlot.class));
-    }
-
-    @Test
-    void deleteTemplate_shouldCallRepository() {
-        scheduleService.deleteTemplate(100L);
-        verify(templateMapper).delete(100L);
-    }
 
     @Test
     void assignShift_shouldCreateAndReturnResponse() {

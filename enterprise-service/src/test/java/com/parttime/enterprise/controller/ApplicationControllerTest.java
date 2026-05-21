@@ -54,7 +54,7 @@ class ApplicationControllerTest {
         app.setStatus(ApplicationStatus.PENDING);
         app.setAppliedAt(LocalDateTime.of(2026, 5, 1, 10, 0));
 
-        when(applicationService.getApplicationsByJob(100L, null, null, 1, 20)).thenReturn(List.of(app));
+        when(applicationService.getApplicationsByJob(1L, 100L, null, null, 1, 20)).thenReturn(List.of(app));
 
         mockMvc.perform(get("/api/applications").param("jobId", "100"))
                 .andExpect(status().isOk())
@@ -72,7 +72,7 @@ class ApplicationControllerTest {
         app.setStatus(ApplicationStatus.PENDING);
         app.setAppliedAt(LocalDateTime.of(2026, 5, 1, 10, 0));
 
-        when(applicationService.getApplicationsByJob(100L, null, null, 2, 20)).thenReturn(List.of(app));
+        when(applicationService.getApplicationsByJob(1L, 100L, null, null, 2, 20)).thenReturn(List.of(app));
 
         mockMvc.perform(get("/api/applications").param("jobId", "100").param("page", "2").param("pageSize", "20"))
                 .andExpect(status().isOk())

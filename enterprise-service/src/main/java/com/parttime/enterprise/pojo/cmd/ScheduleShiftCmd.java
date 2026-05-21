@@ -11,8 +11,6 @@ public class ScheduleShiftCmd {
 
     @Schema(description = "岗位ID")
     private Long jobId;
-    @Schema(description = "模板时段ID")
-    private Long templateSlotId;
     @Schema(description = "工人ID")
     private Long workerId;
     @Schema(description = "班次日期")
