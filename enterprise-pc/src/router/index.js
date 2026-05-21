@@ -55,19 +55,6 @@ const routes = [
     meta: { requiresAuth: true, title: '考勤工时' }
   },
   {
-    path: '/payroll',
-    name: 'PayrollBatchList',
-    component: () => import('../views/payroll/PayrollBatchList.vue'),
-    meta: { requiresAuth: true, title: '薪资批次' }
-  },
-  {
-    path: '/payroll/:id',
-    name: 'PayrollBatchDetail',
-    component: () => import('../views/payroll/PayrollBatchDetail.vue'),
-    meta: { requiresAuth: true, title: '批次详情' },
-    props: true
-  },
-  {
     path: '/workers',
     name: 'WorkerList',
     component: () => import('../views/workers/WorkerList.vue'),

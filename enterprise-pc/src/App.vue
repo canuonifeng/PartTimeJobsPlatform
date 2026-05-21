@@ -54,10 +54,6 @@ function handleMenuSelect(index) {
           <el-icon><Timer /></el-icon>
           <span>考勤工时</span>
         </el-menu-item>
-        <el-menu-item index="/payroll">
-          <el-icon><Money /></el-icon>
-          <span>薪资管理</span>
-        </el-menu-item>
         <el-menu-item index="/workers">
           <el-icon><User /></el-icon>
           <span>兼职管理</span>
