@@ -155,10 +155,10 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="操作" width="280" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" @click="handleApplications(row)">报名记录</el-button>
-            <el-button size="small" @click="handleInvite(row)">邀请报名</el-button>
-            <el-button size="small" @click="handleEdit(row)">编辑</el-button>
-            <el-button v-if="row.status === 'PUBLISHED'" size="small" @click="handleClose(row)">关闭</el-button>
+            <el-button size="small" type="primary" @click="handleApplications(row)">报名记录</el-button>
+            <el-button size="small" type="success" @click="handleInvite(row)">邀请报名</el-button>
+            <el-button size="small" type="primary" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-if="row.status === 'PUBLISHED'" size="small" type="warning" @click="handleClose(row)">关闭</el-button>
             <el-button
               v-if="row.status === 'CLOSED' && (row.applicationCount ?? 0) === 0"
               size="small"

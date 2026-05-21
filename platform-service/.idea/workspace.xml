@@ -5,37 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="83de3c72-8e48-4706-bea2-b2f826d046c4" name="更改" comment="">
-      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/controller/ApplicationController.java" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/controller/ApplicationController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/mapper/JobApplicationMapper.java" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/mapper/JobApplicationMapper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/pojo/entity/JobApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/pojo/entity/JobApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/pojo/vo/JobVO.java" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/pojo/vo/JobVO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/service/ApplicationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/service/ApplicationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/service/impl/ApplicationServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/service/impl/ApplicationServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/service/impl/CompanyWorkerServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/service/impl/CompanyWorkerServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/service/impl/JobServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/main/java/com/parttime/enterprise/service/impl/JobServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/main/resources/mapper/JobApplicationMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/main/resources/mapper/JobApplicationMapper.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/test/java/com/parttime/enterprise/controller/ApplicationControllerTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/test/java/com/parttime/enterprise/controller/ApplicationControllerTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../enterprise-service/src/test/java/com/parttime/enterprise/service/ApplicationServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/../enterprise-service/src/test/java/com/parttime/enterprise/service/ApplicationServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../platform-pc/src/App.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../platform-pc/src/App.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../platform-pc/src/api/registrations.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../platform-pc/src/router/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/../platform-pc/src/router/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../platform-pc/src/views/registrations/RegistrationList.vue" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/parttime/platform/controller/RegistrationController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/parttime/platform/mapper/EnterpriseRegistrationMapper.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/parttime/platform/pojo/cmd/ReviewRegistrationCmd.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/parttime/platform/pojo/entity/Enterprise.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/parttime/platform/pojo/entity/Enterprise.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/parttime/platform/pojo/entity/EnterpriseRegistration.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/parttime/platform/pojo/vo/EnterpriseVO.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/parttime/platform/pojo/vo/EnterpriseVO.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/parttime/platform/pojo/vo/RegistrationListVO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/parttime/platform/pojo/vo/RegistrationVO.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/parttime/platform/service/RegistrationService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/parttime/platform/service/impl/EnterpriseServiceImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/parttime/platform/service/impl/EnterpriseServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/parttime/platform/service/impl/RegistrationServiceImpl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/mapper/EnterpriseMapper.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/mapper/EnterpriseMapper.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/mapper/EnterpriseRegistrationMapper.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/parttime/platform/controller/RegistrationControllerTest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/parttime/platform/service/RegistrationServiceTest.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
