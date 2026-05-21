@@ -52,7 +52,7 @@ const routes = [
     path: '/attendance/hours',
     name: 'AttendanceHoursList',
     component: () => import('../views/attendance/AttendanceHoursList.vue'),
-    meta: { requiresAuth: true, title: '考勤工时' }
+    meta: { requiresAuth: true, title: '考勤管理' }
   },
   {
     path: '/workers',

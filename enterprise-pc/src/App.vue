@@ -52,7 +52,7 @@ function handleMenuSelect(index) {
         </el-menu-item>
         <el-menu-item index="/attendance/hours">
           <el-icon><Timer /></el-icon>
-          <span>考勤工时</span>
+          <span>考勤管理</span>
         </el-menu-item>
         <el-menu-item index="/workers">
           <el-icon><User /></el-icon>

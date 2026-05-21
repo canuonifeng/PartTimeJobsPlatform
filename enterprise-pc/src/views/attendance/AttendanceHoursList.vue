@@ -91,22 +91,22 @@ async function handleEditSave() {
 
 async function handlePay(row) {
   try {
-    await ElMessageBox.confirm(`确定发放 ${row.workerName} 的薪资 ${row.payablePay ?? row.scheduledPay} 元？`, '提示')
+    await ElMessageBox.confirm(`确定结算 ${row.workerName} 的薪资 ${row.payablePay ?? row.scheduledPay} 元？`, '提示')
     await batchPayAttendanceHours([row.id])
-    ElMessage.success('发放成功')
+    ElMessage.success('结算成功')
     fetchData()
   } catch {}
 }
 
 async function handleBatchPay() {
   if (selectedIds.value.length === 0) {
-    ElMessage.warning('请选择要发放的记录')
+    ElMessage.warning('请选择要结算的记录')
     return
   }
   try {
-    await ElMessageBox.confirm(`确定批量发放 ${selectedIds.value.length} 条记录？`, '提示')
+    await ElMessageBox.confirm(`确定批量结算 ${selectedIds.value.length} 条记录？`, '提示')
     await batchPayAttendanceHours(selectedIds.value)
-    ElMessage.success('批量发放成功')
+    ElMessage.success('批量结算成功')
     selectedIds.value = []
     fetchData()
   } catch {}
@@ -163,10 +163,10 @@ onMounted(() => {
         <el-form-item label="结束日期">
           <el-date-picker v-model="searchForm.dateTo" type="date" placeholder="选择日期" value-format="YYYY-MM-DD" style="width: 150px" />
         </el-form-item>
-        <el-form-item label="发放状态">
+        <el-form-item label="结算状态">
           <el-select v-model="searchForm.isPaid" placeholder="全部" clearable style="width: 120px">
-            <el-option label="未发放" :value="false" />
-            <el-option label="已发放" :value="true" />
+            <el-option label="未结算" :value="false" />
+            <el-option label="已结算" :value="true" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -178,7 +178,7 @@ onMounted(() => {
 
     <el-card style="margin-top: 16px">
       <div class="toolbar">
-        <el-button type="success" :disabled="selectedIds.length === 0" @click="handleBatchPay">批量发放</el-button>
+        <el-button type="success" :disabled="selectedIds.length === 0" @click="handleBatchPay">批量结算</el-button>
         <el-button type="danger" :disabled="selectedIds.length === 0" @click="handleBatchDelete">批量删除</el-button>
       </div>
       <el-table
@@ -207,10 +207,10 @@ onMounted(() => {
         <el-table-column label="应付薪资" width="100">
           <template #default="{ row }">{{ n(row.payablePay) }}</template>
         </el-table-column>
-        <el-table-column label="是否发放" width="100">
+        <el-table-column label="是否结算" width="100">
           <template #default="{ row }">
             <el-tag :type="row.isPaid ? 'success' : 'info'" size="small">
-              {{ row.isPaid ? '已发放' : '未发放' }}
+              {{ row.isPaid ? '已结算' : '未结算' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -218,7 +218,7 @@ onMounted(() => {
           <template #default="{ row }">
             <template v-if="!row.isPaid">
               <el-button size="small" @click="handleEdit(row)">编辑</el-button>
-              <el-button size="small" type="success" @click="handlePay(row)">发放薪资</el-button>
+              <el-button size="small" type="success" @click="handlePay(row)">结算</el-button>
               <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
             </template>
             <span v-else style="color: #999; font-size: 12px">--</span>
@@ -236,7 +236,7 @@ onMounted(() => {
       </div>
     </el-card>
 
-    <el-dialog v-model="editDialogVisible" title="编辑考勤工时" width="400px">
+    <el-dialog v-model="editDialogVisible" title="编辑考勤管理" width="400px">
       <el-form :model="editForm" label-width="100px">
         <el-form-item label="工时">
           <el-input-number v-model="editForm.totalHours" :min="0" :precision="2" style="width: 100%" />
