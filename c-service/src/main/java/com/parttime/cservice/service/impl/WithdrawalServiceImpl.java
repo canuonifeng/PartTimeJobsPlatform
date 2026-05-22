@@ -17,6 +17,9 @@ import jakarta.annotation.Resource;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Random;
 import java.util.stream.Collectors;
@@ -102,6 +105,9 @@ public class WithdrawalServiceImpl implements WithdrawalService {
         return resp;
     }
 
+    private static final DateTimeFormatter FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final ZoneId CST = ZoneId.of("Asia/Shanghai");
+
     @Override
     public List<TransactionVO> getTransactions(Long workerId) {
         return balanceTransactionMapper.findByWorkerId(workerId).stream()
@@ -111,7 +117,10 @@ public class WithdrawalServiceImpl implements WithdrawalService {
                     vo.setAmount(t.getAmount());
                     vo.setType(t.getType());
                     vo.setDescription(t.getDescription());
-                    vo.setCreatedAt(t.getCreatedAt());
+                    if (t.getCreatedAt() != null) {
+                        vo.setCreatedAt(t.getCreatedAt().atZone(ZoneId.systemDefault())
+                                .withZoneSameInstant(CST).format(FMT));
+                    }
                     return vo;
                 })
                 .collect(Collectors.toList());

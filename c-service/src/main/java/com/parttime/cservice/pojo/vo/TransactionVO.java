@@ -3,7 +3,6 @@ package com.parttime.cservice.pojo.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Data
 public class TransactionVO {
@@ -15,6 +14,6 @@ public class TransactionVO {
     private String type;
     @Schema(description = "描述")
     private String description;
-    @Schema(description = "交易时间")
-    private LocalDateTime createdAt;
+    @Schema(description = "交易时间(北京时间)")
+    private String createdAt;
 }
