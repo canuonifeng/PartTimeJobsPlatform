@@ -49,6 +49,8 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+// @ts-ignore
+import { onShow } from '@dcloudio/uni-app'
 import { getMyAttendance } from '@/api/attendance'
 import { getEarningsSummary, getEarningsTransactions } from '@/api/earnings'
 
@@ -131,6 +133,7 @@ async function loadData() {
 }
 
 onMounted(loadData)
+onShow(loadData)
 </script>
 
 <style scoped>
