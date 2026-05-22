@@ -50,6 +50,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { getEarningsSummary, createWithdrawal } from '@/api/earnings'
 
 const amount = ref('')
 const availableBalance = ref(0)
@@ -73,19 +74,7 @@ async function handleWithdraw() {
   if (!canSubmit.value) return
   submitting.value = true
   try {
-    await new Promise((resolve, reject) => {
-      uni.request({
-        url: '/api/withdrawals',
-        method: 'POST',
-        data: { amount: parseFloat(amount.value) },
-        header: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${uni.getStorageSync('token')}`
-        },
-        success: (r) => resolve(r.data),
-        fail: (e) => reject(e)
-      })
-    })
+    await createWithdrawal({ amount: parseFloat(amount.value) })
     uni.showToast({ title: '提现申请已提交', icon: 'success' })
     uni.navigateBack()
   } catch {
@@ -97,15 +86,7 @@ async function handleWithdraw() {
 
 onMounted(async () => {
   try {
-    const res: any = await new Promise((resolve, reject) => {
-      uni.request({
-        url: '/api/earnings/summary',
-        method: 'GET',
-        header: { Authorization: `Bearer ${uni.getStorageSync('token')}` },
-        success: (r) => resolve(r.data),
-        fail: (e) => reject(e)
-      })
-    })
+    const res = await getEarningsSummary()
     availableBalance.value = res.pendingWithdrawal || 0
   } catch {
     // ignore
