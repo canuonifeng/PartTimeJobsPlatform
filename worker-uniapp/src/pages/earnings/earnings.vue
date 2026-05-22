@@ -108,7 +108,7 @@ async function loadData() {
     const txTypeMap: Record<string, { type: string; status: string; cls: string }> = {
       EARNINGS: { type: 'earning', status: '已完成', cls: 'success' },
       WITHDRAWAL: { type: 'withdrawal', status: '已提现', cls: 'success' },
-      REFUND: { type: 'earning', status: '已撤回', cls: 'failed' }
+      REFUND: { type: 'refund', status: '已撤回', cls: 'failed' }
     }
     const txList: Transaction[] = (Array.isArray(txRes) ? txRes : []).map((item: any) => {
       const map = txTypeMap[item.type] || { type: 'earning', status: item.type, cls: '' }
@@ -280,6 +280,10 @@ onUnmounted(() => { uni.$off('earningsRefresh', loadData) })
 }
 
 .tx-amount.withdrawal {
+  color: #f60;
+}
+
+.tx-amount.refund {
   color: #f60;
 }
 
