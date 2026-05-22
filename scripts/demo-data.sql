@@ -166,18 +166,7 @@ INSERT INTO worker_evaluations (id, company_id, job_id, worker_id, rating, comme
 (1, 1, 2, 1, 5, '工作认真负责，准时到岗');
 
 -- ----------------------------
--- 15. 薪资批次
--- ----------------------------
-INSERT INTO payroll_batches (id, company_id, name, period_start, period_end, status, total_amount, worker_count) VALUES
-(1, 1, '2026年5月第一批', '2026-05-01', '2026-05-15', 'CONFIRMED', 376.00, 1),
-(2, 1, '2026年6月第一批', '2026-06-01', '2026-06-15', 'DRAFT', 0.00, 0);
-
-INSERT INTO payroll_items (id, batch_id, worker_id, job_id, total_hours, rate_type, rate_amount, total_pay, status) VALUES
-(1, 1, 1, 2, 8.00, 'HOURLY', 22.00, 176.00, 'PAID'),
-(2, 1, 1, 6, 8.00, 'DAILY', 200.00, 200.00, 'PAID');
-
--- ----------------------------
--- 16. 通知模板
+-- 15. 通知模板
 -- ----------------------------
 INSERT INTO notification_templates (id, type, channel, title_template, content_template) VALUES
 (1, 'APPLICATION_RECEIVED', 'IN_APP', '新报名通知', '您的职位「{job_title}」收到一份新的报名，请及时处理。'),
@@ -188,11 +177,11 @@ INSERT INTO notification_templates (id, type, channel, title_template, content_t
 (6, 'JOB_RECOMMENDATION', 'IN_APP', '职位推荐', '为您推荐适合的职位：「{job_title}」，时薪¥{rate}，点击查看详情。');
 
 -- ----------------------------
--- 17. 系统配置
+-- 16. 系统配置
 -- ----------------------------
 INSERT INTO system_configs (id, config_key, config_value, description) VALUES
 (1, 'max_application_per_worker', '10', '工人最多可同时报名的职位数'),
-(2, 'check_in_radius_meters', '500', '打卡允许误差范围（米）'),
+(2, 'check_in_radius_meters', '100', '打卡允许误差范围（米）'),
 (3, 'withdrawal_min_amount', '50.00', '最低提现金额（元）'),
 (4, 'review_required_for_publish', 'false', '职位发布是否需要平台审核'),
 (5, 'enterprise_registration_enabled', 'true', '是否允许企业自助注册');

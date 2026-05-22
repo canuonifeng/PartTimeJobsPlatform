@@ -16,9 +16,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   flyway:
-    enabled: true
-    baseline-on-migrate: true
-    baseline-version: 8
+    enabled: false
 
   data:
     redis:

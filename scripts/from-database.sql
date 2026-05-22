@@ -324,41 +324,6 @@ CREATE TABLE `notification_templates` (
   KEY `idx_channel` (`channel`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
-CREATE TABLE `payroll_batches` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `company_id` bigint NOT NULL,
-  `name` varchar(100) NOT NULL,
-  `period_start` date NOT NULL,
-  `period_end` date NOT NULL,
-  `status` varchar(20) NOT NULL DEFAULT 'DRAFT' COMMENT 'DRAFT/CALCULATED/CONFIRMED/PAID',
-  `total_amount` decimal(12,2) DEFAULT '0.00',
-  `worker_count` int DEFAULT '0',
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_company_id` (`company_id`),
-  KEY `idx_status` (`status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
-CREATE TABLE `payroll_items` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `batch_id` bigint NOT NULL,
-  `worker_id` bigint NOT NULL,
-  `job_id` bigint NOT NULL,
-  `total_hours` decimal(10,2) DEFAULT '0.00',
-  `rate_type` varchar(20) NOT NULL COMMENT 'HOURLY/DAILY',
-  `rate_amount` decimal(12,2) NOT NULL,
-  `total_pay` decimal(12,2) NOT NULL,
-  `status` varchar(20) NOT NULL DEFAULT 'PENDING' COMMENT 'PENDING/CONFIRMED/PAID',
-  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_batch_id` (`batch_id`),
-  KEY `idx_worker_id` (`worker_id`),
-  KEY `idx_job_id` (`job_id`),
-  CONSTRAINT `payroll_items_ibfk_1` FOREIGN KEY (`batch_id`) REFERENCES `payroll_batches` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
 CREATE TABLE `schedule_shifts` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `job_id` bigint NOT NULL,

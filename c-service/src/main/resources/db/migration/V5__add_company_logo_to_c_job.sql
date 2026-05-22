@@ -1,2 +1,0 @@
-ALTER TABLE c_job
-  ADD COLUMN company_logo VARCHAR(500) DEFAULT NULL COMMENT '企业logoURL';
