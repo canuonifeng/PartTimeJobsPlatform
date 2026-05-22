@@ -135,13 +135,13 @@ INSERT INTO schedule_shifts (id, job_id, worker_id, shift_date, start_time, end_
 -- ----------------------------
 -- 11. 考勤记录
 -- ----------------------------
-INSERT INTO attendance_records (id, shift_id, job_id, company_id, worker_id, check_in_time, check_out_time, total_hours, status, scheduled_pay, payable_pay, is_paid, remark) VALUES
+INSERT INTO attendance_records (id, shift_id, job_id, company_id, worker_id, check_in_time, check_out_time, total_hours, status, scheduled_pay, payable_pay, settlement_status, remark) VALUES
 -- 帮厨 - 赵小明 (6月1日)
-(1, 5, 2, 1, 1, '2026-06-01 07:55:00', '2026-06-01 16:05:00', 8.00, 'CHECKED_OUT', 176.00, 176.00, TRUE, NULL),
+(1, 5, 2, 1, 1, '2026-06-01 07:55:00', '2026-06-01 16:05:00', 8.00, 'CHECKED_OUT', 176.00, 176.00, 'PAID', NULL),
 -- 帮厨 - 赵小明 (6月2日)
-(2, 6, 2, 1, 1, '2026-06-02 08:02:00', '2026-06-02 16:00:00', 8.00, 'CHECKED_OUT', 176.00, 176.00, FALSE, NULL),
+(2, 6, 2, 1, 1, '2026-06-02 08:02:00', '2026-06-02 16:00:00', 8.00, 'CHECKED_OUT', 176.00, 176.00, 'UNPAID', NULL),
 -- 旧职位排班
-(3, 9, 6, 1, 1, '2026-04-20 08:55:00', '2026-04-20 18:10:00', 8.00, 'CHECKED_OUT', 200.00, 200.00, TRUE, NULL);
+(3, 9, 6, 1, 1, '2026-04-20 08:55:00', '2026-04-20 18:10:00', 8.00, 'CHECKED_OUT', 200.00, 200.00, 'PAID', NULL);
 
 -- ----------------------------
 -- 12. 考勤修正申请

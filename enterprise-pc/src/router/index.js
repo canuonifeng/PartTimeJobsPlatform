@@ -55,6 +55,12 @@ const routes = [
     meta: { requiresAuth: true, title: '考勤管理' }
   },
   {
+    path: '/settlement/bills',
+    name: 'SettlementBillList',
+    component: () => import('../views/settlement/SettlementBillList.vue'),
+    meta: { requiresAuth: true, title: '结算账单' }
+  },
+  {
     path: '/workers',
     name: 'WorkerList',
     component: () => import('../views/workers/WorkerList.vue'),

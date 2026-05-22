@@ -27,6 +27,10 @@ public class WithdrawalRecord {
     private LocalDateTime processedAt;
     @Schema(description = "完成时间")
     private LocalDateTime completedAt;
+    @Schema(description = "第三方支付流水号")
+    private String thirdPartySerialNo;
+    @Schema(description = "第三方支付平台")
+    private String thirdPartyPlatform;
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")

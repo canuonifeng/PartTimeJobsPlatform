@@ -37,8 +37,8 @@ public class AttendanceHoursVO {
     private BigDecimal scheduledPay;
     @Schema(description = "应付薪资")
     private BigDecimal payablePay;
-    @Schema(description = "是否已发放")
-    private Boolean isPaid;
+    @Schema(description = "结算状态: UNPAID/PAYING/PAID")
+    private String settlementStatus;
     @Schema(description = "签到时间")
     private LocalDateTime checkInTime;
     @Schema(description = "签退时间")

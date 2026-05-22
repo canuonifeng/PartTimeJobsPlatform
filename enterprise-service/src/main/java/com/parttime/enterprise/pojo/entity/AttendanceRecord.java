@@ -36,8 +36,8 @@ public class AttendanceRecord {
     private BigDecimal scheduledPay;
     @Schema(description = "应付薪资")
     private BigDecimal payablePay;
-    @Schema(description = "是否已发放")
-    private Boolean isPaid;
+    @Schema(description = "结算状态: UNPAID/PAYING/PAID")
+    private String settlementStatus;
     @Schema(description = "结算计算时间")
     private LocalDateTime calculatedAt;
     @Schema(description = "考勤状态: NORMAL-正常, LATE-迟到, EARLY_LEAVE-早退, ABSENT-缺勤")

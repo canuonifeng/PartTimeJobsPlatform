@@ -1,17 +1,23 @@
 package com.parttime.cservice.service.impl;
 
+import com.parttime.cservice.mapper.BalanceTransactionMapper;
 import com.parttime.cservice.mapper.WithdrawalRecordMapper;
+import com.parttime.cservice.mapper.WorkerBalanceMapper;
+import com.parttime.cservice.pojo.entity.BalanceTransaction;
 import com.parttime.cservice.pojo.entity.WithdrawalRecord;
+import com.parttime.cservice.pojo.entity.WorkerBalance;
 import com.parttime.cservice.pojo.vo.EarningsSummaryVO;
 import com.parttime.cservice.pojo.vo.WithdrawalVO;
 import com.parttime.cservice.service.WithdrawalService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.Resource;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,60 +26,78 @@ public class WithdrawalServiceImpl implements WithdrawalService {
     @Resource
     private WithdrawalRecordMapper withdrawalRecordMapper;
 
+    @Resource
+    private WorkerBalanceMapper workerBalanceMapper;
+
+    @Resource
+    private BalanceTransactionMapper balanceTransactionMapper;
+
+    private static final Random RANDOM = new Random();
+
+    @Override
+    @Transactional
     public WithdrawalVO requestWithdrawal(Long workerId, BigDecimal amount) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException("Invalid withdrawal amount");
         }
 
-        List<WithdrawalRecord> pending = withdrawalRecordMapper.findByWorkerId(workerId).stream()
-                .filter(r -> "PENDING".equals(r.getStatus()))
-                .collect(Collectors.toList());
-
-        BigDecimal totalPending = pending.stream()
-                .map(WithdrawalRecord::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        if (totalPending.add(amount).compareTo(new BigDecimal("100000")) > 0) {
-            throw new RuntimeException("Insufficient balance: total pending withdrawals exceed available balance");
+        WorkerBalance wb = workerBalanceMapper.findByWorkerId(workerId);
+        if (wb == null || wb.getBalance().compareTo(amount) < 0) {
+            throw new RuntimeException("Insufficient balance");
         }
 
         WithdrawalRecord record = new WithdrawalRecord();
         record.setWorkerId(workerId);
         record.setAmount(amount);
-        record.setStatus("PENDING");
+        record.setStatus("PROCESSING");
         record.setRequestedAt(LocalDateTime.now());
+        record.setProcessedAt(LocalDateTime.now());
         record.setCreatedAt(LocalDateTime.now());
         record.setUpdatedAt(LocalDateTime.now());
         withdrawalRecordMapper.insert(record);
 
+        String thirdPartySerial = "WTHD" + System.currentTimeMillis() + RANDOM.nextInt(1000);
+
+        withdrawalRecordMapper.updateCompletion(record.getId(), "COMPLETED",
+                thirdPartySerial, "SIMULATED_PAY", LocalDateTime.now());
+
+        workerBalanceMapper.upsert(workerId,
+                wb.getBalance().subtract(amount),
+                wb.getTotalEarned(),
+                wb.getTotalWithdrawn().add(amount));
+
+        BalanceTransaction bt = new BalanceTransaction();
+        bt.setWorkerId(workerId);
+        bt.setAmount(amount.negate());
+        bt.setType("WITHDRAWAL");
+        bt.setRelatedWithdrawalId(record.getId());
+        bt.setDescription("提现支出: " + amount);
+        balanceTransactionMapper.insert(bt);
+
         return toResponse(record);
     }
 
+    @Override
     public List<WithdrawalVO> getWithdrawalHistory(Long workerId) {
         return withdrawalRecordMapper.findByWorkerId(workerId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
+    @Override
     public EarningsSummaryVO getEarningsSummary(Long workerId) {
-        List<WithdrawalRecord> workerRecords = withdrawalRecordMapper.findByWorkerId(workerId);
-
-        BigDecimal totalWithdrawn = workerRecords.stream()
-                .filter(r -> "COMPLETED".equals(r.getStatus()))
-                .map(WithdrawalRecord::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal pendingWithdrawal = workerRecords.stream()
-                .filter(r -> "PENDING".equals(r.getStatus()))
-                .map(WithdrawalRecord::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        BigDecimal totalEarned = totalWithdrawn.add(pendingWithdrawal);
+        WorkerBalance wb = workerBalanceMapper.findByWorkerId(workerId);
 
         EarningsSummaryVO resp = new EarningsSummaryVO();
-        resp.setTotalEarned(totalEarned);
-        resp.setTotalWithdrawn(totalWithdrawn);
-        resp.setPendingWithdrawal(pendingWithdrawal);
+        if (wb == null) {
+            resp.setTotalEarned(BigDecimal.ZERO);
+            resp.setTotalWithdrawn(BigDecimal.ZERO);
+            resp.setPendingWithdrawal(BigDecimal.ZERO);
+        } else {
+            resp.setTotalEarned(wb.getTotalEarned());
+            resp.setTotalWithdrawn(wb.getTotalWithdrawn());
+            resp.setPendingWithdrawal(wb.getBalance());
+        }
         return resp;
     }
 
@@ -84,6 +108,9 @@ public class WithdrawalServiceImpl implements WithdrawalService {
         resp.setAmount(record.getAmount());
         resp.setStatus(record.getStatus());
         resp.setRequestedAt(record.getRequestedAt());
+        resp.setThirdPartySerialNo(record.getThirdPartySerialNo());
+        resp.setThirdPartyPlatform(record.getThirdPartyPlatform());
+        resp.setCompletedAt(record.getCompletedAt());
         return resp;
     }
 }

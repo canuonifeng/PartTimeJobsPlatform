@@ -19,4 +19,13 @@
         UPDATE c_withdrawal_record SET status = #{status} WHERE id = #{id}
     </update>
 
+    <update id="updateCompletion">
+        UPDATE c_withdrawal_record
+        SET status = #{status},
+            third_party_serial_no = #{thirdPartySerialNo},
+            third_party_platform = #{thirdPartyPlatform},
+            completed_at = #{completedAt}
+        WHERE id = #{id}
+    </update>
+
 </mapper>

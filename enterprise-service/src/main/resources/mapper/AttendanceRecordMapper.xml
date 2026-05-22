@@ -17,17 +17,17 @@
         <result property="totalHours" column="total_hours"/>
         <result property="scheduledPay" column="scheduled_pay"/>
         <result property="payablePay" column="payable_pay"/>
-        <result property="isPaid" column="is_paid"/>
+        <result property="settlementStatus" column="settlement_status"/>
         <result property="calculatedAt" column="calculated_at"/>
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO attendance_records (shift_id, job_id, company_id, worker_id, check_in_time, check_in_lat, check_in_lng,
                                         check_out_time, check_out_lat, check_out_lng,
-                                        total_hours, scheduled_pay, payable_pay, is_paid, calculated_at, status, remark)
+                                        total_hours, scheduled_pay, payable_pay, settlement_status, calculated_at, status, remark)
         VALUES (#{shiftId}, #{jobId}, #{companyId}, #{workerId}, #{checkInTime}, #{checkInLat}, #{checkInLng},
                 #{checkOutTime}, #{checkOutLat}, #{checkOutLng},
-                #{totalHours}, #{scheduledPay}, #{payablePay}, #{isPaid}, #{calculatedAt}, #{status}, #{remark})
+                #{totalHours}, #{scheduledPay}, #{payablePay}, #{settlementStatus}, #{calculatedAt}, #{status}, #{remark})
     </insert>
 
     <select id="findById" resultMap="RecordResultMap">
@@ -50,8 +50,8 @@
         SET job_id = #{jobId}, company_id = #{companyId}, worker_id = #{workerId}, check_in_time = #{checkInTime},
             check_in_lat = #{checkInLat}, check_in_lng = #{checkInLng},
             check_out_time = #{checkOutTime}, check_out_lat = #{checkOutLat}, check_out_lng = #{checkOutLng},
-            total_hours = #{totalHours}, scheduled_pay = #{scheduledPay}, payable_pay = #{payablePay}, is_paid = #{isPaid},
-            calculated_at = #{calculatedAt}, status = #{status}, remark = #{remark}
+            total_hours = #{totalHours}, scheduled_pay = #{scheduledPay}, payable_pay = #{payablePay},
+            settlement_status = #{settlementStatus}, calculated_at = #{calculatedAt}, status = #{status}, remark = #{remark}
         WHERE id = #{id}
     </update>
 
@@ -70,7 +70,7 @@
         <result property="totalHours" column="total_hours"/>
         <result property="scheduledPay" column="scheduled_pay"/>
         <result property="payablePay" column="payable_pay"/>
-        <result property="isPaid" column="is_paid"/>
+        <result property="settlementStatus" column="settlement_status"/>
         <result property="checkInTime" column="check_in_time"/>
         <result property="checkOutTime" column="check_out_time"/>
     </resultMap>
@@ -78,7 +78,7 @@
     <select id="findHours" resultMap="HoursResultMap">
         SELECT a.id, a.worker_id, w.name AS worker_name,
                a.job_id, j.title AS job_title, s.shift_date, s.start_time, s.end_time,
-               s.salary_type, s.salary_amount, a.total_hours, a.scheduled_pay, a.payable_pay, a.is_paid,
+               s.salary_type, s.salary_amount, a.total_hours, a.scheduled_pay, a.payable_pay, a.settlement_status,
                a.check_in_time, a.check_out_time
         FROM attendance_records a
         JOIN schedule_shifts s ON a.shift_id = s.id
@@ -94,8 +94,8 @@
         <if test="dateTo != null">
             AND s.shift_date &lt;= #{dateTo}
         </if>
-        <if test="isPaid != null">
-            AND a.is_paid = #{isPaid}
+        <if test="settlementStatus != null and settlementStatus != ''">
+            AND a.settlement_status = #{settlementStatus}
         </if>
         ORDER BY a.id DESC
         LIMIT #{offset}, #{pageSize}
@@ -117,17 +117,11 @@
         <if test="dateTo != null">
             AND s.shift_date &lt;= #{dateTo}
         </if>
-        <if test="isPaid != null">
-            AND a.is_paid = #{isPaid}
+        <if test="settlementStatus != null and settlementStatus != ''">
+            AND a.settlement_status = #{settlementStatus}
         </if>
     </select>
 
-    <update id="updatePaidStatus">
-        UPDATE attendance_records SET is_paid = #{isPaid} WHERE id IN
-        <foreach collection="ids" item="id" open="(" separator="," close=")">
-            #{id}
-        </foreach>
-    </update>
 
     <delete id="deleteByIds">
         DELETE FROM attendance_records WHERE id IN

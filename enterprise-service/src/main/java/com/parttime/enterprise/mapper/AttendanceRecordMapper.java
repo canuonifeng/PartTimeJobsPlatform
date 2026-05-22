@@ -26,7 +26,7 @@ public interface AttendanceRecordMapper {
                                       @Param("workerName") String workerName,
                                       @Param("dateFrom") LocalDate dateFrom,
                                       @Param("dateTo") LocalDate dateTo,
-                                      @Param("isPaid") Boolean isPaid,
+                                      @Param("settlementStatus") String settlementStatus,
                                       @Param("offset") int offset,
                                       @Param("pageSize") int pageSize);
 
@@ -34,9 +34,7 @@ public interface AttendanceRecordMapper {
                     @Param("workerName") String workerName,
                     @Param("dateFrom") LocalDate dateFrom,
                     @Param("dateTo") LocalDate dateTo,
-                    @Param("isPaid") Boolean isPaid);
-
-    void updatePaidStatus(@Param("ids") List<Long> ids, @Param("isPaid") boolean isPaid);
+                    @Param("settlementStatus") String settlementStatus);
 
     void deleteByIds(@Param("ids") List<Long> ids);
 }

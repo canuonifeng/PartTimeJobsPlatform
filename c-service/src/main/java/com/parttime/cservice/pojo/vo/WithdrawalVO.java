@@ -19,4 +19,10 @@ public class WithdrawalVO {
     private String status;
     @Schema(description = "申请时间")
     private LocalDateTime requestedAt;
+    @Schema(description = "完成时间")
+    private LocalDateTime completedAt;
+    @Schema(description = "第三方支付流水号")
+    private String thirdPartySerialNo;
+    @Schema(description = "第三方支付平台")
+    private String thirdPartyPlatform;
 }

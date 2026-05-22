@@ -166,9 +166,8 @@ public class CorrectionServiceTest {
         }
         @Override public List<AttendanceRecord> findByShiftIds(List<Long> shiftIds) { return List.of(); }
         @Override public int update(AttendanceRecord r) { store.put(r.getId(), r); return 1; }
-        @Override public List<AttendanceHoursVO> findHours(Long companyId, String workerName, LocalDate dateFrom, LocalDate dateTo, Boolean isPaid, int offset, int pageSize) { return List.of(); }
-        @Override public long countHours(Long companyId, String workerName, LocalDate dateFrom, LocalDate dateTo, Boolean isPaid) { return 0; }
-        @Override public void updatePaidStatus(List<Long> ids, boolean isPaid) {}
+        @Override public List<AttendanceHoursVO> findHours(Long companyId, String workerName, LocalDate dateFrom, LocalDate dateTo, String settlementStatus, int offset, int pageSize) { return List.of(); }
+        @Override public long countHours(Long companyId, String workerName, LocalDate dateFrom, LocalDate dateTo, String settlementStatus) { return 0; }
         @Override public void deleteByIds(List<Long> ids) {}
     }
 

@@ -14,18 +14,23 @@ const loading = ref(false)
 const page = ref(1)
 const pageSize = ref(20)
 const selectedIds = ref([])
+const statusLabels = {
+  UNPAID: { label: '未结算', type: 'info' },
+  PAYING: { label: '结算中', type: 'warning' },
+  PAID: { label: '已结算', type: 'success' }
+}
+
 const searchForm = ref({
   workerName: '',
   dateFrom: '',
   dateTo: '',
-  isPaid: ''
+  settlementStatus: ''
 })
 const editDialogVisible = ref(false)
 const editForm = ref({
   id: null,
   totalHours: 0,
-  scheduledPay: 0,
-  isPaid: false
+  scheduledPay: 0
 })
 
 const salaryTypeMap = {
@@ -40,7 +45,7 @@ async function fetchData() {
     if (searchForm.value.workerName) params.workerName = searchForm.value.workerName
     if (searchForm.value.dateFrom) params.dateFrom = searchForm.value.dateFrom
     if (searchForm.value.dateTo) params.dateTo = searchForm.value.dateTo
-    if (searchForm.value.isPaid !== '') params.isPaid = searchForm.value.isPaid
+    if (searchForm.value.settlementStatus !== '' && searchForm.value.settlementStatus != null) params.settlementStatus = searchForm.value.settlementStatus
     const res = await listAttendanceHours(params)
     records.value = Array.isArray(res) ? res : (res.records || [])
     total.value = res.total || 0
@@ -55,13 +60,13 @@ function handleSearch() {
 }
 
 function handleReset() {
-  searchForm.value = { workerName: '', dateFrom: '', dateTo: '', isPaid: '' }
+  searchForm.value = { workerName: '', dateFrom: '', dateTo: '', settlementStatus: '' }
   page.value = 1
   fetchData()
 }
 
 function handleSelectionChange(val) {
-  selectedIds.value = val.filter(r => !r.isPaid).map(r => r.id)
+  selectedIds.value = val.filter(r => r.settlementStatus !== 'PAID').map(r => r.id)
 }
 
 function handleEdit(row) {
@@ -69,8 +74,7 @@ function handleEdit(row) {
     id: row.id,
     totalHours: row.totalHours ?? 0,
     scheduledPay: row.scheduledPay ?? 0,
-    payablePay: row.payablePay ?? null,
-    isPaid: row.isPaid ?? false
+    payablePay: row.payablePay ?? null
   }
   editDialogVisible.value = true
 }
@@ -164,9 +168,10 @@ onMounted(() => {
           <el-date-picker v-model="searchForm.dateTo" type="date" placeholder="选择日期" value-format="YYYY-MM-DD" style="width: 150px" />
         </el-form-item>
         <el-form-item label="结算状态">
-          <el-select v-model="searchForm.isPaid" placeholder="全部" clearable style="width: 120px">
-            <el-option label="未结算" :value="false" />
-            <el-option label="已结算" :value="true" />
+          <el-select v-model="searchForm.settlementStatus" placeholder="全部" clearable style="width: 120px">
+            <el-option label="未结算" value="UNPAID" />
+            <el-option label="结算中" value="PAYING" />
+            <el-option label="已结算" value="PAID" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -207,16 +212,16 @@ onMounted(() => {
         <el-table-column label="应付薪资" width="100">
           <template #default="{ row }">{{ n(row.payablePay) }}</template>
         </el-table-column>
-        <el-table-column label="是否结算" width="100">
+        <el-table-column label="结算状态" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.isPaid ? 'success' : 'info'" size="small">
-              {{ row.isPaid ? '已结算' : '未结算' }}
+            <el-tag :type="(statusLabels[row.settlementStatus] || statusLabels.UNPAID).type" size="small">
+              {{ (statusLabels[row.settlementStatus] || statusLabels.UNPAID).label }}
             </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
-            <template v-if="!row.isPaid">
+            <template v-if="row.settlementStatus !== 'PAID'">
               <el-button size="small" @click="handleEdit(row)">编辑</el-button>
               <el-button size="small" type="success" @click="handlePay(row)">结算</el-button>
               <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
