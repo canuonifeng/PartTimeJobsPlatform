@@ -154,7 +154,7 @@ public class SettlementServiceImpl implements SettlementService {
         BalanceTransaction bt = new BalanceTransaction();
         bt.setWorkerId(workerId);
         bt.setAmount(actualPay.negate());
-        bt.setType("EARNINGS");
+        bt.setType("REFUND");
         bt.setRelatedBillId(bill.getId());
         bt.setDescription("撤回结算: " + bill.getWorkerName() + " " + bill.getShiftDate());
         balanceTransactionMapper.insert(bt);

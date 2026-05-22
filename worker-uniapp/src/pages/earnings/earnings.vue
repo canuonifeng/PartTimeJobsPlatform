@@ -101,14 +101,22 @@ async function loadData() {
       availableBalance: earningsRes.pendingWithdrawal || 0
     }
 
-    const txList: Transaction[] = (Array.isArray(txRes) ? txRes : []).map((item: any) => ({
-      id: item.id,
-      type: item.type === 'EARNINGS' ? 'earning' : 'withdrawal',
-      amount: Math.abs(item.amount || 0),
-      status: item.type === 'EARNINGS' ? '已完成' : '已提现',
-      statusClass: 'success',
-      createdAt: item.createdAt
-    }))
+    const txTypeMap: Record<string, { type: string; status: string; cls: string }> = {
+      EARNINGS: { type: 'earning', status: '已完成', cls: 'success' },
+      WITHDRAWAL: { type: 'withdrawal', status: '已提现', cls: 'success' },
+      REFUND: { type: 'earning', status: '已撤回', cls: 'failed' }
+    }
+    const txList: Transaction[] = (Array.isArray(txRes) ? txRes : []).map((item: any) => {
+      const map = txTypeMap[item.type] || { type: 'earning', status: item.type, cls: '' }
+      return {
+        id: item.id,
+        type: map.type,
+        amount: Math.abs(item.amount || 0),
+        status: map.status,
+        statusClass: map.cls,
+        createdAt: item.createdAt
+      }
+    })
     txList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     transactions.value = txList
   } catch {
