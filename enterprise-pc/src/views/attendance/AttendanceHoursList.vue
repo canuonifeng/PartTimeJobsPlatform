@@ -5,7 +5,8 @@ import {
   listAttendanceHours,
   updateAttendanceHours,
   batchPayAttendanceHours,
-  batchDeleteAttendanceHours
+  batchDeleteAttendanceHours,
+  unsettleAttendanceHours
 } from '../../api/attendanceHours'
 
 const records = ref([])
@@ -125,6 +126,19 @@ async function handleDelete(row) {
   } catch {}
 }
 
+async function handleUnsettle(row) {
+  try {
+    await ElMessageBox.confirm(
+      `确定撤回 ${row.workerName} 的结算？将扣减工人余额 ${row.payablePay ?? row.scheduledPay} 元`,
+      '提示',
+      { type: 'warning' }
+    )
+    await unsettleAttendanceHours(row.id)
+    ElMessage.success('撤回成功')
+    fetchData()
+  } catch {}
+}
+
 async function handleBatchDelete() {
   if (selectedIds.value.length === 0) {
     ElMessage.warning('请选择要删除的记录')
@@ -226,7 +240,9 @@ onMounted(() => {
               <el-button size="small" type="success" @click="handlePay(row)">结算</el-button>
               <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
             </template>
-            <span v-else style="color: #999; font-size: 12px">--</span>
+            <template v-else>
+              <el-button size="small" type="warning" @click="handleUnsettle(row)">撤回结算</el-button>
+            </template>
           </template>
         </el-table-column>
       </el-table>

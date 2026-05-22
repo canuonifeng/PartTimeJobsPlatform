@@ -26,4 +26,8 @@ public interface SettlementBillMapper {
                           @Param("workerName") String workerName,
                           @Param("dateFrom") LocalDate dateFrom,
                           @Param("dateTo") LocalDate dateTo);
+
+    Optional<SettlementBill> findByShiftId(@Param("shiftId") Long shiftId);
+
+    int updateBillStatus(@Param("id") Long id, @Param("status") String status);
 }

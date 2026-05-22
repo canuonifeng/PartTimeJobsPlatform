@@ -11,4 +11,6 @@ public interface SettlementService {
     Map<String, Object> listBills(Long companyId, String workerName, LocalDate dateFrom, LocalDate dateTo, int page, int pageSize);
 
     void payFromAttendanceRecords(List<Long> attendanceRecordIds, Long companyId);
+
+    void unsettle(Long attendanceRecordId, Long companyId);
 }

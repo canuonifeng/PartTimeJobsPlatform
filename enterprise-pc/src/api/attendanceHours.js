@@ -15,3 +15,7 @@ export function batchPayAttendanceHours(data) {
 export function batchDeleteAttendanceHours(data) {
   return request.delete('/attendance/hours', { data })
 }
+
+export function unsettleAttendanceHours(id) {
+  return request.put(`/settlement/unsettle/${id}`)
+}

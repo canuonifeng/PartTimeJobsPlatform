@@ -123,6 +123,46 @@ public class SettlementServiceImpl implements SettlementService {
         }
     }
 
+    @Override
+    @Transactional
+    public void unsettle(Long attendanceRecordId, Long companyId) {
+        AttendanceRecord ar = attendanceRecordMapper.findById(attendanceRecordId)
+                .orElseThrow(() -> new RuntimeException("Attendance record not found: " + attendanceRecordId));
+        if (!"PAID".equals(ar.getSettlementStatus())) {
+            throw new RuntimeException("Record is not settled");
+        }
+
+        SettlementBill bill = settlementBillMapper.findByShiftId(ar.getShiftId())
+                .orElseThrow(() -> new RuntimeException("Settlement bill not found for this record"));
+
+        Long workerId = ar.getWorkerId() != null ? ar.getWorkerId() : bill.getWorkerId();
+        BigDecimal actualPay = bill.getActualPay();
+
+        WorkerBalance wb = workerBalanceMapper.findByWorkerId(workerId);
+        if (wb == null || wb.getBalance().compareTo(actualPay) < 0) {
+            throw new RuntimeException("Cannot unsettle: worker has withdrawn the settled amount");
+        }
+
+        bill.setStatus("REFUNDED");
+        settlementBillMapper.updateBillStatus(bill.getId(), "REFUNDED");
+
+        workerBalanceMapper.upsert(workerId,
+                wb.getBalance().subtract(actualPay),
+                wb.getTotalEarned().subtract(actualPay),
+                wb.getTotalWithdrawn());
+
+        BalanceTransaction bt = new BalanceTransaction();
+        bt.setWorkerId(workerId);
+        bt.setAmount(actualPay.negate());
+        bt.setType("EARNINGS");
+        bt.setRelatedBillId(bill.getId());
+        bt.setDescription("撤回结算: " + bill.getWorkerName() + " " + bill.getShiftDate());
+        balanceTransactionMapper.insert(bt);
+
+        ar.setSettlementStatus("UNPAID");
+        attendanceRecordMapper.update(ar);
+    }
+
     private SettlementBillVO toVO(SettlementBill bill) {
         SettlementBillVO vo = new SettlementBillVO();
         BeanUtils.copyProperties(bill, vo);
