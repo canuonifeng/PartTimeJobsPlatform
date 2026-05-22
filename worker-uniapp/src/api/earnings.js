@@ -21,3 +21,10 @@ export function createWithdrawal(data) {
     data
   })
 }
+
+export function getEarningsTransactions() {
+  return request({
+    url: '/api/earnings/transactions',
+    method: 'GET'
+  })
+}

@@ -7,6 +7,7 @@ import com.parttime.cservice.pojo.entity.BalanceTransaction;
 import com.parttime.cservice.pojo.entity.WithdrawalRecord;
 import com.parttime.cservice.pojo.entity.WorkerBalance;
 import com.parttime.cservice.pojo.vo.EarningsSummaryVO;
+import com.parttime.cservice.pojo.vo.TransactionVO;
 import com.parttime.cservice.pojo.vo.WithdrawalVO;
 import com.parttime.cservice.service.WithdrawalService;
 import org.springframework.stereotype.Service;
@@ -99,6 +100,21 @@ public class WithdrawalServiceImpl implements WithdrawalService {
             resp.setPendingWithdrawal(wb.getBalance());
         }
         return resp;
+    }
+
+    @Override
+    public List<TransactionVO> getTransactions(Long workerId) {
+        return balanceTransactionMapper.findByWorkerId(workerId).stream()
+                .map(t -> {
+                    TransactionVO vo = new TransactionVO();
+                    vo.setId(t.getId());
+                    vo.setAmount(t.getAmount());
+                    vo.setType(t.getType());
+                    vo.setDescription(t.getDescription());
+                    vo.setCreatedAt(t.getCreatedAt());
+                    return vo;
+                })
+                .collect(Collectors.toList());
     }
 
     private WithdrawalVO toResponse(WithdrawalRecord record) {

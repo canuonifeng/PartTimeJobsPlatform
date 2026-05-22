@@ -2,6 +2,7 @@ package com.parttime.cservice.controller;
 
 import com.parttime.cservice.pojo.vo.EarningsSummaryVO;
 import com.parttime.cservice.pojo.cmd.WithdrawalCmd;
+import com.parttime.cservice.pojo.vo.TransactionVO;
 import com.parttime.cservice.pojo.vo.WithdrawalVO;
 import com.parttime.cservice.service.WithdrawalService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,6 +58,17 @@ public class WithdrawalController {
         }
         EarningsSummaryVO summary = withdrawalService.getEarningsSummary(workerId);
         return ResponseEntity.ok(summary);
+    }
+
+    @Operation(summary = "获取账户流水", description = "获取当前工人的余额变动记录")
+    @GetMapping("/api/earnings/transactions")
+    public ResponseEntity<?> getTransactions() {
+        Long workerId = getCurrentWorkerId();
+        if (workerId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        List<TransactionVO> records = withdrawalService.getTransactions(workerId);
+        return ResponseEntity.ok(records);
     }
 
     @Operation(summary = "获取提现记录", description = "获取当前工人的提现历史记录")

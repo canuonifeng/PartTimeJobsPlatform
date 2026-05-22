@@ -49,8 +49,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getMyAttendance } from '@/api/attendance'
-import { getMyWithdrawals, getEarningsSummary } from '@/api/earnings'
+import { getEarningsSummary, getEarningsTransactions } from '@/api/earnings'
 
 interface Transaction {
   id: number
@@ -90,47 +89,26 @@ function navTo(url: string) {
 async function loadData() {
   loading.value = true
   try {
-    const [attendanceRes, withdrawalsRes, earningsRes] = await Promise.all([
-      getMyAttendance(),
-      getMyWithdrawals(),
-      getEarningsSummary()
+    const [earningsRes, txRes] = await Promise.all([
+      getEarningsSummary(),
+      getEarningsTransactions()
     ])
-
-    const attrs = Array.isArray(attendanceRes) ? attendanceRes : (attendanceRes.list || [])
-    const hours = attrs.reduce((s, r) => s + (r.totalHours || 0), 0)
-    const completed = attrs.filter(r => r.status === 'CHECKED_OUT').length
 
     summary.value = {
       totalEarnings: earningsRes.totalEarned || 0,
-      completedShifts: completed,
-      totalHours: hours,
+      completedShifts: 0,
+      totalHours: 0,
       availableBalance: earningsRes.pendingWithdrawal || 0
     }
 
-    const txList: Transaction[] = []
-    attrs.forEach((item: any) => {
-      const st = getTxStatus(item)
-      txList.push({
-        id: item.attendanceId || item.id,
-        type: 'earning',
-        amount: item.scheduledPay || 0,
-        status: st.text,
-        statusClass: st.cls,
-        createdAt: item.checkOutTime || item.checkInTime || item.createdAt
-      })
-    })
-    const wds = Array.isArray(withdrawalsRes) ? withdrawalsRes : (withdrawalsRes.list || [])
-    wds.forEach((item: any) => {
-      const st = getTxStatus(item)
-      txList.push({
-        id: item.id,
-        type: 'withdrawal',
-        amount: item.amount || 0,
-        status: st.text,
-        statusClass: st.cls,
-        createdAt: item.requestedAt || item.createdAt
-      })
-    })
+    const txList: Transaction[] = (Array.isArray(txRes) ? txRes : []).map((item: any) => ({
+      id: item.id,
+      type: item.type === 'EARNINGS' ? 'earning' : 'withdrawal',
+      amount: Math.abs(item.amount || 0),
+      status: item.type === 'EARNINGS' ? '已完成' : '已提现',
+      statusClass: 'success',
+      createdAt: item.createdAt
+    }))
     txList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     transactions.value = txList
   } catch {
