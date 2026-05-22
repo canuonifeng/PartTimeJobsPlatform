@@ -76,6 +76,7 @@ async function handleWithdraw() {
   try {
     await createWithdrawal({ amount: parseFloat(amount.value) })
     uni.showToast({ title: '提现申请已提交', icon: 'success' })
+    uni.$emit('earningsRefresh')
     uni.navigateBack()
   } catch {
     uni.showToast({ title: '提现失败', icon: 'none' })

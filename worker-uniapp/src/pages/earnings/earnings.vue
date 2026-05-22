@@ -48,9 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-// @ts-ignore
-import { onShow } from '@dcloudio/uni-app'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { getMyAttendance } from '@/api/attendance'
 import { getEarningsSummary, getEarningsTransactions } from '@/api/earnings'
 
@@ -133,7 +131,8 @@ async function loadData() {
 }
 
 onMounted(loadData)
-onShow(loadData)
+onMounted(() => { uni.$on('earningsRefresh', loadData) })
+onUnmounted(() => { uni.$off('earningsRefresh', loadData) })
 </script>
 
 <style scoped>
