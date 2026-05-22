@@ -49,6 +49,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { getMyAttendance } from '@/api/attendance'
 import { getEarningsSummary, getEarningsTransactions } from '@/api/earnings'
 
 interface Transaction {
@@ -89,15 +90,18 @@ function navTo(url: string) {
 async function loadData() {
   loading.value = true
   try {
-    const [earningsRes, txRes] = await Promise.all([
+    const [attendanceRes, earningsRes, txRes] = await Promise.all([
+      getMyAttendance(),
       getEarningsSummary(),
       getEarningsTransactions()
     ])
 
+    const attrs = Array.isArray(attendanceRes) ? attendanceRes : (attendanceRes.list || [])
+
     summary.value = {
       totalEarnings: earningsRes.totalEarned || 0,
-      completedShifts: 0,
-      totalHours: 0,
+      completedShifts: attrs.filter((r: any) => r.status === 'CHECKED_OUT').length,
+      totalHours: attrs.reduce((s: number, r: any) => s + (r.totalHours || 0), 0),
       availableBalance: earningsRes.pendingWithdrawal || 0
     }
 
