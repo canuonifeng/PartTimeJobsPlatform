@@ -40,7 +40,7 @@
         </view>
         <view class="tx-right">
           <text class="tx-amount" :class="item.type">{{ item.type === 'earning' ? '+' : '-' }}{{ item.amount }}元</text>
-          <text class="tx-status" :class="item.status">{{ getStatusText(item.status) }}</text>
+          <text class="tx-status" :class="item.statusClass">{{ item.status }}</text>
         </view>
       </view>
     </view>
@@ -57,6 +57,7 @@ interface Transaction {
   type: string
   amount: number
   status: string
+  statusClass: string
   createdAt: string
 }
 
@@ -69,14 +70,17 @@ const summary = ref({
 })
 const transactions = ref<Transaction[]>([])
 
-function getStatusText(status: string): string {
-  const map: Record<string, string> = {
-    pending: '处理中',
-    success: '已完成',
-    failed: '失败',
-    withdrawn: '已提现'
-  }
-  return map[status] || status
+const statusMap: Record<string, { text: string; cls: string }> = {
+  CHECKED_OUT: { text: '已完成', cls: 'success' },
+  CHECKED_IN: { text: '已签到', cls: 'pending' },
+  COMPLETED: { text: '已提现', cls: 'success' },
+  PROCESSING: { text: '处理中', cls: 'pending' },
+  PENDING: { text: '待处理', cls: 'pending' },
+  FAILED: { text: '失败', cls: 'failed' }
+}
+
+function getTxStatus(item: { status: string }): { text: string; cls: string } {
+  return statusMap[item.status] || { text: item.status, cls: '' }
 }
 
 function navTo(url: string) {
@@ -105,22 +109,26 @@ async function loadData() {
 
     const txList: Transaction[] = []
     attrs.forEach((item: any) => {
+      const st = getTxStatus(item)
       txList.push({
         id: item.attendanceId || item.id,
         type: 'earning',
         amount: item.scheduledPay || 0,
-        status: item.status,
-        createdAt: item.checkOutTime || item.createdAt
+        status: st.text,
+        statusClass: st.cls,
+        createdAt: item.checkOutTime || item.checkInTime || item.createdAt
       })
     })
     const wds = Array.isArray(withdrawalsRes) ? withdrawalsRes : (withdrawalsRes.list || [])
     wds.forEach((item: any) => {
+      const st = getTxStatus(item)
       txList.push({
         id: item.id,
         type: 'withdrawal',
         amount: item.amount || 0,
-        status: item.status,
-        createdAt: item.createdAt
+        status: st.text,
+        statusClass: st.cls,
+        createdAt: item.requestedAt || item.createdAt
       })
     })
     txList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
