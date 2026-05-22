@@ -15,6 +15,7 @@ import com.parttime.enterprise.pojo.entity.JobRate;
 import com.parttime.enterprise.pojo.entity.JobSchedule;
 import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.vo.JobApplicationVO;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.ApplicationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +46,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private CompanyWorkerMapper companyWorkerMapper;
 
     @Override
-    public List<JobApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, String status, Integer page, Integer pageSize) {
+    public PageVO<JobApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, String status, Integer page, Integer pageSize) {
         List<JobApplication> apps;
         if (jobId != null) {
             apps = applicationMapper.findByJobId(jobId);
@@ -60,15 +61,16 @@ public class ApplicationServiceImpl implements ApplicationService {
                     return job != null && job.getTitle() != null && job.getTitle().contains(jobTitle);
                 })
                 .collect(Collectors.toList());
+        int total = filtered.size();
         if (page != null && pageSize != null) {
             int fromIndex = Math.max(page - 1, 0) * pageSize;
             if (fromIndex >= filtered.size()) {
-                return List.of();
+                return new PageVO<>(List.of(), total);
             }
             int toIndex = Math.min(fromIndex + pageSize, filtered.size());
             filtered = filtered.subList(fromIndex, toIndex);
         }
-        return filtered.stream().map(this::toResponse).collect(Collectors.toList());
+        return new PageVO<>(filtered.stream().map(this::toResponse).collect(Collectors.toList()), total);
     }
 
     @Override

@@ -1,5 +1,7 @@
 package com.parttime.cservice.controller;
 
+import com.parttime.cservice.pojo.entity.SettlementBillEntity;
+import com.parttime.cservice.pojo.vo.PageVO;
 import com.parttime.cservice.service.SettlementBillService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -12,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.annotation.Resource;
-import java.util.Map;
 
 @RestController
 public class SettlementBillController {
@@ -37,7 +38,6 @@ public class SettlementBillController {
         if (workerId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        Map<String, Object> result = settlementBillService.listSettledBills(workerId, page, pageSize);
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(settlementBillService.listSettledBills(workerId, page, pageSize));
     }
 }

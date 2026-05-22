@@ -5,6 +5,7 @@ import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
 import com.parttime.enterprise.pojo.dto.CorrectionRejectCmd;
 import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
 import com.parttime.enterprise.pojo.vo.CorrectionVO;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.pojo.vo.ScheduleShiftVO;
 import com.parttime.enterprise.service.CorrectionService;
 import com.parttime.enterprise.service.ScheduleService;
@@ -18,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -38,7 +38,7 @@ public class ScheduleController {
 
     @Operation(summary = "查询班次列表", description = "根据岗位、工人、日期等条件查询班次，支持分页")
     @GetMapping("/schedule-shifts")
-    public Map<String, Object> getShifts(
+    public PageVO<ScheduleShiftVO> getShifts(
             @Parameter(description = "岗位ID") @RequestParam(required = false) Long jobId,
             @Parameter(description = "工人ID") @RequestParam(required = false) Long workerId,
             @Parameter(description = "班次日期") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate shiftDate,
@@ -74,7 +74,7 @@ public class ScheduleController {
 
     @Operation(summary = "补卡申请列表", description = "查看补卡申请列表，支持分页和筛选")
     @GetMapping("/schedules/corrections")
-    public Map<String, Object> listCorrections(
+    public PageVO<CorrectionVO> listCorrections(
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "岗位关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "开始日期") @RequestParam(required = false) String dateFrom,

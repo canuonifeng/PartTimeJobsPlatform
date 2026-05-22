@@ -11,6 +11,7 @@ import com.parttime.enterprise.pojo.entity.AttendanceRecord;
 import com.parttime.enterprise.pojo.entity.Job;
 import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.pojo.vo.ScheduleShiftVO;
 import com.parttime.enterprise.service.ScheduleService;
 import org.springframework.stereotype.Service;
@@ -62,7 +63,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
-    public Map<String, Object> getShifts(Long jobId, Long workerId, LocalDate shiftDate, Integer page, Integer pageSize) {
+    public PageVO<ScheduleShiftVO> getShifts(Long jobId, Long workerId, LocalDate shiftDate, Integer page, Integer pageSize) {
         List<ScheduleShift> shifts;
         if (jobId != null && shiftDate != null) {
             shifts = shiftMapper.findByJobIdAndDate(jobId, shiftDate);
@@ -95,10 +96,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         List<ScheduleShiftVO> voList = shifts.stream()
                 .map(s -> toShiftResponse(s, recordMap.get(s.getId())))
                 .collect(Collectors.toList());
-        Map<String, Object> result = new HashMap<>();
-        result.put("records", voList);
-        result.put("total", total);
-        return result;
+        return new PageVO<>(voList, total);
     }
 
     @Override

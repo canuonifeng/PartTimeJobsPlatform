@@ -11,6 +11,7 @@ import com.parttime.enterprise.pojo.entity.BalanceTransaction;
 import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.entity.SettlementBill;
 import com.parttime.enterprise.pojo.entity.WorkerBalance;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.pojo.vo.SettlementBillVO;
 import com.parttime.enterprise.service.SettlementService;
 import org.springframework.beans.BeanUtils;
@@ -22,9 +23,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -53,15 +52,12 @@ public class SettlementServiceImpl implements SettlementService {
     private static final Random RANDOM = new Random();
 
     @Override
-    public Map<String, Object> listBills(Long companyId, String workerName, LocalDate dateFrom, LocalDate dateTo, int page, int pageSize) {
+    public PageVO<SettlementBillVO> listBills(Long companyId, String workerName, LocalDate dateFrom, LocalDate dateTo, int page, int pageSize) {
         int offset = (page - 1) * pageSize;
         List<SettlementBill> bills = settlementBillMapper.findByCompanyId(companyId, workerName, dateFrom, dateTo, offset, pageSize);
         long total = settlementBillMapper.countByCompanyId(companyId, workerName, dateFrom, dateTo);
         List<SettlementBillVO> voList = bills.stream().map(this::toVO).collect(Collectors.toList());
-        Map<String, Object> result = new HashMap<>();
-        result.put("records", voList);
-        result.put("total", total);
-        return result;
+        return new PageVO<>(voList, total);
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.parttime.enterprise.controller;
 
 import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.pojo.vo.JobApplicationVO;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.ApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,8 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/applications")
 public class ApplicationController {
@@ -25,7 +24,7 @@ public class ApplicationController {
 
     @Operation(summary = "获取岗位申请列表", description = "根据企业ID获取所有申请记录")
     @GetMapping
-    public List<JobApplicationVO> getApplicationsByJob(
+    public PageVO<JobApplicationVO> getApplicationsByJob(
             @Parameter(description = "岗位ID") @RequestParam(required = false) Long jobId,
             @Parameter(description = "岗位标题") @RequestParam(required = false) String jobTitle,
             @Parameter(description = "状态") @RequestParam(required = false) String status,

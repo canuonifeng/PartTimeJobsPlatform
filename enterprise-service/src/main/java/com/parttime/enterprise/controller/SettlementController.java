@@ -1,6 +1,8 @@
 package com.parttime.enterprise.controller;
 
 import com.parttime.enterprise.config.SecurityUtil;
+import com.parttime.enterprise.pojo.vo.PageVO;
+import com.parttime.enterprise.pojo.vo.SettlementBillVO;
 import com.parttime.enterprise.service.SettlementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -9,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.time.LocalDate;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/settlement")
@@ -20,7 +21,7 @@ public class SettlementController {
 
     @Operation(summary = "结算账单列表")
     @GetMapping("/bills")
-    public Map<String, Object> listBills(
+    public PageVO<SettlementBillVO> listBills(
             @Parameter(description = "工人姓名") @RequestParam(required = false) String workerName,
             @Parameter(description = "开始日期") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
             @Parameter(description = "结束日期") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,

@@ -2,6 +2,7 @@ package com.parttime.enterprise.service;
 
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
 import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.pojo.vo.ScheduleShiftVO;
 
 import java.time.LocalDate;
@@ -13,7 +14,7 @@ public interface ScheduleService {
 
     ScheduleShiftVO updateShift(Long id, ScheduleShiftCmd request);
 
-    java.util.Map<String, Object> getShifts(Long jobId, Long workerId, LocalDate shiftDate, Integer page, Integer pageSize);
+    PageVO<ScheduleShiftVO> getShifts(Long jobId, Long workerId, LocalDate shiftDate, Integer page, Integer pageSize);
 
     void removeShift(Long id);
 

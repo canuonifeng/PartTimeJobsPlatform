@@ -1,13 +1,13 @@
 package com.parttime.enterprise.service;
 
 import com.parttime.enterprise.pojo.vo.CorrectionVO;
-import java.util.Map;
+import com.parttime.enterprise.pojo.vo.PageVO;
 
 public interface CorrectionService {
 
-    Map<String, Object> listCorrections(String status, String keyword,
-                                         String dateFrom, String dateTo,
-                                         Integer page, Integer pageSize);
+    PageVO<CorrectionVO> listCorrections(String status, String keyword,
+                                          String dateFrom, String dateTo,
+                                          Integer page, Integer pageSize);
 
     void approve(Long id, Long processorId);
 

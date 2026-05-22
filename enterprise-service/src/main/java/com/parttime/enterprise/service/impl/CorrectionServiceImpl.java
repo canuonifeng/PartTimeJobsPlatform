@@ -12,6 +12,7 @@ import com.parttime.enterprise.pojo.entity.AttendanceRecord;
 import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.entity.Job;
 import com.parttime.enterprise.pojo.vo.CorrectionVO;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.CorrectionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,9 +46,9 @@ public class CorrectionServiceImpl implements CorrectionService {
     public void setJobMapper(JobMapper m) { this.jobMapper = m; }
 
     @Override
-    public Map<String, Object> listCorrections(String status, String keyword,
-                                                String dateFrom, String dateTo,
-                                                Integer page, Integer pageSize) {
+    public PageVO<CorrectionVO> listCorrections(String status, String keyword,
+                                                 String dateFrom, String dateTo,
+                                                 Integer page, Integer pageSize) {
         int offset = (page != null && page > 0) ? (page - 1) * pageSize : 0;
         int limit = pageSize != null ? pageSize : 20;
 
@@ -84,10 +85,7 @@ public class CorrectionServiceImpl implements CorrectionService {
             return vo;
         }).collect(Collectors.toList());
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("records", voList);
-        result.put("total", total);
-        return result;
+        return new PageVO<>(voList, total);
     }
 
     @Override

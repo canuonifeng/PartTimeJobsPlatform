@@ -4,6 +4,7 @@ import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.mapper.AttendanceRecordMapper;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
 import com.parttime.enterprise.pojo.vo.AttendanceHoursVO;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.SettlementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,9 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/attendance/hours")
@@ -31,7 +30,7 @@ public class AttendanceHoursController {
 
     @Operation(summary = "查询考勤工时列表", description = "分页查询考勤工时数据")
     @GetMapping
-    public Map<String, Object> list(
+    public PageVO<AttendanceHoursVO> list(
             @Parameter(description = "工人姓名") @RequestParam(required = false) String workerName,
             @Parameter(description = "开始日期") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateFrom,
             @Parameter(description = "结束日期") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dateTo,
@@ -42,10 +41,7 @@ public class AttendanceHoursController {
         int offset = (page - 1) * pageSize;
         List<AttendanceHoursVO> records = attendanceRecordMapper.findHours(companyId, workerName, dateFrom, dateTo, settlementStatus, offset, pageSize);
         long total = attendanceRecordMapper.countHours(companyId, workerName, dateFrom, dateTo, settlementStatus);
-        Map<String, Object> result = new HashMap<>();
-        result.put("records", records);
-        result.put("total", total);
-        return result;
+        return new PageVO<>(records, total);
     }
 
     @Operation(summary = "编辑考勤工时", description = "编辑考勤工时的工时数和应付薪资")
