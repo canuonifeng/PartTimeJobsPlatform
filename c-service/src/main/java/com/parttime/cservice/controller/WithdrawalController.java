@@ -15,10 +15,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class WithdrawalController {
@@ -60,15 +62,17 @@ public class WithdrawalController {
         return ResponseEntity.ok(summary);
     }
 
-    @Operation(summary = "获取账户流水", description = "获取当前工人的余额变动记录")
+    @Operation(summary = "获取账户流水", description = "获取当前工人的余额变动记录，分页返回")
     @GetMapping("/api/earnings/transactions")
-    public ResponseEntity<?> getTransactions() {
+    public ResponseEntity<?> getTransactions(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int pageSize) {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        List<TransactionVO> records = withdrawalService.getTransactions(workerId);
-        return ResponseEntity.ok(records);
+        Map<String, Object> result = withdrawalService.getTransactions(workerId, page, pageSize);
+        return ResponseEntity.ok(result);
     }
 
     @Operation(summary = "获取提现记录", description = "获取当前工人的提现历史记录")

@@ -22,9 +22,10 @@ export function createWithdrawal(data) {
   })
 }
 
-export function getEarningsTransactions() {
+export function getEarningsTransactions(params) {
   return request({
     url: '/api/earnings/transactions',
-    method: 'GET'
+    method: 'GET',
+    params
   })
 }

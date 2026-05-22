@@ -10,4 +10,8 @@ import java.util.List;
 public interface BalanceTransactionMapper {
     int insert(BalanceTransaction transaction);
     List<BalanceTransaction> findByWorkerId(@Param("workerId") Long workerId);
+    List<BalanceTransaction> findByWorkerIdPage(@Param("workerId") Long workerId,
+                                                  @Param("offset") int offset,
+                                                  @Param("pageSize") int pageSize);
+    long countByWorkerId(@Param("workerId") Long workerId);
 }

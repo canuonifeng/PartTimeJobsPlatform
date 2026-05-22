@@ -6,10 +6,11 @@ import com.parttime.cservice.pojo.vo.WithdrawalVO;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 public interface WithdrawalService {
     WithdrawalVO requestWithdrawal(Long workerId, BigDecimal amount);
     List<WithdrawalVO> getWithdrawalHistory(Long workerId);
     EarningsSummaryVO getEarningsSummary(Long workerId);
-    List<TransactionVO> getTransactions(Long workerId);
+    Map<String, Object> getTransactions(Long workerId, int page, int pageSize);
 }

@@ -27,7 +27,7 @@
         <text class="section-title">交易记录</text>
       </view>
 
-      <uni-load-more v-if="loading" status="loading" />
+      <uni-load-more v-if="loading && page === 1" status="loading" />
 
       <view v-if="transactions.length === 0 && !loading" class="empty-state">
         <text class="empty-text">暂无交易记录</text>
@@ -43,12 +43,15 @@
           <text class="tx-status" :class="item.statusClass">{{ item.status }}</text>
         </view>
       </view>
+
+      <uni-load-more :status="moreStatus" />
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { onReachBottom } from '@dcloudio/uni-app'
 import { getMyAttendance } from '@/api/attendance'
 import { getEarningsSummary, getEarningsTransactions } from '@/api/earnings'
 
@@ -61,7 +64,11 @@ interface Transaction {
   createdAt: string
 }
 
+const pageSize = 20
+const page = ref(1)
+const total = ref(0)
 const loading = ref(false)
+const loadingMore = ref(false)
 const summary = ref({
   totalEarnings: 0,
   completedShifts: 0,
@@ -70,30 +77,53 @@ const summary = ref({
 })
 const transactions = ref<Transaction[]>([])
 
-const statusMap: Record<string, { text: string; cls: string }> = {
-  CHECKED_OUT: { text: '已完成', cls: 'success' },
-  CHECKED_IN: { text: '已签到', cls: 'pending' },
-  COMPLETED: { text: '已提现', cls: 'success' },
-  PROCESSING: { text: '处理中', cls: 'pending' },
-  PENDING: { text: '待处理', cls: 'pending' },
-  FAILED: { text: '失败', cls: 'failed' }
-}
+const hasMore = computed(() => transactions.value.length < total.value)
+const moreStatus = computed(() => {
+  if (loading.value || loadingMore.value) return 'loading'
+  if (!hasMore.value && transactions.value.length > 0) return 'noMore'
+  return 'more'
+})
 
-function getTxStatus(item: { status: string }): { text: string; cls: string } {
-  return statusMap[item.status] || { text: item.status, cls: '' }
+const txTypeMap: Record<string, { type: string; status: string; cls: string }> = {
+  EARNINGS: { type: 'earning', status: '已完成', cls: 'success' },
+  WITHDRAWAL: { type: 'withdrawal', status: '已提现', cls: 'success' },
+  REFUND: { type: 'refund', status: '已撤回', cls: 'failed' }
 }
 
 function navTo(url: string) {
   uni.navigateTo({ url })
 }
 
+function mapTx(item: any): Transaction {
+  const map = txTypeMap[item.type] || { type: 'earning', status: item.type, cls: '' }
+  return {
+    id: item.id,
+    type: map.type,
+    amount: Math.abs(item.amount || 0),
+    status: map.status,
+    statusClass: map.cls,
+    createdAt: item.createdAt
+  }
+}
+
+async function loadTxPage(p: number, append: boolean) {
+  const res = await getEarningsTransactions({ page: p, pageSize })
+  total.value = res.total || 0
+  const list = (res.records || []).map(mapTx)
+  if (append) {
+    transactions.value.push(...list)
+  } else {
+    transactions.value = list
+  }
+}
+
 async function loadData() {
   loading.value = true
+  page.value = 1
   try {
-    const [attendanceRes, earningsRes, txRes] = await Promise.all([
+    const [attendanceRes, earningsRes] = await Promise.all([
       getMyAttendance(),
-      getEarningsSummary(),
-      getEarningsTransactions()
+      getEarningsSummary()
     ])
 
     const attrs = Array.isArray(attendanceRes) ? attendanceRes : (attendanceRes.list || [])
@@ -105,30 +135,29 @@ async function loadData() {
       availableBalance: earningsRes.pendingWithdrawal || 0
     }
 
-    const txTypeMap: Record<string, { type: string; status: string; cls: string }> = {
-      EARNINGS: { type: 'earning', status: '已完成', cls: 'success' },
-      WITHDRAWAL: { type: 'withdrawal', status: '已提现', cls: 'success' },
-      REFUND: { type: 'refund', status: '已撤回', cls: 'failed' }
-    }
-    const txList: Transaction[] = (Array.isArray(txRes) ? txRes : []).map((item: any) => {
-      const map = txTypeMap[item.type] || { type: 'earning', status: item.type, cls: '' }
-      return {
-        id: item.id,
-        type: map.type,
-        amount: Math.abs(item.amount || 0),
-        status: map.status,
-        statusClass: map.cls,
-        createdAt: item.createdAt
-      }
-    })
-    txList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    transactions.value = txList
+    await loadTxPage(1, false)
   } catch {
     uni.showToast({ title: '加载失败', icon: 'none' })
   } finally {
     loading.value = false
   }
 }
+
+async function loadMore() {
+  if (loadingMore.value || !hasMore.value) return
+  loadingMore.value = true
+  page.value++
+  try {
+    await loadTxPage(page.value, true)
+  } catch {
+    page.value--
+    uni.showToast({ title: '加载失败', icon: 'none' })
+  } finally {
+    loadingMore.value = false
+  }
+}
+
+onReachBottom(loadMore)
 
 onMounted(loadData)
 onMounted(() => { uni.$on('earningsRefresh', loadData) })

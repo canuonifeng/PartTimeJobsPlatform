@@ -11,4 +11,12 @@
         SELECT * FROM balance_transactions WHERE worker_id = #{workerId} ORDER BY created_at DESC
     </select>
 
+    <select id="findByWorkerIdPage" resultType="com.parttime.cservice.pojo.entity.BalanceTransaction">
+        SELECT * FROM balance_transactions WHERE worker_id = #{workerId} ORDER BY created_at DESC LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countByWorkerId" resultType="long">
+        SELECT COUNT(*) FROM balance_transactions WHERE worker_id = #{workerId}
+    </select>
+
 </mapper>
