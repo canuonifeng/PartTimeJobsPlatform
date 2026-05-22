@@ -20,11 +20,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
+
+import com.parttime.cservice.pojo.vo.PageVO;
 
 @Service
 public class WithdrawalServiceImpl implements WithdrawalService {
@@ -111,7 +111,7 @@ public class WithdrawalServiceImpl implements WithdrawalService {
     private static final ZoneId CST = ZoneId.of("Asia/Shanghai");
 
     @Override
-    public Map<String, Object> getTransactions(Long workerId, int page, int pageSize) {
+    public PageVO<TransactionVO> getTransactions(Long workerId, int page, int pageSize) {
         int offset = (page - 1) * pageSize;
         List<TransactionVO> list = balanceTransactionMapper.findByWorkerIdPage(workerId, offset, pageSize)
                 .stream().map(t -> {
@@ -128,10 +128,7 @@ public class WithdrawalServiceImpl implements WithdrawalService {
                 })
                 .collect(Collectors.toList());
         long total = balanceTransactionMapper.countByWorkerId(workerId);
-        Map<String, Object> result = new HashMap<>();
-        result.put("records", list);
-        result.put("total", total);
-        return result;
+        return new PageVO<>(list, total);
     }
 
     private WithdrawalVO toResponse(WithdrawalRecord record) {

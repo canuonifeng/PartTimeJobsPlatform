@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.annotation.Resource;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 public class WithdrawalController {
@@ -71,8 +70,7 @@ public class WithdrawalController {
         if (workerId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        Map<String, Object> result = withdrawalService.getTransactions(workerId, page, pageSize);
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(withdrawalService.getTransactions(workerId, page, pageSize));
     }
 
     @Operation(summary = "获取提现记录", description = "获取当前工人的提现历史记录")
