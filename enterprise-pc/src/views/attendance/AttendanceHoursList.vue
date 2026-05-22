@@ -208,10 +208,11 @@ onMounted(() => {
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" width="45" />
-        <el-table-column label="排班时间" width="180">
-          <template #default="{ row }">
-            {{ row.shiftDate }} {{ row.startTime }}~{{ row.endTime }}
-          </template>
+        <el-table-column label="排班日期" width="110">
+          <template #default="{ row }">{{ row.shiftDate }}</template>
+        </el-table-column>
+        <el-table-column label="时间" width="120">
+          <template #default="{ row }">{{ row.startTime }}~{{ row.endTime }}</template>
         </el-table-column>
         <el-table-column prop="workerName" label="姓名" width="120" />
         <el-table-column label="工时" width="80">
