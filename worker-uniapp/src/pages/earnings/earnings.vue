@@ -50,7 +50,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { getMyAttendance } from '@/api/attendance'
-import { getMyWithdrawals } from '@/api/earnings'
+import { getMyWithdrawals, getEarningsSummary } from '@/api/earnings'
 
 interface Transaction {
   id: number
@@ -86,43 +86,43 @@ function navTo(url: string) {
 async function loadData() {
   loading.value = true
   try {
-    const [attendanceRes, withdrawalsRes] = await Promise.all([
+    const [attendanceRes, withdrawalsRes, earningsRes] = await Promise.all([
       getMyAttendance(),
-      getMyWithdrawals()
+      getMyWithdrawals(),
+      getEarningsSummary()
     ])
 
-    if (attendanceRes.summary) {
-      summary.value = {
-        totalEarnings: attendanceRes.summary.totalEarnings || 0,
-        completedShifts: attendanceRes.summary.completedShifts || 0,
-        totalHours: attendanceRes.summary.totalHours || 0,
-        availableBalance: attendanceRes.summary.availableBalance || 0
-      }
+    const attrs = Array.isArray(attendanceRes) ? attendanceRes : (attendanceRes.list || [])
+    const hours = attrs.reduce((s, r) => s + (r.totalHours || 0), 0)
+    const completed = attrs.filter(r => r.status === 'CHECKED_OUT').length
+
+    summary.value = {
+      totalEarnings: earningsRes.totalEarned || 0,
+      completedShifts: completed,
+      totalHours: hours,
+      availableBalance: earningsRes.pendingWithdrawal || 0
     }
 
     const txList: Transaction[] = []
-    if (attendanceRes.list) {
-      attendanceRes.list.forEach((item: any) => {
-        txList.push({
-          id: item.id,
-          type: 'earning',
-          amount: item.amount || 0,
-          status: item.status,
-          createdAt: item.createdAt
-        })
+    attrs.forEach((item: any) => {
+      txList.push({
+        id: item.attendanceId || item.id,
+        type: 'earning',
+        amount: item.scheduledPay || 0,
+        status: item.status,
+        createdAt: item.checkOutTime || item.createdAt
       })
-    }
-    if (withdrawalsRes.list) {
-      withdrawalsRes.list.forEach((item: any) => {
-        txList.push({
-          id: item.id,
-          type: 'withdrawal',
-          amount: item.amount || 0,
-          status: item.status,
-          createdAt: item.createdAt
-        })
+    })
+    const wds = Array.isArray(withdrawalsRes) ? withdrawalsRes : (withdrawalsRes.list || [])
+    wds.forEach((item: any) => {
+      txList.push({
+        id: item.id,
+        type: 'withdrawal',
+        amount: item.amount || 0,
+        status: item.status,
+        createdAt: item.createdAt
       })
-    }
+    })
     txList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     transactions.value = txList
   } catch {

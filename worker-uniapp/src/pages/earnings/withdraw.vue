@@ -99,14 +99,14 @@ onMounted(async () => {
   try {
     const res: any = await new Promise((resolve, reject) => {
       uni.request({
-        url: '/api/attendance/my',
+        url: '/api/earnings/summary',
         method: 'GET',
         header: { Authorization: `Bearer ${uni.getStorageSync('token')}` },
         success: (r) => resolve(r.data),
         fail: (e) => reject(e)
       })
     })
-    availableBalance.value = res.summary?.availableBalance || 0
+    availableBalance.value = res.pendingWithdrawal || 0
   } catch {
     // ignore
   }
