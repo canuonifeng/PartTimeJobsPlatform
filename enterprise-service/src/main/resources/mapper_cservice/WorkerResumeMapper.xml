@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.cservice.mapper.WorkerResumeMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO worker_resumes (worker_id, file_name, file_url, uploaded_at)
+        VALUES (#{workerId}, #{fileName}, #{fileUrl}, #{uploadedAt})
+    </insert>
+
+    <select id="findByWorkerId" resultType="com.parttime.cservice.pojo.entity.WorkerResume">
+        SELECT * FROM worker_resumes WHERE worker_id = #{workerId}
+    </select>
+
+    <delete id="deleteById">
+        DELETE FROM worker_resumes WHERE id = #{id}
+    </delete>
+
+</mapper>

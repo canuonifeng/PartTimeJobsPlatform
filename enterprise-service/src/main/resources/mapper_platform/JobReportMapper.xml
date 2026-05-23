@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.JobReportMapper">
+
+    <resultMap id="JobReportResultMap" type="com.parttime.platform.pojo.entity.JobReport">
+        <id property="id" column="id"/>
+        <result property="jobId" column="job_id"/>
+        <result property="reporterId" column="reporter_id"/>
+        <result property="reason" column="reason"/>
+        <result property="description" column="description"/>
+        <result property="status" column="status"/>
+        <result property="reviewerId" column="reviewer_id"/>
+        <result property="reviewRemark" column="review_remark"/>
+        <result property="reviewedAt" column="reviewed_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findById" resultMap="JobReportResultMap">
+        SELECT * FROM job_reports WHERE id = #{id}
+    </select>
+
+    <select id="findByStatus" resultMap="JobReportResultMap">
+        SELECT * FROM job_reports WHERE status = #{status} ORDER BY created_at DESC
+    </select>
+
+    <select id="findAll" resultMap="JobReportResultMap">
+        SELECT * FROM job_reports ORDER BY created_at DESC
+    </select>
+
+    <update id="update">
+        UPDATE job_reports
+        SET status = #{status},
+            reviewer_id = #{reviewerId},
+            review_remark = #{reviewRemark},
+            reviewed_at = #{reviewedAt}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

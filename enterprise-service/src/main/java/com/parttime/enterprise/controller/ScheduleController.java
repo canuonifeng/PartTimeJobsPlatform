@@ -21,7 +21,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/enterprise")
 public class ScheduleController {
 
     @Resource

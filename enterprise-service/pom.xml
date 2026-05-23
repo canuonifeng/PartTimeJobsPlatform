@@ -16,7 +16,7 @@
     <packaging>jar</packaging>
 
     <name>enterprise-service</name>
-    <description>Part-time Job SaaS Platform - Enterprise Backend Service</description>
+    <description>Part-time Job SaaS Platform - Backend Service</description>
 
     <properties>
         <java.version>17</java.version>
@@ -160,7 +160,7 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
-                    <mainClass>com.parttime.enterprise.EnterpriseApplication</mainClass>
+                    <mainClass>com.parttime.PartTimeApplication</mainClass>
                 </configuration>
                 <executions>
                     <execution>

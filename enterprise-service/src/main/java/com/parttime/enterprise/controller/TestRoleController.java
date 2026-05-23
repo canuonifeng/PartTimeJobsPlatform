@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/test")
+@RequestMapping("/api/enterprise/test")
 public class TestRoleController {
 
     @Operation(summary = "测试管理员权限", description = "测试ADMIN角色的权限控制")

@@ -1,25 +1,23 @@
 import request from './request'
 
-export function getJobs(params) {
+export function getJobs() {
   return request({
-    url: '/api/jobs',
-    method: 'GET',
-    data: params
+    url: '/api/worker/jobs',
+    method: 'GET'
   })
 }
 
 export function getJobDetail(id) {
   return request({
-    url: '/api/jobs/detail',
+    url: '/api/worker/jobs/detail',
     method: 'GET',
-    data: { id }
+    params: { id }
   })
 }
 
-export function applyJob(id, data) {
+export function applyJob(id) {
   return request({
-    url: `/api/jobs/apply?id=${id}`,
-    method: 'POST',
-    data
+    url: `/api/worker/jobs/apply?id=${id}`,
+    method: 'POST'
   })
 }

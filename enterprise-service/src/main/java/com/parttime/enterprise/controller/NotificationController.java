@@ -23,7 +23,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/enterprise")
 public class NotificationController {
 
     @Resource

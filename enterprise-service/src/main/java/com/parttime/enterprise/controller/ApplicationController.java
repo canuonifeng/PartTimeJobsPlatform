@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.annotation.Resource;
 
 @RestController
-@RequestMapping("/api/applications")
+@RequestMapping("/api/enterprise/applications")
 public class ApplicationController {
 
     @Resource

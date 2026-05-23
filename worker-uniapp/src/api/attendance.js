@@ -2,7 +2,7 @@ import request from './request'
 
 export function checkIn(data) {
   return request({
-    url: '/api/attendance/check-in',
+    url: '/api/worker/attendance/check-in',
     method: 'POST',
     data
   })
@@ -10,7 +10,7 @@ export function checkIn(data) {
 
 export function checkOut(data) {
   return request({
-    url: '/api/attendance/check-out',
+    url: '/api/worker/attendance/check-out',
     method: 'POST',
     data
   })
@@ -18,14 +18,14 @@ export function checkOut(data) {
 
 export function getMyAttendance() {
   return request({
-    url: '/api/attendance/my',
+    url: '/api/worker/attendance/my',
     method: 'GET'
   })
 }
 
-export function submitCorrection(data) {
+export function requestCorrection(data) {
   return request({
-    url: '/api/attendance/correction',
+    url: '/api/worker/attendance/correction',
     method: 'POST',
     data
   })
@@ -33,8 +33,8 @@ export function submitCorrection(data) {
 
 export function getCorrectionStatus(params) {
   return request({
-    url: '/api/attendance/correction/status',
+    url: '/api/worker/attendance/correction/status',
     method: 'GET',
-    data: params
+    params
   })
 }

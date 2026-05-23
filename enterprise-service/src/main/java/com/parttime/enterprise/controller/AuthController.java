@@ -22,7 +22,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/enterprise/auth")
 public class AuthController {
 
     @Resource

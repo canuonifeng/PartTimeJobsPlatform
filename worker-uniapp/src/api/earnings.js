@@ -2,21 +2,21 @@ import request from './request'
 
 export function getEarningsSummary() {
   return request({
-    url: '/api/earnings/summary',
+    url: '/api/worker/earnings/summary',
     method: 'GET'
   })
 }
 
 export function getMyWithdrawals() {
   return request({
-    url: '/api/withdrawals/my',
+    url: '/api/worker/withdrawals/my',
     method: 'GET'
   })
 }
 
 export function createWithdrawal(data) {
   return request({
-    url: '/api/withdrawals',
+    url: '/api/worker/withdrawals',
     method: 'POST',
     data
   })
@@ -24,7 +24,7 @@ export function createWithdrawal(data) {
 
 export function getEarningsTransactions(params) {
   return request({
-    url: '/api/earnings/transactions',
+    url: '/api/worker/earnings/transactions',
     method: 'GET',
     params
   })

@@ -22,7 +22,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/job-categories")
+@RequestMapping("/api/enterprise/job-categories")
 public class JobCategoryController {
 
     @Resource

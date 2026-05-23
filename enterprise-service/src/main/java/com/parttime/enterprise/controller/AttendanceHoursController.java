@@ -19,7 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/attendance/hours")
+@RequestMapping("/api/enterprise/attendance/hours")
 public class AttendanceHoursController {
 
     @Resource
