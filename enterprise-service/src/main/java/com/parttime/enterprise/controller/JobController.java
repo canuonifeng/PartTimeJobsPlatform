@@ -28,7 +28,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/enterprise/jobs")
+@RequestMapping("/api/jobs")
 public class JobController {
 
     @Resource

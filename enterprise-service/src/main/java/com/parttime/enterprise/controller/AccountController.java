@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/enterprise/accounts")
+@RequestMapping("/api/accounts")
 public class AccountController {
 
     @Resource

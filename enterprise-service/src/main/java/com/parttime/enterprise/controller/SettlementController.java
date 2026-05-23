@@ -13,7 +13,7 @@ import javax.annotation.Resource;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/api/enterprise/settlement")
+@RequestMapping("/api/settlement")
 public class SettlementController {
 
     @Resource

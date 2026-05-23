@@ -1,8 +1,9 @@
 import request from './request'
 
-export function getMyShifts() {
+export function getMyShifts(params) {
   return request({
-    url: '/api/worker/schedule-shifts/my',
-    method: 'GET'
+    url: '/api/schedule-shifts/my',
+    method: 'GET',
+    data: params
   })
 }

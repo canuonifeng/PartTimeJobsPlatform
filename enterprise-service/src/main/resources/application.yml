@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: parttime-backend
+    name: enterprise-service
   jackson:
     time-zone: Asia/Shanghai
     serialization:
@@ -49,15 +49,8 @@ xxl:
       logretentiondays: 30
 
 jwt:
-  enterprise:
-    secret: parttime-enterprise-jwt-secret-key-must-be-at-least-256-bits
-    expiration: 86400000
-  platform:
-    secret: parttime-platform-jwt-secret-key-must-be-at-least-256-bits-long-enough
-    expiration: 86400000
-  worker:
-    secret: parttime-cservice-jwt-secret-key-must-be-at-least-256-bits
-    expiration: 86400000
+  secret: parttime-enterprise-jwt-secret-key-must-be-at-least-256-bits
+  expiration: 86400000
 
 wechat:
   worker-app-id: mock_worker_app_id
@@ -67,8 +60,8 @@ wechat:
   code-url: https://api.weixin.qq.com/wxa/getwxacodeunlimit
 
 mybatis:
-  mapper-locations: classpath:mapper_enterprise/*.xml,classpath:mapper_platform/*.xml,classpath:mapper_cservice/*.xml
-  type-aliases-package: com.parttime.enterprise.pojo.entity,com.parttime.platform.pojo.entity,com.parttime.cservice.pojo.entity
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.parttime.enterprise.pojo.entity
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

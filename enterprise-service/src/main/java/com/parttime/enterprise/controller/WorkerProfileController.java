@@ -16,7 +16,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/enterprise/workers")
+@RequestMapping("/api/workers")
 public class WorkerProfileController {
 
     @Resource
