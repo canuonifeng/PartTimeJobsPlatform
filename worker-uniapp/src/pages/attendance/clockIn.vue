@@ -121,7 +121,7 @@ async function handleCheckIn(shift: Shift) {
       lng: location.longitude
     })
     shift.checkedIn = true
-    shift.status = 'checked_in'
+    shift.status = 'CHECKED_IN'
     uni.showToast({ title: '签到成功', icon: 'success' })
   } catch (err: any) {
     if (err.message?.includes('距离')) {
@@ -141,7 +141,7 @@ async function handleCheckOut(shift: Shift) {
       lng: location.longitude
     })
     shift.checkedOut = true
-    shift.status = 'checked_out'
+    shift.status = 'CHECKED_OUT'
     uni.showToast({ title: '签退成功', icon: 'success' })
   } catch (err: any) {
     if (err.message?.includes('距离')) {
