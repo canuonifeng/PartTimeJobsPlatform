@@ -41,16 +41,6 @@
       </view>
 
       <view class="section">
-        <text class="section-title">薪资说明</text>
-        <view class="salary-table" v-if="job.rates?.length">
-          <view class="salary-row" v-for="rate in job.rates" :key="rate.id">
-            <text class="salary-type">{{ rateTypeLabel(rate.type) }}</text>
-            <text class="salary-amount">{{ rate.amount }}元/{{ rateUnit(rate.type) }}</text>
-          </view>
-        </view>
-      </view>
-
-      <view class="section">
         <text class="section-title">工作时段</text>
         <view class="schedule-slots" v-if="job.schedules?.length">
           <view class="slot" v-for="slot in job.schedules" :key="slot.id">
