@@ -175,6 +175,9 @@ public class JobServiceImpl implements JobService {
         JobApplication app = new JobApplication();
         app.setWorkerId(workerId);
         app.setJobId(jobId);
+        if (job != null) {
+            app.setCompanyId(job.getCompanyId());
+        }
         app.setStatus("PENDING");
         app.setAppliedAt(LocalDateTime.now());
         app.setUpdatedAt(LocalDateTime.now());

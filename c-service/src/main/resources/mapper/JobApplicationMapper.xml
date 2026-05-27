@@ -3,8 +3,8 @@
 <mapper namespace="com.parttime.cservice.mapper.JobApplicationMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO job_applications (worker_id, job_id, status)
-        VALUES (#{workerId}, #{jobId}, #{status})
+        INSERT INTO job_applications (worker_id, job_id, company_id, status)
+        VALUES (#{workerId}, #{jobId}, #{companyId}, #{status})
     </insert>
 
     <select id="findById" resultType="com.parttime.cservice.pojo.entity.JobApplication">

@@ -12,6 +12,8 @@ public class JobApplication {
     private Long workerId;
     @Schema(description = "岗位ID")
     private Long jobId;
+    @Schema(description = "企业ID")
+    private Long companyId;
     @Schema(description = "申请状态: PENDING-待处理, ACCEPTED-已通过, REJECTED-已拒绝")
     private String status;
     @Schema(description = "申请时间")
