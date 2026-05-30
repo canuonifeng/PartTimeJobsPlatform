@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.EnterpriseBalanceTransactionMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO enterprise_balance_transactions (company_id, amount, type, description, created_at)
+        VALUES (#{companyId}, #{amount}, #{type}, #{description}, #{createdAt})
+    </insert>
+
+</mapper>

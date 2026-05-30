@@ -43,3 +43,7 @@ export function resetPassword(id, newPassword) {
 export function deleteAccount(id) {
   return request.post('/admin/accounts/delete', { id })
 }
+
+export function adjustEnterpriseBalance(data) {
+  return request.post('/admin/enterprise/balance/adjust', data)
+}

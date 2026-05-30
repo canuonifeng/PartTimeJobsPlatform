@@ -36,6 +36,7 @@
             {{ row.status === 'ACTIVE' ? '停用' : '启用' }}
           </el-button>
           <el-button type="primary" size="small" text @click="handleAccounts(row)">账号管理</el-button>
+          <el-button type="success" size="small" text @click="handleTopUp(row)">充值</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -158,6 +159,25 @@
       <el-button type="primary" @click="confirmResetPassword">确定</el-button>
     </template>
   </el-dialog>
+
+  <!-- 充值对话框 -->
+  <el-dialog v-model="topUpDialog.visible" title="企业充值" width="400px">
+    <el-form label-width="80px">
+      <el-form-item label="企业名称">
+        <el-input :model-value="topUpDialog.companyName" disabled />
+      </el-form-item>
+      <el-form-item label="充值金额">
+        <el-input-number v-model="topUpDialog.amount" :min="0.01" :precision="2" style="width:100%" />
+      </el-form-item>
+      <el-form-item label="操作人">
+        <el-input :model-value="topUpDialog.operatorName" disabled />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="topUpDialog.visible = false">取消</el-button>
+      <el-button type="primary" @click="confirmTopUp">确认充值</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
@@ -165,10 +185,49 @@ import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   listEnterprises, createEnterprise, updateEnterprise, suspendEnterprise, activateEnterprise,
-  listAccounts, createAccount, updateAccount, resetPassword, deleteAccount
+  listAccounts, createAccount, updateAccount, resetPassword, deleteAccount, adjustEnterpriseBalance
 } from '../../api/enterprises'
 
 const roleMap = { ADMIN: '管理员', HR: '人力资源', MANAGER: '运营经理', FINANCE: '财务' }
+
+const topUpDialog = ref({ visible: false, companyId: null, companyName: '', amount: 0, operatorName: '' })
+
+function getCurrentUsername() {
+  try {
+    const token = localStorage.getItem('token')
+    if (!token) return ''
+    const payload = token.split('.')[1]
+    const decoded = JSON.parse(atob(payload))
+    return decoded.sub || ''
+  } catch { return '' }
+}
+
+function handleTopUp(row) {
+  topUpDialog.value = {
+    visible: true,
+    companyId: row.id,
+    companyName: row.companyName,
+    amount: 0,
+    operatorName: getCurrentUsername()
+  }
+}
+
+async function confirmTopUp() {
+  if (!topUpDialog.value.amount || topUpDialog.value.amount <= 0) {
+    ElMessage.warning('请输入充值金额')
+    return
+  }
+  try {
+    await adjustEnterpriseBalance({
+      companyId: topUpDialog.value.companyId,
+      amount: topUpDialog.value.amount,
+      description: ''
+    })
+    ElMessage.success(`已为企业 ${topUpDialog.value.companyName} 充值 ${topUpDialog.value.amount} 元`)
+    topUpDialog.value.visible = false
+    await fetchData()
+  } catch {}
+}
 
 const loading = ref(false)
 const enterprises = ref([])
