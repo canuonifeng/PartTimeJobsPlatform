@@ -70,6 +70,10 @@ function handleMenuSelect(index) {
           <el-icon><CopyDocument /></el-icon>
           <span>职位模版</span>
         </el-menu-item>
+        <el-menu-item index="/balance">
+          <el-icon><Wallet /></el-icon>
+          <span>账户余额</span>
+        </el-menu-item>
         <el-menu-item index="/settings">
           <el-icon><Picture /></el-icon>
           <span>企业设置</span>
