@@ -101,6 +101,7 @@ const authStore = useAuthStore()
 const markers = computed(() => {
   if (!job.value?.latitude || !job.value?.longitude) return []
   return [{
+    id: 1,
     latitude: job.value.latitude,
     longitude: job.value.longitude,
     title: job.value.title || ''
