@@ -41,9 +41,16 @@
       </view>
 
       <view class="section">
-        <text class="section-title">工作时段</text>
+        <text class="section-title">选择排班时段<span v-if="selectedScheduleIds.length" class="selected-count">（已选 {{ selectedScheduleIds.length }} 个）</span></text>
         <view class="schedule-slots" v-if="job.schedules?.length">
-          <view class="slot" v-for="slot in job.schedules" :key="slot.id">
+          <view
+            class="slot"
+            :class="{ selected: selectedScheduleIds.includes(slot.id) }"
+            v-for="slot in job.schedules"
+            :key="slot.id"
+            @click="toggleSchedule(slot.id)"
+          >
+            <text class="slot-check">{{ selectedScheduleIds.includes(slot.id) ? '✓' : '' }}</text>
             <text class="slot-date">{{ slot.date }}</text>
             <text class="slot-time">{{ slot.startTime }}-{{ slot.endTime }}</text>
           </view>
@@ -89,6 +96,7 @@ function rateTypeLabel(type) {
 const job = ref<any>(null)
 const loading = ref(true)
 const appliedStatus = ref<string | null>(null)
+const selectedScheduleIds = ref<number[]>([])
 const authStore = useAuthStore()
 const markers = computed(() => {
   if (!job.value?.latitude || !job.value?.longitude) return []
@@ -145,6 +153,15 @@ async function loadDetail() {
   }
 }
 
+function toggleSchedule(scheduleId: number) {
+  const idx = selectedScheduleIds.value.indexOf(scheduleId)
+  if (idx >= 0) {
+    selectedScheduleIds.value.splice(idx, 1)
+  } else {
+    selectedScheduleIds.value.push(scheduleId)
+  }
+}
+
 async function handleApply() {
   if (!job.value) return
   if (!authStore.isLoggedIn) {
@@ -152,10 +169,14 @@ async function handleApply() {
     return
   }
   if (applyStatusText.value) return
+  if (selectedScheduleIds.value.length === 0) {
+    uni.showToast({ title: '请至少选择一个排班时段', icon: 'none' })
+    return
+  }
   try {
     await applyJob(job.value.id, {
       jobId: job.value.id,
-      scheduleIds: []
+      scheduleIds: [...selectedScheduleIds.value]
     })
     appliedStatus.value = '已报名'
     job.value.applyStatus = '已报名'
@@ -296,20 +317,51 @@ onLoad(loadDetail)
 
 .slot {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 12rpx;
   padding: 16rpx 20rpx;
   background: #f9f9f9;
   border-radius: 8rpx;
+  border: 1rpx solid transparent;
+  transition: all 0.2s;
+}
+
+.slot.selected {
+  background: #e8f8ee;
+  border-color: #07c160;
+}
+
+.slot-check {
+  width: 32rpx;
+  height: 32rpx;
+  line-height: 32rpx;
+  text-align: center;
+  border-radius: 50%;
+  background: #e0e0e0;
+  color: #fff;
+  font-size: 20rpx;
+  flex-shrink: 0;
+}
+
+.slot.selected .slot-check {
+  background: #07c160;
 }
 
 .slot-date {
   font-size: 26rpx;
   color: #333;
+  flex: 1;
 }
 
 .slot-time {
   font-size: 26rpx;
   color: #666;
+}
+
+.selected-count {
+  font-size: 22rpx;
+  color: #07c160;
+  font-weight: 400;
 }
 
 .job-desc {
