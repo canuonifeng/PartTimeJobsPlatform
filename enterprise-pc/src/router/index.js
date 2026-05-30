@@ -89,6 +89,12 @@ const routes = [
     name: 'CompanySettings',
     component: () => import('../views/settings/CompanySettings.vue'),
     meta: { requiresAuth: true, title: '企业设置' }
+  },
+  {
+    path: '/balance',
+    name: 'BalancePage',
+    component: () => import('../views/balance/BalancePage.vue'),
+    meta: { requiresAuth: true, title: '账户余额' }
   }
 ]
 
