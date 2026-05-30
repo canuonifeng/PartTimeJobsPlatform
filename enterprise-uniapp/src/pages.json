@@ -11,8 +11,8 @@
     {"path": "pages/templates/templateList", "style": {"navigationBarTitleText": "职位模版", "enablePullDownRefresh": true}},
     {"path": "pages/templates/templateForm", "style": {"navigationBarTitleText": "模版表单"}},
     {"path": "pages/applications/applicationList", "style": {"navigationBarTitleText": "应聘管理", "enablePullDownRefresh": true}},
-    {"path": "pages/schedules/scheduleList", "style": {"navigationBarTitleText": "排班管理", "enablePullDownRefresh": true}},
-    {"path": "pages/attendance/attendanceList", "style": {"navigationBarTitleText": "考勤管理", "enablePullDownRefresh": true}},
+    {"path": "pages/schedules/scheduleList", "style": {"navigationBarTitleText": "排班考勤", "enablePullDownRefresh": true}},
+    {"path": "pages/attendance/attendanceList", "style": {"navigationBarTitleText": "薪资管理", "enablePullDownRefresh": true}},
     {"path": "pages/balance/balanceList", "style": {"navigationBarTitleText": "账户余额", "enablePullDownRefresh": true}}
   ],
   "globalStyle": {

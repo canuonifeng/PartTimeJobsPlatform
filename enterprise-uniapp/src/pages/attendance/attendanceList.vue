@@ -109,7 +109,7 @@ function settlementStatusLabel(s) {
 <template>
   <view class="page">
     <view class="header">
-      <text class="header-title">考勤管理</text>
+      <text class="header-title">薪资管理</text>
       <view class="header-actions">
         <button class="header-btn pay-btn" @click="handleBatchPay">结算</button>
         <button class="header-btn del-btn" @click="handleBatchDelete">删除</button>

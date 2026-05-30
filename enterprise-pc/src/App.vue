@@ -47,12 +47,12 @@ function handleMenuSelect(index) {
           <span>应聘管理</span>
         </el-menu-item>
         <el-menu-item index="/schedules/shifts">
-          <el-icon><List /></el-icon>
-          <span>排班管理</span>
+          <el-icon><Calendar /></el-icon>
+          <span>排班考勤</span>
         </el-menu-item>
         <el-menu-item index="/attendance/hours">
-          <el-icon><Timer /></el-icon>
-          <span>考勤管理</span>
+          <el-icon><Money /></el-icon>
+          <span>薪资管理</span>
         </el-menu-item>
         <el-menu-item index="/workers">
           <el-icon><User /></el-icon>

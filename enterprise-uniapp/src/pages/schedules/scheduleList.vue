@@ -65,7 +65,7 @@ function handleDelete(id) {
 <template>
   <view class="page">
     <view class="header">
-      <text class="header-title">排班管理</text>
+      <text class="header-title">排班考勤</text>
     </view>
     <view class="content">
       <scroll-view scroll-y class="list-scroll" @scrolltolower="loadMore">

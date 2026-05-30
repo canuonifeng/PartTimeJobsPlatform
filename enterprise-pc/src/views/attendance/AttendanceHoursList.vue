@@ -258,7 +258,7 @@ onMounted(() => {
       </div>
     </el-card>
 
-    <el-dialog v-model="editDialogVisible" title="编辑考勤管理" width="400px">
+    <el-dialog v-model="editDialogVisible" title="编辑薪资管理" width="400px">
       <el-form :model="editForm" label-width="100px">
         <el-form-item label="工时">
           <el-input-number v-model="editForm.totalHours" :min="0" :precision="2" style="width: 100%" />
