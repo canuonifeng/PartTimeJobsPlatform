@@ -99,7 +99,7 @@ function rateTypeLabel(t) {
           <view v-for="(sched, i) in schedules" :key="i" class="info-row">
             <text class="info-label">{{ sched.date }}</text>
             <text class="info-value">
-              {{ sched.startTime }} - {{ sched.endTime }}（{{ sched.slots }}人）
+              {{ sched.startTime }} - {{ sched.endTime }}
             </text>
           </view>
         </view>

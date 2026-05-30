@@ -88,11 +88,10 @@ public class JobServiceImpl implements JobService {
                 schedule.setScheduleDate(scheduleReq.getScheduleDate());
                 schedule.setStartTime(scheduleReq.getStartTime());
                 schedule.setEndTime(scheduleReq.getEndTime());
-                schedule.setSlotsAvailable(scheduleReq.getSlotsAvailable());
+                schedule.setSlotsAvailable(job.getHeadcount());
                 jobScheduleMapper.insert(schedule);
             }
         }
-
         return toResponse(job);
     }
 
@@ -134,7 +133,7 @@ public class JobServiceImpl implements JobService {
                 schedule.setScheduleDate(scheduleReq.getScheduleDate());
                 schedule.setStartTime(scheduleReq.getStartTime());
                 schedule.setEndTime(scheduleReq.getEndTime());
-                schedule.setSlotsAvailable(scheduleReq.getSlotsAvailable());
+                schedule.setSlotsAvailable(job.getHeadcount());
                 jobScheduleMapper.insert(schedule);
             }
         }
@@ -276,12 +275,14 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public JobScheduleVO addJobSchedule(Long jobId, JobScheduleCmd request) {
+        Job job = jobMapper.findById(jobId)
+                .orElseThrow(() -> new RuntimeException("Job not found: " + jobId));
         JobSchedule schedule = new JobSchedule();
         schedule.setJobId(jobId);
         schedule.setScheduleDate(request.getScheduleDate());
         schedule.setStartTime(request.getStartTime());
         schedule.setEndTime(request.getEndTime());
-        schedule.setSlotsAvailable(request.getSlotsAvailable());
+        schedule.setSlotsAvailable(job.getHeadcount());
         jobScheduleMapper.insert(schedule);
         return toScheduleResponse(schedule);
     }
@@ -290,11 +291,12 @@ public class JobServiceImpl implements JobService {
     public JobScheduleVO updateJobSchedule(Long scheduleId, JobScheduleCmd request) {
         JobSchedule schedule = jobScheduleMapper.findById(scheduleId)
                 .orElseThrow(() -> new RuntimeException("JobSchedule not found: " + scheduleId));
-        Long jobId = schedule.getJobId();
+        Job job = jobMapper.findById(schedule.getJobId())
+                .orElseThrow(() -> new RuntimeException("Job not found: " + schedule.getJobId()));
         schedule.setScheduleDate(request.getScheduleDate());
         schedule.setStartTime(request.getStartTime());
         schedule.setEndTime(request.getEndTime());
-        schedule.setSlotsAvailable(request.getSlotsAvailable());
+        schedule.setSlotsAvailable(job.getHeadcount());
         jobScheduleMapper.update(schedule);
         return toScheduleResponse(schedule);
     }

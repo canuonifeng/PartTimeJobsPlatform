@@ -194,8 +194,7 @@ async function loadJobDetail() {
         ? schedRes.map(sched => ({
             date: sched.scheduleDate || sched.date || '',
             startTime: sched.startTime || '',
-            endTime: sched.endTime || '',
-            slots: sched.slotsAvailable ?? sched.slots ?? 1
+            endTime: sched.endTime || ''
           }))
         : []
     } catch {}
@@ -231,7 +230,7 @@ function buildPayload() {
         scheduleDate: sched.date,
         startTime: sched.startTime,
         endTime: sched.endTime,
-        slotsAvailable: Number(sched.slots) || 1
+        slotsAvailable: 1
       }))
   }
 }
@@ -245,7 +244,7 @@ function removeRate(index) {
 }
 
 function addSchedule() {
-  schedules.value.push({ date: '', startTime: '', endTime: '', slots: 1 })
+  schedules.value.push({ date: '', startTime: '', endTime: '' })
 }
 
 function removeSchedule(index) {
@@ -446,7 +445,6 @@ async function handleSave() {
                 <text>{{ sched.endTime || '结束' }}</text>
               </view>
             </picker>
-            <input v-model.number="sched.slots" class="input input-sm" type="number" placeholder="人数" />
             <text class="remove-btn" @click="removeSchedule(index)">删除</text>
           </view>
         </view>
