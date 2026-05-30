@@ -71,8 +71,7 @@
         <button
           class="apply-btn"
           type="primary"
-          :disabled="!!applyStatusText"
-          :class="{ applied: !!applyStatusText }"
+          :disabled="!canApplyMore && authStore.isLoggedIn"
           @click="handleApply"
         >
           {{ applyButtonText }}
