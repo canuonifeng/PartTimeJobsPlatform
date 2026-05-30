@@ -206,6 +206,10 @@ async function handleApply() {
     const msg = err.message || err.errMsg || ''
     if (msg.includes('已招满')) {
       uni.showToast({ title: '该岗位已招满', icon: 'none' })
+    } else if (msg.includes('已截止')) {
+      uni.showToast({ title: '报名已截止', icon: 'none' })
+    } else if (msg.includes('已全部报名')) {
+      uni.showToast({ title: '所选排班已全部报名', icon: 'none' })
     } else {
       uni.showToast({ title: '报名失败', icon: 'none' })
     }

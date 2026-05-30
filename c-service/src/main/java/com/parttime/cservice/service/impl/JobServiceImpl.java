@@ -175,7 +175,13 @@ public class JobServiceImpl implements JobService {
             return false;
         }
         Job job = jobMapper.findByJobId(jobId).orElse(null);
-        if (job != null && job.getHeadcount() != null && job.getAcceptedCount() != null
+        if (job == null) {
+            throw new RuntimeException("岗位不存在");
+        }
+        if (job.getDeadline() != null && LocalDateTime.now().isAfter(job.getDeadline())) {
+            throw new RuntimeException("报名已截止");
+        }
+        if (job.getHeadcount() != null && job.getAcceptedCount() != null
                 && job.getAcceptedCount() >= job.getHeadcount()) {
             throw new RuntimeException("该岗位已招满");
         }
@@ -184,7 +190,7 @@ public class JobServiceImpl implements JobService {
                 .filter(id -> !alreadyApplied.contains(id))
                 .toList();
         if (newIds.isEmpty()) {
-            return false;
+            throw new RuntimeException("所选排班已全部报名");
         }
         List<JobApplication> existing = jobApplicationMapper.findByWorkerIdAndJobId(workerId, jobId);
         Long applicationId;
