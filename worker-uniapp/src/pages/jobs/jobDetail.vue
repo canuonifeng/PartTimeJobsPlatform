@@ -45,10 +45,10 @@
         <view class="schedule-slots" v-if="job.schedules?.length">
           <view
             class="slot"
-            :class="{ selected: selectedScheduleIds.includes(slot.id) }"
+            :class="{ selected: selectedScheduleIds.includes(slot.id), disabled: !!applyStatusText }"
             v-for="slot in job.schedules"
             :key="slot.id"
-            @click="toggleSchedule(slot.id)"
+            @click="!applyStatusText && toggleSchedule(slot.id)"
           >
             <text class="slot-check">{{ selectedScheduleIds.includes(slot.id) ? '✓' : '' }}</text>
             <text class="slot-date">{{ slot.date }}</text>
@@ -145,6 +145,9 @@ async function loadDetail() {
     job.value = res
     if (res.applyStatus) {
       appliedStatus.value = res.applyStatus
+    }
+    if (res.appliedScheduleIds?.length) {
+      selectedScheduleIds.value = [...res.appliedScheduleIds]
     }
   } catch {
     uni.showToast({ title: '加载失败', icon: 'none' })
@@ -345,6 +348,11 @@ onLoad(loadDetail)
 
 .slot.selected .slot-check {
   background: #07c160;
+}
+
+.slot.disabled {
+  opacity: 0.7;
+  cursor: default;
 }
 
 .slot-date {

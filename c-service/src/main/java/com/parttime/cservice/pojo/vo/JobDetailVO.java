@@ -50,4 +50,6 @@ public class JobDetailVO {
 
     @Schema(description = "当前工人的申请状态")
     private String applyStatus;
+    @Schema(description = "当前工人已报名的排班ID列表")
+    private List<Long> appliedScheduleIds;
 }

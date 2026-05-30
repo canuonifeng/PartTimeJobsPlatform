@@ -296,6 +296,14 @@ public class JobServiceImpl implements JobService {
             List<JobApplication> applications = jobApplicationMapper.findByWorkerIdAndJobId(workerId, job.getId());
             if (!applications.isEmpty()) {
                 detail.setApplyStatus(mapApplyStatus(applications.get(0).getStatus()));
+                List<Long> scheduleIds = new ArrayList<>();
+                for (JobApplication app : applications) {
+                    List<ApplicationSchedule> schedules = applicationScheduleMapper.findByApplicationId(app.getId());
+                    for (ApplicationSchedule as : schedules) {
+                        scheduleIds.add(as.getScheduleId());
+                    }
+                }
+                detail.setAppliedScheduleIds(scheduleIds);
             }
         }
         return detail;
