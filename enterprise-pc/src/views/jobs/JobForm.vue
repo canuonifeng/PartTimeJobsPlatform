@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getJob, createJob, updateJob } from '../../api/job'
+import { listLocations } from '../../api/location'
 import regions from '../../assets/regions.json'
 import LocationPicker from '../../components/LocationPicker.vue'
 
@@ -10,6 +11,8 @@ const router = useRouter()
 const route = useRoute()
 const isEdit = !!route.params.id
 const loading = ref(false)
+const locationDialogVisible = ref(false)
+const availableLocations = ref([])
 const formRef = ref(null)
 const uploadUrl = '/api/files/upload'
 
@@ -178,6 +181,26 @@ async function handleSubmit() {
   }
 }
 
+async function openLocationPicker() {
+  try {
+    availableLocations.value = await listLocations()
+    locationDialogVisible.value = true
+  } catch {
+    ElMessage.error('加载地点列表失败')
+  }
+}
+
+function selectLocation(loc) {
+  form.value.province = loc.province || ''
+  form.value.city = loc.city || ''
+  form.value.district = loc.district || ''
+  form.value.address = loc.address || ''
+  form.value.latitude = loc.latitude
+  form.value.longitude = loc.longitude
+  locationDialogVisible.value = false
+  ElMessage.success(`已选择地点：${loc.name}`)
+}
+
 onMounted(() => {
   fetchDetail()
 })
@@ -195,6 +218,9 @@ onMounted(() => {
         </el-form-item>
         <el-form-item label="职位描述" prop="description">
           <el-input v-model="form.description" type="textarea" :rows="4" />
+        </el-form-item>
+        <el-form-item label="工作地点">
+          <el-button @click="openLocationPicker">选择已有地点</el-button>
         </el-form-item>
         <el-form-item label="省/市/区" prop="province">
           <el-cascader v-model="regionSelected" :options="regions" placeholder="选择省/市/区" style="width: 100%" />
@@ -276,6 +302,20 @@ onMounted(() => {
       </el-form>
     </el-card>
   </div>
+</template>
+
+  <el-dialog v-model="locationDialogVisible" title="选择工作地点" width="600px">
+    <el-table :data="availableLocations" stripe @row-click="selectLocation" highlight-current-row>
+      <el-table-column prop="name" label="名称" width="120" />
+      <el-table-column prop="province" label="省" width="80" />
+      <el-table-column prop="city" label="市" width="80" />
+      <el-table-column prop="district" label="区" width="80" />
+      <el-table-column prop="address" label="详细地址" min-width="180" />
+    </el-table>
+    <template #footer>
+      <el-button @click="locationDialogVisible = false">取消</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <style scoped>
