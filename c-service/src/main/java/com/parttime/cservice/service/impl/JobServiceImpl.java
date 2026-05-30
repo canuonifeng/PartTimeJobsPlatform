@@ -174,6 +174,11 @@ public class JobServiceImpl implements JobService {
         if (scheduleIds == null || scheduleIds.isEmpty()) {
             return false;
         }
+        Job job = jobMapper.findByJobId(jobId).orElse(null);
+        if (job != null && job.getHeadcount() != null && job.getAcceptedCount() != null
+                && job.getAcceptedCount() >= job.getHeadcount()) {
+            throw new RuntimeException("该岗位已招满");
+        }
         List<Long> alreadyApplied = applicationScheduleMapper.findScheduleIdsByJobAndWorker(jobId, workerId);
         List<Long> newIds = scheduleIds.stream()
                 .filter(id -> !alreadyApplied.contains(id))
@@ -181,20 +186,26 @@ public class JobServiceImpl implements JobService {
         if (newIds.isEmpty()) {
             return false;
         }
-        Job job = jobMapper.findByJobId(jobId).orElse(null);
-        JobApplication app = new JobApplication();
-        app.setWorkerId(workerId);
-        app.setJobId(jobId);
-        if (job != null) {
-            app.setCompanyId(job.getCompanyId());
+        List<JobApplication> existing = jobApplicationMapper.findByWorkerIdAndJobId(workerId, jobId);
+        Long applicationId;
+        if (!existing.isEmpty()) {
+            applicationId = existing.get(0).getId();
+        } else {
+            JobApplication app = new JobApplication();
+            app.setWorkerId(workerId);
+            app.setJobId(jobId);
+            if (job != null) {
+                app.setCompanyId(job.getCompanyId());
+            }
+            app.setStatus("PENDING");
+            app.setAppliedAt(LocalDateTime.now());
+            app.setUpdatedAt(LocalDateTime.now());
+            jobApplicationMapper.insert(app);
+            applicationId = app.getId();
         }
-        app.setStatus("PENDING");
-        app.setAppliedAt(LocalDateTime.now());
-        app.setUpdatedAt(LocalDateTime.now());
-        jobApplicationMapper.insert(app);
         for (Long scheduleId : newIds) {
             ApplicationSchedule as = new ApplicationSchedule();
-            as.setApplicationId(app.getId());
+            as.setApplicationId(applicationId);
             as.setScheduleId(scheduleId);
             applicationScheduleMapper.insert(as);
         }

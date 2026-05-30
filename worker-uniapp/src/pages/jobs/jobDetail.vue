@@ -71,7 +71,7 @@
         <button
           class="apply-btn"
           type="primary"
-          :disabled="!canApplyMore && authStore.isLoggedIn"
+          :disabled="isJobFull || (!canApplyMore && authStore.isLoggedIn)"
           @click="handleApply"
         >
           {{ applyButtonText }}
@@ -125,7 +125,13 @@ const canApplyMore = computed(() =>
   !!authStore.isLoggedIn && job.value?.schedules?.length !== appliedScheduleIds.value.length
 )
 
+const isJobFull = computed(() => {
+  if (!job.value) return false
+  return job.value.acceptedCount >= job.value.headcount
+})
+
 const applyButtonText = computed(() => {
+  if (isJobFull.value) return '已招满'
   if (!authStore.isLoggedIn) return '登录报名'
   if (!appliedScheduleIds.value.length) return '立即报名'
   if (canApplyMore.value) return '补报名'
@@ -204,6 +210,10 @@ async function handleApply() {
     goToLogin()
     return
   }
+  if (isJobFull.value) {
+    uni.showToast({ title: '该岗位已招满', icon: 'none' })
+    return
+  }
   const idsToSubmit = [...pendingScheduleIds.value]
   if (idsToSubmit.length === 0) {
     uni.showToast({ title: '请选择未报名的排班时段', icon: 'none' })
@@ -218,8 +228,13 @@ async function handleApply() {
     appliedStatus.value = '已报名'
     job.value.applyStatus = '已报名'
     uni.showToast({ title: '报名成功', icon: 'success' })
-  } catch {
-    uni.showToast({ title: '报名失败', icon: 'none' })
+  } catch (err: any) {
+    const msg = err.message || err.errMsg || ''
+    if (msg.includes('已招满')) {
+      uni.showToast({ title: '该岗位已招满', icon: 'none' })
+    } else {
+      uni.showToast({ title: '报名失败', icon: 'none' })
+    }
   }
 }
 
