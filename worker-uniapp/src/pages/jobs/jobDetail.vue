@@ -9,9 +9,12 @@
       </view>
 
       <view class="info-section">
-        <view class="info-row">
+        <view class="info-row location-row" @click="handleOpenLocation">
           <text class="info-label">工作地点</text>
-          <text class="info-value">{{ job.location }}</text>
+          <view class="location-value-wrap">
+            <text class="info-value">{{ job.location }}</text>
+            <text class="location-arrow">›</text>
+          </view>
         </view>
         <view class="info-row">
           <text class="info-label">招聘人数</text>
@@ -31,14 +34,7 @@
         </view>
       </view>
 
-      <view class="map-section" v-if="job.latitude && job.longitude">
-        <map :latitude="job.latitude" :longitude="job.longitude" :markers="markers" style="width:100%;height:300rpx;border-radius:16rpx" />
-        <text class="map-address">{{ job.province }} {{ job.city }} {{ job.district }} {{ job.address }}</text>
-        <view class="map-meta">
-          <text class="map-coords">{{ job.latitude }}, {{ job.longitude }}</text>
-          <text class="map-link" @click="handleOpenLocation">定位</text>
-        </view>
-      </view>
+
 
       <view class="section">
         <text class="section-title">
@@ -103,17 +99,7 @@ const appliedStatus = ref<string | null>(null)
 const appliedScheduleIds = ref<number[]>([])
 const selectedScheduleIds = ref<number[]>([])
 const authStore = useAuthStore()
-const markers = computed(() => {
-  if (!job.value?.latitude || !job.value?.longitude) return []
-  return [{
-    id: 1,
-    latitude: job.value.latitude,
-    longitude: job.value.longitude,
-    title: job.value.title || '',
-    width: 30,
-    height: 30
-  }]
-})
+
 
 const applyStatusText = computed(() => job.value?.applyStatus || appliedStatus.value || '')
 
@@ -448,35 +434,19 @@ onLoad(loadDetail)
   line-height: 1.6;
 }
 
-.map-section {
-  margin-bottom: 20rpx;
-  border-radius: 16rpx;
-  overflow: hidden;
-}
-.map-address {
-  display: block;
-  padding: 12rpx 16rpx;
-  background: #fff;
-  font-size: 24rpx;
-  color: #666;
+.location-row {
+  cursor: pointer;
 }
 
-.map-meta {
+.location-value-wrap {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 0 16rpx 12rpx;
-  background: #fff;
+  gap: 8rpx;
 }
 
-.map-coords {
-  font-size: 22rpx;
-  color: #999;
-}
-
-.map-link {
-  font-size: 24rpx;
-  color: #07c160;
+.location-arrow {
+  font-size: 28rpx;
+  color: #ccc;
 }
 
 .bottom-bar {
