@@ -14,6 +14,8 @@ public class ScheduleShift {
     private Long id;
     @Schema(description = "岗位ID")
     private Long jobId;
+    @Schema(description = "企业ID")
+    private Long companyId;
     @Schema(description = "报名ID快照")
     private Long applicationId;
     @Schema(description = "薪资类型快照")

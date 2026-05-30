@@ -100,6 +100,8 @@ public class AttendanceServiceImpl implements AttendanceService {
         record.setCompanyId(shift.getCompanyId());
         record.setWorkerId(workerId);
         record.setCheckInTime(LocalDateTime.now());
+        record.setCheckInLat(lat);
+        record.setCheckInLng(lng);
         record.setStatus(ShiftStatus.CHECKED_IN.name());
         record.setCreatedAt(LocalDateTime.now());
         record.setUpdatedAt(LocalDateTime.now());
@@ -141,8 +143,12 @@ public class AttendanceServiceImpl implements AttendanceService {
         }
 
         record.setCheckOutTime(checkOutTime);
+        record.setCheckOutLat(lat);
+        record.setCheckOutLng(lng);
         record.setTotalHours(hours);
         record.setScheduledPay(scheduledPay);
+        record.setPayablePay(scheduledPay);
+        record.setSettlementStatus("UNPAID");
         record.setCalculatedAt(LocalDateTime.now());
         record.setStatus(ShiftStatus.CHECKED_OUT.name());
         record.setUpdatedAt(LocalDateTime.now());

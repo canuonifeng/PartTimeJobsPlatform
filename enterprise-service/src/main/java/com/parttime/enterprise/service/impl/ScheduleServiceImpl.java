@@ -38,8 +38,11 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     public ScheduleShiftVO assignShift(ScheduleShiftCmd request) {
+        Job job = jobMapper.findById(request.getJobId())
+                .orElseThrow(() -> new RuntimeException("Job not found: " + request.getJobId()));
         ScheduleShift shift = new ScheduleShift();
         shift.setJobId(request.getJobId());
+        shift.setCompanyId(job.getCompanyId());
         shift.setWorkerId(request.getWorkerId());
         shift.setShiftDate(request.getShiftDate());
         shift.setStartTime(request.getStartTime());
@@ -54,10 +57,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         shift = shiftMapper.findById(shiftId)
                 .orElseThrow(() -> new RuntimeException("ScheduleShift not found: " + shiftId));
         if (shift.getWorkerId() != null) {
-            Job job = jobMapper.findById(shift.getJobId()).orElse(null);
-            if (job != null) {
-                companyWorkerMapper.upsert(job.getCompanyId(), shift.getWorkerId());
-            }
+            companyWorkerMapper.upsert(job.getCompanyId(), shift.getWorkerId());
         }
         return toShiftResponse(shift);
     }

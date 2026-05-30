@@ -35,8 +35,12 @@ public class AttendanceRecordEntity {
     private BigDecimal totalHours;
     @Schema(description = "排班薪资")
     private BigDecimal scheduledPay;
-    @Schema(description = "工资计算时间")
+    @Schema(description = "薪资计算时间")
     private LocalDateTime calculatedAt;
+    @Schema(description = "应付薪资")
+    private BigDecimal payablePay;
+    @Schema(description = "结算状态: UNPAID/PAYING/PAID")
+    private String settlementStatus;
     @Schema(description = "考勤状态: NORMAL-正常, LATE-迟到, EARLY_LEAVE-早退, ABSENT-缺勤")
     private String status;
     @Schema(description = "备注")
