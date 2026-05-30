@@ -126,7 +126,7 @@ onMounted(() => {
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="createdAt" label="申请时间" width="180" />
+        <el-table-column prop="appliedAt" label="申请时间" width="180" />
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="{ row }">
             <el-button v-if="row.status === 'PENDING'" size="small" type="success" @click="handleAccept(row)">通过</el-button>
