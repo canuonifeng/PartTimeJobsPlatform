@@ -1,11 +1,35 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { listLocations, createLocation, updateLocation, deleteLocation, enableLocation, disableLocation } from '../../api/location'
+import regions from '../../assets/regions.json'
+import LocationPicker from '../../components/LocationPicker.vue'
 
 const loading = ref(false)
 const locations = ref([])
 const formDialog = ref({ visible: false, isEdit: false, form: {} })
+const showLocationPicker = ref(false)
+
+const regionSelected = computed({
+  get: () => {
+    const arr = []
+    if (formDialog.value.form.province) arr.push(formDialog.value.form.province)
+    if (formDialog.value.form.city) arr.push(formDialog.value.form.city)
+    if (formDialog.value.form.district) arr.push(formDialog.value.form.district)
+    return arr
+  },
+  set: (val) => {
+    if (!val || val.length === 0) {
+      formDialog.value.form.province = ''
+      formDialog.value.form.city = ''
+      formDialog.value.form.district = ''
+      return
+    }
+    formDialog.value.form.province = val[0] || ''
+    formDialog.value.form.city = val[1] || ''
+    formDialog.value.form.district = val[2] || ''
+  }
+})
 
 async function fetchData() {
   loading.value = true
@@ -39,6 +63,16 @@ function handleEdit(row) {
       longitude: row.longitude
     }
   }
+}
+
+function onLocationConfirm(pos) {
+  formDialog.value.form.latitude = pos.latitude
+  formDialog.value.form.longitude = pos.longitude
+  if (pos.province) formDialog.value.form.province = pos.province
+  if (pos.city) formDialog.value.form.city = pos.city
+  if (pos.district) formDialog.value.form.district = pos.district
+  if (pos.address) formDialog.value.form.address = pos.address
+  if (pos.name && !formDialog.value.form.name) formDialog.value.form.name = pos.name
 }
 
 async function confirmSave() {
@@ -119,23 +153,17 @@ onMounted(fetchData)
       <el-form-item label="名称">
         <el-input v-model="formDialog.form.name" placeholder="如：总部、分店A" />
       </el-form-item>
-      <el-form-item label="省">
-        <el-input v-model="formDialog.form.province" />
-      </el-form-item>
-      <el-form-item label="市">
-        <el-input v-model="formDialog.form.city" />
-      </el-form-item>
-      <el-form-item label="区">
-        <el-input v-model="formDialog.form.district" />
+      <el-form-item label="省/市/区">
+        <el-cascader v-model="regionSelected" :options="regions" placeholder="选择省/市/区" style="width:100%" />
       </el-form-item>
       <el-form-item label="详细地址">
         <el-input v-model="formDialog.form.address" type="textarea" :rows="2" />
       </el-form-item>
-      <el-form-item label="纬度">
-        <el-input-number v-model="formDialog.form.latitude" :precision="7" :step="0.01" style="width:100%" />
-      </el-form-item>
-      <el-form-item label="经度">
-        <el-input-number v-model="formDialog.form.longitude" :precision="7" :step="0.01" style="width:100%" />
+      <el-form-item label="位置">
+        <el-button @click="showLocationPicker = true">选择位置</el-button>
+        <span v-if="formDialog.form.latitude" style="margin-left:12px;color:#999">
+          {{ formDialog.form.latitude }}, {{ formDialog.form.longitude }}
+        </span>
       </el-form-item>
     </el-form>
     <template #footer>
@@ -143,4 +171,6 @@ onMounted(fetchData)
       <el-button type="primary" @click="confirmSave">保存</el-button>
     </template>
   </el-dialog>
+
+  <LocationPicker v-model="showLocationPicker" :latitude="formDialog.form.latitude || 39.9042" :longitude="formDialog.form.longitude || 116.4074" @confirm="onLocationConfirm" />
 </template>

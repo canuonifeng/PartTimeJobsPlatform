@@ -70,6 +70,10 @@ function handleMenuSelect(index) {
           <el-icon><Location /></el-icon>
           <span>工作地点</span>
         </el-menu-item>
+        <el-menu-item index="/templates">
+          <el-icon><CopyDocument /></el-icon>
+          <span>职位模版</span>
+        </el-menu-item>
         <el-menu-item index="/settings">
           <el-icon><Picture /></el-icon>
           <span>企业设置</span>

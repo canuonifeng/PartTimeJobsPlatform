@@ -2,6 +2,8 @@
 import { ref, onMounted } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { createJob, updateJob, getJob, getCategories, getRates, getSchedules } from '@/api/jobs'
+import { listTemplates } from '@/api/templates'
+import { listLocations } from '@/api/locations'
 import regions from '@/assets/regions.json'
 
 const isEdit = ref(false)
@@ -31,6 +33,12 @@ const rateTypeLabels = ['时薪', '日薪', '计件']
 const rateTypeValues = ['HOURLY', 'DAILY', 'PIECEWORK']
 
 const categoryNames = ref([])
+const availableTemplates = ref([])
+const templateNames = ref([])
+const availableLocations = ref([])
+const locationNames = ref([])
+const selectedTemplateName = ref('')
+const selectedLocationName = ref('')
 
 const provinceList = regions.map(r => r.label)
 
@@ -78,6 +86,57 @@ function chooseLocation() {
       uni.showToast({ title: '定位失败', icon: 'none' })
     }
   })
+}
+
+async function openTemplatePicker() {
+  try {
+    const res = await listTemplates()
+    const list = Array.isArray(res) ? res : (res.records || res.data || [])
+    availableTemplates.value = list
+    templateNames.value = list.map(t => t.title || '')
+  } catch {
+    uni.showToast({ title: '加载模版失败', icon: 'none' })
+  }
+}
+
+function onTemplatePick(e) {
+  const idx = e.detail.value
+  const tpl = availableTemplates.value[idx]
+  if (!tpl) return
+  formData.value.title = tpl.title || ''
+  formData.value.description = tpl.description || ''
+  formData.value.categoryId = tpl.categoryId || ''
+  formData.value.province = tpl.province || ''
+  formData.value.city = tpl.city || ''
+  formData.value.district = tpl.district || ''
+  formData.value.address = tpl.address || ''
+  formData.value.latitude = tpl.latitude || null
+  formData.value.longitude = tpl.longitude || null
+  selectedTemplateName.value = tpl.title || ''
+}
+
+async function openLocationPicker() {
+  try {
+    const res = await listLocations()
+    const list = Array.isArray(res) ? res : (res.records || res.data || [])
+    availableLocations.value = list
+    locationNames.value = list.map(l => l.name || '')
+  } catch {
+    uni.showToast({ title: '加载地点失败', icon: 'none' })
+  }
+}
+
+function onLocationPick(e) {
+  const idx = e.detail.value
+  const loc = availableLocations.value[idx]
+  if (!loc) return
+  formData.value.province = loc.province || ''
+  formData.value.city = loc.city || ''
+  formData.value.district = loc.district || ''
+  formData.value.address = loc.address || ''
+  formData.value.latitude = loc.latitude || null
+  formData.value.longitude = loc.longitude || null
+  selectedLocationName.value = loc.name || ''
 }
 
 onLoad(async (params) => {
@@ -248,6 +307,26 @@ async function handleSave() {
     <scroll-view scroll-y class="form-scroll">
       <view class="form-section">
         <text class="section-title">基本信息</text>
+
+        <view class="form-item">
+          <text class="label">职位模版</text>
+          <picker mode="selector" :range="templateNames" @click="openTemplatePicker" @change="onTemplatePick">
+            <view class="picker">
+              <text v-if="selectedTemplateName" class="picker-value">{{ selectedTemplateName }}</text>
+              <text v-else class="picker-placeholder">选择模版快速填充</text>
+            </view>
+          </picker>
+        </view>
+
+        <view class="form-item">
+          <text class="label">工作地点</text>
+          <picker mode="selector" :range="locationNames" @click="openLocationPicker" @change="onLocationPick">
+            <view class="picker">
+              <text v-if="selectedLocationName" class="picker-value">{{ selectedLocationName }}</text>
+              <text v-else class="picker-placeholder">选择已有地点</text>
+            </view>
+          </picker>
+        </view>
 
         <view class="form-item">
           <text class="label">职位标题 *</text>

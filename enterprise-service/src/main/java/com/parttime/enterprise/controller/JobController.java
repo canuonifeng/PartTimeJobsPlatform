@@ -51,6 +51,8 @@ public class JobController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public JobVO createJob(@RequestBody JobCreateCmd request) {
+        Long companyId = SecurityUtil.getCurrentCompanyId();
+        request.setCompanyId(companyId);
         return jobService.createJob(request);
     }
 

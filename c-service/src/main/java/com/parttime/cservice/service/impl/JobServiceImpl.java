@@ -259,7 +259,7 @@ public class JobServiceImpl implements JobService {
         JobSummaryVO summary = new JobSummaryVO();
         summary.setId(job.getId());
         summary.setTitle(job.getTitle());
-        summary.setLocation(job.getLocation());
+        summary.setLocation(job.getAddress());
         summary.setProvince(job.getProvince());
         summary.setCity(job.getCity());
         summary.setDistrict(job.getDistrict());
@@ -293,7 +293,7 @@ public class JobServiceImpl implements JobService {
         detail.setId(job.getId());
         detail.setTitle(job.getTitle());
         detail.setDescription(job.getDescription());
-        detail.setLocation(job.getLocation());
+        detail.setLocation(job.getAddress());
         detail.setProvince(job.getProvince());
         detail.setCity(job.getCity());
         detail.setDistrict(job.getDistrict());

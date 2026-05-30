@@ -73,6 +73,12 @@ const routes = [
     meta: { requiresAuth: true, title: '账号管理' }
   },
   {
+    path: '/templates',
+    name: 'TemplateList',
+    component: () => import('../views/templates/TemplateList.vue'),
+    meta: { requiresAuth: true, title: '职位模版' }
+  },
+  {
     path: '/locations',
     name: 'LocationList',
     component: () => import('../views/locations/LocationList.vue'),

@@ -1,10 +1,19 @@
 {
   "pages": [
     {"path": "pages/login/login", "style": {"navigationBarTitleText": "登录"}},
+    {"path": "pages/home/index", "style": {"navigationBarTitleText": "职管"}},
     {"path": "pages/jobs/jobList", "style": {"navigationBarTitleText": "职位管理", "enablePullDownRefresh": true, "enableShareAppMessage": true}},
     {"path": "pages/jobs/jobForm", "style": {"navigationBarTitleText": "职位表单"}},
     {"path": "pages/jobs/jobDetail", "style": {"navigationBarTitleText": "职位详情", "enableShareAppMessage": true, "enableShareTimeline": true}},
-    {"path": "pages/jobs/applicationList", "style": {"navigationBarTitleText": "报名记录", "enablePullDownRefresh": true}}
+    {"path": "pages/jobs/applicationList", "style": {"navigationBarTitleText": "报名记录", "enablePullDownRefresh": true}},
+    {"path": "pages/locations/locationList", "style": {"navigationBarTitleText": "工作地点", "enablePullDownRefresh": true}},
+    {"path": "pages/locations/locationForm", "style": {"navigationBarTitleText": "地点表单"}},
+    {"path": "pages/templates/templateList", "style": {"navigationBarTitleText": "职位模版", "enablePullDownRefresh": true}},
+    {"path": "pages/templates/templateForm", "style": {"navigationBarTitleText": "模版表单"}},
+    {"path": "pages/applications/applicationList", "style": {"navigationBarTitleText": "应聘管理", "enablePullDownRefresh": true}},
+    {"path": "pages/schedules/scheduleList", "style": {"navigationBarTitleText": "排班管理", "enablePullDownRefresh": true}},
+    {"path": "pages/attendance/attendanceList", "style": {"navigationBarTitleText": "考勤管理", "enablePullDownRefresh": true}},
+    {"path": "pages/settlement/settlementList", "style": {"navigationBarTitleText": "结算账单", "enablePullDownRefresh": true}}
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",

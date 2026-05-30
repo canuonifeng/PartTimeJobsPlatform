@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS job_templates (
+  id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+  company_id  BIGINT       NOT NULL,
+  title       VARCHAR(200),
+  description TEXT,
+  category_id BIGINT,
+  image_url   VARCHAR(500),
+  created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);

@@ -12,7 +12,7 @@ const loading = ref(false)
 onShow(() => {
   const token = uni.getStorageSync('token')
   if (token) {
-    uni.reLaunch({ url: '/pages/jobs/jobList' })
+    uni.reLaunch({ url: '/pages/home/index' })
   }
 })
 
@@ -26,7 +26,8 @@ async function handleLogin() {
     const res = await login(username.value, password.value)
     authStore.setToken(res.token || res.accessToken)
     authStore.setUser(res.user)
-    uni.reLaunch({ url: '/pages/jobs/jobList' })
+    authStore.setDisplayName(username.value)
+    uni.reLaunch({ url: '/pages/home/index' })
   } catch (e) {
     uni.showToast({ title: '登录失败，请检查账号密码', icon: 'none' })
   } finally {

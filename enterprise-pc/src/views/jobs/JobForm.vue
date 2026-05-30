@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { getJob, createJob, updateJob } from '../../api/job'
 import { listLocations } from '../../api/location'
+import { listTemplates } from '../../api/template'
 import regions from '../../assets/regions.json'
 import LocationPicker from '../../components/LocationPicker.vue'
 
@@ -70,6 +71,9 @@ const statusOptions = [
 ]
 
 const showLocationPicker = ref(false)
+const templateDialogVisible = ref(false)
+const availableTemplates = ref([])
+const selectedTemplateName = ref('')
 
 const regionSelected = computed({
   get: () => {
@@ -95,6 +99,10 @@ const regionSelected = computed({
 function onLocationConfirm(pos) {
   form.value.latitude = pos.latitude
   form.value.longitude = pos.longitude
+  if (pos.province) form.value.province = pos.province
+  if (pos.city) form.value.city = pos.city
+  if (pos.district) form.value.district = pos.district
+  if (pos.address) form.value.address = pos.address
 }
 
 function addSalaryRate() {
@@ -115,6 +123,7 @@ function removeScheduleSlot(index) {
 
 async function fetchDetail() {
   if (!isEdit) return
+  selectedTemplateName.value = ''
   loading.value = true
   try {
     const res = await getJob(route.params.id)
@@ -201,6 +210,31 @@ function selectLocation(loc) {
   ElMessage.success(`已选择地点：${loc.name}`)
 }
 
+async function openTemplatePicker() {
+  try {
+    availableTemplates.value = await listTemplates()
+    templateDialogVisible.value = true
+  } catch {
+    ElMessage.error('加载模版列表失败')
+  }
+}
+
+function selectTemplate(tpl) {
+  form.value.title = tpl.title || ''
+  form.value.description = tpl.description || ''
+  form.value.category = tpl.categoryId || ''
+  form.value.imageUrl = tpl.imageUrl || ''
+  form.value.province = tpl.province || ''
+  form.value.city = tpl.city || ''
+  form.value.district = tpl.district || ''
+  form.value.address = tpl.address || ''
+  form.value.latitude = tpl.latitude || ''
+  form.value.longitude = tpl.longitude || ''
+  selectedTemplateName.value = tpl.title || ''
+  templateDialogVisible.value = false
+  ElMessage.success(`已选择模版：${tpl.title}`)
+}
+
 onMounted(() => {
   fetchDetail()
 })
@@ -213,6 +247,10 @@ onMounted(() => {
         <span>{{ isEdit ? '编辑职位' : '新建职位' }}</span>
       </template>
       <el-form ref="formRef" :model="form" label-width="120px" style="max-width: 800px">
+        <el-form-item label="职位模版">
+          <el-button @click="openTemplatePicker">选择职位模版</el-button>
+          <span v-if="selectedTemplateName" style="margin-left:12px;color:#909399;font-size:13px">已选：{{ selectedTemplateName }}</span>
+        </el-form-item>
         <el-form-item label="职位名称" prop="title" :rules="[{ required: true, message: '请输入职位名称' }]">
           <el-input v-model="form.title" />
         </el-form-item>
@@ -298,24 +336,33 @@ onMounted(() => {
           <el-button type="primary" :loading="loading" @click="handleSubmit">保存</el-button>
           <el-button @click="router.push('/jobs')">取消</el-button>
         </el-form-item>
-        <LocationPicker v-model="showLocationPicker" :latitude="form.latitude || 39.9042" :longitude="form.longitude || 116.4074" @confirm="onLocationConfirm" />
       </el-form>
+      <LocationPicker v-model="showLocationPicker" :latitude="form.latitude || 39.9042" :longitude="form.longitude || 116.4074" @confirm="onLocationConfirm" />
     </el-card>
-  </div>
-</template>
 
-  <el-dialog v-model="locationDialogVisible" title="选择工作地点" width="600px">
-    <el-table :data="availableLocations" stripe @row-click="selectLocation" highlight-current-row>
-      <el-table-column prop="name" label="名称" width="120" />
-      <el-table-column prop="province" label="省" width="80" />
-      <el-table-column prop="city" label="市" width="80" />
-      <el-table-column prop="district" label="区" width="80" />
-      <el-table-column prop="address" label="详细地址" min-width="180" />
-    </el-table>
-    <template #footer>
-      <el-button @click="locationDialogVisible = false">取消</el-button>
-    </template>
-  </el-dialog>
+    <el-dialog v-model="templateDialogVisible" title="选择职位模版" width="600px">
+      <el-table :data="availableTemplates" stripe @row-click="selectTemplate" highlight-current-row>
+        <el-table-column prop="title" label="职位名称" width="150" />
+        <el-table-column prop="description" label="职位描述" min-width="250" show-overflow-tooltip />
+      </el-table>
+      <template #footer>
+        <el-button @click="templateDialogVisible = false">取消</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="locationDialogVisible" title="选择工作地点" width="600px">
+      <el-table :data="availableLocations" stripe @row-click="selectLocation" highlight-current-row>
+        <el-table-column prop="name" label="名称" width="120" />
+        <el-table-column prop="province" label="省" width="80" />
+        <el-table-column prop="city" label="市" width="80" />
+        <el-table-column prop="district" label="区" width="80" />
+        <el-table-column prop="address" label="详细地址" min-width="180" />
+      </el-table>
+      <template #footer>
+        <el-button @click="locationDialogVisible = false">取消</el-button>
+      </template>
+    </el-dialog>
+  </div>
 </template>
 
 <style scoped>

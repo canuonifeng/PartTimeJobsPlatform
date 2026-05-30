@@ -21,6 +21,12 @@
   },
   "mp-weixin": {
     "appid": "",
-    "setting": {"urlCheck": false}
+    "setting": {"urlCheck": false},
+    "permission": {
+      "scope.userLocation": {
+        "desc": "你的位置信息将用于定位工作地点"
+      }
+    },
+    "requiredPrivateInfos": ["chooseLocation", "getLocation"]
   }
 }
