@@ -32,6 +32,10 @@ public class JobDetailVO {
     private BigDecimal longitude;
     @Schema(description = "发布企业")
     private String companyName;
+    @Schema(description = "企业logo")
+    private String companyLogo;
+    @Schema(description = "岗位图片URL")
+    private String imageUrl;
     @Schema(description = "分类名称")
     private String categoryName;
     @Schema(description = "薪资规则列表")

@@ -266,6 +266,7 @@ public class JobServiceImpl implements JobService {
         summary.setCategoryName(job.getCategoryName());
         summary.setCompanyName(job.getCompanyName());
         summary.setCompanyLogo(job.getCompanyLogo());
+        summary.setImageUrl(job.getImageUrl());
         summary.setDistanceKm(distanceKm);
         summary.setMinRate(minRate);
         summary.setMaxRate(maxRate);
@@ -300,6 +301,8 @@ public class JobServiceImpl implements JobService {
         detail.setLatitude(job.getLatitude());
         detail.setLongitude(job.getLongitude());
         detail.setCompanyName(job.getCompanyName());
+        detail.setCompanyLogo(job.getCompanyLogo());
+        detail.setImageUrl(job.getImageUrl());
         detail.setCategoryName(job.getCategoryName());
         detail.setStatus(job.getStatus());
         detail.setHeadcount(job.getHeadcount());

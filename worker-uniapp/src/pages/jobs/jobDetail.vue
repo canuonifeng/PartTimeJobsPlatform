@@ -3,6 +3,8 @@
     <uni-load-more v-if="loading" status="loading" />
 
     <template v-if="job">
+      <image v-if="job.imageUrl" class="job-banner" :src="job.imageUrl" mode="aspectFill" />
+      <image v-else-if="job.companyLogo" class="job-banner" :src="job.companyLogo" mode="aspectFill" />
       <view class="detail-header">
         <text class="job-title">{{ job.title }}</text>
         <text class="job-pay">{{ job.rates?.[0]?.amount ?? '-' }}元/{{ rateUnit(job.rates?.[0]?.type) }}</text>
@@ -244,6 +246,14 @@ onLoad(loadDetail)
   padding: 30rpx;
   margin-bottom: 20rpx;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+}
+
+.job-banner {
+  width: 100%;
+  height: 350rpx;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+  background: #f5f5f5;
 }
 
 .job-title {

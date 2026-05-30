@@ -66,6 +66,14 @@ function handleMenuSelect(index) {
           <el-icon><Setting /></el-icon>
           <span>账号管理</span>
         </el-menu-item>
+        <el-menu-item index="/locations">
+          <el-icon><Location /></el-icon>
+          <span>工作地点</span>
+        </el-menu-item>
+        <el-menu-item index="/settings">
+          <el-icon><Picture /></el-icon>
+          <span>企业设置</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>

@@ -65,6 +65,7 @@ public class JobServiceImpl implements JobService {
         job.setHeadcount(request.getHeadcount());
         job.setStatus("DRAFT");
         job.setDeadline(request.getDeadline());
+        job.setImageUrl(request.getImageUrl());
 
         jobMapper.insert(job);
 
@@ -111,6 +112,7 @@ public class JobServiceImpl implements JobService {
         if (request.getCategoryId() != null) job.setCategoryId(request.getCategoryId());
         if (request.getHeadcount() != null) job.setHeadcount(request.getHeadcount());
         if (request.getDeadline() != null) job.setDeadline(request.getDeadline());
+        if (request.getImageUrl() != null) job.setImageUrl(request.getImageUrl());
         jobMapper.update(job);
         if (request.getRates() != null) {
             jobRateMapper.deleteByJobId(id);
@@ -360,6 +362,7 @@ public class JobServiceImpl implements JobService {
             response.setCategoryName(categoryName);
         }
         response.setHeadcount(job.getHeadcount());
+        response.setImageUrl(job.getImageUrl());
         response.setStatus(JobStatus.valueOf(job.getStatus()));
         response.setApplicationCount(jobApplicationMapper.countByJobId(job.getId()));
         response.setPendingApplicationCount(jobApplicationMapper.countByJobIdAndStatus(job.getId(), "PENDING"));

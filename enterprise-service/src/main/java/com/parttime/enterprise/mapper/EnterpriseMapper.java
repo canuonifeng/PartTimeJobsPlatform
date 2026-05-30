@@ -3,6 +3,7 @@ package com.parttime.enterprise.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 @Mapper
 public interface EnterpriseMapper {
@@ -12,4 +13,7 @@ public interface EnterpriseMapper {
 
     @Select("SELECT company_logo FROM enterprises WHERE id = #{id}")
     String findCompanyLogoById(@Param("id") Long id);
+
+    @Update("UPDATE enterprises SET company_logo = #{logoUrl} WHERE id = #{id}")
+    void updateLogo(@Param("id") Long id, @Param("logoUrl") String logoUrl);
 }

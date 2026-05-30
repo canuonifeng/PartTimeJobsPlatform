@@ -55,6 +55,8 @@ public class Job {
     private List<JobRateInfoVO> rates;
     @Schema(description = "排班列表")
     private List<JobScheduleInfoVO> schedules;
+    @Schema(description = "岗位图片URL")
+    private String imageUrl;
     @Schema(description = "招聘人数")
     private Integer headcount;
     @Schema(description = "已录用人数")

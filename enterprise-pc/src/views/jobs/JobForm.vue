@@ -11,6 +11,26 @@ const route = useRoute()
 const isEdit = !!route.params.id
 const loading = ref(false)
 const formRef = ref(null)
+const uploadUrl = '/api/files/upload'
+
+function handleImageSuccess(response) {
+  if (response?.url) {
+    form.value.imageUrl = response.url
+  }
+}
+function beforeImageUpload(file) {
+  const isImg = file.type.startsWith('image/')
+  const isLt2M = file.size / 1024 / 1024 < 2
+  if (!isImg) {
+    ElMessage.error('只能上传图片文件')
+    return false
+  }
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过 2MB')
+    return false
+  }
+  return true
+}
 
 const form = ref({
   title: '',
@@ -25,6 +45,7 @@ const form = ref({
   address: '',
   latitude: null,
   longitude: null,
+  imageUrl: '',
   salaryRates: [{ type: '', rate: '' }],
   scheduleSlots: [{ date: '', startTime: '', endTime: '' }],
   status: 'DRAFT'
@@ -107,6 +128,7 @@ async function fetchDetail() {
       address: res.address || '',
       latitude: res.latitude || null,
       longitude: res.longitude || null,
+      imageUrl: res.imageUrl || '',
       salaryRates: (res.rates || []).map((r) => ({ type: r.type || '', rate: r.amount || '' })),
       scheduleSlots: (res.schedules || []).map((s) => ({ date: s.scheduleDate || '', startTime: s.startTime || '', endTime: s.endTime || '' })),
       status: res.status || 'DRAFT'
@@ -130,6 +152,7 @@ function buildPayload() {
     categoryId: form.value.category || null,
     headcount: form.value.headcount,
     deadline: form.value.deadline ? `${form.value.deadline} 23:59:59` : null,
+    imageUrl: form.value.imageUrl || null,
     rates: form.value.salaryRates.filter((r) => r.type && r.rate).map((r) => ({ type: r.type, amount: Number(r.rate), currency: 'CNY' })),
     schedules: form.value.scheduleSlots.filter((s) => s.date && s.startTime && s.endTime).map((s) => ({ scheduleDate: s.date, startTime: s.startTime, endTime: s.endTime, slotsAvailable: 1 }))
   }
@@ -193,6 +216,20 @@ onMounted(() => {
         </el-form-item>
         <el-form-item label="截止日期" prop="deadline">
           <el-date-picker v-model="form.deadline" type="date" placeholder="选择日期" value-format="YYYY-MM-DD" />
+        </el-form-item>
+        <el-form-item label="岗位图片">
+          <div style="display:flex;gap:12px;align-items:center">
+            <el-upload
+              :action="uploadUrl"
+              :show-file-list="false"
+              :on-success="handleImageSuccess"
+              :before-upload="beforeImageUpload"
+            >
+              <el-button type="primary">上传图片</el-button>
+            </el-upload>
+            <el-input v-model="form.imageUrl" placeholder="或输入图片URL" style="width:300px" clearable />
+            <el-image v-if="form.imageUrl" :src="form.imageUrl" style="width:60px;height:60px;border-radius:4px" fit="cover" />
+          </div>
         </el-form-item>
 
         <el-divider>薪资标准</el-divider>

@@ -26,6 +26,8 @@ public class JobSummaryVO {
     private String companyName;
     @Schema(description = "企业logo")
     private String companyLogo;
+    @Schema(description = "岗位图片URL")
+    private String imageUrl;
     @Schema(description = "距离(公里)")
     private BigDecimal distanceKm;
     @Schema(description = "最低薪资")

@@ -52,6 +52,8 @@ public class JobVO {
     private List<JobRateVO> rates;
     @Schema(description = "排班列表")
     private List<JobScheduleVO> schedules;
+    @Schema(description = "岗位图片URL")
+    private String imageUrl;
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")

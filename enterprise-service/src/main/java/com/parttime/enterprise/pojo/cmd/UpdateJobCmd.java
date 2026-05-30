@@ -41,4 +41,6 @@ public class UpdateJobCmd {
     private List<JobRateCmd> rates;
     @Schema(description = "排班列表")
     private List<JobScheduleCmd> schedules;
+    @Schema(description = "岗位图片URL")
+    private String imageUrl;
 }

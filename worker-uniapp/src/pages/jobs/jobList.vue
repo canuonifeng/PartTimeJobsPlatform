@@ -49,8 +49,9 @@
         @click="goDetail(job.id)"
       >
         <view class="job-card-top">
-          <image v-if="job.companyLogo" class="company-logo" :src="job.companyLogo" mode="aspectFill" />
-          <view v-else class="company-logo placeholder">
+          <image v-if="job.imageUrl" class="job-image" :src="job.imageUrl" mode="aspectFill" />
+          <image v-else-if="job.companyLogo" class="job-image" :src="job.companyLogo" mode="aspectFill" />
+          <view v-else class="job-image placeholder">
             <text>{{ (job.companyName || '?').slice(0, 1) }}</text>
           </view>
           <view class="job-main">
@@ -260,24 +261,24 @@ onMounted(async () => {
 
 .job-card-top {
   display: flex;
-  gap: 20rpx;
+  gap: 16rpx;
 }
 
-.company-logo {
-  width: 88rpx;
-  height: 88rpx;
-  border-radius: 20rpx;
+ .job-image {
+  width: 200rpx;
+  height: 150rpx;
+  border-radius: 12rpx;
   background: #f5f5f5;
   flex-shrink: 0;
-}
+ }
 
-.company-logo.placeholder {
+ .job-image.placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 28rpx;
   color: #999;
-}
+ }
 
 .job-main {
   flex: 1;

@@ -38,6 +38,8 @@ public class Job {
     private String status;
     @Schema(description = "报名截止时间")
     private LocalDateTime deadline;
+    @Schema(description = "岗位图片URL")
+    private String imageUrl;
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")

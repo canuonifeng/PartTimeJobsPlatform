@@ -71,6 +71,18 @@ const routes = [
     name: 'AccountList',
     component: () => import('../views/accounts/AccountList.vue'),
     meta: { requiresAuth: true, title: '账号管理' }
+  },
+  {
+    path: '/locations',
+    name: 'LocationList',
+    component: () => import('../views/locations/LocationList.vue'),
+    meta: { requiresAuth: true, title: '工作地点' }
+  },
+  {
+    path: '/settings',
+    name: 'CompanySettings',
+    component: () => import('../views/settings/CompanySettings.vue'),
+    meta: { requiresAuth: true, title: '企业设置' }
   }
 ]
 
