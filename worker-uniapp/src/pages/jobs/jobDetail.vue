@@ -41,18 +41,23 @@
       </view>
 
       <view class="section">
-        <text class="section-title">选择排班时段<span v-if="selectedScheduleIds.length" class="selected-count">（已选 {{ selectedScheduleIds.length }} 个）</span></text>
+        <text class="section-title">
+          选择排班时段
+          <span v-if="canApplyMore" class="selected-count">（已选 {{ pendingScheduleIds.length }} 个）</span>
+          <span v-if="appliedScheduleIds.length" class="applied-count">（已报名 {{ appliedScheduleIds.length }} 个）</span>
+        </text>
         <view class="schedule-slots" v-if="job.schedules?.length">
           <view
             class="slot"
-            :class="{ selected: selectedScheduleIds.includes(slot.id), disabled: !!applyStatusText }"
+            :class="slotClass(slot.id)"
             v-for="slot in job.schedules"
             :key="slot.id"
-            @click="!applyStatusText && toggleSchedule(slot.id)"
+            @click="!isScheduleApplied(slot.id) && toggleSchedule(slot.id)"
           >
-            <text class="slot-check">{{ selectedScheduleIds.includes(slot.id) ? '✓' : '' }}</text>
+            <text class="slot-check">{{ slotCheckText(slot.id) }}</text>
             <text class="slot-date">{{ slot.date }}</text>
             <text class="slot-time">{{ slot.startTime }}-{{ slot.endTime }}</text>
+            <text v-if="isScheduleApplied(slot.id)" class="slot-badge">已报名</text>
           </view>
         </view>
       </view>
@@ -96,6 +101,7 @@ function rateTypeLabel(type) {
 const job = ref<any>(null)
 const loading = ref(true)
 const appliedStatus = ref<string | null>(null)
+const appliedScheduleIds = ref<number[]>([])
 const selectedScheduleIds = ref<number[]>([])
 const authStore = useAuthStore()
 const markers = computed(() => {
@@ -112,9 +118,19 @@ const markers = computed(() => {
 
 const applyStatusText = computed(() => job.value?.applyStatus || appliedStatus.value || '')
 
+const pendingScheduleIds = computed(() =>
+  selectedScheduleIds.value.filter(id => !appliedScheduleIds.value.includes(id))
+)
+
+const canApplyMore = computed(() =>
+  !!authStore.isLoggedIn && job.value?.schedules?.length !== appliedScheduleIds.value.length
+)
+
 const applyButtonText = computed(() => {
-  if (applyStatusText.value) return applyStatusText.value
-  return authStore.isLoggedIn ? '立即报名' : '登录报名'
+  if (!authStore.isLoggedIn) return '登录报名'
+  if (!appliedScheduleIds.value.length) return '立即报名'
+  if (canApplyMore.value) return '补报名'
+  return '已报名全部排班'
 })
 
 function buildRedirectUrl() {
@@ -149,9 +165,7 @@ async function loadDetail() {
     if (res.applyStatus) {
       appliedStatus.value = res.applyStatus
     }
-    if (res.appliedScheduleIds?.length) {
-      selectedScheduleIds.value = [...res.appliedScheduleIds]
-    }
+    appliedScheduleIds.value = res.appliedScheduleIds ? [...res.appliedScheduleIds] : []
   } catch {
     uni.showToast({ title: '加载失败', icon: 'none' })
   } finally {
@@ -159,7 +173,24 @@ async function loadDetail() {
   }
 }
 
+function isScheduleApplied(id: number) {
+  return appliedScheduleIds.value.includes(id)
+}
+
+function slotClass(id: number) {
+  if (isScheduleApplied(id)) return 'applied'
+  if (selectedScheduleIds.value.includes(id)) return 'selected'
+  return ''
+}
+
+function slotCheckText(id: number) {
+  if (isScheduleApplied(id)) return '✓'
+  if (selectedScheduleIds.value.includes(id)) return '✓'
+  return ''
+}
+
 function toggleSchedule(scheduleId: number) {
+  if (isScheduleApplied(scheduleId)) return
   const idx = selectedScheduleIds.value.indexOf(scheduleId)
   if (idx >= 0) {
     selectedScheduleIds.value.splice(idx, 1)
@@ -174,16 +205,17 @@ async function handleApply() {
     goToLogin()
     return
   }
-  if (applyStatusText.value) return
-  if (selectedScheduleIds.value.length === 0) {
-    uni.showToast({ title: '请至少选择一个排班时段', icon: 'none' })
+  const idsToSubmit = [...pendingScheduleIds.value]
+  if (idsToSubmit.length === 0) {
+    uni.showToast({ title: '请选择未报名的排班时段', icon: 'none' })
     return
   }
   try {
     await applyJob(job.value.id, {
       jobId: job.value.id,
-      scheduleIds: [...selectedScheduleIds.value]
+      scheduleIds: idsToSubmit
     })
+    appliedScheduleIds.value = [...appliedScheduleIds.value, ...idsToSubmit]
     appliedStatus.value = '已报名'
     job.value.applyStatus = '已报名'
     uni.showToast({ title: '报名成功', icon: 'success' })
@@ -353,9 +385,24 @@ onLoad(loadDetail)
   background: #07c160;
 }
 
-.slot.disabled {
-  opacity: 0.7;
-  cursor: default;
+.slot.applied .slot-check {
+  background: #07c160;
+}
+
+.slot.applied {
+  background: #e8f8ee;
+  border-color: #07c160;
+  opacity: 0.8;
+}
+
+.slot-badge {
+  font-size: 20rpx;
+  color: #07c160;
+  background: #d4f5e0;
+  padding: 2rpx 10rpx;
+  border-radius: 6rpx;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .slot-date {
@@ -372,6 +419,12 @@ onLoad(loadDetail)
 .selected-count {
   font-size: 22rpx;
   color: #07c160;
+  font-weight: 400;
+}
+
+.applied-count {
+  font-size: 22rpx;
+  color: #999;
   font-weight: 400;
 }
 

@@ -171,8 +171,14 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public boolean applyForJob(Long workerId, Long jobId, List<Long> scheduleIds) {
-        List<JobApplication> existing = jobApplicationMapper.findByWorkerIdAndJobId(workerId, jobId);
-        if (!existing.isEmpty()) {
+        if (scheduleIds == null || scheduleIds.isEmpty()) {
+            return false;
+        }
+        List<Long> alreadyApplied = applicationScheduleMapper.findScheduleIdsByJobAndWorker(jobId, workerId);
+        List<Long> newIds = scheduleIds.stream()
+                .filter(id -> !alreadyApplied.contains(id))
+                .toList();
+        if (newIds.isEmpty()) {
             return false;
         }
         Job job = jobMapper.findByJobId(jobId).orElse(null);
@@ -186,13 +192,11 @@ public class JobServiceImpl implements JobService {
         app.setAppliedAt(LocalDateTime.now());
         app.setUpdatedAt(LocalDateTime.now());
         jobApplicationMapper.insert(app);
-        if (scheduleIds != null && !scheduleIds.isEmpty()) {
-            for (Long scheduleId : scheduleIds) {
-                ApplicationSchedule as = new ApplicationSchedule();
-                as.setApplicationId(app.getId());
-                as.setScheduleId(scheduleId);
-                applicationScheduleMapper.insert(as);
-            }
+        for (Long scheduleId : newIds) {
+            ApplicationSchedule as = new ApplicationSchedule();
+            as.setApplicationId(app.getId());
+            as.setScheduleId(scheduleId);
+            applicationScheduleMapper.insert(as);
         }
         if (job != null && job.getCompanyId() != null) {
             companyWorkerInsertMapper.upsert(job.getCompanyId(), workerId);

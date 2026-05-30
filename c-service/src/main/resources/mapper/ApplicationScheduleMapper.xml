@@ -11,4 +11,11 @@
         SELECT * FROM application_schedules WHERE application_id = #{applicationId}
     </select>
 
+    <select id="findScheduleIdsByJobAndWorker" resultType="java.lang.Long">
+        SELECT as2.schedule_id
+        FROM application_schedules as2
+        JOIN job_applications ja ON ja.id = as2.application_id
+        WHERE ja.job_id = #{jobId} AND ja.worker_id = #{workerId}
+    </select>
+
 </mapper>
