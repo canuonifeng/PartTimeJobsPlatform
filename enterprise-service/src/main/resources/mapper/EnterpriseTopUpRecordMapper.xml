@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.enterprise.mapper.EnterpriseTopUpRecordMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO enterprise_top_up_records (company_id, amount, status, serial_number)
+        VALUES (#{companyId}, #{amount}, #{status}, #{serialNumber})
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE enterprise_top_up_records
+        SET status = #{status},
+            third_party_serial_no = #{thirdPartySerialNo},
+            third_party_platform = #{thirdPartyPlatform},
+            completed_at = #{completedAt}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

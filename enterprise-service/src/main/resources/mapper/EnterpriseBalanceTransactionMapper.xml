@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.enterprise.mapper.EnterpriseBalanceTransactionMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO enterprise_balance_transactions (company_id, amount, type, related_bill_id, related_top_up_id, description)
+        VALUES (#{companyId}, #{amount}, #{type}, #{relatedBillId}, #{relatedTopUpId}, #{description})
+    </insert>
+
+    <select id="findByCompanyIdPage" resultType="com.parttime.enterprise.pojo.entity.EnterpriseBalanceTransaction">
+        SELECT * FROM enterprise_balance_transactions
+        WHERE company_id = #{companyId}
+        ORDER BY created_at DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countByCompanyId" resultType="long">
+        SELECT COUNT(*) FROM enterprise_balance_transactions
+        WHERE company_id = #{companyId}
+    </select>
+
+</mapper>
