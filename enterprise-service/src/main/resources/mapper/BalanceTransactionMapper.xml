@@ -2,9 +2,29 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.parttime.enterprise.mapper.BalanceTransactionMapper">
 
+    <resultMap id="BalanceTransactionResultMap" type="com.parttime.enterprise.pojo.entity.BalanceTransaction">
+        <id property="id" column="id"/>
+        <result property="workerId" column="worker_id"/>
+        <result property="amount" column="amount"/>
+        <result property="type" column="type"/>
+        <result property="relatedBillId" column="related_bill_id"/>
+        <result property="relatedAttendanceRecordId" column="related_attendance_record_id"/>
+        <result property="relatedWithdrawalId" column="related_withdrawal_id"/>
+        <result property="description" column="description"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO balance_transactions (worker_id, amount, type, related_bill_id, description)
-        VALUES (#{workerId}, #{amount}, #{type}, #{relatedBillId}, #{description})
+        INSERT INTO balance_transactions (worker_id, amount, type, related_bill_id, related_attendance_record_id, related_withdrawal_id, description)
+        VALUES (#{workerId}, #{amount}, #{type}, #{relatedBillId}, #{relatedAttendanceRecordId}, #{relatedWithdrawalId}, #{description})
     </insert>
+
+    <select id="findByAttendanceRecordIdAndType" resultMap="BalanceTransactionResultMap">
+        SELECT * FROM balance_transactions
+        WHERE related_attendance_record_id = #{attendanceRecordId}
+          AND type = #{type}
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
 
 </mapper>

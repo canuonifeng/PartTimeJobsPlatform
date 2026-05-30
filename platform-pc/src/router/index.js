@@ -41,12 +41,6 @@ const routes = [
       meta: { requiresAuth: true }
     },
     {
-      path: '/settlement/bills',
-      name: 'SettlementBills',
-      component: () => import('../views/settlement/SettlementBillList.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
       path: '/admin/workers',
       name: 'WorkerList',
       component: () => import('../views/workers/WorkerList.vue'),

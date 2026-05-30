@@ -15,8 +15,10 @@ public class BalanceTransaction {
     private BigDecimal amount;
     @Schema(description = "类型: EARNINGS/WITHDRAWAL")
     private String type;
-    @Schema(description = "关联结算账单ID")
+    @Schema(description = "历史结算账单ID")
     private Long relatedBillId;
+    @Schema(description = "关联考勤记录ID")
+    private Long relatedAttendanceRecordId;
     @Schema(description = "关联提现记录ID")
     private Long relatedWithdrawalId;
     @Schema(description = "描述")

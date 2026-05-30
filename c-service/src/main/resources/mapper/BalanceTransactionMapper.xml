@@ -3,8 +3,8 @@
 <mapper namespace="com.parttime.cservice.mapper.BalanceTransactionMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO balance_transactions (worker_id, amount, type, related_bill_id, related_withdrawal_id, description)
-        VALUES (#{workerId}, #{amount}, #{type}, #{relatedBillId}, #{relatedWithdrawalId}, #{description})
+        INSERT INTO balance_transactions (worker_id, amount, type, related_bill_id, related_attendance_record_id, related_withdrawal_id, description)
+        VALUES (#{workerId}, #{amount}, #{type}, #{relatedBillId}, #{relatedAttendanceRecordId}, #{relatedWithdrawalId}, #{description})
     </insert>
 
     <select id="findByWorkerId" resultType="com.parttime.cservice.pojo.entity.BalanceTransaction">
