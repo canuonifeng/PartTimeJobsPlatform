@@ -13,6 +13,7 @@ import com.parttime.enterprise.pojo.entity.SettlementBill;
 import com.parttime.enterprise.pojo.entity.WorkerBalance;
 import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.pojo.vo.SettlementBillVO;
+import com.parttime.enterprise.service.EnterpriseBalanceService;
 import com.parttime.enterprise.service.SettlementService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -48,6 +49,9 @@ public class SettlementServiceImpl implements SettlementService {
     @Resource
     private BalanceTransactionMapper balanceTransactionMapper;
 
+    @Resource
+    private EnterpriseBalanceService enterpriseBalanceService;
+
     private static final DateTimeFormatter SERIAL_FMT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
     private static final Random RANDOM = new Random();
 
@@ -63,6 +67,7 @@ public class SettlementServiceImpl implements SettlementService {
     @Override
     @Transactional
     public void payFromAttendanceRecords(List<Long> attendanceRecordIds, Long companyId) {
+        BigDecimal totalPay = BigDecimal.ZERO;
         for (Long arId : attendanceRecordIds) {
             AttendanceRecord ar = attendanceRecordMapper.findById(arId)
                     .orElseThrow(() -> new RuntimeException("Attendance record not found: " + arId));
@@ -116,6 +121,12 @@ public class SettlementServiceImpl implements SettlementService {
 
             ar.setSettlementStatus("PAID");
             attendanceRecordMapper.update(ar);
+
+            totalPay = totalPay.add(actualPay);
+        }
+
+        if (totalPay.compareTo(BigDecimal.ZERO) > 0) {
+            enterpriseBalanceService.deduct(companyId, totalPay, null, "批量结算: " + totalPay + "元");
         }
     }
 
@@ -154,6 +165,8 @@ public class SettlementServiceImpl implements SettlementService {
         bt.setRelatedBillId(bill.getId());
         bt.setDescription("撤回结算: " + bill.getWorkerName() + " " + bill.getShiftDate());
         balanceTransactionMapper.insert(bt);
+
+        enterpriseBalanceService.refund(companyId, actualPay, bill.getId(), "撤回结算退款: " + bill.getWorkerName() + " " + bill.getShiftDate());
 
         ar.setSettlementStatus("UNPAID");
         attendanceRecordMapper.update(ar);
