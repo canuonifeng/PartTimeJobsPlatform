@@ -28,7 +28,8 @@ const sections = [
     name: '基础管理',
     items: [
       { name: '工作地点', icon: '📍', path: '/pages/locations/locationList' },
-      { name: '职位模版', icon: '📄', path: '/pages/templates/templateList' }
+      { name: '职位模版', icon: '📄', path: '/pages/templates/templateList' },
+      { name: '账户余额', icon: '🏦', path: '/pages/balance/balanceList' }
     ]
   }
 ]

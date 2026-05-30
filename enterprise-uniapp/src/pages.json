@@ -13,7 +13,8 @@
     {"path": "pages/applications/applicationList", "style": {"navigationBarTitleText": "应聘管理", "enablePullDownRefresh": true}},
     {"path": "pages/schedules/scheduleList", "style": {"navigationBarTitleText": "排班管理", "enablePullDownRefresh": true}},
     {"path": "pages/attendance/attendanceList", "style": {"navigationBarTitleText": "考勤管理", "enablePullDownRefresh": true}},
-    {"path": "pages/settlement/settlementList", "style": {"navigationBarTitleText": "结算账单", "enablePullDownRefresh": true}}
+    {"path": "pages/settlement/settlementList", "style": {"navigationBarTitleText": "结算账单", "enablePullDownRefresh": true}},
+    {"path": "pages/balance/balanceList", "style": {"navigationBarTitleText": "账户余额", "enablePullDownRefresh": true}}
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
