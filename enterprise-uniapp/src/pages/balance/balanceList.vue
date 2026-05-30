@@ -1,5 +1,6 @@
 <script setup>
-import { ref, onShow } from 'vue'
+import { ref } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { request } from '@/api/request'
 import { getBalance, topUp, getTransactions } from '@/api/balance'
 
