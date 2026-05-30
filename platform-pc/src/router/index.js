@@ -45,6 +45,12 @@ const routes = [
       name: 'WorkerList',
       component: () => import('../views/workers/WorkerList.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/withdrawals',
+      name: 'WithdrawalRecords',
+      component: () => import('../views/withdrawals/WithdrawalRecordList.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 
