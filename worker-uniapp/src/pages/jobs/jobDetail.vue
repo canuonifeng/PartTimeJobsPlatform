@@ -104,7 +104,9 @@ const markers = computed(() => {
     id: 1,
     latitude: job.value.latitude,
     longitude: job.value.longitude,
-    title: job.value.title || ''
+    title: job.value.title || '',
+    width: 30,
+    height: 30
   }]
 })
 
