@@ -438,6 +438,11 @@ onLoad(loadDetail)
   cursor: pointer;
 }
 
+.location-row .info-value {
+  color: #07c160;
+  text-decoration: underline;
+}
+
 .location-value-wrap {
   display: flex;
   align-items: center;
@@ -446,7 +451,7 @@ onLoad(loadDetail)
 
 .location-arrow {
   font-size: 28rpx;
-  color: #ccc;
+  color: #07c160;
 }
 
 .bottom-bar {
