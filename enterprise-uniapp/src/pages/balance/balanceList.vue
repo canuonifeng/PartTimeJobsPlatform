@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { request } from '@/api/request'
-import { getBalance, topUp, getTransactions } from '@/api/balance'
+import { getBalance, getTransactions } from '@/api/balance'
 
 const balanceInfo = ref({
   balance: 0,
@@ -15,8 +15,6 @@ const transactions = ref([])
 const total = ref(0)
 const page = ref(1)
 const pageSize = ref(20)
-const showTopUpDialog = ref(false)
-const topUpAmount = ref('')
 
 async function fetchBalance() {
   try {
@@ -29,23 +27,6 @@ async function fetchTransactions() {
     const res = await getTransactions(request, { page: page.value, pageSize: pageSize.value })
     transactions.value = Array.isArray(res) ? res : (res.records || [])
     total.value = res.total || 0
-  } catch {}
-}
-
-async function handleTopUp() {
-  const amount = parseFloat(topUpAmount.value)
-  if (!amount || amount <= 0) {
-    uni.showToast({ title: '请输入有效金额', icon: 'none' })
-    return
-  }
-  try {
-    await topUp(request, amount)
-    uni.showToast({ title: '充值成功', icon: 'success' })
-    showTopUpDialog.value = false
-    topUpAmount.value = ''
-    page.value = 1
-    fetchBalance()
-    fetchTransactions()
   } catch {}
 }
 
@@ -95,10 +76,6 @@ function typeLabel(type) {
       </view>
     </view>
 
-    <view class="toolbar">
-      <button class="top-up-btn" @click="showTopUpDialog = true">充值</button>
-    </view>
-
     <view class="section-title">账户流水</view>
 
     <view v-for="item in transactions" :key="item.id" class="txn-item">
@@ -112,18 +89,6 @@ function typeLabel(type) {
 
     <view v-if="total > pageSize && page * pageSize < total" class="load-more" @click="page++; fetchTransactions()">
       <text>加载更多</text>
-    </view>
-
-    <!-- Top-up dialog overlay -->
-    <view v-if="showTopUpDialog" class="dialog-overlay" @click="showTopUpDialog = false">
-      <view class="dialog-box" @click.stop>
-        <text class="dialog-title">充值</text>
-        <input v-model="topUpAmount" type="digit" placeholder="请输入充值金额" class="top-up-input" />
-        <view class="dialog-actions">
-          <button class="dialog-btn cancel" @click="showTopUpDialog = false">取消</button>
-          <button class="dialog-btn confirm" @click="handleTopUp">确认充值</button>
-        </view>
-      </view>
     </view>
   </view>
 </template>
@@ -139,9 +104,6 @@ function typeLabel(type) {
 .success { color: #67c23a; }
 .warning { color: #e6a23c; }
 .info { color: #909399; }
-.toolbar { padding: 16rpx 0; }
-.top-up-btn { width: 100%; background: #409eff; color: #fff; border: none; border-radius: 12rpx; padding: 24rpx; font-size: 30rpx; }
-.top-up-btn::after { border: none; }
 .section-title { font-size: 28rpx; color: #666; padding: 16rpx 0 8rpx; }
 .txn-item { background: #fff; border-radius: 12rpx; padding: 24rpx; margin-bottom: 8rpx; display: flex; justify-content: space-between; align-items: center; }
 .txn-left { flex: 1; }
@@ -150,13 +112,4 @@ function typeLabel(type) {
 .txn-time { font-size: 22rpx; color: #ccc; margin-top: 4rpx; display: block; }
 .txn-amount { font-size: 32rpx; font-weight: 600; }
 .load-more { text-align: center; padding: 24rpx; color: #409eff; font-size: 26rpx; }
-.dialog-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 999; }
-.dialog-box { background: #fff; border-radius: 16rpx; padding: 40rpx; width: 70%; }
-.dialog-title { font-size: 32rpx; font-weight: 600; color: #333; display: block; text-align: center; margin-bottom: 24rpx; }
-.top-up-input { border: 2rpx solid #ddd; border-radius: 12rpx; padding: 20rpx; font-size: 30rpx; margin-bottom: 24rpx; width: 100%; box-sizing: border-box; }
-.dialog-actions { display: flex; gap: 16rpx; }
-.dialog-btn { flex: 1; height: 72rpx; line-height: 72rpx; border-radius: 12rpx; font-size: 28rpx; text-align: center; }
-.dialog-btn::after { border: none; }
-.cancel { background: #f5f5f5; color: #666; }
-.confirm { background: #409eff; color: #fff; }
 </style>
