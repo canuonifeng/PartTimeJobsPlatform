@@ -20,8 +20,7 @@ const sections = [
       { name: '发布职位', icon: '📋', path: '/pages/jobs/jobList' },
       { name: '报名管理', icon: '👥', path: '/pages/applications/applicationList' },
       { name: '排班管理', icon: '📅', path: '/pages/schedules/scheduleList' },
-      { name: '考勤管理', icon: '⏱', path: '/pages/attendance/attendanceList' },
-      { name: '结算账单', icon: '💰', path: '/pages/settlement/settlementList' }
+      { name: '考勤管理', icon: '⏱', path: '/pages/attendance/attendanceList' }
     ]
   },
   {

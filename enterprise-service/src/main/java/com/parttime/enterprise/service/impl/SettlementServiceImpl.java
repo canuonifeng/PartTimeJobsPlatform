@@ -11,22 +11,17 @@ import com.parttime.enterprise.pojo.entity.BalanceTransaction;
 import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.entity.SettlementBill;
 import com.parttime.enterprise.pojo.entity.WorkerBalance;
-import com.parttime.enterprise.pojo.vo.PageVO;
-import com.parttime.enterprise.pojo.vo.SettlementBillVO;
 import com.parttime.enterprise.service.EnterpriseBalanceService;
 import com.parttime.enterprise.service.SettlementService;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 @Service
 public class SettlementServiceImpl implements SettlementService {
@@ -54,15 +49,6 @@ public class SettlementServiceImpl implements SettlementService {
 
     private static final DateTimeFormatter SERIAL_FMT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
     private static final Random RANDOM = new Random();
-
-    @Override
-    public PageVO<SettlementBillVO> listBills(Long companyId, String workerName, LocalDate dateFrom, LocalDate dateTo, int page, int pageSize) {
-        int offset = (page - 1) * pageSize;
-        List<SettlementBill> bills = settlementBillMapper.findByCompanyId(companyId, workerName, dateFrom, dateTo, offset, pageSize);
-        long total = settlementBillMapper.countByCompanyId(companyId, workerName, dateFrom, dateTo);
-        List<SettlementBillVO> voList = bills.stream().map(this::toVO).collect(Collectors.toList());
-        return new PageVO<>(voList, total);
-    }
 
     @Override
     @Transactional
@@ -170,12 +156,6 @@ public class SettlementServiceImpl implements SettlementService {
 
         ar.setSettlementStatus("UNPAID");
         attendanceRecordMapper.update(ar);
-    }
-
-    private SettlementBillVO toVO(SettlementBill bill) {
-        SettlementBillVO vo = new SettlementBillVO();
-        BeanUtils.copyProperties(bill, vo);
-        return vo;
     }
 
     private synchronized String generateSerialNumber() {

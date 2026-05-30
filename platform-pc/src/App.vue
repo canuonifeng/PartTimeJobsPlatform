@@ -19,6 +19,9 @@
         <el-menu-item index="/enterprises">
           <el-icon><OfficeBuilding /></el-icon><span>企业管理</span>
         </el-menu-item>
+        <el-menu-item index="/settlement/bills">
+          <el-icon><Money /></el-icon><span>结算账单</span>
+        </el-menu-item>
         <el-menu-item index="/admin/workers">
           <el-icon><User /></el-icon><span>兼职管理</span>
         </el-menu-item>
@@ -40,7 +43,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
-import { DataAnalysis, Warning, Setting, Folder, OfficeBuilding, User } from '@element-plus/icons-vue'
+import { DataAnalysis, Warning, Setting, Folder, OfficeBuilding, User, Money } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
