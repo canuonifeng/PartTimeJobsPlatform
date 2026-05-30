@@ -28,10 +28,7 @@
           <text class="info-label">发布企业</text>
           <text class="info-value">{{ job.companyName }}</text>
         </view>
-        <view v-if="applyStatusText" class="info-row">
-          <text class="info-label">报名状态</text>
-          <text class="info-value">{{ displayApplyStatus(applyStatusText) }}</text>
-        </view>
+
       </view>
 
 
@@ -95,13 +92,9 @@ function rateTypeLabel(type) {
 
 const job = ref<any>(null)
 const loading = ref(true)
-const appliedStatus = ref<string | null>(null)
 const appliedScheduleIds = ref<number[]>([])
 const selectedScheduleIds = ref<number[]>([])
 const authStore = useAuthStore()
-
-
-const applyStatusText = computed(() => job.value?.applyStatus || appliedStatus.value || '')
 
 const pendingScheduleIds = computed(() =>
   selectedScheduleIds.value.filter(id => !appliedScheduleIds.value.includes(id))
@@ -153,9 +146,6 @@ async function loadDetail() {
   try {
     const res: any = await getJobDetail(id)
     job.value = res
-    if (res.applyStatus) {
-      appliedStatus.value = res.applyStatus
-    }
     appliedScheduleIds.value = res.appliedScheduleIds ? [...res.appliedScheduleIds] : []
   } catch {
     uni.showToast({ title: '加载失败', icon: 'none' })
@@ -211,8 +201,6 @@ async function handleApply() {
       scheduleIds: idsToSubmit
     })
     appliedScheduleIds.value = [...appliedScheduleIds.value, ...idsToSubmit]
-    appliedStatus.value = '已报名'
-    job.value.applyStatus = '已报名'
     uni.showToast({ title: '报名成功', icon: 'success' })
   } catch (err: any) {
     const msg = err.message || err.errMsg || ''
@@ -222,13 +210,6 @@ async function handleApply() {
       uni.showToast({ title: '报名失败', icon: 'none' })
     }
   }
-}
-
-function displayApplyStatus(status?: string) {
-  if (status === 'PENDING') return '已报名'
-  if (status === 'ACCEPTED') return '已通过'
-  if (status === 'REJECTED') return '未通过'
-  return status || ''
 }
 
 function handleOpenLocation() {
