@@ -4,6 +4,7 @@ import com.parttime.enterprise.enums.ApplicationStatus;
 import com.parttime.enterprise.exception.BusinessException;
 import com.parttime.enterprise.exception.GlobalExceptionHandler;
 import com.parttime.enterprise.pojo.vo.JobApplicationVO;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.ApplicationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,13 +55,13 @@ class ApplicationControllerTest {
         app.setStatus(ApplicationStatus.PENDING);
         app.setAppliedAt(LocalDateTime.of(2026, 5, 1, 10, 0));
 
-        when(applicationService.getApplicationsByJob(1L, 100L, null, null, 1, 20)).thenReturn(List.of(app));
+        when(applicationService.getApplicationsByJob(1L, 100L, null, null, 1, 20)).thenReturn(new PageVO<>(List.of(app), 1));
 
         mockMvc.perform(get("/api/applications").param("jobId", "100"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1L))
-                .andExpect(jsonPath("$[0].workerPhone").value("13800000000"))
-                .andExpect(jsonPath("$[0].status").value("PENDING"));
+                .andExpect(jsonPath("$.records[0].id").value(1L))
+                .andExpect(jsonPath("$.records[0].workerPhone").value("13800000000"))
+                .andExpect(jsonPath("$.records[0].status").value("PENDING"));
     }
 
     @Test
@@ -72,11 +73,11 @@ class ApplicationControllerTest {
         app.setStatus(ApplicationStatus.PENDING);
         app.setAppliedAt(LocalDateTime.of(2026, 5, 1, 10, 0));
 
-        when(applicationService.getApplicationsByJob(1L, 100L, null, null, 2, 20)).thenReturn(List.of(app));
+        when(applicationService.getApplicationsByJob(1L, 100L, null, null, 2, 20)).thenReturn(new PageVO<>(List.of(app), 1));
 
         mockMvc.perform(get("/api/applications").param("jobId", "100").param("page", "2").param("pageSize", "20"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1L));
+                .andExpect(jsonPath("$.records[0].id").value(1L));
     }
 
     @Test
