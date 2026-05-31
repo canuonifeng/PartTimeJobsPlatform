@@ -28,6 +28,9 @@ const sections = [
     items: [
       { name: '工作地点', icon: '📍', path: '/pages/locations/locationList' },
       { name: '职位模版', icon: '📄', path: '/pages/templates/templateList' },
+      { name: '兼职管理', icon: '👤', path: '/pages/workers/workerList' },
+      { name: '账号管理', icon: '🔐', path: '/pages/accounts/accountList' },
+      { name: '企业设置', icon: '⚙️', path: '/pages/settings/companySettings' },
       { name: '账户余额', icon: '🏦', path: '/pages/balance/balanceList' }
     ]
   }
