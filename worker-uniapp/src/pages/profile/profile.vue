@@ -25,6 +25,10 @@
         <text>编辑资料</text>
         <text class="arrow">›</text>
       </view>
+      <view class="menu-item" @click="navTo('/pages/auth/realName')">
+        <text>实名认证</text>
+        <text class="arrow">›</text>
+      </view>
       <view class="menu-item" @click="navTo('/pages/schedule/schedule')">
         <text>我的排班</text>
         <text class="arrow">›</text>

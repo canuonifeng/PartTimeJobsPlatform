@@ -37,6 +37,12 @@
       }
     },
     {
+      "path": "pages/auth/realName",
+      "style": {
+        "navigationBarTitleText": "实名认证"
+      }
+    },
+    {
       "path": "pages/schedule/schedule",
       "style": {
         "navigationBarTitleText": "我的排班"

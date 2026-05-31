@@ -74,6 +74,10 @@ function handleMenuSelect(index) {
           <el-icon><Wallet /></el-icon>
           <span>账户余额</span>
         </el-menu-item>
+        <el-menu-item index="/auth/real-name">
+          <el-icon><Postcard /></el-icon>
+          <span>实名认证</span>
+        </el-menu-item>
         <el-menu-item index="/settings">
           <el-icon><Picture /></el-icon>
           <span>企业设置</span>

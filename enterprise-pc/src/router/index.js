@@ -89,6 +89,12 @@ const routes = [
     name: 'BalancePage',
     component: () => import('../views/balance/BalancePage.vue'),
     meta: { requiresAuth: true, title: '账户余额' }
+  },
+  {
+    path: '/auth/real-name',
+    name: 'RealNameAuth',
+    component: () => import('../views/auth/RealNameAuth.vue'),
+    meta: { requiresAuth: true, title: '实名认证' }
   }
 ]
 
