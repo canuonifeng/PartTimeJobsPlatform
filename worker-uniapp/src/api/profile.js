@@ -14,3 +14,10 @@ export function updateProfile(data) {
     data
   })
 }
+
+export function getProfileCompleteness() {
+  return request({
+    url: '/api/profile/completeness',
+    method: 'GET'
+  })
+}

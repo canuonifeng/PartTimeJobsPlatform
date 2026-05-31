@@ -80,6 +80,7 @@
 import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { getJobDetail, applyJob } from '@/api/jobs'
+import { getProfileCompleteness } from '@/api/profile'
 import { useAuthStore } from '@/store'
 
 function rateUnit(type) {
@@ -198,6 +199,25 @@ async function handleApply() {
     return
   }
   try {
+    const comp: any = await getProfileCompleteness()
+    if (comp && comp.complete === false) {
+      uni.showModal({
+        title: '完善个人信息',
+        content: '报名前请先完善姓名、手机号、性别和出生日期',
+        confirmText: '去完善',
+        cancelText: '取消',
+        success(res) {
+          if (res.confirm) {
+            uni.navigateTo({ url: '/pages/profile/edit' })
+          }
+        }
+      })
+      return
+    }
+  } catch {
+    // if completeness check fails, proceed and let backend gate
+  }
+  try {
     await applyJob(job.value.id, {
       jobId: job.value.id,
       scheduleIds: idsToSubmit
@@ -206,7 +226,19 @@ async function handleApply() {
     uni.showToast({ title: '报名成功', icon: 'success' })
   } catch (err: any) {
     const msg = err.message || err.errMsg || ''
-    if (msg.includes('已招满')) {
+    if (msg.includes('PROFILE_INCOMPLETE') || msg.includes('完善个人信息')) {
+      uni.showModal({
+        title: '完善个人信息',
+        content: '报名前请先完善姓名、手机号、性别和出生日期',
+        confirmText: '去完善',
+        cancelText: '取消',
+        success(res) {
+          if (res.confirm) {
+            uni.navigateTo({ url: '/pages/profile/edit' })
+          }
+        }
+      })
+    } else if (msg.includes('已招满')) {
       uni.showToast({ title: '该岗位已招满', icon: 'none' })
     } else if (msg.includes('已截止')) {
       uni.showToast({ title: '报名已截止', icon: 'none' })

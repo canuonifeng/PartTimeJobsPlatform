@@ -16,6 +16,28 @@
     </view>
 
     <view class="form-group">
+      <text class="form-label">性别</text>
+      <view class="gender-row">
+        <view
+          v-for="opt in genderOptions"
+          :key="opt.value"
+          class="gender-chip"
+          :class="{ selected: form.gender === opt.value }"
+          @click="form.gender = opt.value"
+        >
+          {{ opt.label }}
+        </view>
+      </view>
+    </view>
+
+    <view class="form-group">
+      <text class="form-label">出生日期</text>
+      <picker mode="date" :value="form.birthday" :end="todayStr" @change="onBirthdayChange">
+        <view class="form-input picker-value">{{ form.birthday || '请选择出生日期' }}</view>
+      </picker>
+    </view>
+
+    <view class="form-group">
       <text class="form-label">技能标签</text>
       <view class="skill-input-area">
         <view class="skill-tags">
@@ -68,13 +90,27 @@ const weekDays = [
   { label: '周日', value: 'Sunday' }
 ]
 
+const genderOptions = [
+  { label: '男', value: 'MALE' },
+  { label: '女', value: 'FEMALE' },
+  { label: '其他', value: 'OTHER' }
+]
+
+const todayStr = new Date().toISOString().slice(0, 10)
+
 const form = reactive({
   name: '',
   phone: '',
   avatar: '',
+  gender: '',
+  birthday: '',
   skills: [] as string[],
   availableDays: [] as string[]
 })
+
+function onBirthdayChange(e: any) {
+  form.birthday = e.detail.value
+}
 
 const newSkill = ref('')
 const saving = ref(false)
@@ -134,7 +170,9 @@ onMounted(async () => {
     if (res) {
       form.name = res.name || ''
       form.phone = res.phone || ''
-      form.avatar = res.avatar || ''
+      form.avatar = res.avatar || res.avatarUrl || ''
+      form.gender = res.gender || ''
+      form.birthday = res.birthday || ''
       form.skills = res.skills || []
       form.availableDays = res.availableDays || []
     }
@@ -191,6 +229,31 @@ onMounted(async () => {
   font-size: 28rpx;
   color: #333;
   border-bottom: 1rpx solid #f0f0f0;
+}
+
+.picker-value {
+  line-height: 72rpx;
+  color: #333;
+}
+
+.gender-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.gender-chip {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0;
+  border-radius: 8rpx;
+  background: #f5f5f5;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.gender-chip.selected {
+  background: #07c160;
+  color: #fff;
 }
 
 .skill-input-area {
