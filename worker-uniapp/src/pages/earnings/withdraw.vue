@@ -1,5 +1,16 @@
 <template>
   <view class="withdraw-page">
+    <view v-if="!ready" class="gate-card">
+      <view v-if="!realNameOk" class="gate-row" @click="goRealName">
+        <text>实名认证未通过，点击前往</text>
+        <text class="arrow">›</text>
+      </view>
+      <view v-else-if="!bankCardOk" class="gate-row" @click="goBankCard">
+        <text>未绑定银行卡，点击前往</text>
+        <text class="arrow">›</text>
+      </view>
+    </view>
+
     <view class="balance-card">
       <text class="balance-label">可提现金额</text>
       <text class="balance-amount">{{ availableBalance }}元</text>
@@ -51,16 +62,22 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { getEarningsSummary, createWithdrawal } from '@/api/earnings'
+import { getRealNameStatus } from '@/api/realName.js'
+import { getBankCard } from '@/api/bankCard.js'
 
 const amount = ref('')
 const availableBalance = ref(0)
 const submitting = ref(false)
+const realNameOk = ref(false)
+const bankCardOk = ref(false)
 
 const quickAmounts = [50, 100, 200, 500]
 
+const ready = computed(() => realNameOk.value && bankCardOk.value)
+
 const canSubmit = computed(() => {
   const val = parseFloat(amount.value)
-  return val >= 10 && val <= availableBalance.value
+  return ready.value && val >= 10 && val <= availableBalance.value
 })
 
 function validateAmount() {
@@ -70,7 +87,20 @@ function validateAmount() {
   }
 }
 
+function goRealName() {
+  uni.navigateTo({ url: '/pages/auth/realName' })
+}
+
+function goBankCard() {
+  uni.navigateTo({ url: '/pages/bank/bankCard' })
+}
+
 async function handleWithdraw() {
+  if (!ready.value) {
+    if (!realNameOk.value) goRealName()
+    else if (!bankCardOk.value) goBankCard()
+    return
+  }
   if (!canSubmit.value) return
   submitting.value = true
   try {
@@ -78,14 +108,30 @@ async function handleWithdraw() {
     uni.showToast({ title: '提现申请已提交', icon: 'success' })
     uni.$emit('earningsRefresh')
     uni.navigateBack()
-  } catch {
-    uni.showToast({ title: '提现失败', icon: 'none' })
+  } catch (e: any) {
+    uni.showToast({ title: e?.message || '提现失败', icon: 'none' })
   } finally {
     submitting.value = false
   }
 }
 
+async function loadGates() {
+  try {
+    const auth: any = await getRealNameStatus()
+    realNameOk.value = auth && auth.status === 'APPROVED'
+  } catch {
+    realNameOk.value = false
+  }
+  try {
+    const card: any = await getBankCard()
+    bankCardOk.value = !!(card && card.id)
+  } catch {
+    bankCardOk.value = false
+  }
+}
+
 onMounted(async () => {
+  await loadGates()
   try {
     const res = await getEarningsSummary()
     availableBalance.value = res.pendingWithdrawal || 0
@@ -206,4 +252,19 @@ onMounted(async () => {
 .submit-btn[disabled] {
   background: #ccc;
 }
+
+.gate-card {
+  background: #fff8e1;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+.gate-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #d48806;
+  font-size: 28rpx;
+}
+.gate-row .arrow { color: #d48806; }
 </style>

@@ -29,6 +29,10 @@
         <text>实名认证</text>
         <text class="arrow">›</text>
       </view>
+      <view class="menu-item" @click="navTo('/pages/bank/bankCard')">
+        <text>银行卡</text>
+        <text class="arrow">›</text>
+      </view>
       <view class="menu-item" @click="navTo('/pages/schedule/schedule')">
         <text>我的排班</text>
         <text class="arrow">›</text>

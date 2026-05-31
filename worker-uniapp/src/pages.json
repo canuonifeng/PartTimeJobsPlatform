@@ -43,6 +43,12 @@
       }
     },
     {
+      "path": "pages/bank/bankCard",
+      "style": {
+        "navigationBarTitleText": "银行卡"
+      }
+    },
+    {
       "path": "pages/schedule/schedule",
       "style": {
         "navigationBarTitleText": "我的排班"
