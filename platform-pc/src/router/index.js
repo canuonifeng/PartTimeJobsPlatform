@@ -51,6 +51,18 @@ const routes = [
       name: 'WithdrawalRecords',
       component: () => import('../views/withdrawals/WithdrawalRecordList.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/auth/workers',
+      name: 'WorkerRealNameList',
+      component: () => import('../views/auth/WorkerRealNameList.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/auth/enterprises',
+      name: 'EnterpriseRealNameList',
+      component: () => import('../views/auth/EnterpriseRealNameList.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 
