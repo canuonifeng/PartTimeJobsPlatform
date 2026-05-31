@@ -142,13 +142,13 @@ public class CorrectionServiceImpl implements CorrectionService {
             record.setCheckOutTime(checkOut);
             record.setTotalHours(totalHours);
             record.setScheduledPay(scheduledPay);
-            record.setStatus(ShiftStatus.CHECKED_IN.name());
+            record.setStatus(ShiftStatus.ON_DUTY.name());
             record.setRemark("补卡");
             attendanceRecordMapper.insert(record);
         }
 
         if (ShiftStatus.SCHEDULED.name().equals(shift.getStatus())) {
-            shift.setStatus(ShiftStatus.CHECKED_IN.name());
+            shift.setStatus(ShiftStatus.ON_DUTY.name());
             shift.setUpdatedAt(LocalDateTime.now());
             shiftMapper.update(shift);
         }

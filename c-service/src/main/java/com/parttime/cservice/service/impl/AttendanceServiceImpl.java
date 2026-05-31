@@ -1,9 +1,11 @@
 package com.parttime.cservice.service.impl;
 
 import com.parttime.cservice.enums.ShiftStatus;
+import com.parttime.cservice.mapper.AttendanceCheckInMapper;
 import com.parttime.cservice.mapper.AttendanceCorrectionMapper;
 import com.parttime.cservice.mapper.AttendanceRecordMapper;
 import com.parttime.cservice.mapper.ShiftMapper;
+import com.parttime.cservice.pojo.entity.AttendanceCheckIn;
 import com.parttime.cservice.pojo.entity.AttendanceCorrectionEntity;
 import com.parttime.cservice.pojo.entity.AttendanceRecordEntity;
 import com.parttime.cservice.pojo.entity.ShiftEntity;
@@ -33,6 +35,8 @@ public class AttendanceServiceImpl implements AttendanceService {
     private AttendanceRecordMapper attendanceRecordMapper;
     @Resource
     private AttendanceCorrectionMapper correctionMapper;
+    @Resource
+    private AttendanceCheckInMapper attendanceCheckInMapper;
 
     @Override
     public ShiftEntity addShift(Long jobId, String jobTitle, String jobLocation, Long workerId,
@@ -73,13 +77,11 @@ public class AttendanceServiceImpl implements AttendanceService {
         if (!shift.getWorkerId().equals(workerId)) {
             throw new RuntimeException("Shift does not belong to this worker");
         }
+
+        // 已上岗/已签退/缺勤/迟到/早退 都不能再签到
         if (!ShiftStatus.SCHEDULED.name().equals(shift.getStatus())) {
             throw new RuntimeException("Cannot check in: shift status is " + shift.getStatus());
         }
-
-        attendanceRecordMapper.findByShiftId(shiftId).ifPresent(r -> {
-            throw new RuntimeException("Already checked in for this shift");
-        });
 
         if (shift.getLocationLat() != null && shift.getLocationRadius() != null && lat != null) {
             double distance = haversine(
@@ -90,21 +92,39 @@ public class AttendanceServiceImpl implements AttendanceService {
             }
         }
 
-        shift.setStatus(ShiftStatus.CHECKED_IN.name());
-        shift.setUpdatedAt(LocalDateTime.now());
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime scheduledStart = LocalDateTime.of(shift.getShiftDate(), shift.getStartTime());
+        long lateSeconds = now.isAfter(scheduledStart) ? Duration.between(scheduledStart, now).getSeconds() : 0;
+
+        ShiftStatus newStatus = lateSeconds > 0 ? ShiftStatus.LATE : ShiftStatus.ON_DUTY;
+
+        shift.setStatus(newStatus.name());
+        shift.setUpdatedAt(now);
         shiftMapper.update(shift);
+
+        AttendanceCheckIn checkIn = new AttendanceCheckIn();
+        checkIn.setShiftId(shiftId);
+        checkIn.setWorkerId(workerId);
+        checkIn.setCheckInTime(now);
+        checkIn.setCheckInLat(lat);
+        checkIn.setCheckInLng(lng);
+        checkIn.setLateSeconds((int) lateSeconds);
+        checkIn.setEarlyLeaveSeconds(0);
+        checkIn.setCreatedAt(now);
+        checkIn.setUpdatedAt(now);
+        attendanceCheckInMapper.insert(checkIn);
 
         AttendanceRecordEntity record = new AttendanceRecordEntity();
         record.setShiftId(shiftId);
         record.setJobId(shift.getJobId());
         record.setCompanyId(shift.getCompanyId());
         record.setWorkerId(workerId);
-        record.setCheckInTime(LocalDateTime.now());
+        record.setCheckInTime(now);
         record.setCheckInLat(lat);
         record.setCheckInLng(lng);
-        record.setStatus(ShiftStatus.CHECKED_IN.name());
-        record.setCreatedAt(LocalDateTime.now());
-        record.setUpdatedAt(LocalDateTime.now());
+        record.setStatus(newStatus.name());
+        record.setCreatedAt(now);
+        record.setUpdatedAt(now);
         attendanceRecordMapper.insert(record);
 
         return toAttendanceResponse(record);
@@ -119,15 +139,43 @@ public class AttendanceServiceImpl implements AttendanceService {
             throw new RuntimeException("Shift does not belong to this worker");
         }
 
+        // 只能从已上岗/迟到状态签退
+        if (!ShiftStatus.ON_DUTY.name().equals(shift.getStatus()) && !ShiftStatus.LATE.name().equals(shift.getStatus())) {
+            throw new RuntimeException("Cannot check out: shift status is " + shift.getStatus());
+        }
+
         AttendanceRecordEntity record = attendanceRecordMapper.findByShiftId(shiftId)
                 .orElseThrow(() -> new RuntimeException("No check-in record found for this shift"));
 
-        if (!"CHECKED_IN".equals(record.getStatus())) {
-            throw new RuntimeException("Cannot check out: status is " + record.getStatus());
+        if (shift.getLocationLat() != null && shift.getLocationRadius() != null && lat != null) {
+            double distance = haversine(
+                    shift.getLocationLat().doubleValue(), shift.getLocationLng().doubleValue(),
+                    lat.doubleValue(), lng.doubleValue());
+            if (distance > shift.getLocationRadius()) {
+                throw new RuntimeException("Location out of range: " + (int) distance + "m (max: " + shift.getLocationRadius() + "m)");
+            }
         }
 
-        LocalDateTime checkOutTime = LocalDateTime.now();
-        Duration duration = Duration.between(record.getCheckInTime(), checkOutTime);
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime scheduledEnd = LocalDateTime.of(shift.getShiftDate(), shift.getEndTime());
+        long earlySeconds = now.isBefore(scheduledEnd) ? Duration.between(now, scheduledEnd).getSeconds() : 0;
+
+        ShiftStatus newStatus = earlySeconds > 0 ? ShiftStatus.EARLY_LEAVE : ShiftStatus.OFF_DUTY;
+
+        // 追加签到记录（支持多次签退）
+        AttendanceCheckIn checkIn = new AttendanceCheckIn();
+        checkIn.setShiftId(shiftId);
+        checkIn.setWorkerId(workerId);
+        checkIn.setCheckInTime(now);
+        checkIn.setCheckInLat(lat);
+        checkIn.setCheckInLng(lng);
+        checkIn.setLateSeconds(0);
+        checkIn.setEarlyLeaveSeconds((int) earlySeconds);
+        checkIn.setCreatedAt(now);
+        checkIn.setUpdatedAt(now);
+        attendanceCheckInMapper.insert(checkIn);
+
+        Duration duration = Duration.between(record.getCheckInTime(), now);
         BigDecimal hours = BigDecimal.valueOf(duration.toMinutes() / 60.0)
                 .setScale(2, RoundingMode.HALF_UP);
 
@@ -142,20 +190,20 @@ public class AttendanceServiceImpl implements AttendanceService {
             }
         }
 
-        record.setCheckOutTime(checkOutTime);
+        record.setCheckOutTime(now);
         record.setCheckOutLat(lat);
         record.setCheckOutLng(lng);
         record.setTotalHours(hours);
         record.setScheduledPay(scheduledPay);
         record.setPayablePay(scheduledPay);
         record.setSettlementStatus("UNPAID");
-        record.setCalculatedAt(LocalDateTime.now());
-        record.setStatus(ShiftStatus.CHECKED_OUT.name());
-        record.setUpdatedAt(LocalDateTime.now());
+        record.setCalculatedAt(now);
+        record.setStatus(newStatus.name());
+        record.setUpdatedAt(now);
         attendanceRecordMapper.update(record);
 
-        shift.setStatus(ShiftStatus.CHECKED_OUT.name());
-        shift.setUpdatedAt(LocalDateTime.now());
+        shift.setStatus(newStatus.name());
+        shift.setUpdatedAt(now);
         shiftMapper.update(shift);
 
         return toAttendanceResponse(record);

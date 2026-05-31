@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.cservice.mapper.AttendanceCheckInMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO attendance_check_ins (shift_id, worker_id, check_in_time, check_in_lat, check_in_lng,
+                                          late_seconds, early_leave_seconds)
+        VALUES (#{shiftId}, #{workerId}, #{checkInTime}, #{checkInLat}, #{checkInLng},
+                #{lateSeconds}, #{earlyLeaveSeconds})
+    </insert>
+
+    <update id="update">
+        UPDATE attendance_check_ins
+        SET early_leave_seconds = #{earlyLeaveSeconds},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <select id="findByShiftId" resultType="com.parttime.cservice.pojo.entity.AttendanceCheckIn">
+        SELECT * FROM attendance_check_ins WHERE shift_id = #{shiftId} ORDER BY check_in_time ASC
+    </select>
+
+    <select id="findByShiftIdAndWorkerId" resultType="com.parttime.cservice.pojo.entity.AttendanceCheckIn">
+        SELECT * FROM attendance_check_ins
+        WHERE shift_id = #{shiftId} AND worker_id = #{workerId}
+        ORDER BY check_in_time ASC
+    </select>
+
+    <select id="findById" resultType="com.parttime.cservice.pojo.entity.AttendanceCheckIn">
+        SELECT * FROM attendance_check_ins WHERE id = #{id}
+    </select>
+
+</mapper>

@@ -80,34 +80,34 @@
     }
   ],
   "tabBar": {
-    "color": "#999999",
-    "selectedColor": "#07c160",
+    "color": "#666666",
+    "selectedColor": "#10b981",
     "backgroundColor": "#ffffff",
     "borderStyle": "black",
     "list": [
       {
         "pagePath": "pages/index/index",
         "text": "首页",
-        "iconPath": "static/home.png",
-        "selectedIconPath": "static/home-active.png"
+        "iconPath": "static/tab-home.png",
+        "selectedIconPath": "static/tab-home-active.png"
       },
       {
         "pagePath": "pages/jobs/jobList",
         "text": "找活",
-        "iconPath": "static/jobs.png",
-        "selectedIconPath": "static/jobs-active.png"
+        "iconPath": "static/tab-jobs.png",
+        "selectedIconPath": "static/tab-jobs-active.png"
       },
       {
         "pagePath": "pages/message/message",
         "text": "消息",
-        "iconPath": "static/message.png",
-        "selectedIconPath": "static/message-active.png"
+        "iconPath": "static/tab-message.png",
+        "selectedIconPath": "static/tab-message-active.png"
       },
       {
         "pagePath": "pages/profile/profile",
         "text": "我的",
-        "iconPath": "static/profile.png",
-        "selectedIconPath": "static/profile-active.png"
+        "iconPath": "static/tab-profile.png",
+        "selectedIconPath": "static/tab-profile-active.png"
       }
     ]
   },

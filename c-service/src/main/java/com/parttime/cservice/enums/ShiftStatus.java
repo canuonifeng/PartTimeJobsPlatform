@@ -1,5 +1,5 @@
 package com.parttime.cservice.enums;
 
 public enum ShiftStatus {
-    SCHEDULED, CHECKED_IN, CHECKED_OUT, ABSENT
+    SCHEDULED, ON_DUTY, OFF_DUTY, ABSENT, LATE, EARLY_LEAVE
 }
