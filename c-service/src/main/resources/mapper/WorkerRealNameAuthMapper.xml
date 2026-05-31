@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.cservice.mapper.WorkerRealNameAuthMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO worker_real_name_auth (
+            worker_id, real_name, id_card_no, id_card_front_url, id_card_back_url,
+            status, reject_reason, submitted_at, reviewed_at, reviewer_id
+        ) VALUES (
+            #{workerId}, #{realName}, #{idCardNo}, #{idCardFrontUrl}, #{idCardBackUrl},
+            #{status}, #{rejectReason}, #{submittedAt}, #{reviewedAt}, #{reviewerId}
+        )
+    </insert>
+
+    <update id="update">
+        UPDATE worker_real_name_auth
+        SET real_name = #{realName},
+            id_card_no = #{idCardNo},
+            id_card_front_url = #{idCardFrontUrl},
+            id_card_back_url = #{idCardBackUrl},
+            status = #{status},
+            reject_reason = #{rejectReason},
+            submitted_at = #{submittedAt},
+            reviewed_at = #{reviewedAt},
+            reviewer_id = #{reviewerId}
+        WHERE worker_id = #{workerId}
+    </update>
+
+    <select id="findByWorkerId" resultType="com.parttime.cservice.pojo.entity.WorkerRealNameAuth">
+        SELECT id, worker_id, real_name, id_card_no, id_card_front_url, id_card_back_url,
+               status, reject_reason, submitted_at, reviewed_at, reviewer_id, created_at, updated_at
+        FROM worker_real_name_auth WHERE worker_id = #{workerId}
+    </select>
+
+</mapper>

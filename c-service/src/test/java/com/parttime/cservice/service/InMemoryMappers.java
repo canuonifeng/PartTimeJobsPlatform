@@ -304,4 +304,24 @@ public class InMemoryMappers {
             }
         };
     }
+
+    public static WorkerRealNameAuthMapper createWorkerRealNameAuthMapper() {
+        return new WorkerRealNameAuthMapper() {
+            private final ConcurrentHashMap<Long, WorkerRealNameAuth> store = new ConcurrentHashMap<>();
+            private final AtomicLong idGen = new AtomicLong(1);
+
+            @Override public int insert(WorkerRealNameAuth auth) {
+                if (auth.getId() == null) auth.setId(idGen.getAndIncrement());
+                store.put(auth.getWorkerId(), auth);
+                return 1;
+            }
+            @Override public int update(WorkerRealNameAuth auth) {
+                store.put(auth.getWorkerId(), auth);
+                return 1;
+            }
+            @Override public Optional<WorkerRealNameAuth> findByWorkerId(Long workerId) {
+                return Optional.ofNullable(store.get(workerId));
+            }
+        };
+    }
 }
