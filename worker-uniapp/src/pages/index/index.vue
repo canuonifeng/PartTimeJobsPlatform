@@ -7,7 +7,7 @@
       <view class="date-row">
         <text class="date">{{ todayDate }}</text>
         <text class="weekday">{{ todayWeekday }}</text>
-        <text class="shift-count">今日 {{ todayShifts.length }} 个班次</text>
+        <text class="shift-count">{{ todayShifts.length === 0 ? '今日无班次' : '今日 ' + todayShifts.length + ' 个班次' }}</text>
       </view>
     </view>
 
