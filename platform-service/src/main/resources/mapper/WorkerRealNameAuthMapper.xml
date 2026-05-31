@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.WorkerRealNameAuthMapper">
+
+    <select id="findPage" resultType="com.parttime.platform.pojo.entity.WorkerRealNameAuth">
+        SELECT a.id, a.worker_id, w.name AS worker_name, w.phone AS worker_phone,
+               a.real_name, a.id_card_no, a.id_card_front_url, a.id_card_back_url,
+               a.status, a.reject_reason, a.submitted_at, a.reviewed_at, a.reviewer_id,
+               a.created_at, a.updated_at
+        FROM worker_real_name_auth a
+        LEFT JOIN c_worker w ON w.id = a.worker_id
+        <where>
+            <if test="status != null and status != ''">a.status = #{status}</if>
+        </where>
+        ORDER BY a.submitted_at DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countPage" resultType="long">
+        SELECT COUNT(*) FROM worker_real_name_auth a
+        <where>
+            <if test="status != null and status != ''">a.status = #{status}</if>
+        </where>
+    </select>
+
+    <select id="findById" resultType="com.parttime.platform.pojo.entity.WorkerRealNameAuth">
+        SELECT a.id, a.worker_id, w.name AS worker_name, w.phone AS worker_phone,
+               a.real_name, a.id_card_no, a.id_card_front_url, a.id_card_back_url,
+               a.status, a.reject_reason, a.submitted_at, a.reviewed_at, a.reviewer_id,
+               a.created_at, a.updated_at
+        FROM worker_real_name_auth a
+        LEFT JOIN c_worker w ON w.id = a.worker_id
+        WHERE a.id = #{id}
+    </select>
+
+    <update id="updateReview">
+        UPDATE worker_real_name_auth
+        SET status = #{status},
+            reject_reason = #{rejectReason},
+            reviewer_id = #{reviewerId},
+            reviewed_at = #{reviewedAt}
+        WHERE id = #{id}
+    </update>
+
+</mapper>
