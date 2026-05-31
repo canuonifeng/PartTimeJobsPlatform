@@ -3,18 +3,20 @@
 <mapper namespace="com.parttime.cservice.mapper.WorkerProfileMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO worker_profiles (worker_id, name, phone, avatar_url, skills, available_days, created_at, updated_at)
-        VALUES (#{workerId}, #{name}, #{phone}, #{avatarUrl}, #{skills}, #{availableDays}, #{createdAt}, #{updatedAt})
+        INSERT INTO worker_profiles (worker_id, name, phone, avatar_url, skills, available_days, gender, birthday, created_at, updated_at)
+        VALUES (#{workerId}, #{name}, #{phone}, #{avatarUrl}, #{skills}, #{availableDays}, #{gender}, #{birthday}, #{createdAt}, #{updatedAt})
     </insert>
 
     <select id="findByWorkerId" resultType="com.parttime.cservice.pojo.entity.WorkerProfile">
-        SELECT * FROM worker_profiles WHERE worker_id = #{workerId}
+        SELECT id, worker_id, name, phone, avatar_url, skills, available_days, gender, birthday, created_at, updated_at
+        FROM worker_profiles WHERE worker_id = #{workerId}
     </select>
 
     <update id="update">
         UPDATE worker_profiles
         SET name = #{name}, phone = #{phone}, avatar_url = #{avatarUrl},
-            skills = #{skills}, available_days = #{availableDays}
+            skills = #{skills}, available_days = #{availableDays},
+            gender = #{gender}, birthday = #{birthday}
         WHERE worker_id = #{workerId}
     </update>
 

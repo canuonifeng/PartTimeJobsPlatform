@@ -3,6 +3,7 @@ package com.parttime.cservice.pojo.cmd;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -18,4 +19,8 @@ public class ProfileUpdateCmd {
     private List<String> skills;
     @Schema(description = "可工作日期")
     private List<String> availableDays;
+    @Schema(description = "性别: MALE/FEMALE/OTHER")
+    private String gender;
+    @Schema(description = "出生日期")
+    private LocalDate birthday;
 }

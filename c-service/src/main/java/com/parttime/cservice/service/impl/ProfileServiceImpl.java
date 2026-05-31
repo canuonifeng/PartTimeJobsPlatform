@@ -8,6 +8,7 @@ import com.parttime.cservice.mapper.WorkerResumeMapper;
 import com.parttime.cservice.pojo.cmd.ProfileUpdateCmd;
 import com.parttime.cservice.pojo.entity.WorkerProfile;
 import com.parttime.cservice.pojo.entity.WorkerResume;
+import com.parttime.cservice.pojo.vo.ProfileCompletenessVO;
 import com.parttime.cservice.pojo.vo.ProfileVO;
 import com.parttime.cservice.pojo.vo.ResumeVO;
 import com.parttime.cservice.service.ProfileService;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import jakarta.annotation.Resource;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -45,6 +47,8 @@ public class ProfileServiceImpl implements ProfileService {
         if (request.getAvatarUrl() != null) profile.setAvatarUrl(request.getAvatarUrl());
         if (request.getSkills() != null) profile.setSkills(toJson(request.getSkills()));
         if (request.getAvailableDays() != null) profile.setAvailableDays(toJson(request.getAvailableDays()));
+        if (request.getGender() != null) profile.setGender(request.getGender());
+        if (request.getBirthday() != null) profile.setBirthday(request.getBirthday());
         profile.setUpdatedAt(LocalDateTime.now());
 
         if (existing.isPresent()) {
@@ -57,8 +61,36 @@ public class ProfileServiceImpl implements ProfileService {
 
     public ProfileVO getProfile(Long workerId) {
         WorkerProfile profile = workerProfileMapper.findByWorkerId(workerId)
-                .orElseThrow(() -> new RuntimeException("Profile not found for worker: " + workerId));
+                .orElseGet(() -> {
+                    WorkerProfile p = new WorkerProfile(workerId, null, null, null);
+                    p.setCreatedAt(LocalDateTime.now());
+                    p.setUpdatedAt(LocalDateTime.now());
+                    workerProfileMapper.insert(p);
+                    return p;
+                });
         return toProfileResponse(profile);
+    }
+
+    public ProfileCompletenessVO getCompleteness(Long workerId) {
+        Optional<WorkerProfile> existing = workerProfileMapper.findByWorkerId(workerId);
+        List<String> missing = new ArrayList<>();
+        if (existing.isEmpty()) {
+            missing.add("name");
+            missing.add("phone");
+            missing.add("gender");
+            missing.add("birthday");
+            return new ProfileCompletenessVO(false, missing);
+        }
+        WorkerProfile p = existing.get();
+        if (isBlank(p.getName())) missing.add("name");
+        if (isBlank(p.getPhone())) missing.add("phone");
+        if (isBlank(p.getGender())) missing.add("gender");
+        if (p.getBirthday() == null) missing.add("birthday");
+        return new ProfileCompletenessVO(missing.isEmpty(), missing);
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
     }
 
     public ResumeVO uploadResume(Long workerId, String fileName, String fileUrl) {
@@ -85,6 +117,8 @@ public class ProfileServiceImpl implements ProfileService {
         response.setAvatarUrl(profile.getAvatarUrl());
         response.setSkills(fromJson(profile.getSkills()));
         response.setAvailableDays(fromJson(profile.getAvailableDays()));
+        response.setGender(profile.getGender());
+        response.setBirthday(profile.getBirthday());
         response.setCreatedAt(profile.getCreatedAt());
         response.setUpdatedAt(profile.getUpdatedAt());
         return response;

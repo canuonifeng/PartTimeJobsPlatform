@@ -1,5 +1,6 @@
 package com.parttime.cservice.controller;
 
+import com.parttime.cservice.pojo.vo.ProfileCompletenessVO;
 import com.parttime.cservice.pojo.vo.ProfileVO;
 import com.parttime.cservice.pojo.cmd.ProfileUpdateCmd;
 import com.parttime.cservice.pojo.vo.ResumeVO;
@@ -54,6 +55,17 @@ public class ProfileController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         ProfileVO response = profileService.updateProfile(workerId, request);
+        return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "检查档案完整性", description = "返回当前工人的基本信息是否完整及缺失字段")
+    @GetMapping("/profile/completeness")
+    public ResponseEntity<?> getCompleteness() {
+        Long workerId = getCurrentWorkerId();
+        if (workerId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        ProfileCompletenessVO response = profileService.getCompleteness(workerId);
         return ResponseEntity.ok(response);
     }
 

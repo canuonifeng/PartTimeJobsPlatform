@@ -2,6 +2,7 @@ package com.parttime.cservice.pojo.entity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -21,6 +22,10 @@ public class WorkerProfile {
     private String skills;
     @Schema(description = "可工作日期")
     private String availableDays;
+    @Schema(description = "性别: MALE/FEMALE/OTHER")
+    private String gender;
+    @Schema(description = "出生日期")
+    private LocalDate birthday;
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")

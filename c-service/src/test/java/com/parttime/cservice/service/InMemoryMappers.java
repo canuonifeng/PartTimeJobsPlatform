@@ -232,6 +232,17 @@ public class InMemoryMappers {
                 if (r != null) { r.setStatus(status); return 1; }
                 return 0;
             }
+            @Override public int updateCompletion(Long id, String status, String thirdPartySerialNo, String thirdPartyPlatform, LocalDateTime completedAt) {
+                WithdrawalRecord r = store.get(id);
+                if (r != null) {
+                    r.setStatus(status);
+                    r.setThirdPartySerialNo(thirdPartySerialNo);
+                    r.setThirdPartyPlatform(thirdPartyPlatform);
+                    r.setCompletedAt(completedAt);
+                    return 1;
+                }
+                return 0;
+            }
         };
     }
 

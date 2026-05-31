@@ -4,7 +4,9 @@ import com.parttime.cservice.pojo.cmd.ApplyJobCmd;
 import com.parttime.cservice.pojo.vo.ApplicationVO;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
+import com.parttime.cservice.pojo.vo.ProfileCompletenessVO;
 import com.parttime.cservice.service.JobService;
+import com.parttime.cservice.service.ProfileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,9 @@ public class JobController {
 
     @Resource
     private JobService jobService;
+
+    @Resource
+    private ProfileService profileService;
 
     @Operation(summary = "搜索岗位", description = "根据关键词、分类、地点和薪资范围搜索岗位")
     @GetMapping
@@ -62,6 +67,14 @@ public class JobController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         Long workerId = Long.valueOf(auth.getName());
+        ProfileCompletenessVO completeness = profileService.getCompleteness(workerId);
+        if (!completeness.isComplete()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                    "error", "PROFILE_INCOMPLETE",
+                    "message", "请先完善个人信息",
+                    "missing", completeness.getMissing()
+            ));
+        }
         boolean success = jobService.applyForJob(workerId, id, request.scheduleIds());
         return ResponseEntity.ok(Map.of("success", success));
     }
