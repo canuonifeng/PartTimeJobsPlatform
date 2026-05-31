@@ -324,4 +324,27 @@ public class InMemoryMappers {
             }
         };
     }
+
+    public static WorkerBankCardMapper createWorkerBankCardMapper() {
+        return new WorkerBankCardMapper() {
+            private final ConcurrentHashMap<Long, WorkerBankCard> store = new ConcurrentHashMap<>();
+            private final AtomicLong idGen = new AtomicLong(1);
+
+            @Override public int insert(WorkerBankCard card) {
+                if (card.getId() == null) card.setId(idGen.getAndIncrement());
+                store.put(card.getWorkerId(), card);
+                return 1;
+            }
+            @Override public int update(WorkerBankCard card) {
+                store.put(card.getWorkerId(), card);
+                return 1;
+            }
+            @Override public Optional<WorkerBankCard> findByWorkerId(Long workerId) {
+                return Optional.ofNullable(store.get(workerId));
+            }
+            @Override public int deleteByWorkerId(Long workerId) {
+                return store.remove(workerId) != null ? 1 : 0;
+            }
+        };
+    }
 }

@@ -3,9 +3,13 @@ package com.parttime.cservice.service.impl;
 import com.parttime.cservice.mapper.BalanceTransactionMapper;
 import com.parttime.cservice.mapper.WithdrawalRecordMapper;
 import com.parttime.cservice.mapper.WorkerBalanceMapper;
+import com.parttime.cservice.mapper.WorkerBankCardMapper;
+import com.parttime.cservice.mapper.WorkerRealNameAuthMapper;
 import com.parttime.cservice.pojo.entity.BalanceTransaction;
 import com.parttime.cservice.pojo.entity.WithdrawalRecord;
 import com.parttime.cservice.pojo.entity.WorkerBalance;
+import com.parttime.cservice.pojo.entity.WorkerBankCard;
+import com.parttime.cservice.pojo.entity.WorkerRealNameAuth;
 import com.parttime.cservice.pojo.vo.EarningsSummaryVO;
 import com.parttime.cservice.pojo.vo.TransactionVO;
 import com.parttime.cservice.pojo.vo.WithdrawalVO;
@@ -21,6 +25,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -38,6 +43,12 @@ public class WithdrawalServiceImpl implements WithdrawalService {
     @Resource
     private BalanceTransactionMapper balanceTransactionMapper;
 
+    @Resource
+    private WorkerRealNameAuthMapper workerRealNameAuthMapper;
+
+    @Resource
+    private WorkerBankCardMapper workerBankCardMapper;
+
     private static final Random RANDOM = new Random();
 
     @Override
@@ -47,15 +58,29 @@ public class WithdrawalServiceImpl implements WithdrawalService {
             throw new RuntimeException("Invalid withdrawal amount");
         }
 
+        Optional<WorkerRealNameAuth> auth = workerRealNameAuthMapper.findByWorkerId(workerId);
+        if (auth.isEmpty() || !"APPROVED".equals(auth.get().getStatus())) {
+            throw new RuntimeException("请先完成实名认证");
+        }
+
+        Optional<WorkerBankCard> bankCard = workerBankCardMapper.findByWorkerId(workerId);
+        if (bankCard.isEmpty()) {
+            throw new RuntimeException("请先绑定银行卡");
+        }
+
         WorkerBalance wb = workerBalanceMapper.findByWorkerId(workerId);
         if (wb == null || wb.getBalance().compareTo(amount) < 0) {
             throw new RuntimeException("Insufficient balance");
         }
 
+        WorkerBankCard card = bankCard.get();
+        String bankInfo = String.format("%s|%s|%s", card.getBankName(), card.getCardHolder(), card.getCardNumber());
+
         WithdrawalRecord record = new WithdrawalRecord();
         record.setWorkerId(workerId);
         record.setAmount(amount);
         record.setStatus("PROCESSING");
+        record.setBankInfo(bankInfo);
         record.setRequestedAt(LocalDateTime.now());
         record.setProcessedAt(LocalDateTime.now());
         record.setCreatedAt(LocalDateTime.now());
