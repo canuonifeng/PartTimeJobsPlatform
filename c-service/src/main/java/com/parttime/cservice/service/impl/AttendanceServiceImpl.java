@@ -160,7 +160,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         LocalDateTime scheduledEnd = LocalDateTime.of(shift.getShiftDate(), shift.getEndTime());
         long earlySeconds = now.isBefore(scheduledEnd) ? Duration.between(now, scheduledEnd).getSeconds() : 0;
 
-        ShiftStatus newStatus = earlySeconds > 0 ? ShiftStatus.EARLY_LEAVE : ShiftStatus.OFF_DUTY;
+        ShiftStatus newStatus = earlySeconds > 0 ? ShiftStatus.EARLY_LEAVE : ShiftStatus.COMPLETED;
 
         // 追加签到记录（支持多次签退）
         AttendanceCheckIn checkIn = new AttendanceCheckIn();

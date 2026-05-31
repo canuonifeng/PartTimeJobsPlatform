@@ -37,9 +37,9 @@
           </view>
         </view>
 
-          <view v-if="checkTip" class="tip" :class="checkTip.type === 'warn' ? 'tip-warn' : checkTip.type === 'late' ? 'tip-late' : checkTip.type === 'countdown' ? 'tip-countdown' : 'tip-info'">
+        <view v-if="checkTip" class="tip" :class="checkTip.type === 'warn' ? 'tip-warn' : checkTip.type === 'late' ? 'tip-late' : checkTip.type === 'countdown' ? 'tip-countdown' : 'tip-info'">
             {{ checkTip.text }}
-          </view>
+        </view>
 
         <view v-if="canCheckIn" class="btn-primary" @click="handleCheckIn">签到</view>
         <view v-else-if="canCheckOut" class="btn-primary" @click="handleCheckOut">签退</view>
@@ -143,8 +143,8 @@ function normalizeShift(shift: any): Shift {
 }
 
 function statusLabel(status?: string) {
-  if (status === 'ON_DUTY') return '已上岗'
-  if (status === 'OFF_DUTY') return '已签退'
+  if (status === 'ON_DUTY') return '工作中'
+  if (status === 'COMPLETED') return '已完成'
   if (status === 'ABSENT') return '缺勤'
   if (status === 'LATE') return '迟到'
   if (status === 'EARLY_LEAVE') return '早退'
@@ -182,8 +182,14 @@ const countdown = ref('')
 let countdownTimer: any = null
 
 const checkTip = computed(() => {
-  if (!currentShift.value || currentShift.value.status === 'OFF_DUTY') return null
-  if (currentShift.value.status === 'ON_DUTY') return { type: 'info', text: '已上岗，工作中，可点击签退' }
+  if (!currentShift.value) return null
+  if (currentShift.value.status === 'ON_DUTY' || currentShift.value.status === 'LATE') {
+    return { type: 'info', text: '工作中，可点击签退' }
+  }
+  if (currentShift.value.status === 'COMPLETED' || currentShift.value.status === 'EARLY_LEAVE' || currentShift.value.status === 'ABSENT') {
+    return null
+  }
+  // SCHEDULED状态 - 待上岗
   const now = new Date()
   const start = new Date(`${currentShift.value.date} ${currentShift.value.startTime}`)
   const diffMs = start.getTime() - now.getTime()
