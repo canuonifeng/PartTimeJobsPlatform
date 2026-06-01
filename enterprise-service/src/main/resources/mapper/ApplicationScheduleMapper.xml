@@ -19,7 +19,7 @@
 
     <select id="findByCompanyId" resultMap="ScheduleApplicationResultMap">
         SELECT ja.id as application_id, as2.schedule_id, j.id as job_id, j.title as job_title,
-               ja.worker_id, w.worker_name, w.worker_phone,
+               ja.worker_id, w.name as worker_name, w.phone as worker_phone,
                js.schedule_date, js.start_time, js.end_time,
                ja.status, ja.applied_at
         FROM job_applications ja
@@ -33,7 +33,7 @@
 
     <select id="findByJobId" resultMap="ScheduleApplicationResultMap">
         SELECT ja.id as application_id, as2.schedule_id, j.id as job_id, j.title as job_title,
-               ja.worker_id, w.worker_name, w.worker_phone,
+               ja.worker_id, w.name as worker_name, w.phone as worker_phone,
                js.schedule_date, js.start_time, js.end_time,
                ja.status, ja.applied_at
         FROM job_applications ja
@@ -47,7 +47,7 @@
 
     <select id="findByJobIdAndStatus" resultMap="ScheduleApplicationResultMap">
         SELECT ja.id as application_id, as2.schedule_id, j.id as job_id, j.title as job_title,
-               ja.worker_id, w.worker_name, w.worker_phone,
+               ja.worker_id, w.name as worker_name, w.phone as worker_phone,
                js.schedule_date, js.start_time, js.end_time,
                ja.status, ja.applied_at
         FROM job_applications ja

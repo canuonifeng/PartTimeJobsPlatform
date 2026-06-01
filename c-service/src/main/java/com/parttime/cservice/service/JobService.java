@@ -2,13 +2,11 @@ package com.parttime.cservice.service;
 
 import com.parttime.cservice.pojo.cmd.ApplyJobCmd;
 import com.parttime.cservice.pojo.entity.Job;
-import com.parttime.cservice.pojo.vo.ApplicationVO;
+import com.parttime.cservice.pojo.entity.ScheduleApplication;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
 import com.parttime.cservice.pojo.vo.JobRateInfoVO;
 import com.parttime.cservice.pojo.vo.JobScheduleInfoVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
-import com.parttime.cservice.pojo.vo.JobRateInfoVO;
-import com.parttime.cservice.pojo.vo.JobScheduleInfoVO;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,5 +22,5 @@ public interface JobService {
     JobDetailVO getJobDetail(Long jobId);
     JobDetailVO getJobDetail(Long jobId, Long workerId);
     boolean applyForJob(Long workerId, Long jobId, List<Long> scheduleIds);
-    List<ApplicationVO> getApplicationStatus(Long workerId, Long jobId);
+    List<ScheduleApplication> getApplicationStatus(Long workerId, Long jobId);
 }

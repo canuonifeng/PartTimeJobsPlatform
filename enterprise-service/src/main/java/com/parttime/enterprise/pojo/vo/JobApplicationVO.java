@@ -10,6 +10,8 @@ public class JobApplicationVO {
 
     @Schema(description = "申请ID")
     private Long id;
+    @Schema(description = "排班ID")
+    private Long scheduleId;
     @Schema(description = "岗位ID")
     private Long jobId;
     @Schema(description = "岗位标题")

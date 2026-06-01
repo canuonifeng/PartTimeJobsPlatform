@@ -89,11 +89,13 @@ public class ApplicationServiceImpl implements ApplicationService {
         JobApplication app = applicationMapper.findById(applicationId)
                 .orElseThrow(() -> new RuntimeException("Application not found: " + applicationId));
 
-        Job job = jobMapper.findById(app.getJobId())
-                .orElseThrow(() -> new RuntimeException("Job not found: " + app.getJobId()));
+        JobSchedule schedule = jobScheduleMapper.findById(app.getScheduleId())
+                .orElseThrow(() -> new RuntimeException("Schedule not found: " + app.getScheduleId()));
+        Job job = jobMapper.findById(schedule.getJobId())
+                .orElseThrow(() -> new RuntimeException("Job not found: " + schedule.getJobId()));
 
         if (!"ACCEPTED".equals(app.getStatus())) {
-            int acceptedCount = applicationMapper.countByJobIdAndStatus(app.getJobId(), "ACCEPTED");
+            int acceptedCount = applicationMapper.countByJobIdAndStatus(schedule.getJobId(), "ACCEPTED");
             if (acceptedCount >= job.getHeadcount()) {
                 throw new BusinessException("岗位已录满");
             }
@@ -102,29 +104,27 @@ public class ApplicationServiceImpl implements ApplicationService {
             app.setStatus("ACCEPTED");
         }
 
-        ensureShifts(app);
+        ensureShifts(app, job);
         companyWorkerMapper.upsert(job.getCompanyId(), app.getWorkerId());
         return toResponse(app);
     }
 
-    private void ensureShifts(JobApplication app) {
-        List<JobSchedule> schedules = jobScheduleMapper.findByJobId(app.getJobId());
-        JobRate rate = jobRateMapper.findByJobId(app.getJobId()).stream()
+    private void ensureShifts(JobApplication app, Job job) {
+        JobSchedule schedule = jobScheduleMapper.findById(app.getScheduleId())
+                .orElseThrow(() -> new RuntimeException("Schedule not found: " + app.getScheduleId()));
+        JobRate rate = jobRateMapper.findByJobId(job.getId()).stream()
                 .findFirst()
                 .orElse(null);
 
-        Set<String> existingShiftKeys = shiftMapper.findByApplicationId(app.getId()).stream()
-                .map(this::shiftKey)
-                .collect(Collectors.toSet());
+        boolean alreadyExists = shiftMapper.findByApplicationId(app.getId()).stream()
+                .anyMatch(s -> s.getShiftDate().equals(schedule.getScheduleDate())
+                        && s.getStartTime().equals(schedule.getStartTime())
+                        && s.getEndTime().equals(schedule.getEndTime()));
 
-        for (JobSchedule schedule : schedules) {
-            if (existingShiftKeys.contains(scheduleKey(schedule))) {
-                continue;
-            }
-
+        if (!alreadyExists) {
             ScheduleShift shift = new ScheduleShift();
             shift.setApplicationId(app.getId());
-            shift.setJobId(app.getJobId());
+            shift.setJobId(job.getId());
             shift.setWorkerId(app.getWorkerId());
             shift.setShiftDate(schedule.getScheduleDate());
             shift.setStartTime(schedule.getStartTime());
@@ -134,26 +134,16 @@ public class ApplicationServiceImpl implements ApplicationService {
                 shift.setSalaryAmount(rate.getAmount());
                 shift.setSalaryCurrency(rate.getCurrency());
             }
-
             try {
                 shiftMapper.insert(shift);
             } catch (DuplicateKeyException ignored) {
-                // Another request inserted the same shift concurrently.
             }
         }
     }
 
-    private String scheduleKey(JobSchedule schedule) {
-        return schedule.getScheduleDate() + "|" + schedule.getStartTime() + "|" + schedule.getEndTime();
-    }
-
-    private String shiftKey(ScheduleShift shift) {
-        return shift.getShiftDate() + "|" + shift.getStartTime() + "|" + shift.getEndTime();
-    }
-
     @Override
     public JobApplicationVO rejectApplication(Long applicationId) {
-        JobApplication app =         applicationMapper.findById(applicationId)
+        JobApplication app = applicationMapper.findById(applicationId)
                 .orElseThrow(() -> new RuntimeException("Application not found: " + applicationId));
 
         applicationMapper.updateStatus(applicationId, "REJECTED");
@@ -164,15 +154,19 @@ public class ApplicationServiceImpl implements ApplicationService {
     private JobApplicationVO toResponse(JobApplication app) {
         JobApplicationVO response = new JobApplicationVO();
         response.setId(app.getId());
-        response.setJobId(app.getJobId());
+        response.setScheduleId(app.getScheduleId());
         response.setWorkerId(app.getWorkerId());
         response.setStatus(ApplicationStatus.valueOf(app.getStatus()));
         response.setAppliedAt(app.getAppliedAt());
         response.setUpdatedAt(app.getUpdatedAt());
 
-        Job job = jobMapper.findById(app.getJobId()).orElse(null);
-        if (job != null) {
-            response.setJobTitle(job.getTitle());
+        JobSchedule schedule = jobScheduleMapper.findById(app.getScheduleId()).orElse(null);
+        if (schedule != null) {
+            response.setJobId(schedule.getJobId());
+            Job job = jobMapper.findById(schedule.getJobId()).orElse(null);
+            if (job != null) {
+                response.setJobTitle(job.getTitle());
+            }
         }
         response.setWorkerName(workerSyncMapper.findWorkerNameById(app.getWorkerId()));
         response.setWorkerPhone(workerSyncMapper.findWorkerPhoneById(app.getWorkerId()));

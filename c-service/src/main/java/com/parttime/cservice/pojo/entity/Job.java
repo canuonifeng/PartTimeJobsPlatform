@@ -67,6 +67,8 @@ public class Job {
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")
     private LocalDateTime updatedAt;
+    @Schema(description = "关闭原因")
+    private String closeReason;
 
     public Job() {}
 

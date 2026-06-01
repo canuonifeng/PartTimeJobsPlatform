@@ -4,8 +4,7 @@
 
     <resultMap id="JobApplicationResultMap" type="com.parttime.enterprise.pojo.entity.JobApplication">
         <id property="id" column="id"/>
-        <result property="jobId" column="job_id"/>
-        <result property="companyId" column="company_id"/>
+        <result property="scheduleId" column="schedule_id"/>
         <result property="workerId" column="worker_id"/>
         <result property="status" column="status"/>
         <result property="appliedAt" column="applied_at"/>
@@ -13,65 +12,77 @@
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO job_applications (job_id, company_id, worker_id, status)
-        VALUES (#{jobId}, #{companyId}, #{workerId}, #{status})
+        INSERT INTO schedule_applications (schedule_id, worker_id, status)
+        VALUES (#{scheduleId}, #{workerId}, #{status})
     </insert>
 
     <select id="findById" resultMap="JobApplicationResultMap">
-        SELECT * FROM job_applications WHERE id = #{id}
+        SELECT * FROM schedule_applications WHERE id = #{id}
     </select>
 
     <select id="findByJobId" resultMap="JobApplicationResultMap">
-        SELECT * FROM job_applications WHERE job_id = #{jobId} ORDER BY applied_at DESC
+        SELECT sa.* FROM schedule_applications sa
+        JOIN job_schedules js ON sa.schedule_id = js.id
+        WHERE js.job_id = #{jobId}
+        ORDER BY sa.applied_at DESC
     </select>
 
     <select id="findByJobIdPaged" resultMap="JobApplicationResultMap">
-        SELECT * FROM job_applications
-        WHERE job_id = #{jobId}
-        ORDER BY applied_at DESC
+        SELECT sa.* FROM schedule_applications sa
+        JOIN job_schedules js ON sa.schedule_id = js.id
+        WHERE js.job_id = #{jobId}
+        ORDER BY sa.applied_at DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
 
     <select id="findByCompanyId" resultMap="JobApplicationResultMap">
-        SELECT * FROM job_applications WHERE company_id = #{companyId} ORDER BY applied_at DESC
+        SELECT sa.* FROM schedule_applications sa
+        JOIN job_schedules js ON sa.schedule_id = js.id
+        JOIN jobs j ON js.job_id = j.id
+        WHERE j.company_id = #{companyId}
+        ORDER BY sa.applied_at DESC
     </select>
 
     <select id="findByWorkerId" resultMap="JobApplicationResultMap">
-        SELECT * FROM job_applications WHERE worker_id = #{workerId} ORDER BY applied_at DESC
+        SELECT * FROM schedule_applications WHERE worker_id = #{workerId} ORDER BY applied_at DESC
     </select>
 
     <select id="findAll" resultMap="JobApplicationResultMap">
-        SELECT * FROM job_applications
+        SELECT * FROM schedule_applications
     </select>
 
     <select id="countByJobId" resultType="int">
-        SELECT COUNT(*) FROM job_applications WHERE job_id = #{jobId}
+        SELECT COUNT(*) FROM schedule_applications sa
+        JOIN job_schedules js ON sa.schedule_id = js.id
+        WHERE js.job_id = #{jobId}
     </select>
 
     <select id="countByScheduleId" resultType="int">
-        SELECT COUNT(*) FROM job_applications WHERE schedule_id = #{scheduleId}
+        SELECT COUNT(*) FROM schedule_applications WHERE schedule_id = #{scheduleId}
     </select>
 
     <select id="findByJobIdAndWorkerId" resultMap="JobApplicationResultMap">
-        SELECT * FROM job_applications WHERE job_id = #{jobId} AND worker_id = #{workerId}
+        SELECT sa.* FROM schedule_applications sa
+        JOIN job_schedules js ON sa.schedule_id = js.id
+        WHERE js.job_id = #{jobId} AND sa.worker_id = #{workerId}
     </select>
 
     <select id="countByJobIdAndStatus" resultType="int">
-        SELECT COUNT(*) FROM job_applications WHERE job_id = #{jobId} AND status = #{status}
+        SELECT COUNT(*) FROM schedule_applications sa
+        JOIN job_schedules js ON sa.schedule_id = js.id
+        WHERE js.job_id = #{jobId} AND sa.status = #{status}
     </select>
 
     <update id="updateStatus">
-        UPDATE job_applications SET status = #{status} WHERE id = #{id}
+        UPDATE schedule_applications SET status = #{status} WHERE id = #{id}
     </update>
 
     <update id="update">
-        UPDATE job_applications
-        SET status = #{status}
-        WHERE id = #{id}
+        UPDATE schedule_applications SET status = #{status} WHERE id = #{id}
     </update>
 
     <delete id="delete">
-        DELETE FROM job_applications WHERE id = #{id}
+        DELETE FROM schedule_applications WHERE id = #{id}
     </delete>
 
 </mapper>

@@ -1,7 +1,7 @@
 package com.parttime.cservice.controller;
 
 import com.parttime.cservice.pojo.cmd.ApplyJobCmd;
-import com.parttime.cservice.pojo.vo.ApplicationVO;
+import com.parttime.cservice.pojo.entity.ScheduleApplication;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
 import com.parttime.cservice.pojo.vo.ProfileCompletenessVO;
@@ -87,7 +87,7 @@ public class JobController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         Long workerId = Long.valueOf(auth.getName());
-        List<ApplicationVO> statuses = jobService.getApplicationStatus(workerId, id);
+        List<ScheduleApplication> statuses = jobService.getApplicationStatus(workerId, id);
         return ResponseEntity.ok(statuses);
     }
 }

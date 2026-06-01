@@ -1,15 +1,12 @@
 package com.parttime.cservice.service.impl;
 
-import com.parttime.cservice.mapper.ApplicationScheduleMapper;
 import com.parttime.cservice.mapper.CompanyWorkerInsertMapper;
-import com.parttime.cservice.mapper.JobApplicationMapper;
 import com.parttime.cservice.mapper.JobMapper;
 import com.parttime.cservice.mapper.JobScheduleMapper;
-import com.parttime.cservice.pojo.entity.ApplicationSchedule;
+import com.parttime.cservice.mapper.ScheduleApplicationMapper;
 import com.parttime.cservice.pojo.entity.Job;
-import com.parttime.cservice.pojo.entity.JobApplication;
 import com.parttime.cservice.pojo.entity.JobSchedule;
-import com.parttime.cservice.pojo.vo.ApplicationVO;
+import com.parttime.cservice.pojo.entity.ScheduleApplication;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
 import com.parttime.cservice.pojo.vo.JobRateInfoVO;
 import com.parttime.cservice.pojo.vo.JobScheduleInfoVO;
@@ -21,7 +18,9 @@ import jakarta.annotation.Resource;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,13 +34,11 @@ public class JobServiceImpl implements JobService {
     @Resource
     private JobMapper jobMapper;
     @Resource
-    private JobApplicationMapper jobApplicationMapper;
+    private ScheduleApplicationMapper scheduleApplicationMapper;
     @Resource
     private CompanyWorkerInsertMapper companyWorkerInsertMapper;
     @Resource
     private JobScheduleMapper jobScheduleMapper;
-    @Resource
-    private ApplicationScheduleMapper applicationScheduleMapper;
 
     @Override
     public List<JobSummaryVO> searchJobs(String keyword, Long categoryId, String location,
@@ -185,62 +182,40 @@ public class JobServiceImpl implements JobService {
                 && job.getAcceptedCount() >= job.getHeadcount()) {
             throw new RuntimeException("该岗位已招满");
         }
-        List<Long> alreadyApplied = applicationScheduleMapper.findScheduleIdsByJobAndWorker(jobId, workerId);
+        List<Long> alreadyApplied = scheduleApplicationMapper.findScheduleIdsByWorkerIdAndJobId(workerId, jobId);
         List<Long> newIds = scheduleIds.stream()
                 .filter(id -> !alreadyApplied.contains(id))
                 .toList();
         if (newIds.isEmpty()) {
             throw new RuntimeException("所选排班已全部报名");
         }
-        // 检查排班是否已下架
+        LocalDateTime now = LocalDateTime.now();
         for (Long sid : newIds) {
             JobSchedule sched = jobScheduleMapper.findById(sid).orElse(null);
             if (sched == null || !"ACTIVE".equals(sched.getStatus())) {
                 throw new RuntimeException("排班已下架，无法报名");
             }
-        }
-        List<JobApplication> existing = jobApplicationMapper.findByWorkerIdAndJobId(workerId, jobId);
-        Long applicationId;
-        if (!existing.isEmpty()) {
-            applicationId = existing.get(0).getId();
-        } else {
-            JobApplication app = new JobApplication();
-            app.setWorkerId(workerId);
-            app.setJobId(jobId);
-            if (job != null) {
-                app.setCompanyId(job.getCompanyId());
+            LocalDateTime scheduleStart = LocalDateTime.of(sched.getScheduleDate(), sched.getStartTime());
+            if (now.isAfter(scheduleStart)) {
+                throw new RuntimeException("排班已开始，无法报名");
             }
-            app.setStatus("PENDING");
-            app.setAppliedAt(LocalDateTime.now());
-            app.setUpdatedAt(LocalDateTime.now());
-            jobApplicationMapper.insert(app);
-            applicationId = app.getId();
         }
         for (Long scheduleId : newIds) {
-            ApplicationSchedule as = new ApplicationSchedule();
-            as.setApplicationId(applicationId);
-            as.setScheduleId(scheduleId);
-            applicationScheduleMapper.insert(as);
+            ScheduleApplication sa = new ScheduleApplication();
+            sa.setScheduleId(scheduleId);
+            sa.setWorkerId(workerId);
+            sa.setStatus("PENDING");
+            scheduleApplicationMapper.insert(sa);
         }
-        if (job != null && job.getCompanyId() != null) {
+        if (job.getCompanyId() != null) {
             companyWorkerInsertMapper.upsert(job.getCompanyId(), workerId);
         }
         return true;
     }
 
     @Override
-    public List<ApplicationVO> getApplicationStatus(Long workerId, Long jobId) {
-        List<JobApplication> apps = jobApplicationMapper.findByWorkerIdAndJobId(workerId, jobId);
-        if (apps.isEmpty()) {
-            return Collections.emptyList();
-        }
-        JobApplication app = apps.get(0);
-        ApplicationVO resp = new ApplicationVO();
-        resp.setApplicationId(app.getId());
-        resp.setJobId(app.getJobId());
-        resp.setStatus(app.getStatus());
-        resp.setAppliedAt(app.getAppliedAt());
-        return List.of(resp);
+    public List<ScheduleApplication> getApplicationStatus(Long workerId, Long jobId) {
+        return scheduleApplicationMapper.findByWorkerId(workerId);
     }
 
     private JobSummaryVO toSummary(Job job, BigDecimal latitude, BigDecimal longitude) {
@@ -322,37 +297,30 @@ public class JobServiceImpl implements JobService {
             rate.setAmount(job.getRateAmount());
             detail.setRates(List.of(rate));
         }
-        detail.setSchedules(toScheduleVOs(jobScheduleMapper.findActiveByJobId(job.getId())));
+        // 过滤过期排班
+        LocalDateTime now = LocalDateTime.now();
+        List<JobSchedule> allActive = jobScheduleMapper.findActiveByJobId(job.getId());
+        List<JobSchedule> validSchedules = allActive.stream()
+                .filter(s -> LocalDateTime.of(s.getScheduleDate(), s.getStartTime()).isAfter(now))
+                .toList();
+        detail.setSchedules(toScheduleVOs(validSchedules));
+        // 如果所有排班都已过期，自动关闭职位
+        if (allActive.size() > 0 && validSchedules.size() == 0 && !"CLOSED".equals(job.getStatus())) {
+            job.setStatus("CLOSED");
+            job.setCloseReason("所有排班已过期");
+            jobMapper.update(job);
+            detail.setStatus("CLOSED");
+        }
         if (workerId != null) {
-            List<JobApplication> applications = jobApplicationMapper.findByWorkerIdAndJobId(workerId, job.getId());
-            if (!applications.isEmpty()) {
-                detail.setApplyStatus(mapApplyStatus(applications.get(0).getStatus()));
-                List<Long> scheduleIds = new ArrayList<>();
-                for (JobApplication app : applications) {
-                    List<ApplicationSchedule> schedules = applicationScheduleMapper.findByApplicationId(app.getId());
-                    for (ApplicationSchedule as : schedules) {
-                        scheduleIds.add(as.getScheduleId());
-                    }
-                }
+            List<ScheduleApplication> apps = scheduleApplicationMapper.findByWorkerId(workerId);
+            List<Long> scheduleIds = apps.stream()
+                    .filter(a -> a.getScheduleId() != null)
+                    .map(ScheduleApplication::getScheduleId)
+                    .toList();
+            if (!scheduleIds.isEmpty()) {
                 detail.setAppliedScheduleIds(scheduleIds);
             }
         }
         return detail;
-    }
-
-    private String mapApplyStatus(String status) {
-        if (status == null) {
-            return null;
-        }
-        if ("PENDING".equals(status)) {
-            return "已报名";
-        }
-        if ("ACCEPTED".equals(status)) {
-            return "已通过";
-        }
-        if ("REJECTED".equals(status)) {
-            return "未通过";
-        }
-        return status;
     }
 }
