@@ -128,16 +128,6 @@ function handleDelete(id) {
   })
 }
 
-function handleLogout() {
-  uni.showModal({
-    title: '退出登录',
-    content: '确定要退出登录吗？',
-    success: (res) => {
-      if (res.confirm) authStore.logout()
-    }
-  })
-}
-
 function statusLabel(s) {
   const map = { DRAFT: '草稿', PUBLISHED: '已发布', CLOSED: '已关闭' }
   return map[s] || s
@@ -153,7 +143,6 @@ function statusClass(s) {
   <view class="page">
     <view class="header">
       <text class="header-title">职位管理</text>
-      <text class="logout-btn" @click="handleLogout">退出</text>
     </view>
 
     <scroll-view scroll-x class="tabs" scroll-with-animation>
@@ -249,11 +238,6 @@ function statusClass(s) {
   font-size: 34rpx;
   font-weight: 600;
   color: #333;
-}
-.logout-btn {
-  font-size: 26rpx;
-  color: #007aff;
-  padding: 8rpx 16rpx;
 }
 .tabs {
   display: flex;

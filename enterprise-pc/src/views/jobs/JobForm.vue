@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { Delete, SuccessFilled } from '@element-plus/icons-vue'
 import { getJob, createJob, updateJob } from '../../api/job'
 import { listLocations } from '../../api/location'
 import { listTemplates } from '../../api/template'
@@ -74,6 +75,7 @@ const showLocationPicker = ref(false)
 const templateDialogVisible = ref(false)
 const availableTemplates = ref([])
 const selectedTemplateName = ref('')
+const selectedLocationName = ref('')
 
 const regionSelected = computed({
   get: () => {
@@ -206,6 +208,7 @@ function selectLocation(loc) {
   form.value.address = loc.address || ''
   form.value.latitude = loc.latitude
   form.value.longitude = loc.longitude
+  selectedLocationName.value = loc.name
   locationDialogVisible.value = false
   ElMessage.success(`已选择地点：${loc.name}`)
 }
@@ -242,46 +245,30 @@ onMounted(() => {
 
 <template>
   <div class="job-form">
-    <el-card>
+    <el-card class="section-card">
       <template #header>
-        <span>{{ isEdit ? '编辑职位' : '新建职位' }}</span>
+        <div class="section-header">{{ isEdit ? '编辑职位' : '新建职位' }} - 岗位信息</div>
       </template>
       <el-form ref="formRef" :model="form" label-width="120px" style="max-width: 800px">
-        <el-form-item label="职位模版">
-          <el-button @click="openTemplatePicker">选择职位模版</el-button>
-          <span v-if="selectedTemplateName" style="margin-left:12px;color:#909399;font-size:13px">已选：{{ selectedTemplateName }}</span>
+        <el-form-item label="选择已有职位模版">
+          <el-button type="primary" plain @click="openTemplatePicker" style="width: 260px; justify-content: flex-start">选择已有职位模版</el-button>
+          <div v-if="selectedTemplateName" class="selected-tip">
+            <el-icon><SuccessFilled /></el-icon>
+            已选模版：{{ selectedTemplateName }}
+          </div>
         </el-form-item>
         <el-form-item label="职位名称" prop="title" :rules="[{ required: true, message: '请输入职位名称' }]">
           <el-input v-model="form.title" />
         </el-form-item>
-        <el-form-item label="职位描述" prop="description">
-          <el-input v-model="form.description" type="textarea" :rows="4" />
-        </el-form-item>
-        <el-form-item label="工作地点">
-          <el-button @click="openLocationPicker">选择已有地点</el-button>
-        </el-form-item>
-        <el-form-item label="省/市/区" prop="province">
-          <el-cascader v-model="regionSelected" :options="regions" placeholder="选择省/市/区" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="详细地址" prop="address">
-          <el-input v-model="form.address" placeholder="街道、门牌号" />
-        </el-form-item>
-        <el-form-item label="坐标定位">
-          <el-button @click="showLocationPicker = true">选择位置</el-button>
-          <span v-if="form.latitude" style="margin-left:12px;color:#999">{{ form.latitude.toFixed(6) }}, {{ form.longitude.toFixed(6) }}</span>
-        </el-form-item>
-        <el-form-item label="类别" prop="category">
-          <el-select v-model="form.category" style="width: 200px">
+        <el-form-item label="职位类型" prop="category">
+          <el-select v-model="form.category" style="width: 260px">
             <el-option v-for="opt in categoryOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
           </el-select>
         </el-form-item>
-        <el-form-item label="招聘人数" prop="headcount">
-          <el-input-number v-model="form.headcount" :min="1" />
+        <el-form-item label="职位描述" prop="description">
+          <el-input v-model="form.description" type="textarea" :rows="4" />
         </el-form-item>
-        <el-form-item label="截止日期" prop="deadline">
-          <el-date-picker v-model="form.deadline" type="date" placeholder="选择日期" value-format="YYYY-MM-DD" />
-        </el-form-item>
-        <el-form-item label="岗位图片">
+        <el-form-item label="职位图片">
           <div style="display:flex;gap:12px;align-items:center">
             <el-upload
               :action="uploadUrl"
@@ -289,14 +276,59 @@ onMounted(() => {
               :on-success="handleImageSuccess"
               :before-upload="beforeImageUpload"
             >
-              <el-button type="primary">上传图片</el-button>
+              <el-button type="primary" plain>上传图片</el-button>
             </el-upload>
             <el-input v-model="form.imageUrl" placeholder="或输入图片URL" style="width:300px" clearable />
             <el-image v-if="form.imageUrl" :src="form.imageUrl" style="width:60px;height:60px;border-radius:4px" fit="cover" />
           </div>
         </el-form-item>
+      </el-form>
+    </el-card>
 
-        <el-divider>薪资标准</el-divider>
+    <el-card class="section-card">
+      <template #header>
+        <div class="section-header">地址信息</div>
+      </template>
+      <el-form ref="formRef2" :model="form" label-width="120px" style="max-width: 800px">
+        <el-form-item label="选择已有工作地点">
+          <el-button type="primary" plain @click="openLocationPicker" style="width: 260px; justify-content: flex-start">选择已有工作地点</el-button>
+          <div v-if="selectedLocationName" class="selected-tip">
+            <el-icon><SuccessFilled /></el-icon>
+            已选地址：{{ selectedLocationName }}
+          </div>
+        </el-form-item>
+        <el-form-item label="省/市/区" prop="province">
+          <el-cascader v-model="regionSelected" :options="regions" placeholder="选择省/市/区" style="width: 260px" />
+        </el-form-item>
+        <el-form-item label="详细地址" prop="address">
+          <el-input v-model="form.address" placeholder="街道、门牌号" />
+        </el-form-item>
+        <el-form-item label="坐标定位">
+          <el-button type="primary" plain @click="showLocationPicker = true">选择位置</el-button>
+          <span v-if="form.latitude" class="coord-text">{{ form.latitude.toFixed(6) }}, {{ form.longitude.toFixed(6) }}</span>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <el-card class="section-card">
+      <template #header>
+        <div class="section-header">招聘信息</div>
+      </template>
+      <el-form ref="formRef3" :model="form" label-width="120px" style="max-width: 800px">
+        <el-form-item label="招聘人数" prop="headcount">
+          <el-input-number v-model="form.headcount" :min="1" style="width: 200px" />
+        </el-form-item>
+        <el-form-item label="截止日期" prop="deadline">
+          <el-date-picker v-model="form.deadline" type="date" placeholder="选择截止日期" value-format="YYYY-MM-DD" style="width: 260px" />
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <el-card class="section-card">
+      <template #header>
+        <div class="section-header">薪资标准</div>
+      </template>
+      <el-form ref="formRef4" :model="form" label-width="120px" style="max-width: 800px">
         <el-form-item v-for="(item, index) in form.salaryRates" :key="index" :label="`薪资 ${index + 1}`">
           <div style="display: flex; gap: 8px; align-items: center">
             <el-select v-model="item.type" placeholder="薪资类型" style="width: 140px">
@@ -304,15 +336,21 @@ onMounted(() => {
               <el-option label="日薪" value="DAILY" />
               <el-option label="计件" value="PIECEWORK" />
             </el-select>
-            <el-input-number v-model="item.rate" :min="0" :precision="2" placeholder="金额" />
+            <el-input-number v-model="item.rate" :min="0" :precision="2" placeholder="金额" style="width: 180px" />
             <el-button v-if="form.salaryRates.length > 1" type="danger" :icon="Delete" circle @click="removeSalaryRate(index)" />
           </div>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="addSalaryRate">添加薪资</el-button>
+          <el-button type="primary" plain @click="addSalaryRate">添加薪资</el-button>
         </el-form-item>
+      </el-form>
+    </el-card>
 
-        <el-divider>排班时段</el-divider>
+    <el-card class="section-card">
+      <template #header>
+        <div class="section-header">排班时段</div>
+      </template>
+      <el-form ref="formRef5" :model="form" label-width="120px" style="max-width: 800px">
         <el-form-item v-for="(item, index) in form.scheduleSlots" :key="index" :label="`时段 ${index + 1}`">
           <div style="display: flex; gap: 8px; align-items: center">
             <el-date-picker v-model="item.date" type="date" placeholder="选择日期" value-format="YYYY-MM-DD" style="width: 140px" />
@@ -322,23 +360,25 @@ onMounted(() => {
           </div>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="addScheduleSlot">添加时段</el-button>
+          <el-button type="primary" plain @click="addScheduleSlot">添加时段</el-button>
         </el-form-item>
+      </el-form>
+    </el-card>
 
-        <el-divider />
+    <el-card class="section-card">
+      <el-form ref="formRef6" :model="form" label-width="120px" style="max-width: 800px">
         <el-form-item label="状态" prop="status">
           <el-radio-group v-model="form.status">
             <el-radio v-for="opt in statusOptions" :key="opt.value" :value="opt.value">{{ opt.label }}</el-radio>
           </el-radio-group>
         </el-form-item>
-
         <el-form-item>
-          <el-button type="primary" :loading="loading" @click="handleSubmit">保存</el-button>
-          <el-button @click="router.push('/jobs')">取消</el-button>
+          <el-button type="primary" size="large" :loading="loading" @click="handleSubmit">保存</el-button>
+          <el-button size="large" @click="router.push('/jobs')">取消</el-button>
         </el-form-item>
       </el-form>
-      <LocationPicker v-model="showLocationPicker" :latitude="form.latitude || 39.9042" :longitude="form.longitude || 116.4074" @confirm="onLocationConfirm" />
     </el-card>
+      <LocationPicker v-model="showLocationPicker" :latitude="form.latitude || 39.9042" :longitude="form.longitude || 116.4074" @confirm="onLocationConfirm" />
 
     <el-dialog v-model="templateDialogVisible" title="选择职位模版" width="600px">
       <el-table :data="availableTemplates" stripe @row-click="selectTemplate" highlight-current-row>
@@ -368,5 +408,26 @@ onMounted(() => {
 <style scoped>
 .job-form {
   padding: 20px;
+}
+.section-card {
+  margin-bottom: 20px;
+}
+.section-header {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+.selected-tip {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #67c23a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.coord-text {
+  margin-left: 12px;
+  color: #909399;
+  font-size: 13px;
 }
 </style>

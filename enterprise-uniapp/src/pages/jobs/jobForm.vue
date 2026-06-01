@@ -14,16 +14,18 @@ const categories = ref([])
 const formData = ref({
   title: '',
   description: '',
-  location: '',
+  categoryId: '',
+  headcount: 1,
+  deadline: '',
   province: '',
   city: '',
   district: '',
   address: '',
   latitude: null,
   longitude: null,
-  categoryId: '',
-  headcount: 1,
-  deadline: ''
+  imageUrl: '',
+  salaryRates: [{ type: '', amount: '' }],
+  schedules: [{ date: '', startTime: '', endTime: '' }]
 })
 
 const rates = ref([])
@@ -73,6 +75,24 @@ function onRegionChange(e) {
   }
 }
 
+function chooseImage() {
+  uni.chooseImage({
+    count: 1,
+    sizeType: ['compressed'],
+    sourceType: ['album', 'camera'],
+    success: (res) => {
+      formData.value.imageUrl = res.tempFilePaths[0]
+    }
+  })
+}
+
+function previewImage() {
+  uni.previewImage({
+    urls: [formData.value.imageUrl],
+    current: 0
+  })
+}
+
 function chooseLocation() {
   uni.chooseLocation({
     success: (res) => {
@@ -89,14 +109,7 @@ function chooseLocation() {
 }
 
 async function openTemplatePicker() {
-  try {
-    const res = await listTemplates()
-    const list = Array.isArray(res) ? res : (res.records || res.data || [])
-    availableTemplates.value = list
-    templateNames.value = list.map(t => t.title || '')
-  } catch {
-    uni.showToast({ title: '加载模版失败', icon: 'none' })
-  }
+  // 数据已在onLoad中预加载，无需重复加载
 }
 
 function onTemplatePick(e) {
@@ -116,14 +129,7 @@ function onTemplatePick(e) {
 }
 
 async function openLocationPicker() {
-  try {
-    const res = await listLocations()
-    const list = Array.isArray(res) ? res : (res.records || res.data || [])
-    availableLocations.value = list
-    locationNames.value = list.map(l => l.name || '')
-  } catch {
-    uni.showToast({ title: '加载地点失败', icon: 'none' })
-  }
+  // 数据已在onLoad中预加载，无需重复加载
 }
 
 function onLocationPick(e) {
@@ -145,6 +151,8 @@ onLoad(async (params) => {
     jobId.value = params.id
   }
   await loadCategories()
+  await openTemplatePicker()
+  await openLocationPicker()
   if (isEdit.value) {
     await loadJobDetail()
   }
@@ -305,36 +313,65 @@ async function handleSave() {
   <view class="page form-page">
     <scroll-view scroll-y class="form-scroll">
       <view class="form-section">
-        <text class="section-title">基本信息</text>
+        <text class="section-title">岗位信息</text>
 
         <view class="form-item">
-          <text class="label">职位模版</text>
-          <picker mode="selector" :range="templateNames" @click="openTemplatePicker" @change="onTemplatePick">
-            <view class="picker">
-              <text v-if="selectedTemplateName" class="picker-value">{{ selectedTemplateName }}</text>
-              <text v-else class="picker-placeholder">选择模版快速填充</text>
+          <text class="label">选择已有职位模版</text>
+          <picker mode="selector" :range="templateNames" @change="onTemplatePick">
+            <view class="picker-btn">
+              <text>选择已有职位模版</text>
             </view>
           </picker>
+          <view v-if="selectedTemplateName" class="selected-tip">
+            ✔ 已选：{{ selectedTemplateName }}
+          </view>
         </view>
 
         <view class="form-item">
-          <text class="label">工作地点</text>
-          <picker mode="selector" :range="locationNames" @click="openLocationPicker" @change="onLocationPick">
-            <view class="picker">
-              <text v-if="selectedLocationName" class="picker-value">{{ selectedLocationName }}</text>
-              <text v-else class="picker-placeholder">选择已有地点</text>
-            </view>
-          </picker>
+          <text class="label">职位名称 *</text>
+          <input v-model="formData.title" class="input" placeholder="请输入职位名称" />
         </view>
 
         <view class="form-item">
-          <text class="label">职位标题 *</text>
-          <input v-model="formData.title" class="input" placeholder="请输入职位标题" />
+          <text class="label">职位类型</text>
+          <picker
+            mode="selector"
+            :range="categoryNames"
+            :value="getCategoryIndex()"
+            @change="onCategoryChange"
+          >
+            <view class="picker">
+              <text v-if="formData.categoryId" class="picker-value">{{ categoryNames[getCategoryIndex()] }}</text>
+              <text v-else class="picker-placeholder">请选择职位类型</text>
+            </view>
+          </picker>
         </view>
 
         <view class="form-item">
           <text class="label">职位描述</text>
           <textarea v-model="formData.description" class="textarea" placeholder="请输入职位描述" />
+        </view>
+
+        <view class="form-item">
+          <text class="label">职位图片</text>
+          <button class="picker-btn" @click="chooseImage">选择图片</button>
+          <image v-if="formData.imageUrl" class="preview-image" :src="formData.imageUrl" mode="aspectFill" @click="previewImage" />
+        </view>
+      </view>
+
+      <view class="form-section">
+        <text class="section-title">地址信息</text>
+
+        <view class="form-item">
+          <text class="label">选择已有工作地址</text>
+          <picker mode="selector" :range="locationNames" @change="onLocationPick">
+            <view class="picker-btn">
+              <text>选择已有工作地址</text>
+            </view>
+          </picker>
+          <view v-if="selectedLocationName" class="selected-tip">
+            ✔ 已选：{{ selectedLocationName }}
+          </view>
         </view>
 
         <view class="form-item">
@@ -357,21 +394,10 @@ async function handleSave() {
           <button class="location-btn" @click="chooseLocation">选择位置</button>
           <text v-if="formData.latitude" class="location-coords">{{ formData.latitude }}, {{ formData.longitude }}</text>
         </view>
+      </view>
 
-        <view class="form-item">
-          <text class="label">职位类别</text>
-          <picker
-            mode="selector"
-            :range="categoryNames"
-            :value="getCategoryIndex()"
-            @change="onCategoryChange"
-          >
-            <view class="picker">
-              <text v-if="formData.categoryId" class="picker-value">{{ categoryNames[getCategoryIndex()] }}</text>
-              <text v-else class="picker-placeholder">请选择类别</text>
-            </view>
-          </picker>
-        </view>
+      <view class="form-section">
+        <text class="section-title">招聘信息</text>
 
         <view class="form-item">
           <text class="label">招聘人数</text>
@@ -387,7 +413,7 @@ async function handleSave() {
           >
             <view class="picker">
               <text v-if="formData.deadline" class="picker-value">{{ formData.deadline }}</text>
-              <text v-else class="picker-placeholder">请选择日期</text>
+              <text v-else class="picker-placeholder">请选择截止日期</text>
             </view>
           </picker>
         </view>
@@ -496,6 +522,22 @@ async function handleSave() {
   font-size: 26rpx;
   color: #007aff;
   padding: 8rpx 12rpx;
+}
+.picker-btn {
+  width: 100%;
+  height: 72rpx;
+  line-height: 72rpx;
+  background: #fff;
+  border: 2rpx solid #409eff;
+  border-radius: 8rpx;
+  color: #409eff;
+  text-align: center;
+  font-size: 28rpx;
+}
+.selected-tip {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #67c23a;
 }
 .form-item {
   margin-bottom: 24rpx;
@@ -625,5 +667,11 @@ async function handleSave() {
   font-size: 22rpx;
   color: #999;
   margin-left: 12rpx;
+}
+.preview-image {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 12rpx;
+  margin-top: 20rpx;
 }
 </style>

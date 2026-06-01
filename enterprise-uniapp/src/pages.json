@@ -3,7 +3,7 @@
     {"path": "pages/login/login", "style": {"navigationBarTitleText": "登录"}},
     {"path": "pages/home/index", "style": {"navigationBarTitleText": "职管"}},
     {"path": "pages/jobs/jobList", "style": {"navigationBarTitleText": "职位管理", "enablePullDownRefresh": true, "enableShareAppMessage": true}},
-    {"path": "pages/jobs/jobForm", "style": {"navigationBarTitleText": "职位表单"}},
+    {"path": "pages/jobs/jobForm", "style": {"navigationBarTitleText": "发布职位"}},
     {"path": "pages/jobs/jobDetail", "style": {"navigationBarTitleText": "职位详情", "enableShareAppMessage": true, "enableShareTimeline": true}},
     {"path": "pages/jobs/applicationList", "style": {"navigationBarTitleText": "报名记录", "enablePullDownRefresh": true}},
     {"path": "pages/locations/locationList", "style": {"navigationBarTitleText": "工作地点", "enablePullDownRefresh": true}},
