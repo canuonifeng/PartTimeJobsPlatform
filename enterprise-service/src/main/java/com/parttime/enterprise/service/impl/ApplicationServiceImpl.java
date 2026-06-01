@@ -2,7 +2,7 @@ package com.parttime.enterprise.service.impl;
 
 import com.parttime.enterprise.enums.ApplicationStatus;
 import com.parttime.enterprise.exception.BusinessException;
-import com.parttime.enterprise.mapper.ApplicationScheduleMapper;
+import com.parttime.enterprise.mapper.ScheduleApplicationMapper;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.ScheduleApplicationMapper;
 import com.parttime.enterprise.mapper.JobMapper;
@@ -34,7 +34,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Resource
     private ScheduleApplicationMapper applicationMapper;
     @Resource
-    private ApplicationScheduleMapper applicationScheduleMapper;
+    private ScheduleApplicationMapper scheduleApplicationMapper;
     @Resource
     private JobMapper jobMapper;
     @Resource
@@ -52,11 +52,11 @@ public class ApplicationServiceImpl implements ApplicationService {
     public PageVO<ScheduleApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, String status, Integer page, Integer pageSize) {
         List<ScheduleApplicationVO> apps;
         if (jobId != null && status != null && !status.isEmpty()) {
-            apps = applicationScheduleMapper.findByJobIdAndStatus(jobId, status);
+            apps = scheduleApplicationMapper.findVOByJobIdAndStatus(jobId, status);
         } else if (jobId != null) {
-            apps = applicationScheduleMapper.findByJobId(jobId);
+            apps = scheduleApplicationMapper.findVOByJobId(jobId);
         } else {
-            apps = applicationScheduleMapper.findByCompanyId(companyId);
+            apps = scheduleApplicationMapper.findVOByCompanyId(companyId);
         }
         if (jobTitle != null && !jobTitle.isEmpty()) {
             apps = apps.stream()

@@ -61,7 +61,7 @@
         </view>
 
         <view v-if="futureShifts.length" class="future-list">
-          <view v-for="shift in futureShifts.length > 1 ? futureShifts.slice(1, 6) : futureShifts" :key="shift.id" class="future-item">
+          <view v-for="shift in futureShifts.slice(todayShifts.length > 0 ? 1 : 0, todayShifts.length > 0 ? 6 : 5)" :key="shift.id" class="future-item">
             <view class="future-left">
               <text class="future-job">{{ shift.jobTitle }}</text>
               <text class="future-location">{{ shift.location || '暂无地点' }}</text>
@@ -379,9 +379,11 @@ onShow(refreshHome)
 
 .header {
   background: linear-gradient(135deg, #07c160, #059d50);
-  margin: -30rpx -30rpx 30rpx;
-  padding: 50rpx 30rpx 40rpx;
+  margin: -30rpx -30rpx 60rpx;
+  padding: 50rpx 30rpx 200rpx;
   color: #fff;
+  border-bottom-left-radius: 30rpx;
+  border-bottom-right-radius: 30rpx;
 }
 
 .greeting-row {
@@ -418,6 +420,7 @@ onShow(refreshHome)
 
 .current-shift-card {
   border-left: 8rpx solid #07c160;
+  margin-top: -200rpx;
 }
 
 .job-row {
@@ -556,6 +559,7 @@ onShow(refreshHome)
 .empty-shift-card {
   text-align: center;
   padding: 60rpx 36rpx;
+  margin-top: -220rpx;
 }
 
 .empty-icon {

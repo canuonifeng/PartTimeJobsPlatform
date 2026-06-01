@@ -1,6 +1,7 @@
 package com.parttime.enterprise.mapper;
 
 import com.parttime.enterprise.pojo.entity.ScheduleApplication;
+import com.parttime.enterprise.pojo.vo.ScheduleApplicationVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -31,4 +32,11 @@ public interface ScheduleApplicationMapper {
     int countByJobIdAndStatus(@Param("jobId") Long jobId, @Param("status") String status);
 
     int updateStatus(@Param("id") Long id, @Param("status") String status);
+
+    // VO methods with JOINs
+    List<ScheduleApplicationVO> findVOByCompanyId(@Param("companyId") Long companyId);
+
+    List<ScheduleApplicationVO> findVOByJobId(@Param("jobId") Long jobId);
+
+    List<ScheduleApplicationVO> findVOByJobIdAndStatus(@Param("jobId") Long jobId, @Param("status") String status);
 }

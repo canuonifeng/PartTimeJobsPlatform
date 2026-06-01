@@ -45,6 +45,18 @@ public class JobServiceImpl implements JobService {
                                          BigDecimal minRate, BigDecimal maxRate,
                                          BigDecimal latitude, BigDecimal longitude) {
         List<Job> jobs = jobMapper.search(keyword, location, categoryId);
+        LocalDateTime now = LocalDateTime.now();
+        // 自动关闭已过报名截止的岗位
+        for (Job job : jobs) {
+            if (job.getDeadline() != null && now.isAfter(job.getDeadline()) && !"CLOSED".equals(job.getStatus())) {
+                job.setStatus("CLOSED");
+                job.setCloseReason("报名已截止");
+                jobMapper.update(job);
+            }
+        }
+        jobs = jobs.stream()
+                .filter(j -> !"CLOSED".equals(j.getStatus()))
+                .toList();
         if (latitude != null && longitude != null) {
             jobs = jobs.stream()
                     .sorted((a, b) -> Double.compare(
@@ -297,8 +309,15 @@ public class JobServiceImpl implements JobService {
             rate.setAmount(job.getRateAmount());
             detail.setRates(List.of(rate));
         }
-        // 过滤过期排班
+        // 报名截止自动关闭
         LocalDateTime now = LocalDateTime.now();
+        if (job.getDeadline() != null && now.isAfter(job.getDeadline()) && !"CLOSED".equals(job.getStatus())) {
+            job.setStatus("CLOSED");
+            job.setCloseReason("报名已截止");
+            jobMapper.update(job);
+            detail.setStatus("CLOSED");
+        }
+        // 过滤过期排班
         List<JobSchedule> allActive = jobScheduleMapper.findActiveByJobId(job.getId());
         List<JobSchedule> validSchedules = allActive.stream()
                 .filter(s -> LocalDateTime.of(s.getScheduleDate(), s.getStartTime()).isAfter(now))
