@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { listShifts, createShift, deleteShift, listCorrections, approveCorrection, rejectCorrection } from '../../api/schedule'
+import { listShifts, createShift, cancelShift, listCorrections, approveCorrection, rejectCorrection } from '../../api/schedule'
 
 const activeTab = ref('shifts')
 
@@ -68,9 +68,9 @@ async function handleSave() {
 
 async function handleDelete(row) {
   try {
-    await ElMessageBox.confirm('确定删除该班次？', '提示')
-    await deleteShift(row.id)
-    ElMessage.success('删除成功')
+    await ElMessageBox.confirm('确定取消该排班？取消后该兼职将无法签到', '提示')
+    await cancelShift(row.id)
+    ElMessage.success('取消成功')
     fetchData()
   } catch {}
 }
@@ -215,9 +215,18 @@ onMounted(() => {
                 <span v-else class="att-none">未签到</span>
               </template>
             </el-table-column>
+            <el-table-column label="排班状态" width="100">
+              <template #default="{ row }">
+                <el-tag v-if="row.status === 'CANCELLED'" type="danger" size="small">已取消</el-tag>
+                <el-tag v-else-if="row.status === 'COMPLETED'" type="success" size="small">已完成</el-tag>
+                <el-tag v-else-if="row.status === 'ON_DUTY' || row.status === 'LATE'" type="warning" size="small">工作中</el-tag>
+                <el-tag v-else type="info" size="small">待上岗</el-tag>
+              </template>
+            </el-table-column>
             <el-table-column label="操作" width="120" fixed="right">
               <template #default="{ row }">
-                <el-button size="small" type="danger" @click="handleDelete(row)">删除</el-button>
+                <el-button v-if="row.status !== 'CANCELLED'" size="small" type="danger" @click="handleDelete(row)">取消排班</el-button>
+                <span v-else style="color:#999">已取消</span>
               </template>
             </el-table-column>
           </el-table>

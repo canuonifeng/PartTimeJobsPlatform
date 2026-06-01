@@ -120,7 +120,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     public void removeShift(Long id) {
-        shiftMapper.delete(id);
+        shiftMapper.cancelShift(id);
     }
 
     @Override

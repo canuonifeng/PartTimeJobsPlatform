@@ -16,6 +16,10 @@ export function deleteShift(id) {
   return request.delete('/schedule-shifts', { params: { id } })
 }
 
+export function cancelShift(id) {
+  return request.put('/schedule-shifts/cancel', { id })
+}
+
 export function getAttendanceReport(params) {
   return request.get('/attendance/report', { params })
 }

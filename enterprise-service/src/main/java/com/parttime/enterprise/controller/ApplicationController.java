@@ -3,6 +3,7 @@ package com.parttime.enterprise.controller;
 import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.pojo.vo.JobApplicationVO;
 import com.parttime.enterprise.pojo.vo.PageVO;
+import com.parttime.enterprise.pojo.vo.ScheduleApplicationVO;
 import com.parttime.enterprise.service.ApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -22,9 +23,9 @@ public class ApplicationController {
     @Resource
     private ApplicationService applicationService;
 
-    @Operation(summary = "获取岗位申请列表", description = "根据企业ID获取所有申请记录")
+    @Operation(summary = "获取排班报名列表", description = "根据企业ID获取所有排班报名记录")
     @GetMapping
-    public PageVO<JobApplicationVO> getApplicationsByJob(
+    public PageVO<ScheduleApplicationVO> getApplicationsByJob(
             @Parameter(description = "岗位ID") @RequestParam(required = false) Long jobId,
             @Parameter(description = "岗位标题") @RequestParam(required = false) String jobTitle,
             @Parameter(description = "状态") @RequestParam(required = false) String status,

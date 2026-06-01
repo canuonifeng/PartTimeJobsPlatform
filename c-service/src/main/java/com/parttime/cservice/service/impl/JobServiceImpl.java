@@ -192,6 +192,13 @@ public class JobServiceImpl implements JobService {
         if (newIds.isEmpty()) {
             throw new RuntimeException("所选排班已全部报名");
         }
+        // 检查排班是否已下架
+        for (Long sid : newIds) {
+            JobSchedule sched = jobScheduleMapper.findById(sid).orElse(null);
+            if (sched == null || !"ACTIVE".equals(sched.getStatus())) {
+                throw new RuntimeException("排班已下架，无法报名");
+            }
+        }
         List<JobApplication> existing = jobApplicationMapper.findByWorkerIdAndJobId(workerId, jobId);
         Long applicationId;
         if (!existing.isEmpty()) {
@@ -315,7 +322,7 @@ public class JobServiceImpl implements JobService {
             rate.setAmount(job.getRateAmount());
             detail.setRates(List.of(rate));
         }
-        detail.setSchedules(toScheduleVOs(jobScheduleMapper.findByJobId(job.getId())));
+        detail.setSchedules(toScheduleVOs(jobScheduleMapper.findActiveByJobId(job.getId())));
         if (workerId != null) {
             List<JobApplication> applications = jobApplicationMapper.findByWorkerIdAndJobId(workerId, job.getId());
             if (!applications.isEmpty()) {

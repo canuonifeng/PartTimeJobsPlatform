@@ -21,6 +21,8 @@ public class JobScheduleVO {
     private LocalTime endTime;
     @Schema(description = "可报名人数")
     private Integer slotsAvailable;
+    @Schema(description = "状态 ACTIVE/CANCELLED")
+    private String status;
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")

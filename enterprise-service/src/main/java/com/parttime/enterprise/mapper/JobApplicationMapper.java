@@ -26,6 +26,8 @@ public interface JobApplicationMapper {
 
     int countByJobId(Long jobId);
 
+    int countByScheduleId(@Param("scheduleId") Long scheduleId);
+
     int countByJobIdAndStatus(@Param("jobId") Long jobId, @Param("status") String status);
 
     int updateStatus(@Param("id") Long id, @Param("status") String status);

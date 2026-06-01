@@ -106,16 +106,17 @@ onMounted(() => {
       <view v-if="loading" class="state-msg">加载中...</view>
       <view v-else-if="applications.length === 0" class="state-msg">暂无报名记录</view>
       <view v-else class="application-list">
-        <view v-for="app in applications" :key="app.id" class="application-card">
+        <view v-for="app in applications" :key="app.applicationId" class="application-card">
           <view class="application-top">
             <text class="name">{{ app.workerName || '未知姓名' }}</text>
             <text class="status">{{ statusLabel(app.status) }}</text>
           </view>
           <text class="phone">{{ app.workerPhone || '暂无手机号' }}</text>
+          <text class="time">排班：{{ app.scheduleDate || '' }} {{ app.startTime || '' }}-{{ app.endTime || '' }}</text>
           <text class="time">{{ app.appliedAt || '暂无申请时间' }}</text>
           <view v-if="app.status === 'PENDING'" class="actions">
-            <button class="btn accept" @click="handleAccept(app.id)">通过</button>
-            <button class="btn reject" @click="handleReject(app.id)">拒绝</button>
+            <button class="btn accept" @click="handleAccept(app.applicationId)">通过</button>
+            <button class="btn reject" @click="handleReject(app.applicationId)">拒绝</button>
           </view>
         </view>
 

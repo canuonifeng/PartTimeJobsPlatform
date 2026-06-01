@@ -126,15 +126,24 @@ public class JobServiceImpl implements JobService {
             }
         }
         if (request.getSchedules() != null) {
-            jobScheduleMapper.deleteByJobId(id);
             for (JobScheduleCmd scheduleReq : request.getSchedules()) {
-                JobSchedule schedule = new JobSchedule();
-                schedule.setJobId(id);
-                schedule.setScheduleDate(scheduleReq.getScheduleDate());
-                schedule.setStartTime(scheduleReq.getStartTime());
-                schedule.setEndTime(scheduleReq.getEndTime());
-                schedule.setSlotsAvailable(job.getHeadcount());
-                jobScheduleMapper.insert(schedule);
+                if (scheduleReq.getId() != null) {
+                    long appCount = jobApplicationMapper.countByScheduleId(scheduleReq.getId());
+                    if (appCount > 0) {
+                        jobScheduleMapper.cancelSchedule(scheduleReq.getId());
+                    } else {
+                        jobScheduleMapper.delete(scheduleReq.getId());
+                    }
+                } else {
+                    JobSchedule schedule = new JobSchedule();
+                    schedule.setJobId(id);
+                    schedule.setScheduleDate(scheduleReq.getScheduleDate());
+                    schedule.setStartTime(scheduleReq.getStartTime());
+                    schedule.setEndTime(scheduleReq.getEndTime());
+                    schedule.setSlotsAvailable(job.getHeadcount());
+                    schedule.setStatus("ACTIVE");
+                    jobScheduleMapper.insert(schedule);
+                }
             }
         }
         return toResponse(job);
@@ -282,8 +291,9 @@ public class JobServiceImpl implements JobService {
         schedule.setScheduleDate(request.getScheduleDate());
         schedule.setStartTime(request.getStartTime());
         schedule.setEndTime(request.getEndTime());
-        schedule.setSlotsAvailable(job.getHeadcount());
-        jobScheduleMapper.insert(schedule);
+                schedule.setSlotsAvailable(job.getHeadcount());
+                schedule.setStatus("ACTIVE");
+                jobScheduleMapper.insert(schedule);
         return toScheduleResponse(schedule);
     }
 

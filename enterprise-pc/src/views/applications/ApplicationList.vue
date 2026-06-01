@@ -71,7 +71,7 @@ function handleReset() {
 async function handleAccept(row) {
   try {
     await ElMessageBox.confirm('确定通过该应聘申请？', '提示')
-    await acceptApplication(row.id)
+    await acceptApplication(row.applicationId)
     ElMessage.success('操作成功')
     fetchData()
   } catch {}
@@ -80,7 +80,7 @@ async function handleAccept(row) {
 async function handleReject(row) {
   try {
     await ElMessageBox.confirm('确定拒绝该应聘申请？', '提示')
-    await rejectApplication(row.id)
+    await rejectApplication(row.applicationId)
     ElMessage.success('操作成功')
     fetchData()
   } catch {}
@@ -116,10 +116,20 @@ onMounted(() => {
 
     <el-card style="margin-top: 16px">
       <el-table :data="applications" v-loading="loading" stripe style="width: 100%">
-        <el-table-column prop="jobTitle" label="职位" min-width="160" />
-        <el-table-column prop="workerName" label="应聘者" width="120" />
-        <el-table-column prop="workerPhone" label="手机号" width="140" />
-        <el-table-column prop="status" label="状态" width="100">
+        <el-table-column prop="jobTitle" label="职位" min-width="140" />
+        <el-table-column prop="workerName" label="应聘者" width="100" />
+        <el-table-column prop="workerPhone" label="手机号" width="130" />
+        <el-table-column label="排班日期" width="100">
+          <template #default="{ row }">
+            {{ row.scheduleDate || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="排班时段" width="140">
+          <template #default="{ row }">
+            {{ row.startTime || '-' }} - {{ row.endTime || '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="状态" width="90">
           <template #default="{ row }">
             <el-tag :type="statusMap[row.status] || 'info'">
               {{ statusOptions.find(o => o.value === row.status)?.label || row.status }}

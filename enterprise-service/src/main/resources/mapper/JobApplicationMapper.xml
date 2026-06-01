@@ -48,6 +48,10 @@
         SELECT COUNT(*) FROM job_applications WHERE job_id = #{jobId}
     </select>
 
+    <select id="countByScheduleId" resultType="int">
+        SELECT COUNT(*) FROM job_applications WHERE schedule_id = #{scheduleId}
+    </select>
+
     <select id="findByJobIdAndWorkerId" resultMap="JobApplicationResultMap">
         SELECT * FROM job_applications WHERE job_id = #{jobId} AND worker_id = #{workerId}
     </select>

@@ -2,16 +2,17 @@ package com.parttime.enterprise.service;
 
 import com.parttime.enterprise.pojo.vo.JobApplicationVO;
 import com.parttime.enterprise.pojo.vo.PageVO;
+import com.parttime.enterprise.pojo.vo.ScheduleApplicationVO;
 
 import java.util.List;
 
 public interface ApplicationService {
 
-    default PageVO<JobApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, String status) {
+    default PageVO<ScheduleApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, String status) {
         return getApplicationsByJob(companyId, jobId, jobTitle, status, null, null);
     }
 
-    PageVO<JobApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, String status, Integer page, Integer pageSize);
+    PageVO<ScheduleApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, String status, Integer page, Integer pageSize);
 
     List<JobApplicationVO> getApplicationsByWorker(Long workerId);
 

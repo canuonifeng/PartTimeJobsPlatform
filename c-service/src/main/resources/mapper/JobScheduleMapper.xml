@@ -9,6 +9,7 @@
         <result property="startTime" column="start_time"/>
         <result property="endTime" column="end_time"/>
         <result property="slotsAvailable" column="slots_available"/>
+        <result property="status" column="status"/>
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
@@ -17,10 +18,22 @@
     </insert>
 
     <select id="findByJobId" resultMap="jobScheduleResultMap">
-        SELECT id, job_id, schedule_date, start_time, end_time, slots_available
+        SELECT id, job_id, schedule_date, start_time, end_time, slots_available, status
         FROM job_schedules
         WHERE job_id = #{jobId}
         ORDER BY schedule_date ASC, start_time ASC
+    </select>
+
+    <select id="findActiveByJobId" resultMap="jobScheduleResultMap">
+        SELECT id, job_id, schedule_date, start_time, end_time, slots_available, status
+        FROM job_schedules
+        WHERE job_id = #{jobId} AND status = 'ACTIVE'
+        ORDER BY schedule_date ASC, start_time ASC
+    </select>
+
+    <select id="findById" resultMap="jobScheduleResultMap">
+        SELECT id, job_id, schedule_date, start_time, end_time, slots_available, status
+        FROM job_schedules WHERE id = #{id}
     </select>
 
 </mapper>

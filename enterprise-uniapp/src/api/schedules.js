@@ -21,3 +21,7 @@ export function updateShift(id, data) {
 export function deleteShift(id) {
   return request('DELETE', `/schedule-shifts?id=${id}`)
 }
+
+export function cancelShift(id) {
+  return request('PUT', '/schedule-shifts/cancel', { id })
+}

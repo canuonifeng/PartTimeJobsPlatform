@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -61,6 +62,12 @@ public class ScheduleController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeShift(@Parameter(description = "班次ID") @RequestParam Long id) {
         scheduleService.removeShift(id);
+    }
+
+    @Operation(summary = "取消排班", description = "取消排班（保留记录，状态改为CANCELLED）")
+    @PutMapping("/schedule-shifts/cancel")
+    public void cancelShift(@RequestBody Map<String, Long> body) {
+        scheduleService.removeShift(body.get("id"));
     }
 
     @Operation(summary = "获取考勤报表", description = "根据条件获取考勤报表数据")

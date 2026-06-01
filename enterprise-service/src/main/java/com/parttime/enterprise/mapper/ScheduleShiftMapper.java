@@ -38,6 +38,8 @@ public interface ScheduleShiftMapper {
 
     int delete(Long id);
 
+    int cancelShift(Long id);
+
     List<ScheduleShift> findCompletedByWorkerIdAndCompanyId(@Param("workerId") Long workerId, @Param("companyId") Long companyId);
 
     List<ScheduleShift> findByIds(@Param("ids") List<Long> ids);

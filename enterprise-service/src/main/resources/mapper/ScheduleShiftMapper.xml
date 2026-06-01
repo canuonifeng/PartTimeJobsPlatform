@@ -89,6 +89,10 @@
         DELETE FROM schedule_shifts WHERE id = #{id}
     </delete>
 
+    <update id="cancelShift">
+        UPDATE schedule_shifts SET status = 'CANCELLED' WHERE id = #{id}
+    </update>
+
     <select id="findByIds" resultMap="ShiftResultMap">
         SELECT * FROM schedule_shifts WHERE id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">

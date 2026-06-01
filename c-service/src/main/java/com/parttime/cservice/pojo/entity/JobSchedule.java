@@ -13,4 +13,5 @@ public class JobSchedule {
     private LocalTime startTime;
     private LocalTime endTime;
     private Integer slotsAvailable;
+    private String status;
 }

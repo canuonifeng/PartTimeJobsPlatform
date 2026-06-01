@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { onPullDownRefresh } from '@dcloudio/uni-app'
-import { listScheduleShifts, deleteShift } from '@/api/schedules'
+import { listScheduleShifts, cancelShift } from '@/api/schedules'
 
 const shifts = ref([])
 const loading = ref(false)
@@ -42,19 +42,19 @@ function loadMore() {
 
 function handleDelete(id) {
   uni.showModal({
-    title: '确认删除',
-    content: '确定要删除该班次吗？',
+    title: '确认取消',
+    content: '确定要取消该排班吗？取消后该兼职将无法签到',
     success: async (res) => {
       if (res.confirm) {
         try {
-          await deleteShift(id)
-          uni.showToast({ title: '已删除', icon: 'success' })
+          await cancelShift(id)
+          uni.showToast({ title: '已取消', icon: 'success' })
           page.value = 1
           shifts.value = []
           hasMore.value = true
           loadShifts()
         } catch {
-          uni.showToast({ title: '删除失败', icon: 'none' })
+          uni.showToast({ title: '取消失败', icon: 'none' })
         }
       }
     }
@@ -89,8 +89,15 @@ function handleDelete(id) {
               <text class="card-label">时间</text>
               <text class="card-val">{{ s.startTime || '-' }} - {{ s.endTime || '-' }}</text>
             </view>
+            <view class="card-row">
+              <text class="card-label">状态</text>
+              <text class="card-val" :class="s.status === 'CANCELLED' ? 'status-cancelled' : ''">
+                {{ s.status === 'CANCELLED' ? '已取消' : s.status === 'COMPLETED' ? '已完成' : s.status === 'ON_DUTY' || s.status === 'LATE' ? '工作中' : '待上岗' }}
+              </text>
+            </view>
             <view class="card-actions">
-              <button class="action-btn delete" @click="handleDelete(s.id)">删除</button>
+              <button v-if="s.status !== 'CANCELLED'" class="action-btn delete" @click="handleDelete(s.id)">取消排班</button>
+              <text v-else class="cancelled-text">已取消</text>
             </view>
           </view>
         </view>
@@ -121,5 +128,7 @@ function handleDelete(id) {
 .action-btn { flex: 1; height: 64rpx; line-height: 64rpx; font-size: 24rpx; border-radius: 8rpx; border: 2rpx solid #ddd; background: #fff; text-align: center; }
 .action-btn::after { border: none; }
 .delete { border-color: #ff3b30; color: #ff3b30; }
+.status-cancelled { color: #ff3b30; }
+.cancelled-text { flex: 1; text-align: center; color: #999; font-size: 24rpx; line-height: 64rpx; }
 .load-more-wrap { padding-bottom: 24rpx; }
 </style>

@@ -15,7 +15,13 @@ public interface JobScheduleMapper {
 
     List<JobSchedule> findByJobId(Long jobId);
 
+    List<JobSchedule> findActiveByJobId(Long jobId);
+
     int update(JobSchedule schedule);
+
+    int cancelSchedule(Long id);
+
+    int cancelByJobId(Long jobId);
 
     int delete(Long id);
 

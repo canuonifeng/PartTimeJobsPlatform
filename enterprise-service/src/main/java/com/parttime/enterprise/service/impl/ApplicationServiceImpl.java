@@ -2,6 +2,7 @@ package com.parttime.enterprise.service.impl;
 
 import com.parttime.enterprise.enums.ApplicationStatus;
 import com.parttime.enterprise.exception.BusinessException;
+import com.parttime.enterprise.mapper.ApplicationScheduleMapper;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.JobApplicationMapper;
 import com.parttime.enterprise.mapper.JobMapper;
@@ -16,6 +17,7 @@ import com.parttime.enterprise.pojo.entity.JobSchedule;
 import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.vo.JobApplicationVO;
 import com.parttime.enterprise.pojo.vo.PageVO;
+import com.parttime.enterprise.pojo.vo.ScheduleApplicationVO;
 import com.parttime.enterprise.service.ApplicationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Resource
     private JobApplicationMapper applicationMapper;
     @Resource
+    private ApplicationScheduleMapper applicationScheduleMapper;
+    @Resource
     private JobMapper jobMapper;
     @Resource
     private JobScheduleMapper jobScheduleMapper;
@@ -46,31 +50,30 @@ public class ApplicationServiceImpl implements ApplicationService {
     private CompanyWorkerMapper companyWorkerMapper;
 
     @Override
-    public PageVO<JobApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, String status, Integer page, Integer pageSize) {
-        List<JobApplication> apps;
-        if (jobId != null) {
-            apps = applicationMapper.findByJobId(jobId);
+    public PageVO<ScheduleApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, String status, Integer page, Integer pageSize) {
+        List<ScheduleApplicationVO> apps;
+        if (jobId != null && status != null && !status.isEmpty()) {
+            apps = applicationScheduleMapper.findByJobIdAndStatus(jobId, status);
+        } else if (jobId != null) {
+            apps = applicationScheduleMapper.findByJobId(jobId);
         } else {
-            apps = applicationMapper.findByCompanyId(companyId);
+            apps = applicationScheduleMapper.findByCompanyId(companyId);
         }
-        List<JobApplication> filtered = apps.stream()
-                .filter(app -> status == null || status.isEmpty() || status.equals(app.getStatus()))
-                .filter(app -> {
-                    if (jobTitle == null || jobTitle.isEmpty()) return true;
-                    Job job = jobMapper.findById(app.getJobId()).orElse(null);
-                    return job != null && job.getTitle() != null && job.getTitle().contains(jobTitle);
-                })
-                .collect(Collectors.toList());
-        int total = filtered.size();
+        if (jobTitle != null && !jobTitle.isEmpty()) {
+            apps = apps.stream()
+                    .filter(a -> a.getJobTitle() != null && a.getJobTitle().contains(jobTitle))
+                    .collect(Collectors.toList());
+        }
+        int total = apps.size();
         if (page != null && pageSize != null) {
             int fromIndex = Math.max(page - 1, 0) * pageSize;
-            if (fromIndex >= filtered.size()) {
+            if (fromIndex >= apps.size()) {
                 return new PageVO<>(List.of(), total);
             }
-            int toIndex = Math.min(fromIndex + pageSize, filtered.size());
-            filtered = filtered.subList(fromIndex, toIndex);
+            int toIndex = Math.min(fromIndex + pageSize, apps.size());
+            apps = apps.subList(fromIndex, toIndex);
         }
-        return new PageVO<>(filtered.stream().map(this::toResponse).collect(Collectors.toList()), total);
+        return new PageVO<>(apps, total);
     }
 
     @Override

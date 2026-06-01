@@ -9,13 +9,14 @@
         <result property="startTime" column="start_time"/>
         <result property="endTime" column="end_time"/>
         <result property="slotsAvailable" column="slots_available"/>
+        <result property="status" column="status"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO job_schedules (job_id, schedule_date, start_time, end_time, slots_available)
-        VALUES (#{jobId}, #{scheduleDate}, #{startTime}, #{endTime}, #{slotsAvailable})
+        INSERT INTO job_schedules (job_id, schedule_date, start_time, end_time, slots_available, status)
+        VALUES (#{jobId}, #{scheduleDate}, #{startTime}, #{endTime}, #{slotsAvailable}, #{status})
     </insert>
 
     <select id="findById" resultMap="JobScheduleResultMap">
@@ -24,6 +25,10 @@
 
     <select id="findByJobId" resultMap="JobScheduleResultMap">
         SELECT * FROM job_schedules WHERE job_id = #{jobId} ORDER BY schedule_date ASC, start_time ASC
+    </select>
+
+    <select id="findActiveByJobId" resultMap="JobScheduleResultMap">
+        SELECT * FROM job_schedules WHERE job_id = #{jobId} AND status = 'ACTIVE' ORDER BY schedule_date ASC, start_time ASC
     </select>
 
     <select id="findAll" resultMap="JobScheduleResultMap">
@@ -35,6 +40,14 @@
         SET schedule_date = #{scheduleDate}, start_time = #{startTime},
             end_time = #{endTime}, slots_available = #{slotsAvailable}
         WHERE id = #{id}
+    </update>
+
+    <update id="cancelSchedule">
+        UPDATE job_schedules SET status = 'CANCELLED' WHERE id = #{id}
+    </update>
+
+    <update id="cancelByJobId">
+        UPDATE job_schedules SET status = 'CANCELLED' WHERE job_id = #{jobId}
     </update>
 
     <delete id="delete">
