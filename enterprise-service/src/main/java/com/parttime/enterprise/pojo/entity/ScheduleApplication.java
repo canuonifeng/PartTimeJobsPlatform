@@ -5,7 +5,7 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class JobApplication {
+public class ScheduleApplication {
 
     @Schema(description = "申请ID")
     private Long id;

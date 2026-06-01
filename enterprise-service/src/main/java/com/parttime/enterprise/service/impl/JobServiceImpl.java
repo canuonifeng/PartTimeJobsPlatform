@@ -3,7 +3,7 @@ package com.parttime.enterprise.service.impl;
 import com.parttime.enterprise.enums.JobRateType;
 import com.parttime.enterprise.enums.JobStatus;
 import com.parttime.enterprise.exception.BusinessException;
-import com.parttime.enterprise.mapper.JobApplicationMapper;
+import com.parttime.enterprise.mapper.ScheduleApplicationMapper;
 import com.parttime.enterprise.mapper.JobCategoryMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.JobRateMapper;
@@ -36,7 +36,7 @@ public class JobServiceImpl implements JobService {
     @Resource
     private JobScheduleMapper jobScheduleMapper;
     @Resource
-    private JobApplicationMapper jobApplicationMapper;
+    private ScheduleApplicationMapper scheduleApplicationMapper;
     @Resource
     private JobCategoryMapper jobCategoryMapper;
 
@@ -128,7 +128,7 @@ public class JobServiceImpl implements JobService {
         if (request.getSchedules() != null) {
             for (JobScheduleCmd scheduleReq : request.getSchedules()) {
                 if (scheduleReq.getId() != null) {
-                    long appCount = jobApplicationMapper.countByScheduleId(scheduleReq.getId());
+                    long appCount = scheduleApplicationMapper.countByScheduleId(scheduleReq.getId());
                     if (appCount > 0) {
                         jobScheduleMapper.cancelSchedule(scheduleReq.getId());
                     } else {
@@ -156,7 +156,7 @@ public class JobServiceImpl implements JobService {
         if (!"CLOSED".equals(job.getStatus())) {
             throw new BusinessException("只有关闭后的职位才能删除");
         }
-        if (jobApplicationMapper.countByJobId(id) > 0) {
+        if (scheduleApplicationMapper.countByJobId(id) > 0) {
             throw new BusinessException("已有报名记录的职位不能删除");
         }
         jobMapper.delete(id);
@@ -376,8 +376,8 @@ public class JobServiceImpl implements JobService {
         response.setHeadcount(job.getHeadcount());
         response.setImageUrl(job.getImageUrl());
         response.setStatus(JobStatus.valueOf(job.getStatus()));
-        response.setApplicationCount(jobApplicationMapper.countByJobId(job.getId()));
-        response.setPendingApplicationCount(jobApplicationMapper.countByJobIdAndStatus(job.getId(), "PENDING"));
+        response.setApplicationCount(scheduleApplicationMapper.countByJobId(job.getId()));
+        response.setPendingApplicationCount(scheduleApplicationMapper.countByJobIdAndStatus(job.getId(), "PENDING"));
         response.setDeadline(job.getDeadline());
         response.setCreatedAt(job.getCreatedAt());
         response.setUpdatedAt(job.getUpdatedAt());

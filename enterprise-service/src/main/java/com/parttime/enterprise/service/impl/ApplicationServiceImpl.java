@@ -4,20 +4,19 @@ import com.parttime.enterprise.enums.ApplicationStatus;
 import com.parttime.enterprise.exception.BusinessException;
 import com.parttime.enterprise.mapper.ApplicationScheduleMapper;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
-import com.parttime.enterprise.mapper.JobApplicationMapper;
+import com.parttime.enterprise.mapper.ScheduleApplicationMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.JobRateMapper;
 import com.parttime.enterprise.mapper.JobScheduleMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.entity.Job;
-import com.parttime.enterprise.pojo.entity.JobApplication;
+import com.parttime.enterprise.pojo.entity.ScheduleApplication;
 import com.parttime.enterprise.pojo.entity.JobRate;
 import com.parttime.enterprise.pojo.entity.JobSchedule;
 import com.parttime.enterprise.pojo.entity.ScheduleShift;
-import com.parttime.enterprise.pojo.vo.JobApplicationVO;
-import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.pojo.vo.ScheduleApplicationVO;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.ApplicationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +32,7 @@ import java.util.stream.Collectors;
 public class ApplicationServiceImpl implements ApplicationService {
 
     @Resource
-    private JobApplicationMapper applicationMapper;
+    private ScheduleApplicationMapper applicationMapper;
     @Resource
     private ApplicationScheduleMapper applicationScheduleMapper;
     @Resource
@@ -77,7 +76,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
-    public List<JobApplicationVO> getApplicationsByWorker(Long workerId) {
+    public List<ScheduleApplicationVO> getApplicationsByWorker(Long workerId) {
         return applicationMapper.findByWorkerId(workerId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -85,8 +84,8 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     @Transactional
-    public JobApplicationVO acceptApplication(Long applicationId) {
-        JobApplication app = applicationMapper.findById(applicationId)
+    public ScheduleApplicationVO acceptApplication(Long applicationId) {
+        ScheduleApplication app = applicationMapper.findById(applicationId)
                 .orElseThrow(() -> new RuntimeException("Application not found: " + applicationId));
 
         JobSchedule schedule = jobScheduleMapper.findById(app.getScheduleId())
@@ -109,7 +108,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         return toResponse(app);
     }
 
-    private void ensureShifts(JobApplication app, Job job) {
+    private void ensureShifts(ScheduleApplication app, Job job) {
         JobSchedule schedule = jobScheduleMapper.findById(app.getScheduleId())
                 .orElseThrow(() -> new RuntimeException("Schedule not found: " + app.getScheduleId()));
         JobRate rate = jobRateMapper.findByJobId(job.getId()).stream()
@@ -142,8 +141,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
-    public JobApplicationVO rejectApplication(Long applicationId) {
-        JobApplication app = applicationMapper.findById(applicationId)
+    public ScheduleApplicationVO rejectApplication(Long applicationId) {
+        ScheduleApplication app = applicationMapper.findById(applicationId)
                 .orElseThrow(() -> new RuntimeException("Application not found: " + applicationId));
 
         applicationMapper.updateStatus(applicationId, "REJECTED");
@@ -151,8 +150,8 @@ public class ApplicationServiceImpl implements ApplicationService {
         return toResponse(app);
     }
 
-    private JobApplicationVO toResponse(JobApplication app) {
-        JobApplicationVO response = new JobApplicationVO();
+    private ScheduleApplicationVO toResponse(ScheduleApplication app) {
+        ScheduleApplicationVO response = new ScheduleApplicationVO();
         response.setId(app.getId());
         response.setScheduleId(app.getScheduleId());
         response.setWorkerId(app.getWorkerId());

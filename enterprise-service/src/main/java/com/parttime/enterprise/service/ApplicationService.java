@@ -1,8 +1,6 @@
 package com.parttime.enterprise.service;
 
-import com.parttime.enterprise.pojo.vo.JobApplicationVO;
-import com.parttime.enterprise.pojo.vo.PageVO;
-import com.parttime.enterprise.pojo.vo.ScheduleApplicationVO;
+import com.parttime.enterprise.pojo.vo.ScheduleApplicationVO;import com.parttime.enterprise.pojo.vo.PageVO;
 
 import java.util.List;
 
@@ -14,9 +12,9 @@ public interface ApplicationService {
 
     PageVO<ScheduleApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, String status, Integer page, Integer pageSize);
 
-    List<JobApplicationVO> getApplicationsByWorker(Long workerId);
+    List<ScheduleApplicationVO> getApplicationsByWorker(Long workerId);
 
-    JobApplicationVO acceptApplication(Long applicationId);
+    ScheduleApplicationVO acceptApplication(Long applicationId);
 
-    JobApplicationVO rejectApplication(Long applicationId);
+    ScheduleApplicationVO rejectApplication(Long applicationId);
 }

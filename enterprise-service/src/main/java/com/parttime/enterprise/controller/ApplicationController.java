@@ -1,9 +1,7 @@
 package com.parttime.enterprise.controller;
 
 import com.parttime.enterprise.config.SecurityUtil;
-import com.parttime.enterprise.pojo.vo.JobApplicationVO;
-import com.parttime.enterprise.pojo.vo.PageVO;
-import com.parttime.enterprise.pojo.vo.ScheduleApplicationVO;
+import com.parttime.enterprise.pojo.vo.ScheduleApplicationVO;import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.ApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -37,13 +35,13 @@ public class ApplicationController {
 
     @Operation(summary = "通过申请", description = "通过工人的岗位申请")
     @PutMapping("/accept")
-    public JobApplicationVO acceptApplication(@Parameter(description = "申请ID") @RequestParam Long applicationId) {
+    public ScheduleApplicationVO acceptApplication(@Parameter(description = "申请ID") @RequestParam Long applicationId) {
         return applicationService.acceptApplication(applicationId);
     }
 
     @Operation(summary = "拒绝申请", description = "拒绝工人的岗位申请")
     @PutMapping("/reject")
-    public JobApplicationVO rejectApplication(@Parameter(description = "申请ID") @RequestParam Long applicationId) {
+    public ScheduleApplicationVO rejectApplication(@Parameter(description = "申请ID") @RequestParam Long applicationId) {
         return applicationService.rejectApplication(applicationId);
     }
 }
