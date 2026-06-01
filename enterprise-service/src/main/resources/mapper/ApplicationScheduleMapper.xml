@@ -18,45 +18,42 @@
     </resultMap>
 
     <select id="findByCompanyId" resultMap="ScheduleApplicationResultMap">
-        SELECT ja.id as application_id, as2.schedule_id, j.id as job_id, j.title as job_title,
-               ja.worker_id, w.name as worker_name, w.phone as worker_phone,
+        SELECT sa.id as application_id, sa.schedule_id, j.id as job_id, j.title as job_title,
+               sa.worker_id, w.name as worker_name, w.phone as worker_phone,
                js.schedule_date, js.start_time, js.end_time,
-               ja.status, ja.applied_at
-        FROM job_applications ja
-        JOIN application_schedules as2 ON ja.id = as2.application_id
-        JOIN job_schedules js ON as2.schedule_id = js.id
-        JOIN jobs j ON ja.job_id = j.id
-        LEFT JOIN c_worker w ON ja.worker_id = w.id
+               sa.status, sa.applied_at
+        FROM schedule_applications sa
+        JOIN job_schedules js ON sa.schedule_id = js.id
+        JOIN jobs j ON js.job_id = j.id
+        LEFT JOIN c_worker w ON sa.worker_id = w.id
         WHERE j.company_id = #{companyId}
-        ORDER BY ja.applied_at DESC
+        ORDER BY sa.applied_at DESC
     </select>
 
     <select id="findByJobId" resultMap="ScheduleApplicationResultMap">
-        SELECT ja.id as application_id, as2.schedule_id, j.id as job_id, j.title as job_title,
-               ja.worker_id, w.name as worker_name, w.phone as worker_phone,
+        SELECT sa.id as application_id, sa.schedule_id, j.id as job_id, j.title as job_title,
+               sa.worker_id, w.name as worker_name, w.phone as worker_phone,
                js.schedule_date, js.start_time, js.end_time,
-               ja.status, ja.applied_at
-        FROM job_applications ja
-        JOIN application_schedules as2 ON ja.id = as2.application_id
-        JOIN job_schedules js ON as2.schedule_id = js.id
-        JOIN jobs j ON ja.job_id = j.id
-        LEFT JOIN c_worker w ON ja.worker_id = w.id
+               sa.status, sa.applied_at
+        FROM schedule_applications sa
+        JOIN job_schedules js ON sa.schedule_id = js.id
+        JOIN jobs j ON js.job_id = j.id
+        LEFT JOIN c_worker w ON sa.worker_id = w.id
         WHERE j.id = #{jobId}
-        ORDER BY ja.applied_at DESC
+        ORDER BY sa.applied_at DESC
     </select>
 
     <select id="findByJobIdAndStatus" resultMap="ScheduleApplicationResultMap">
-        SELECT ja.id as application_id, as2.schedule_id, j.id as job_id, j.title as job_title,
-               ja.worker_id, w.name as worker_name, w.phone as worker_phone,
+        SELECT sa.id as application_id, sa.schedule_id, j.id as job_id, j.title as job_title,
+               sa.worker_id, w.name as worker_name, w.phone as worker_phone,
                js.schedule_date, js.start_time, js.end_time,
-               ja.status, ja.applied_at
-        FROM job_applications ja
-        JOIN application_schedules as2 ON ja.id = as2.application_id
-        JOIN job_schedules js ON as2.schedule_id = js.id
-        JOIN jobs j ON ja.job_id = j.id
-        LEFT JOIN c_worker w ON ja.worker_id = w.id
-        WHERE j.id = #{jobId} AND ja.status = #{status}
-        ORDER BY ja.applied_at DESC
+               sa.status, sa.applied_at
+        FROM schedule_applications sa
+        JOIN job_schedules js ON sa.schedule_id = js.id
+        JOIN jobs j ON js.job_id = j.id
+        LEFT JOIN c_worker w ON sa.worker_id = w.id
+        WHERE j.id = #{jobId} AND sa.status = #{status}
+        ORDER BY sa.applied_at DESC
     </select>
 
 </mapper>
