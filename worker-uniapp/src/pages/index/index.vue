@@ -85,7 +85,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useAuthStore } from '@/store'
-import { getMyShifts } from '@/api/schedule'
+import { getMyTopShifts } from '@/api/schedule'
 import { checkIn, checkOut } from '@/api/attendance'
 
 const authStore = useAuthStore()
@@ -333,11 +333,15 @@ async function handleCheckOut() {
 async function loadShifts() {
   if (!authStore.token) return
   try {
-    const startDate = formatDateKey(new Date())
-    const endDate = formatDateKey(new Date(Date.now() + 6 * 24 * 60 * 60 * 1000))
-    const res: any = await getMyShifts({ startDate, endDate })
-    const list = Array.isArray(res) ? res : (res.list || [])
-    shifts.value = list.map(normalizeShift)
+    const res: any = await getMyTopShifts()
+    const all = []
+    if (res.currentShift) {
+      all.push(normalizeShift(res.currentShift))
+    }
+    if (res.futureShifts) {
+      all.push(...res.futureShifts.map(normalizeShift))
+    }
+    shifts.value = all
   } catch {
   }
 }

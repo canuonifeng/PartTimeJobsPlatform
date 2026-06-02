@@ -2,6 +2,7 @@ package com.parttime.cservice.controller;
 
 import com.parttime.cservice.pojo.cmd.CheckInCmd;
 import com.parttime.cservice.pojo.vo.AttendanceVO;
+import com.parttime.cservice.pojo.vo.MyTopShiftsVO;
 import com.parttime.cservice.pojo.vo.WorkerShiftVO;
 import com.parttime.cservice.service.AttendanceService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -42,6 +43,17 @@ public class AttendanceController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         List<WorkerShiftVO> shifts = attendanceService.getMyShifts(workerId, startDate, endDate);
+        return ResponseEntity.ok(shifts);
+    }
+
+    @Operation(summary = "获取我的班次", description = "获取当前工人最近的班次列表")
+    @GetMapping("/schedule-shifts/my-top")
+    public ResponseEntity<?> getMyTopShifts() {
+        Long workerId = getCurrentWorkerId();
+        if (workerId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        MyTopShiftsVO shifts = attendanceService.getMyTopShifts(workerId, 6);
         return ResponseEntity.ok(shifts);
     }
 

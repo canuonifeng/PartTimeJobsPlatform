@@ -6,15 +6,16 @@ import com.parttime.cservice.mapper.AttendanceCorrectionMapper;
 import com.parttime.cservice.mapper.AttendanceRecordMapper;
 import com.parttime.cservice.mapper.ShiftMapper;
 import com.parttime.cservice.pojo.entity.AttendanceCheckIn;
-import com.parttime.cservice.pojo.entity.AttendanceCorrectionEntity;
 import com.parttime.cservice.pojo.entity.AttendanceRecordEntity;
 import com.parttime.cservice.pojo.entity.ShiftEntity;
 import com.parttime.cservice.pojo.vo.AttendanceVO;
+import com.parttime.cservice.pojo.vo.MyTopShiftsVO;
 import com.parttime.cservice.pojo.vo.WorkerShiftVO;
 import com.parttime.cservice.service.AttendanceService;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
+import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -22,8 +23,9 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -65,6 +67,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     public List<WorkerShiftVO> getMyShifts(Long workerId, LocalDate startDate, LocalDate endDate) {
         return shiftMapper.findByWorkerIdAndDateRange(workerId, startDate, endDate).stream()
+                .filter(s -> !"CANCELLED".equals(s.getStatus()))
                 .map(this::toWorkerShiftResponse)
                 .collect(Collectors.toList());
     }
@@ -214,6 +217,23 @@ public class AttendanceServiceImpl implements AttendanceService {
         return attendanceRecordMapper.findByWorkerId(workerId).stream()
                 .map(this::toAttendanceResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public MyTopShiftsVO getMyTopShifts(Long workerId, int size) {
+        List<ShiftEntity> futureEntities = shiftMapper.findLtStartTimeByWorkerId(workerId, size);
+        ShiftEntity currentEntity = shiftMapper.getGtEndTimeByWorkerId(workerId);
+
+        MyTopShiftsVO vo = new MyTopShiftsVO();
+        if (currentEntity != null) {
+            vo.setCurrentShift(toWorkerShiftResponse(currentEntity));
+        }
+        if (futureEntities != null && !futureEntities.isEmpty()) {
+            vo.setFutureShifts(futureEntities.stream()
+                    .map(this::toWorkerShiftResponse)
+                    .collect(Collectors.toList()));
+        }
+        return vo;
     }
 
     private double haversine(double lat1, double lon1, double lat2, double lon2) {

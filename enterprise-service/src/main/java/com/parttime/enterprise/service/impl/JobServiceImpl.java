@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -126,15 +127,29 @@ public class JobServiceImpl implements JobService {
             }
         }
         if (request.getSchedules() != null) {
-            for (JobScheduleCmd scheduleReq : request.getSchedules()) {
-                if (scheduleReq.getId() != null) {
-                    long appCount = scheduleApplicationMapper.countByScheduleId(scheduleReq.getId());
+            // 获取数据库中现有的排班ID
+            List<Long> existingIds = jobScheduleMapper.findByJobId(id).stream()
+                    .map(JobSchedule::getId)
+                    .toList();
+            // 请求中保留的排班ID
+            List<Long> keptIds = request.getSchedules().stream()
+                    .map(JobScheduleCmd::getId)
+                    .filter(Objects::nonNull)
+                    .toList();
+            // 取消/删除不再需要的排班
+            for (Long sid : existingIds) {
+                if (!keptIds.contains(sid)) {
+                    long appCount = scheduleApplicationMapper.countByScheduleId(sid);
                     if (appCount > 0) {
-                        jobScheduleMapper.cancelSchedule(scheduleReq.getId());
+                        jobScheduleMapper.cancelSchedule(sid);
                     } else {
-                        jobScheduleMapper.delete(scheduleReq.getId());
+                        jobScheduleMapper.delete(sid);
                     }
-                } else {
+                }
+            }
+            // 新增排班
+            for (JobScheduleCmd scheduleReq : request.getSchedules()) {
+                if (scheduleReq.getId() == null) {
                     JobSchedule schedule = new JobSchedule();
                     schedule.setJobId(id);
                     schedule.setScheduleDate(scheduleReq.getScheduleDate());

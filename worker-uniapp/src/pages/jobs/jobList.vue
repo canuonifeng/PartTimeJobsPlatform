@@ -1,28 +1,12 @@
 <template>
   <view class="job-list-page">
     <view class="search-bar">
-      <uni-search-bar
-        :radius="100"
-        placeholder="搜索职位、公司"
-        @confirm="onSearch"
-        @clear="onSearch('')"
-        v-model="keyword"
-      />
+      <uni-search-bar :radius="100" placeholder="搜索职位、公司" @confirm="onSearch" @clear="onSearch('')" v-model="keyword" />
     </view>
 
-    <scroll-view
-      class="category-scroll"
-      scroll-x
-      show-scrollbar="false"
-    >
+    <scroll-view class="category-scroll" scroll-x show-scrollbar="false">
       <view class="category-chips">
-        <view
-          v-for="cat in categories"
-          :key="cat.id"
-          class="chip"
-          :class="{ active: categoryId === cat.id }"
-          @click="onCategoryChange(cat.id)"
-        >
+        <view v-for="cat in categories" :key="cat.id" class="chip" :class="{ active: categoryId === cat.id }" @click="onCategoryChange(cat.id)">
           <text>{{ cat.name }}</text>
         </view>
       </view>
@@ -30,24 +14,13 @@
 
     <uni-load-more v-if="loading && page === 1" status="loading" />
 
-    <scroll-view
-      class="job-scroll"
-      scroll-y
-      @scrolltolower="loadMore"
-      :refresher-enabled="true"
-      :refresher-triggered="refreshing"
-      @refresherrefresh="onRefresh"
-    >
-      <view v-if="jobList.length === 0 && !loading" class="empty-state">
+    <scroll-view class="job-scroll" scroll-y @scrolltolower="loadMore" :refresher-enabled="true" :refresher-triggered="refreshing" @refresherrefresh="onRefresh">
+      <view class="job-list-inner">
+        <view v-if="jobList.length === 0 && !loading" class="empty-state">
         <text class="empty-text">暂无职位信息</text>
       </view>
 
-      <view
-        v-for="job in jobList"
-        :key="job.id"
-        class="job-card"
-        @click="goDetail(job.id)"
-      >
+      <view v-for="job in jobList" :key="job.id" class="job-card" @click="goDetail(job.id)">
         <view class="job-card-top">
           <image v-if="job.imageUrl" class="job-image" :src="job.imageUrl" mode="aspectFill" />
           <image v-else-if="job.companyLogo" class="job-image" :src="job.companyLogo" mode="aspectFill" />
@@ -74,6 +47,7 @@
 
       <uni-load-more v-if="hasMore" :status="loadingMore ? 'loading' : 'more'" />
       <uni-load-more v-if="!hasMore && jobList.length > 0" status="noMore" />
+      </view>
     </scroll-view>
   </view>
 </template>
@@ -107,7 +81,6 @@ const categories = [
 async function fetchJobs(p: number, append: boolean = false) {
   if (!append) loading.value = true
   else loadingMore.value = true
-
   try {
     const res: any = await getJobs({
       keyword: keyword.value || undefined,
@@ -201,143 +174,145 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  background: #f5f5f5;
 }
-
 .search-bar {
-  padding: 16rpx 20rpx;
+  padding: 20rpx 24rpx;
   background: #fff;
+  border-bottom: 2rpx solid #f0f0f0;
 }
-
 .category-scroll {
   white-space: nowrap;
-  padding: 16rpx 20rpx;
+  padding: 20rpx 24rpx;
   background: #fff;
-  border-bottom: 1rpx solid #f0f0f0;
 }
-
 .category-chips {
   display: inline-flex;
-  gap: 16rpx;
+  gap: 20rpx;
 }
-
 .chip {
   display: inline-flex;
-  padding: 12rpx 28rpx;
-  border-radius: 40rpx;
+  padding: 16rpx 36rpx;
+  border-radius: 44rpx;
   background: #f5f5f5;
-  font-size: 26rpx;
+  font-size: 30rpx;
   color: #666;
+  transition: all 0.2s;
 }
-
 .chip.active {
-  background: #e8f8ee;
-  color: #07c160;
-  font-weight: 500;
+  background: #07c160;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 4rpx 12rpx rgba(7, 193, 96, 0.35);
 }
-
 .job-scroll {
   flex: 1;
-  padding: 20rpx;
+  padding: 0;
 }
-
+.job-list-inner {
+  padding: 24rpx;
+}
 .empty-state {
   display: flex;
   justify-content: center;
-  padding: 100rpx 0;
+  padding: 120rpx 0;
 }
-
 .empty-text {
-  font-size: 28rpx;
-  color: #ccc;
+  font-size: 32rpx;
+  color: #999;
 }
-
 .job-card {
   background: #fff;
-  border-radius: 16rpx;
-  padding: 30rpx;
+  border-radius: 24rpx;
+  padding: 32rpx;
   margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
+  transition: all 0.2s;
 }
-
+.job-card:active {
+  transform: scale(0.98);
+}
 .job-card-top {
   display: flex;
-  gap: 16rpx;
+  gap: 20rpx;
 }
-
- .job-image {
+.job-image {
   width: 200rpx;
-  height: 150rpx;
-  border-radius: 12rpx;
+  height: 160rpx;
+  border-radius: 16rpx;
   background: #f5f5f5;
   flex-shrink: 0;
- }
-
- .job-image.placeholder {
+}
+.job-image.placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28rpx;
-  color: #999;
- }
-
+  font-size: 48rpx;
+  color: #07c160;
+  background: #ecfdf5;
+}
 .job-main {
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
-
 .job-card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 16rpx;
 }
-
 .job-title {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #333;
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #222;
   flex: 1;
+  line-height: 1.3;
 }
-
 .job-pay {
-  font-size: 28rpx;
+  font-size: 30rpx;
   color: #f60;
-  font-weight: 500;
+  font-weight: 700;
   white-space: nowrap;
   margin-left: 16rpx;
+  background: #fff7f0;
+  padding: 6rpx 18rpx;
+  border-radius: 12rpx;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
 }
-
 .job-tags {
   display: flex;
   gap: 12rpx;
-  margin-bottom: 16rpx;
+  margin-bottom: 14rpx;
 }
-
 .tag {
-  padding: 4rpx 16rpx;
-  border-radius: 8rpx;
-  background: #f5f5f5;
-  font-size: 22rpx;
-  color: #999;
+  padding: 6rpx 18rpx;
+  border-radius: 10rpx;
+  background: #f0f0f0;
+  font-size: 24rpx;
+  color: #666;
 }
-
 .job-card-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 6rpx;
 }
-
 .job-location {
-  font-size: 24rpx;
-  color: #999;
+  font-size: 26rpx;
+  color: #888;
 }
-
 .job-company {
-  font-size: 24rpx;
-  color: #999;
+  display: block;
+  font-size: 26rpx;
+  color: #aaa;
 }
-
 .job-distance {
-  font-size: 24rpx;
+  font-size: 26rpx;
   color: #07c160;
+  font-weight: 500;
 }
 </style>

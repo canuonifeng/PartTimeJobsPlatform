@@ -1,7 +1,10 @@
 <template>
   <view class="profile-page">
     <view class="profile-header">
-      <image class="avatar" :src="profile?.avatar || '/static/default-avatar.png'" mode="aspectFill" />
+      <view class="avatar-wrap">
+        <image class="avatar" :src="profile?.avatar || '/static/default-avatar.png'" mode="aspectFill" />
+        <view class="avatar-ring"></view>
+      </view>
       <text class="nickname">{{ profile?.name || '未设置' }}</text>
       <text class="phone" v-if="profile?.phone">{{ profile.phone }}</text>
     </view>
@@ -22,27 +25,45 @@
 
     <view class="menu-list">
       <view class="menu-item" @click="navTo('/pages/profile/edit')">
-        <text>编辑资料</text>
+        <view class="menu-left">
+          <text class="menu-icon">✏️</text>
+          <text class="menu-text">编辑资料</text>
+        </view>
         <text class="arrow">›</text>
       </view>
       <view class="menu-item" @click="navTo('/pages/auth/realName')">
-        <text>实名认证</text>
+        <view class="menu-left">
+          <text class="menu-icon">🪪</text>
+          <text class="menu-text">实名认证</text>
+        </view>
         <text class="arrow">›</text>
       </view>
       <view class="menu-item" @click="navTo('/pages/bank/bankCard')">
-        <text>银行卡</text>
+        <view class="menu-left">
+          <text class="menu-icon">💳</text>
+          <text class="menu-text">银行卡</text>
+        </view>
         <text class="arrow">›</text>
       </view>
       <view class="menu-item" @click="navTo('/pages/schedule/schedule')">
-        <text>我的排班</text>
+        <view class="menu-left">
+          <text class="menu-icon">📅</text>
+          <text class="menu-text">我的排班</text>
+        </view>
         <text class="arrow">›</text>
       </view>
       <view class="menu-item" @click="navTo('/pages/attendance/clockIn')">
-        <text>打卡记录</text>
+        <view class="menu-left">
+          <text class="menu-icon">📍</text>
+          <text class="menu-text">打卡记录</text>
+        </view>
         <text class="arrow">›</text>
       </view>
       <view class="menu-item" @click="navTo('/pages/earnings/earnings')">
-        <text>我的收入</text>
+        <view class="menu-left">
+          <text class="menu-icon">💰</text>
+          <text class="menu-text">我的收入</text>
+        </view>
         <text class="arrow">›</text>
       </view>
     </view>
@@ -75,9 +96,7 @@ function handleLogout() {
     title: '提示',
     content: '确定退出登录吗？',
     success: (res) => {
-      if (res.confirm) {
-        authStore.logout()
-      }
+      if (res.confirm) authStore.logout()
     }
   })
 }
@@ -87,129 +106,150 @@ onMounted(async () => {
     const res: any = await getProfile()
     profile.value = res
     authStore.setWorkerInfo(res)
-  } catch {
-    // ignore
-  }
+  } catch {}
 })
 </script>
 
 <style scoped>
 .profile-page {
+  min-height: 100vh;
+  background: #f5f5f5;
   padding: 30rpx;
+  padding-bottom: 40rpx;
 }
-
 .profile-header {
+  background: linear-gradient(135deg, #07c160, #059d50);
+  margin: -30rpx -30rpx 60rpx;
+  padding: 80rpx 30rpx 200rpx;
+  color: #fff;
+  border-bottom-left-radius: 30rpx;
+  border-bottom-right-radius: 30rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 60rpx 0;
-  background: #fff;
-  border-radius: 16rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
 }
-
+.avatar-wrap {
+  position: relative;
+  margin-bottom: 24rpx;
+}
 .avatar {
-  width: 140rpx;
-  height: 140rpx;
+  width: 160rpx;
+  height: 160rpx;
   border-radius: 50%;
-  margin-bottom: 20rpx;
+  position: relative;
+  z-index: 1;
 }
-
+.avatar-ring {
+  position: absolute;
+  top: -8rpx;
+  left: -8rpx;
+  width: 176rpx;
+  height: 176rpx;
+  border-radius: 50%;
+  border: 4rpx solid rgba(255,255,255,0.4);
+}
 .nickname {
-  font-size: 36rpx;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 8rpx;
+  font-size: 44rpx;
+  font-weight: 700;
+  margin-bottom: 10rpx;
 }
-
 .phone {
-  font-size: 26rpx;
-  color: #999;
+  font-size: 30rpx;
+  opacity: 0.9;
 }
-
 .info-card {
   background: #fff;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  border-radius: 24rpx;
+  margin: -120rpx 24rpx 24rpx;
+  padding: 32rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.06);
+  position: relative;
+  z-index: 1;
 }
-
 .info-row {
   display: flex;
   flex-direction: column;
   padding: 16rpx 0;
 }
-
-.info-label {
-  font-size: 26rpx;
-  color: #999;
-  margin-bottom: 12rpx;
+.info-row + .info-row {
+  border-top: 2rpx solid #f5f5f5;
+  margin-top: 8rpx;
+  padding-top: 24rpx;
 }
-
+.info-label {
+  font-size: 28rpx;
+  color: #999;
+  margin-bottom: 14rpx;
+}
 .skill-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 12rpx;
+  gap: 14rpx;
 }
-
 .skill-tag {
-  padding: 8rpx 20rpx;
-  background: #e8f8ee;
-  border-radius: 8rpx;
-  font-size: 24rpx;
+  padding: 10rpx 24rpx;
+  background: #ecfdf5;
+  border-radius: 12rpx;
+  font-size: 28rpx;
   color: #07c160;
+  font-weight: 500;
 }
-
 .empty-tip {
-  font-size: 24rpx;
+  font-size: 28rpx;
   color: #ccc;
 }
-
 .info-value {
-  font-size: 26rpx;
+  font-size: 30rpx;
   color: #333;
+  line-height: 1.5;
 }
-
 .menu-list {
   background: #fff;
-  border-radius: 16rpx;
-  margin-bottom: 40rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
+  border-radius: 24rpx;
+  margin: 0 24rpx 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.06);
+  overflow: hidden;
 }
-
 .menu-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 30rpx;
-  border-bottom: 1rpx solid #f5f5f5;
-  font-size: 28rpx;
-  color: #333;
+  padding: 32rpx;
+  border-bottom: 2rpx solid #f5f5f5;
 }
-
 .menu-item:last-child {
   border-bottom: none;
 }
-
+.menu-left {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+.menu-icon {
+  font-size: 36rpx;
+}
+.menu-text {
+  font-size: 34rpx;
+  color: #333;
+  font-weight: 500;
+}
 .arrow {
+  font-size: 44rpx;
   color: #ccc;
-  font-size: 28rpx;
+  font-weight: 300;
 }
-
 .logout-area {
-  padding: 20rpx 0;
+  padding: 0 24rpx;
 }
-
 .logout-btn {
   width: 100%;
-  height: 88rpx;
-  line-height: 88rpx;
+  height: 100rpx;
+  line-height: 100rpx;
   background: #fff;
-  border: 1rpx solid #e0e0e0;
-  border-radius: 44rpx;
-  font-size: 28rpx;
-  color: #f60;
+  color: #ff3b30;
+  border-radius: 50rpx;
+  font-size: 34rpx;
+  font-weight: 600;
+  border: 2rpx solid #ff3b30;
 }
 </style>

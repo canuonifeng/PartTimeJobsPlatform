@@ -59,11 +59,41 @@
         </if>
     </select>
 
+    <select id="findRecentByWorkerId" resultMap="ShiftResultMap">
+        SELECT ss.*, j.title AS job_title, j.location AS job_location
+        FROM schedule_shifts ss
+        LEFT JOIN jobs j ON ss.job_id = j.id
+        WHERE ss.worker_id = #{workerId}
+        ORDER BY ss.shift_date ASC, ss.start_time ASC
+        LIMIT 6
+    </select>
+
     <select id="findByJobId" resultMap="ShiftResultMap">
         SELECT ss.*, j.title AS job_title, j.location AS job_location
         FROM schedule_shifts ss
         LEFT JOIN jobs j ON ss.job_id = j.id
         WHERE ss.job_id = #{jobId}
+    </select>
+    <select id="findLtStartTimeByWorkerId" resultType="com.parttime.cservice.pojo.entity.ShiftEntity">
+        SELECT ss.*, j.title AS job_title, j.location AS job_location
+        FROM schedule_shifts ss
+        LEFT JOIN jobs j ON ss.job_id = j.id
+        WHERE ss.worker_id = #{workerId}
+          AND (ss.shift_date > CURDATE()
+            OR (ss.shift_date = CURDATE() AND ss.start_time > CURTIME()))
+          AND ss.status != 'CANCELLED'
+        ORDER BY ss.shift_date ASC, ss.start_time ASC
+        LIMIT #{size}
+    </select>
+    <select id="getGtEndTimeByWorkerId" resultType="com.parttime.cservice.pojo.entity.ShiftEntity">
+        SELECT ss.*, j.title AS job_title, j.location AS job_location
+        FROM schedule_shifts ss
+        LEFT JOIN jobs j ON ss.job_id = j.id
+        WHERE ss.worker_id = #{workerId}
+          AND ss.shift_date = CURDATE()
+          AND ss.status != 'CANCELLED'
+        ORDER BY ss.start_time ASC
+        LIMIT 1
     </select>
 
     <update id="updateStatus">
