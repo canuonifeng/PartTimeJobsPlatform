@@ -169,6 +169,10 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
         response.setWorkerName(workerSyncMapper.findWorkerNameById(app.getWorkerId()));
         response.setWorkerPhone(workerSyncMapper.findWorkerPhoneById(app.getWorkerId()));
+        java.time.LocalDate birthday = workerSyncMapper.findWorkerBirthdayById(app.getWorkerId());
+        if (birthday != null) {
+            response.setWorkerAge(java.time.LocalDate.now().getYear() - birthday.getYear());
+        }
 
         return response;
     }

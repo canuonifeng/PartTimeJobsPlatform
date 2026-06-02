@@ -80,6 +80,10 @@ public class CorrectionServiceImpl implements CorrectionService {
                 vo.setStartTime(shift.getStartTime());
                 vo.setEndTime(shift.getEndTime());
                 vo.setWorkerName(workerSyncMapper.findWorkerNameById(shift.getWorkerId()));
+                java.time.LocalDate birthday = workerSyncMapper.findWorkerBirthdayById(shift.getWorkerId());
+                if (birthday != null) {
+                    vo.setWorkerAge(java.time.LocalDate.now().getYear() - birthday.getYear());
+                }
                 vo.setJobTitle(jobMapper.findById(shift.getJobId()).map(Job::getTitle).orElse(null));
             }
             return vo;

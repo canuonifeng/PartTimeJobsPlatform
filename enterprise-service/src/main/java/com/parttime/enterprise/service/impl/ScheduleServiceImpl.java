@@ -156,6 +156,11 @@ public class ScheduleServiceImpl implements ScheduleService {
             report.setStartTime(shift.getStartTime());
             report.setEndTime(shift.getEndTime());
             report.setShiftStatus(shift.getStatus());
+            report.setWorkerName(workerSyncMapper.findWorkerNameById(shift.getWorkerId()));
+            java.time.LocalDate birthday = workerSyncMapper.findWorkerBirthdayById(shift.getWorkerId());
+            if (birthday != null) {
+                report.setWorkerAge(java.time.LocalDate.now().getYear() - birthday.getYear());
+            }
 
             AttendanceRecord record = recordMap.get(shift.getId());
             if (record != null) {
@@ -181,6 +186,10 @@ public class ScheduleServiceImpl implements ScheduleService {
         response.setJobId(shift.getJobId());
         response.setJobTitle(jobMapper.findById(shift.getJobId()).map(Job::getTitle).orElse(null));
         response.setWorkerName(workerSyncMapper.findWorkerNameById(shift.getWorkerId()));
+        java.time.LocalDate birthday = workerSyncMapper.findWorkerBirthdayById(shift.getWorkerId());
+        if (birthday != null) {
+            response.setWorkerAge(java.time.LocalDate.now().getYear() - birthday.getYear());
+        }
         response.setApplicationId(shift.getApplicationId());
         response.setSalaryType(shift.getSalaryType());
         response.setSalaryAmount(shift.getSalaryAmount());

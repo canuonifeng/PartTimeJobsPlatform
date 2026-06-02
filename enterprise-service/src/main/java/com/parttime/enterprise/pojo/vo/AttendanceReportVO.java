@@ -26,6 +26,8 @@ public class AttendanceReportVO {
     private String shiftStatus;
     @Schema(description = "工人姓名")
     private String workerName;
+    @Schema(description = "年龄")
+    private Integer workerAge;
     @Schema(description = "签到时间")
     private LocalDateTime checkInTime;
     @Schema(description = "签退时间")

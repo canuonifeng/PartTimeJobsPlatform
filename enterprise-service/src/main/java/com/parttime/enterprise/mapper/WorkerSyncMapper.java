@@ -11,4 +11,7 @@ public interface WorkerSyncMapper {
 
     @Select("SELECT phone FROM c_worker WHERE id = #{id}")
     String findWorkerPhoneById(Long id);
+
+    @Select("SELECT birthday FROM worker_profiles WHERE worker_id = #{id}")
+    java.time.LocalDate findWorkerBirthdayById(Long id);
 }

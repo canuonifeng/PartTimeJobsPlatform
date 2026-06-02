@@ -17,6 +17,8 @@ public class AttendanceHoursVO {
     private Long workerId;
     @Schema(description = "工人姓名")
     private String workerName;
+    @Schema(description = "年龄")
+    private Integer workerAge;
     @Schema(description = "岗位ID")
     private Long jobId;
     @Schema(description = "岗位名称")

@@ -14,6 +14,8 @@ public class WorkerListVO {
     private String name;
     @Schema(description = "电话")
     private String phone;
+    @Schema(description = "年龄")
+    private Integer workerAge;
     @Schema(description = "头像URL")
     private String avatarUrl;
     @Schema(description = "状态: ACTIVE/BLACKLISTED")

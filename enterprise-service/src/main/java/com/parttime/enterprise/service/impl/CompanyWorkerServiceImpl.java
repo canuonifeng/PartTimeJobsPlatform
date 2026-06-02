@@ -63,6 +63,10 @@ public class CompanyWorkerServiceImpl implements CompanyWorkerService {
         vo.setName(name);
         String phone = workerSyncMapper.findWorkerPhoneById(cw.getWorkerId());
         vo.setPhone(phone);
+        java.time.LocalDate birthday = workerSyncMapper.findWorkerBirthdayById(cw.getWorkerId());
+        if (birthday != null) {
+            vo.setWorkerAge(java.time.LocalDate.now().getYear() - birthday.getYear());
+        }
         return vo;
     }
 }
