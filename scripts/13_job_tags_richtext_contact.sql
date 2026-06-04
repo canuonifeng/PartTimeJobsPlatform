@@ -1,3 +1,5 @@
+SET NAMES utf8mb4;
+
 CREATE TABLE IF NOT EXISTS job_tag_groups (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(50) NOT NULL COMMENT '标签组名称',
@@ -100,3 +102,11 @@ SELECT g.id, '按时', 'hourly', 20, 'ACTIVE'
 FROM job_tag_groups g
 WHERE g.code = 'settlement_method'
   AND NOT EXISTS (SELECT 1 FROM job_tags t WHERE t.group_id = g.id AND t.code = 'hourly');
+
+UPDATE job_tag_groups SET name = '结算周期' WHERE code = 'settlement_cycle';
+UPDATE job_tag_groups SET name = '结算方式' WHERE code = 'settlement_method';
+UPDATE job_tags SET name = '日结' WHERE code = 'daily';
+UPDATE job_tags SET name = '周结' WHERE code = 'weekly';
+UPDATE job_tags SET name = '月结' WHERE code = 'monthly';
+UPDATE job_tags SET name = '计件' WHERE code = 'piecework';
+UPDATE job_tags SET name = '按时' WHERE code = 'hourly';

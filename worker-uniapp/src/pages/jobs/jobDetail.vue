@@ -27,8 +27,10 @@
         </view>
 
         <view class="card">
-          <view class="card-title"><text class="card-icon">💼</text><text>工作地点</text></view>
-          <view class="info-row"><view class="info-value-row" @click="handleOpenLocation"><text class="info-value">{{ locationText }}</text><text class="map-link">导航</text></view></view>
+          <view class="card-title"><text class="card-icon">💼</text><text>基本信息</text></view>
+          <view class="info-row"><text class="info-label">工作地点</text><view class="info-value-row" @click="handleOpenLocation"><text class="info-value">{{ locationText }}</text><text class="map-link">导航</text></view></view>
+          <view class="info-row"><text class="info-label">招聘人数</text><text class="info-value">{{ headcountText }}</text></view>
+          <view class="info-row"><text class="info-label">截止日期</text><text class="info-value">{{ deadlineText }}</text></view>
         </view>
 
         <view class="card">
@@ -109,6 +111,8 @@ const appliedScheduleIds = ref<number[]>([])
 const title = computed(() => job.value?.title || fallbackJob.title)
 const companyName = computed(() => job.value?.companyName || fallbackJob.companyName)
 const locationText = computed(() => job.value?.location || fallbackJob.location)
+const headcountText = computed(() => job.value?.headcount ? `${job.value.headcount}人` : '不限')
+const deadlineText = computed(() => formatDateText(job.value?.deadline) || '长期有效')
 const schedules = computed(() => Array.isArray(job.value?.schedules) ? job.value.schedules : [])
 const heroEmoji = computed(() => title.value.indexOf('外卖') >= 0 || title.value.indexOf('配送') >= 0 ? '🛵' : '💼')
 const companyAuthStatus = computed(() => normalizeCompanyAuthStatus(job.value))
@@ -181,6 +185,12 @@ function toggleSchedule(id: number | string) {
 function rateUnit(type: string) {
   const map: Record<string, string> = { HOURLY: '小时', DAILY: '日', PIECEWORK: '件', PIECE: '单', MONTHLY: '月' }
   return map[type] || '小时'
+}
+
+function formatDateText(value: any) {
+  if (!value) return ''
+  const date = String(value)
+  return date.length >= 10 ? date.slice(0, 10) : date
 }
 
 function scheduleDate(slot: any) {
@@ -305,11 +315,11 @@ onShareAppMessage(() => ({
 .nav-title { font-size: 34rpx; color: #111827; font-weight: 700; }
 .share-btn { width: 96rpx; height: 58rpx; line-height: 58rpx; padding: 0; margin: 0; border-radius: 29rpx; background: #ecfdf5; color: #0f9f5f; font-size: 26rpx; }
 .share-btn::after { border: none; }
-.banner-card { margin: 24rpx 24rpx 0; min-height: 300rpx; border-radius: 36rpx; background: linear-gradient(135deg, #16c784, #0ea66b); overflow: hidden; position: relative; box-shadow: 0 18rpx 40rpx rgba(14, 166, 107, 0.22); }
-.banner-image { width: 100%; height: 300rpx; }
-.banner-emoji { height: 210rpx; line-height: 210rpx; text-align: center; font-size: 118rpx; }
-.banner-info { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 34rpx; text-align: center; }
-.banner-title { display: block; color: #fff; font-size: 46rpx; font-weight: 800; text-align: center; }
+.banner-card { margin: 24rpx 24rpx 0; border-radius: 36rpx; background: linear-gradient(135deg, #16c784, #0ea66b); overflow: hidden; box-shadow: 0 18rpx 40rpx rgba(14, 166, 107, 0.22); }
+.banner-image { display: block; width: 100%; height: 300rpx; border-radius: 36rpx 36rpx 0 0; }
+.banner-emoji { height: 210rpx; line-height: 210rpx; text-align: center; font-size: 118rpx; border-radius: 36rpx 36rpx 0 0; }
+.banner-info { margin-top: 0; padding: 30rpx 34rpx 36rpx; border-radius: 0 0 36rpx 36rpx; text-align: left; }
+.banner-title { display: block; color: #fff; font-size: 46rpx; line-height: 58rpx; font-weight: 800; text-align: left; }
 .content { padding: 24rpx; }
 .salary-card, .card, .company-card { margin-bottom: 22rpx; padding: 30rpx; border-radius: 28rpx; background: #fff; box-shadow: 0 8rpx 30rpx rgba(31, 41, 55, 0.06); }
 .salary-card { background: #fff8ef; border: 2rpx solid #ffe4bd; }

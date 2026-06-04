@@ -177,6 +177,15 @@ public class JobServiceImpl implements JobService {
                     schedule.setSlotsAvailable(job.getHeadcount());
                     schedule.setStatus("ACTIVE");
                     jobScheduleMapper.insert(schedule);
+                } else {
+                    JobSchedule schedule = new JobSchedule();
+                    schedule.setId(scheduleReq.getId());
+                    schedule.setJobId(id);
+                    schedule.setScheduleDate(scheduleReq.getScheduleDate());
+                    schedule.setStartTime(scheduleReq.getStartTime());
+                    schedule.setEndTime(scheduleReq.getEndTime());
+                    schedule.setSlotsAvailable(job.getHeadcount());
+                    jobScheduleMapper.update(schedule);
                 }
             }
         }
@@ -202,7 +211,7 @@ public class JobServiceImpl implements JobService {
                 .orElseThrow(() -> new RuntimeException("Job not found: " + id));
         JobVO response = toResponse(job);
         response.setRates(toRateResponses(jobRateMapper.findByJobId(id)));
-        response.setSchedules(toScheduleResponses(jobScheduleMapper.findByJobId(id)));
+        response.setSchedules(toScheduleResponses(jobScheduleMapper.findActiveByJobId(id)));
         return response;
     }
 
@@ -217,7 +226,7 @@ public class JobServiceImpl implements JobService {
         return jobs.stream().map(job -> {
             JobVO response = toResponse(job);
             response.setRates(toRateResponses(jobRateMapper.findByJobId(job.getId())));
-            response.setSchedules(toScheduleResponses(jobScheduleMapper.findByJobId(job.getId())));
+            response.setSchedules(toScheduleResponses(jobScheduleMapper.findActiveByJobId(job.getId())));
             return response;
         }).collect(Collectors.toList());
     }
@@ -233,7 +242,7 @@ public class JobServiceImpl implements JobService {
         job.setStatus("PUBLISHED");
         JobVO response = toResponse(job);
         response.setRates(toRateResponses(jobRateMapper.findByJobId(id)));
-        response.setSchedules(toScheduleResponses(jobScheduleMapper.findByJobId(id)));
+        response.setSchedules(toScheduleResponses(jobScheduleMapper.findActiveByJobId(id)));
         return response;
     }
 
@@ -248,7 +257,7 @@ public class JobServiceImpl implements JobService {
         job.setStatus("CLOSED");
         JobVO response = toResponse(job);
         response.setRates(toRateResponses(jobRateMapper.findByJobId(id)));
-        response.setSchedules(toScheduleResponses(jobScheduleMapper.findByJobId(id)));
+        response.setSchedules(toScheduleResponses(jobScheduleMapper.findActiveByJobId(id)));
         return response;
     }
 
@@ -263,7 +272,7 @@ public class JobServiceImpl implements JobService {
         job.setStatus("PUBLISHED");
         JobVO response = toResponse(job);
         response.setRates(toRateResponses(jobRateMapper.findByJobId(id)));
-        response.setSchedules(toScheduleResponses(jobScheduleMapper.findByJobId(id)));
+        response.setSchedules(toScheduleResponses(jobScheduleMapper.findActiveByJobId(id)));
         return response;
     }
 
@@ -313,7 +322,7 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public List<JobScheduleVO> getJobSchedules(Long jobId) {
-        return toScheduleResponses(jobScheduleMapper.findByJobId(jobId));
+        return toScheduleResponses(jobScheduleMapper.findActiveByJobId(jobId));
     }
 
     @Override
@@ -418,6 +427,7 @@ public class JobServiceImpl implements JobService {
         response.setStartTime(schedule.getStartTime());
         response.setEndTime(schedule.getEndTime());
         response.setSlotsAvailable(schedule.getSlotsAvailable());
+        response.setStatus(schedule.getStatus());
         response.setCreatedAt(schedule.getCreatedAt());
         response.setUpdatedAt(schedule.getUpdatedAt());
         return response;

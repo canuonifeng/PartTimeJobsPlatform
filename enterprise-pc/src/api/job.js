@@ -8,6 +8,10 @@ export function getJob(id) {
   return request.get('/jobs', { params: { id } })
 }
 
+export function getJobTags() {
+  return request.get('/job-tags')
+}
+
 export function getJobShareLink(id) {
   return request.get('/jobs/share-link', { params: { id } })
 }

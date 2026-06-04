@@ -40,6 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -109,7 +110,7 @@ class JobServiceTest {
 
         when(jobMapper.findById(100L)).thenReturn(Optional.of(job));
         when(jobRateMapper.findByJobId(100L)).thenReturn(List.of(rate));
-        when(jobScheduleMapper.findByJobId(100L)).thenReturn(List.of(schedule));
+        when(jobScheduleMapper.findActiveByJobId(100L)).thenReturn(List.of(schedule));
         when(jobTagRelationMapper.findTagIdsByJobId(100L)).thenReturn(List.of());
         when(jobTagRelationMapper.findTagsByJobId(100L)).thenReturn(List.of());
 
@@ -145,8 +146,8 @@ class JobServiceTest {
         when(jobMapper.findByCompanyId(1L)).thenReturn(List.of(first, second));
         when(jobRateMapper.findByJobId(1L)).thenReturn(List.of());
         when(jobRateMapper.findByJobId(2L)).thenReturn(List.of());
-        when(jobScheduleMapper.findByJobId(1L)).thenReturn(List.of());
-        when(jobScheduleMapper.findByJobId(2L)).thenReturn(List.of());
+        when(jobScheduleMapper.findActiveByJobId(1L)).thenReturn(List.of());
+        when(jobScheduleMapper.findActiveByJobId(2L)).thenReturn(List.of());
         when(jobTagRelationMapper.findTagIdsByJobId(1L)).thenReturn(List.of());
         when(jobTagRelationMapper.findTagIdsByJobId(2L)).thenReturn(List.of());
         when(jobTagRelationMapper.findTagsByJobId(1L)).thenReturn(List.of());
@@ -364,10 +365,19 @@ class JobServiceTest {
         rateRequest.setAmount(new BigDecimal("300.00"));
         rateRequest.setCurrency("CNY");
 
+        JobSchedule existingSchedule = new JobSchedule();
+        existingSchedule.setId(10L);
+        existingSchedule.setJobId(1L);
+        existingSchedule.setScheduleDate(LocalDate.of(2026, 6, 1));
+        existingSchedule.setStartTime(LocalTime.of(9, 0));
+        existingSchedule.setEndTime(LocalTime.of(18, 0));
+        existingSchedule.setSlotsAvailable(8);
+
         JobScheduleCmd scheduleRequest = new JobScheduleCmd();
-        scheduleRequest.setScheduleDate(LocalDate.of(2026, 6, 1));
-        scheduleRequest.setStartTime(LocalTime.of(9, 0));
-        scheduleRequest.setEndTime(LocalTime.of(18, 0));
+        scheduleRequest.setId(10L);
+        scheduleRequest.setScheduleDate(LocalDate.of(2026, 6, 2));
+        scheduleRequest.setStartTime(LocalTime.of(10, 0));
+        scheduleRequest.setEndTime(LocalTime.of(19, 0));
         scheduleRequest.setSlotsAvailable(8);
 
         UpdateJobCmd request = new UpdateJobCmd();
@@ -381,6 +391,7 @@ class JobServiceTest {
         request.setSchedules(List.of(scheduleRequest));
 
         when(jobMapper.findById(1L)).thenReturn(Optional.of(existing));
+        when(jobScheduleMapper.findByJobId(1L)).thenReturn(List.of(existingSchedule));
 
         JobVO response = jobService.updateJob(1L, request);
 
@@ -389,9 +400,11 @@ class JobServiceTest {
         verify(jobRateMapper).deleteByJobId(1L);
         verify(jobRateMapper).insert(rateCaptor.capture());
         assertThat(rateCaptor.getValue().getType()).isEqualTo("DAILY");
-        verify(jobScheduleMapper).deleteByJobId(1L);
-        verify(jobScheduleMapper).insert(scheduleCaptor.capture());
-        assertThat(scheduleCaptor.getValue().getSlotsAvailable()).isEqualTo(8);
+        verify(jobScheduleMapper, never()).deleteByJobId(1L);
+        verify(jobScheduleMapper, never()).insert(any(JobSchedule.class));
+        verify(jobScheduleMapper).update(scheduleCaptor.capture());
+        assertThat(scheduleCaptor.getValue().getId()).isEqualTo(10L);
+        assertThat(scheduleCaptor.getValue().getScheduleDate()).isEqualTo(LocalDate.of(2026, 6, 2));
     }
 
     @Test

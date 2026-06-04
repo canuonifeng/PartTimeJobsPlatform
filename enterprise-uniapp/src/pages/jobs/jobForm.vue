@@ -12,6 +12,8 @@ const saving = ref(false)
 const categories = ref([])
 const tagGroups = ref([])
 const selectedTagIds = ref([])
+const tagLoading = ref(false)
+const tagLoadFailed = ref(false)
 const responsibilityEditorReady = ref(false)
 const requirementEditorReady = ref(false)
 
@@ -272,11 +274,17 @@ async function loadCategories() {
 }
 
 async function loadJobTags() {
+  tagLoading.value = true
+  tagLoadFailed.value = false
   try {
     const res = await getJobTags()
     tagGroups.value = normalizeTagGroups(res)
   } catch (e) {
+    tagGroups.value = []
+    tagLoadFailed.value = true
     console.error('Failed to load job tags', e)
+  } finally {
+    tagLoading.value = false
   }
 }
 
@@ -308,6 +316,7 @@ async function loadJobDetail() {
       const rateRes = await getRates(jobId.value)
       rates.value = Array.isArray(rateRes)
         ? rateRes.map(rate => ({
+            id: rate.id,
             type: rate.type || 'HOURLY',
             amount: rate.amount ?? '',
             currency: rate.currency || 'CNY'
@@ -318,6 +327,7 @@ async function loadJobDetail() {
       const schedRes = await getSchedules(jobId.value)
       schedules.value = Array.isArray(schedRes)
         ? schedRes.map(sched => ({
+            id: sched.id,
             date: sched.scheduleDate || sched.date || '',
             startTime: sched.startTime || '',
             endTime: sched.endTime || ''
@@ -349,6 +359,7 @@ function buildPayload() {
     rates: rates.value
       .filter(rate => rate.amount)
       .map(rate => ({
+        id: rate.id,
         type: rate.type,
         amount: Number(rate.amount),
         currency: rate.currency || 'CNY'
@@ -356,6 +367,7 @@ function buildPayload() {
     schedules: schedules.value
       .filter(sched => sched.date && sched.startTime && sched.endTime)
       .map(sched => ({
+        id: sched.id,
         scheduleDate: sched.date,
         startTime: sched.startTime,
         endTime: sched.endTime,
@@ -520,18 +532,23 @@ async function handleSave() {
           <input v-model="formData.contactPhone" class="input" type="number" placeholder="请输入联系电话" />
         </view>
 
-        <view v-if="tagGroups.length" class="form-item">
+        <view class="form-item">
           <text class="label">岗位标签</text>
-          <view v-for="group in tagGroups" :key="group.id" class="tag-group">
-            <text class="tag-group-title">{{ group.name }}</text>
-            <view class="tag-list">
-              <text
-                v-for="tag in getGroupTags(group)"
-                :key="tag.id"
-                class="tag-chip"
-                :class="{ active: isTagSelected(tag) }"
-                @click="toggleTag(tag)"
-              >{{ tag.name }}</text>
+          <view v-if="tagLoading" class="tag-hint">标签加载中...</view>
+          <view v-else-if="tagLoadFailed" class="tag-hint error" @click="loadJobTags">标签加载失败，点击重试</view>
+          <view v-else-if="!tagGroups.length" class="tag-hint">暂无可选标签</view>
+          <view v-else>
+            <view v-for="group in tagGroups" :key="group.id" class="tag-group">
+              <text class="tag-group-title">{{ group.name }}</text>
+              <view class="tag-list">
+                <view
+                  v-for="tag in getGroupTags(group)"
+                  :key="tag.id"
+                  class="tag-chip"
+                  :class="{ active: isTagSelected(tag) }"
+                  @click="toggleTag(tag)"
+                >{{ tag.name }}</view>
+              </view>
             </view>
           </view>
         </view>
@@ -749,6 +766,14 @@ async function handleSave() {
   padding: 16rpx 20rpx;
   font-size: 28rpx;
   box-sizing: border-box;
+}
+.tag-hint {
+  padding: 18rpx 0;
+  font-size: 24rpx;
+  color: #999;
+}
+.tag-hint.error {
+  color: #ff3b30;
 }
 .tag-group {
   margin-top: 16rpx;

@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Delete, SuccessFilled } from '@element-plus/icons-vue'
-import { getJob, createJob, updateJob } from '../../api/job'
+import { getJob, createJob, updateJob, getJobTags } from '../../api/job'
 import { listLocations } from '../../api/location'
 import { listTemplates } from '../../api/template'
 import regions from '../../assets/regions.json'
@@ -15,6 +15,9 @@ const isEdit = !!route.params.id
 const loading = ref(false)
 const locationDialogVisible = ref(false)
 const availableLocations = ref([])
+const tagGroups = ref([])
+const tagLoading = ref(false)
+const tagLoadFailed = ref(false)
 const formRef = ref(null)
 const uploadUrl = '/api/files/upload'
 
@@ -40,6 +43,9 @@ function beforeImageUpload(file) {
 const form = ref({
   title: '',
   description: '',
+  requirements: '',
+  contactPhone: '',
+  tagIds: [],
   location: '',
   category: '',
   headcount: 1,
@@ -70,6 +76,27 @@ const statusOptions = [
   { value: 'DRAFT', label: '草稿' },
   { value: 'PUBLISHED', label: '发布' }
 ]
+
+function getResponseList(res) {
+  if (Array.isArray(res)) return res
+  if (!res || typeof res !== 'object') return []
+  if (Array.isArray(res.data)) return res.data
+  if (Array.isArray(res.records)) return res.records
+  return []
+}
+
+function getGroupTags(group) {
+  return Array.isArray(group?.tags) ? group.tags : []
+}
+
+function normalizeTagId(id) {
+  const value = Number(id)
+  return Number.isFinite(value) ? value : null
+}
+
+function normalizeTagIds(ids) {
+  return [...new Set((Array.isArray(ids) ? ids : []).map(normalizeTagId).filter(id => id !== null))]
+}
 
 const showLocationPicker = ref(false)
 const templateDialogVisible = ref(false)
@@ -123,6 +150,22 @@ function removeScheduleSlot(index) {
   form.value.scheduleSlots.splice(index, 1)
 }
 
+async function loadJobTags() {
+  tagLoading.value = true
+  tagLoadFailed.value = false
+  try {
+    tagGroups.value = getResponseList(await getJobTags()).map(group => ({
+      ...group,
+      tags: getGroupTags(group)
+    }))
+  } catch {
+    tagGroups.value = []
+    tagLoadFailed.value = true
+  } finally {
+    tagLoading.value = false
+  }
+}
+
 async function fetchDetail() {
   if (!isEdit) return
   selectedTemplateName.value = ''
@@ -132,6 +175,9 @@ async function fetchDetail() {
     form.value = {
       title: res.title || '',
       description: res.description || '',
+      requirements: res.requirements || '',
+      contactPhone: res.contactPhone || '',
+      tagIds: normalizeTagIds(res.tagIds || (Array.isArray(res.tags) ? res.tags.map(tag => tag?.id ?? tag?.tagId) : [])),
       location: res.location || '',
       category: res.categoryId || '',
       headcount: res.headcount || 1,
@@ -143,8 +189,8 @@ async function fetchDetail() {
       latitude: res.latitude || null,
       longitude: res.longitude || null,
       imageUrl: res.imageUrl || '',
-      salaryRates: (res.rates || []).map((r) => ({ type: r.type || '', rate: r.amount || '' })),
-      scheduleSlots: (res.schedules || []).map((s) => ({ date: s.scheduleDate || '', startTime: s.startTime || '', endTime: s.endTime || '' })),
+      salaryRates: (res.rates || []).map((r) => ({ id: r.id, type: r.type || '', rate: r.amount || '' })),
+      scheduleSlots: (res.schedules || []).map((s) => ({ id: s.id, date: s.scheduleDate || '', startTime: s.startTime || '', endTime: s.endTime || '' })),
       status: res.status || 'DRAFT'
     }
   } finally {
@@ -156,6 +202,9 @@ function buildPayload() {
   return {
     title: form.value.title,
     description: form.value.description,
+    requirements: form.value.requirements,
+    contactPhone: form.value.contactPhone,
+    tagIds: normalizeTagIds(form.value.tagIds),
     location: form.value.location,
     province: form.value.province || null,
     city: form.value.city || null,
@@ -167,8 +216,8 @@ function buildPayload() {
     headcount: form.value.headcount,
     deadline: form.value.deadline ? `${form.value.deadline} 23:59:59` : null,
     imageUrl: form.value.imageUrl || null,
-    rates: form.value.salaryRates.filter((r) => r.type && r.rate).map((r) => ({ type: r.type, amount: Number(r.rate), currency: 'CNY' })),
-    schedules: form.value.scheduleSlots.filter((s) => s.date && s.startTime && s.endTime).map((s) => ({ scheduleDate: s.date, startTime: s.startTime, endTime: s.endTime, slotsAvailable: 1 }))
+    rates: form.value.salaryRates.filter((r) => r.type && r.rate).map((r) => ({ id: r.id, type: r.type, amount: Number(r.rate), currency: 'CNY' })),
+    schedules: form.value.scheduleSlots.filter((s) => s.date && s.startTime && s.endTime).map((s) => ({ id: s.id, scheduleDate: s.date, startTime: s.startTime, endTime: s.endTime, slotsAvailable: 1 }))
   }
 }
 
@@ -225,6 +274,9 @@ async function openTemplatePicker() {
 function selectTemplate(tpl) {
   form.value.title = tpl.title || ''
   form.value.description = tpl.description || ''
+  form.value.requirements = tpl.requirements || ''
+  form.value.contactPhone = tpl.contactPhone || ''
+  form.value.tagIds = normalizeTagIds(tpl.tagIds || (Array.isArray(tpl.tags) ? tpl.tags.map(tag => tag?.id ?? tag?.tagId) : []))
   form.value.category = tpl.categoryId || ''
   form.value.imageUrl = tpl.imageUrl || ''
   form.value.province = tpl.province || ''
@@ -238,7 +290,8 @@ function selectTemplate(tpl) {
   ElMessage.success(`已选择模版：${tpl.title}`)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await loadJobTags()
   fetchDetail()
 })
 </script>
@@ -265,8 +318,29 @@ onMounted(() => {
             <el-option v-for="opt in categoryOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
           </el-select>
         </el-form-item>
-        <el-form-item label="职位描述" prop="description">
-          <el-input v-model="form.description" type="textarea" :rows="4" />
+        <el-form-item label="岗位职责" prop="description">
+          <el-input v-model="form.description" type="textarea" :rows="5" placeholder="请输入HTML富文本岗位职责" />
+        </el-form-item>
+        <el-form-item label="任职要求" prop="requirements">
+          <el-input v-model="form.requirements" type="textarea" :rows="5" placeholder="请输入HTML富文本任职要求" />
+        </el-form-item>
+        <el-form-item label="联系方式" prop="contactPhone">
+          <el-input v-model="form.contactPhone" placeholder="请输入联系电话" style="width: 260px" />
+        </el-form-item>
+        <el-form-item label="岗位标签">
+          <div v-if="tagLoading" class="tag-hint">标签加载中...</div>
+          <div v-else-if="tagLoadFailed" class="tag-hint error" @click="loadJobTags">标签加载失败，点击重试</div>
+          <div v-else-if="!tagGroups.length" class="tag-hint">暂无可选标签</div>
+          <div v-else class="tag-groups">
+            <div v-for="group in tagGroups" :key="group.id" class="tag-group">
+              <div class="tag-group-title">{{ group.name }}</div>
+              <el-checkbox-group v-model="form.tagIds">
+                <el-checkbox-button v-for="tag in getGroupTags(group)" :key="tag.id" :label="tag.id">
+                  {{ tag.name }}
+                </el-checkbox-button>
+              </el-checkbox-group>
+            </div>
+          </div>
         </el-form-item>
         <el-form-item label="职位图片">
           <div style="display:flex;gap:12px;align-items:center">
@@ -383,7 +457,7 @@ onMounted(() => {
     <el-dialog v-model="templateDialogVisible" title="选择职位模版" width="600px">
       <el-table :data="availableTemplates" stripe @row-click="selectTemplate" highlight-current-row>
         <el-table-column prop="title" label="职位名称" width="150" />
-        <el-table-column prop="description" label="职位描述" min-width="250" show-overflow-tooltip />
+        <el-table-column prop="description" label="岗位职责" min-width="250" show-overflow-tooltip />
       </el-table>
       <template #footer>
         <el-button @click="templateDialogVisible = false">取消</el-button>
@@ -428,6 +502,25 @@ onMounted(() => {
 .coord-text {
   margin-left: 12px;
   color: #909399;
+  font-size: 13px;
+}
+.tag-hint {
+  color: #909399;
+  font-size: 13px;
+  cursor: default;
+}
+.tag-hint.error {
+  color: #f56c6c;
+  cursor: pointer;
+}
+.tag-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tag-group-title {
+  margin-bottom: 8px;
+  color: #606266;
   font-size: 13px;
 }
 </style>
