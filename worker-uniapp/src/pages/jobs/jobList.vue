@@ -252,7 +252,7 @@ onMounted(async () => {
 }
 .search-section {
   padding: 24rpx 28rpx 18rpx;
-  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%);
+  background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%);
 }
 .search-box {
   display: flex;
@@ -309,7 +309,7 @@ onMounted(async () => {
   width: 34rpx;
   height: 8rpx;
   border-radius: 8rpx;
-  background: #ff7a1a;
+  background: #07c160;
   transform: translateX(-50%);
   content: '';
 }
@@ -356,8 +356,8 @@ onMounted(async () => {
   justify-content: center;
   font-size: 42rpx;
   font-weight: 700;
-  color: #ff7a1a;
-  background: linear-gradient(135deg, #fff3e8 0%, #ffe1c2 100%);
+  color: #07c160;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
 }
 .job-content {
   flex: 1;
@@ -417,9 +417,9 @@ onMounted(async () => {
   margin-right: 12rpx;
   margin-bottom: 8rpx;
   border-radius: 8rpx;
-  background: #fff2e6;
+  background: #ecfdf5;
   font-size: 22rpx;
-  color: #f97316;
+  color: #07c160;
 }
 .job-company {
   display: block;
