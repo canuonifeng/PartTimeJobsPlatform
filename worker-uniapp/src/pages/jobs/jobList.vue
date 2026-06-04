@@ -1,12 +1,16 @@
 <template>
   <view class="job-list-page">
-    <view class="search-bar">
-      <uni-search-bar :radius="100" placeholder="搜索职位、公司" @confirm="onSearch" @clear="onSearch('')" v-model="keyword" />
+    <view class="search-section">
+      <view class="search-box">
+        <text class="search-icon">搜</text>
+        <input class="search-input" v-model="keyword" placeholder="搜索职位、公司" confirm-type="search" @confirm="onSearch" />
+        <text v-if="keyword" class="search-clear" @click="onSearch('')">×</text>
+      </view>
     </view>
 
-    <scroll-view class="category-scroll" scroll-x show-scrollbar="false">
-      <view class="category-chips">
-        <view v-for="cat in categories" :key="cat.id" class="chip" :class="{ active: categoryId === cat.id }" @click="onCategoryChange(cat.id)">
+    <scroll-view class="category-scroll" scroll-x :show-scrollbar="false">
+      <view class="category-tabs">
+        <view v-for="cat in categories" :key="cat.name" class="category-tab" :class="{ active: categoryId === cat.id }" @click="onCategoryChange(cat.id)">
           <text>{{ cat.name }}</text>
         </view>
       </view>
@@ -16,37 +20,36 @@
 
     <scroll-view class="job-scroll" scroll-y @scrolltolower="loadMore" :refresher-enabled="true" :refresher-triggered="refreshing" @refresherrefresh="onRefresh">
       <view class="job-list-inner">
-        <view v-if="jobList.length === 0 && !loading" class="empty-state">
-        <text class="empty-text">暂无职位信息</text>
-      </view>
-
-      <view v-for="job in jobList" :key="job.id" class="job-card" @click="goDetail(job.id)">
-        <view class="job-card-top">
-          <image v-if="job.imageUrl" class="job-image" :src="job.imageUrl" mode="aspectFill" />
-          <image v-else-if="job.companyLogo" class="job-image" :src="job.companyLogo" mode="aspectFill" />
-          <view v-else class="job-image placeholder">
-            <text>{{ (job.companyName || '?').slice(0, 1) }}</text>
+        <view v-for="job in jobList" :key="job.id" class="job-card" @click="goDetail(job.id)">
+          <view class="job-media">
+            <image v-if="job.imageUrl" class="job-image" :src="job.imageUrl" mode="aspectFill" />
+            <image v-else-if="job.companyLogo" class="job-image" :src="job.companyLogo" mode="aspectFill" />
+            <view v-else class="job-image placeholder">
+              <text>{{ job.iconText || (job.companyName || '?').slice(0, 1) }}</text>
+            </view>
           </view>
-          <view class="job-main">
+          <view class="job-content">
             <view class="job-card-header">
               <text class="job-title">{{ job.title }}</text>
               <text class="job-pay">{{ formatRates(job.rates, job.minRate, job.maxRate) }}</text>
             </view>
+            <view class="job-meta">
+              <text class="job-location">{{ job.location || '附近' }}</text>
+              <text v-if="job.distanceKm != null" class="job-distance">{{ job.distanceKm }}km</text>
+            </view>
             <view class="job-tags">
-              <text v-if="job.jobType" class="tag">{{ job.jobType }}</text>
-              <text v-if="job.experience" class="tag">{{ job.experience }}</text>
+              <text v-for="tag in getSettlementTags(job)" :key="tag" class="tag">{{ tag }}</text>
             </view>
-            <view class="job-card-footer">
-              <text class="job-location">{{ job.location }}</text>
-              <text class="job-distance">{{ job.distanceKm != null ? `${job.distanceKm}km` : '' }}</text>
-            </view>
-            <text class="job-company">{{ job.companyName }}</text>
+            <text class="job-company">{{ job.companyName || '优选企业' }}</text>
           </view>
         </view>
-      </view>
 
-      <uni-load-more v-if="hasMore" :status="loadingMore ? 'loading' : 'more'" />
-      <uni-load-more v-if="!hasMore && jobList.length > 0" status="noMore" />
+        <view v-if="jobList.length === 0 && !loading" class="empty-state">
+          <text class="empty-text">暂无职位信息</text>
+        </view>
+
+        <uni-load-more v-if="hasMore" :status="loadingMore ? 'loading' : 'more'" />
+        <uni-load-more v-if="!hasMore && jobList.length > 0" status="noMore" />
       </view>
     </scroll-view>
   </view>
@@ -56,9 +59,29 @@
 import { ref, onMounted } from 'vue'
 import { getJobs } from '@/api/jobs'
 
+type SearchEvent = { detail?: { value?: string }, value?: string }
+type JobRate = { amount: number | string, type: string }
+type JobItem = {
+  id: number
+  categoryId?: number
+  title: string
+  rates?: JobRate[]
+  minRate?: number
+  maxRate?: number
+  location?: string
+  distanceKm?: number
+  companyName?: string
+  imageUrl?: string
+  companyLogo?: string
+  iconText?: string
+  settlement?: string[]
+  jobType?: string
+  experience?: string
+}
+
 const keyword = ref('')
 const categoryId = ref<number | undefined>(undefined)
-const jobList = ref<any[]>([])
+const jobList = ref<JobItem[]>([])
 const page = ref(1)
 const pageSize = 10
 const hasMore = ref(true)
@@ -73,30 +96,64 @@ const categories = [
   { id: 2, name: '物流配送' },
   { id: 3, name: '家政保洁' },
   { id: 4, name: '活动促销' },
-  { id: 5, name: '教育培训' },
-  { id: 6, name: '美容美发' },
-  { id: 7, name: '其他' }
+  { id: 5, name: '仓库分拣' },
+  { id: 6, name: '零售导购' }
 ]
+
+const fallbackJobs = [
+  { id: -1, categoryId: 2, title: '外卖配送员', minRate: 220, maxRate: 320, location: '望京商圈', distanceKm: 1.2, companyName: '蜂鸟配送站', iconText: '配', settlement: ['日结', '周结'] },
+  { id: -2, categoryId: 5, title: '仓库分拣员', minRate: 180, maxRate: 260, location: '顺义物流园', distanceKm: 3.8, companyName: '京北仓储中心', iconText: '仓', settlement: ['日结'] },
+  { id: -3, categoryId: 3, title: '家庭保洁员', minRate: 45, maxRate: 65, location: '朝阳区', distanceKm: 2.4, companyName: '安心到家家政', iconText: '洁', settlement: ['日结'] },
+  { id: -4, categoryId: 3, title: '家电清洗师', minRate: 80, maxRate: 120, location: '海淀区', distanceKm: 4.1, companyName: '净享生活服务', iconText: '洗', settlement: ['周结'] },
+  { id: -5, categoryId: 1, title: '餐厅服务员', minRate: 22, maxRate: 28, location: '三里屯', distanceKm: 1.8, companyName: '悦味餐饮', iconText: '餐', settlement: ['日结'] },
+  { id: -6, categoryId: 4, title: '展会协助员', minRate: 180, maxRate: 240, location: '国展中心', distanceKm: 5.3, companyName: '星程会展', iconText: '展', settlement: ['日结'] },
+  { id: -7, categoryId: 6, title: '超市理货员', minRate: 24, maxRate: 30, location: '大悦城', distanceKm: 2.9, companyName: '惠民生活超市', iconText: '货', settlement: ['周结'] },
+  { id: -8, categoryId: 6, title: '促销导购员', minRate: 180, maxRate: 260, location: '合生汇', distanceKm: 3.2, companyName: '优选零售', iconText: '促', settlement: ['日结', '周结'] }
+]
+
+function getFallbackJobs() {
+  let list = fallbackJobs
+  if (categoryId.value !== undefined) {
+    list = list.filter(job => job.categoryId === categoryId.value)
+  }
+  if (keyword.value) {
+    list = list.filter(job => job.title.includes(keyword.value) || job.companyName.includes(keyword.value))
+  }
+  return list
+}
+
+function shouldShowFallback() {
+  return !keyword.value && categoryId.value === undefined
+}
+
+function applyJobs(list: JobItem[], append: boolean) {
+  const finalList = list.length > 0 ? list : (shouldShowFallback() ? getFallbackJobs() : [])
+  if (append) {
+    if (list.length > 0) jobList.value.push(...list)
+  } else {
+    jobList.value = finalList
+  }
+  hasMore.value = list.length >= pageSize
+}
 
 async function fetchJobs(p: number, append: boolean = false) {
   if (!append) loading.value = true
   else loadingMore.value = true
   try {
-    const res: any = await getJobs({
+    const res: { list?: JobItem[] } | JobItem[] | null | undefined = await getJobs({
       keyword: keyword.value || undefined,
       categoryId: categoryId.value,
+      page: p,
+      pageSize,
       latitude: currentLocation.value?.latitude,
       longitude: currentLocation.value?.longitude
     })
-    const list = Array.isArray(res) ? res : (res.list || [])
-    if (append) {
-      jobList.value.push(...list)
-    } else {
-      jobList.value = list
-    }
-    hasMore.value = list.length >= pageSize
+    const list = Array.isArray(res) ? res : (res?.list || [])
+    applyJobs(list, append)
   } catch {
-    uni.showToast({ title: '加载失败', icon: 'none' })
+    if (!append) jobList.value = getFallbackJobs()
+    hasMore.value = false
+    uni.showToast({ title: '加载失败，已展示推荐岗位', icon: 'none' })
   } finally {
     loading.value = false
     loadingMore.value = false
@@ -120,8 +177,13 @@ function loadCurrentLocation() {
   })
 }
 
-function onSearch(val?: string) {
-  if (val !== undefined) keyword.value = val
+function normalizeSearchValue(val?: string | SearchEvent): string {
+  if (typeof val === 'string') return val
+  return val?.detail?.value ?? val?.value ?? keyword.value
+}
+
+function onSearch(val?: string | SearchEvent) {
+  keyword.value = normalizeSearchValue(val)
   page.value = 1
   fetchJobs(1)
 }
@@ -145,17 +207,29 @@ function onRefresh() {
 }
 
 function goDetail(id: number) {
+  if (id < 0) {
+    uni.showToast({ title: '推荐岗位暂无详情', icon: 'none' })
+    return
+  }
   uni.navigateTo({ url: `/pages/jobs/jobDetail?id=${id}` })
 }
 
-function rateUnit(type) {
-  const map = { HOURLY: '小时', DAILY: '日', PIECEWORK: '件', PIECE: '单', MONTHLY: '月' }
+function getSettlementTags(job: JobItem): string[] {
+  if (Array.isArray(job.settlement) && job.settlement.length > 0) return job.settlement
+  const tags: string[] = []
+  if (job.jobType) tags.push(job.jobType)
+  if (job.experience) tags.push(job.experience)
+  return tags.length > 0 ? tags : ['日结']
+}
+
+function rateUnit(type: string): string {
+  const map: Record<string, string> = { HOURLY: '小时', DAILY: '日', PIECEWORK: '件', PIECE: '单', MONTHLY: '月' }
   return map[type] || '小时'
 }
 
-function formatRates(rates, fallbackMin, fallbackMax) {
+function formatRates(rates?: JobRate[], fallbackMin?: number, fallbackMax?: number): string {
   if (rates && rates.length > 0) {
-    return rates.map(r => `${r.amount}元/${rateUnit(r.type)}`).join(' + ')
+    return rates.map((r: JobRate) => `${r.amount}元/${rateUnit(r.type)}`).join(' + ')
   }
   if (fallbackMin && fallbackMax && fallbackMin !== fallbackMax) {
     return `${fallbackMin}-${fallbackMax}元/小时`
@@ -174,43 +248,77 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #f5f5f5;
+  background: #f6f7fb;
 }
-.search-bar {
-  padding: 20rpx 24rpx;
-  background: #fff;
-  border-bottom: 2rpx solid #f0f0f0;
+.search-section {
+  padding: 24rpx 28rpx 18rpx;
+  background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%);
+}
+.search-box {
+  display: flex;
+  align-items: center;
+  height: 76rpx;
+  padding: 0 24rpx;
+  border-radius: 38rpx;
+  background: #f3f4f6;
+}
+.search-icon {
+  width: 42rpx;
+  font-size: 24rpx;
+  color: #9ca3af;
+}
+.search-input {
+  flex: 1;
+  height: 76rpx;
+  font-size: 28rpx;
+  color: #222;
+}
+.search-clear {
+  width: 48rpx;
+  text-align: center;
+  font-size: 36rpx;
+  color: #9ca3af;
 }
 .category-scroll {
   white-space: nowrap;
-  padding: 20rpx 24rpx;
   background: #fff;
+  border-bottom: 2rpx solid #f1f2f4;
 }
-.category-chips {
+.category-tabs {
   display: inline-flex;
-  gap: 20rpx;
+  padding: 0 28rpx;
 }
-.chip {
+.category-tab {
   display: inline-flex;
-  padding: 16rpx 36rpx;
-  border-radius: 44rpx;
-  background: #f5f5f5;
-  font-size: 30rpx;
-  color: #666;
-  transition: all 0.2s;
+  position: relative;
+  align-items: center;
+  justify-content: center;
+  height: 86rpx;
+  margin-right: 42rpx;
+  font-size: 28rpx;
+  color: #6b7280;
 }
-.chip.active {
-  background: #07c160;
-  color: #fff;
-  font-weight: 600;
-  box-shadow: 0 4rpx 12rpx rgba(7, 193, 96, 0.35);
+.category-tab.active {
+  color: #111827;
+  font-weight: 700;
+}
+.category-tab.active::after {
+  position: absolute;
+  left: 50%;
+  bottom: 12rpx;
+  width: 34rpx;
+  height: 8rpx;
+  border-radius: 8rpx;
+  background: #ff7a1a;
+  transform: translateX(-50%);
+  content: '';
 }
 .job-scroll {
   flex: 1;
   padding: 0;
 }
 .job-list-inner {
-  padding: 24rpx;
+  padding: 24rpx 28rpx 32rpx;
 }
 .empty-state {
   display: flex;
@@ -222,97 +330,103 @@ onMounted(async () => {
   color: #999;
 }
 .job-card {
-  background: #fff;
+  display: flex;
+  padding: 24rpx;
+  margin-bottom: 22rpx;
   border-radius: 24rpx;
-  padding: 32rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
-  transition: all 0.2s;
+  background: #fff;
+  box-shadow: 0 10rpx 30rpx rgba(17, 24, 39, 0.06);
 }
 .job-card:active {
-  transform: scale(0.98);
+  transform: scale(0.99);
 }
-.job-card-top {
-  display: flex;
-  gap: 20rpx;
+.job-media {
+  flex-shrink: 0;
+  margin-right: 22rpx;
 }
 .job-image {
-  width: 200rpx;
-  height: 160rpx;
-  border-radius: 16rpx;
+  width: 132rpx;
+  height: 132rpx;
+  border-radius: 20rpx;
   background: #f5f5f5;
-  flex-shrink: 0;
 }
 .job-image.placeholder {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48rpx;
-  color: #07c160;
-  background: #ecfdf5;
+  font-size: 42rpx;
+  font-weight: 700;
+  color: #ff7a1a;
+  background: linear-gradient(135deg, #fff3e8 0%, #ffe1c2 100%);
 }
-.job-main {
+.job-content {
   flex: 1;
-  display: flex;
-  flex-direction: column;
+  min-width: 0;
 }
 .job-card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16rpx;
+  margin-bottom: 14rpx;
 }
 .job-title {
-  font-size: 34rpx;
-  font-weight: 700;
-  color: #222;
   flex: 1;
-  line-height: 1.3;
+  min-width: 0;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #111827;
+  line-height: 42rpx;
 }
 .job-pay {
-  font-size: 30rpx;
-  color: #f60;
-  font-weight: 700;
-  white-space: nowrap;
+  flex-shrink: 0;
+  max-width: 260rpx;
   margin-left: 16rpx;
-  background: #fff7f0;
-  padding: 6rpx 18rpx;
-  border-radius: 12rpx;
-  max-width: 40%;
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #ff6a00;
+  line-height: 40rpx;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex-shrink: 0;
+  white-space: nowrap;
+}
+.job-meta {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+.job-location {
+  max-width: 240rpx;
+  font-size: 25rpx;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.job-distance {
+  margin-left: 14rpx;
+  font-size: 25rpx;
+  color: #9ca3af;
 }
 .job-tags {
   display: flex;
-  gap: 12rpx;
-  margin-bottom: 14rpx;
+  flex-wrap: wrap;
+  margin-bottom: 16rpx;
 }
 .tag {
-  padding: 6rpx 18rpx;
-  border-radius: 10rpx;
-  background: #f0f0f0;
-  font-size: 24rpx;
-  color: #666;
-}
-.job-card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6rpx;
-}
-.job-location {
-  font-size: 26rpx;
-  color: #888;
+  padding: 6rpx 14rpx;
+  margin-right: 12rpx;
+  margin-bottom: 8rpx;
+  border-radius: 8rpx;
+  background: #fff2e6;
+  font-size: 22rpx;
+  color: #f97316;
 }
 .job-company {
   display: block;
-  font-size: 26rpx;
-  color: #aaa;
-}
-.job-distance {
-  font-size: 26rpx;
-  color: #07c160;
-  font-weight: 500;
+  font-size: 25rpx;
+  color: #9ca3af;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

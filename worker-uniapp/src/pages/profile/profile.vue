@@ -1,68 +1,53 @@
 <template>
   <view class="profile-page">
     <view class="profile-header">
-      <view class="avatar-wrap">
+      <view class="profile-top">
         <image class="avatar" :src="profile?.avatar || '/static/default-avatar.png'" mode="aspectFill" />
-        <view class="avatar-ring"></view>
-      </view>
-      <text class="nickname">{{ profile?.name || '未设置' }}</text>
-      <text class="phone" v-if="profile?.phone">{{ profile.phone }}</text>
-    </view>
-
-    <view class="info-card">
-      <view class="info-row">
-        <text class="info-label">技能标签</text>
-        <view class="skill-tags">
-          <text v-for="(skill, i) in profile?.skills" :key="i" class="skill-tag">{{ skill }}</text>
-          <text v-if="!profile?.skills?.length" class="empty-tip">暂无</text>
+        <view class="user-info">
+          <view class="name-row">
+            <text class="nickname">{{ displayName }}</text>
+            <text class="auth-badge" @click="navTo('/pages/auth/realName')">{{ realNameStatus }}</text>
+          </view>
+          <text class="phone">{{ displayPhone }}</text>
         </view>
       </view>
-      <view class="info-row">
-        <text class="info-label">可工作日期</text>
-        <text class="info-value">{{ profile?.availableDays?.map((d: string) => dayLabelMap[d] || d).join('、') || '暂无' }}</text>
+      <view class="stats-panel">
+        <view v-for="item in stats" :key="item.label" class="stat-item">
+          <text class="stat-value">{{ item.value }}</text>
+          <text class="stat-label">{{ item.label }}</text>
+        </view>
       </view>
     </view>
 
-    <view class="menu-list">
-      <view class="menu-item" @click="navTo('/pages/profile/edit')">
-        <view class="menu-left">
-          <text class="menu-icon">✏️</text>
-          <text class="menu-text">编辑资料</text>
-        </view>
-        <text class="arrow">›</text>
+    <view class="income-card">
+      <view class="card-title-row">
+        <text class="card-title">本月收入</text>
+        <text class="card-link" @click="navTo('/pages/earnings/earnings')">查看明细</text>
       </view>
-      <view class="menu-item" @click="navTo('/pages/auth/realName')">
-        <view class="menu-left">
-          <text class="menu-icon">🪪</text>
-          <text class="menu-text">实名认证</text>
-        </view>
-        <text class="arrow">›</text>
+      <view class="income-main">
+        <text class="income-symbol">¥</text>
+        <text class="income-amount">4,680.00</text>
       </view>
-      <view class="menu-item" @click="navTo('/pages/bank/bankCard')">
-        <view class="menu-left">
-          <text class="menu-icon">💳</text>
-          <text class="menu-text">银行卡</text>
+      <view class="income-sub-row">
+        <view class="income-sub-item">
+          <text class="income-sub-value">¥680.00</text>
+          <text class="income-sub-label">待结算</text>
         </view>
-        <text class="arrow">›</text>
-      </view>
-      <view class="menu-item" @click="navTo('/pages/schedule/schedule')">
-        <view class="menu-left">
-          <text class="menu-icon">📅</text>
-          <text class="menu-text">我的排班</text>
+        <view class="income-divider"></view>
+        <view class="income-sub-item">
+          <text class="income-sub-value">¥4,000.00</text>
+          <text class="income-sub-label">已结算</text>
         </view>
-        <text class="arrow">›</text>
       </view>
-      <view class="menu-item" @click="navTo('/pages/attendance/clockIn')">
+    </view>
+
+    <view v-for="(group, groupIndex) in menuGroups" :key="groupIndex" class="menu-group">
+      <view v-for="item in group" :key="item.title" class="menu-item" @click="navTo(item.url)">
         <view class="menu-left">
-          <text class="menu-icon">📍</text>
-          <text class="menu-text">打卡记录</text>
-        </view>
-        <text class="arrow">›</text>
-      </view>
-      <view class="menu-item" @click="navTo('/pages/earnings/earnings')">
-        <view class="menu-left">
-          <text class="menu-icon">💰</text>
-          <text class="menu-text">我的收入</text>
+          <view class="menu-icon" :class="item.iconClass">
+            <text>{{ item.icon }}</text>
+          </view>
+          <text class="menu-text">{{ item.title }}</text>
         </view>
         <text class="arrow">›</text>
       </view>
@@ -75,19 +60,76 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useAuthStore } from '@/store'
 import { getProfile } from '@/api/profile'
-
-const dayLabelMap: Record<string, string> = {
-  Monday: '周一', Tuesday: '周二', Wednesday: '周三', Thursday: '周四',
-  Friday: '周五', Saturday: '周六', Sunday: '周日'
-}
 
 const authStore = useAuthStore()
 const profile = ref<any>(null)
 
+const tabBarPageUrls = [
+  '/pages/index/index',
+  '/pages/jobs/jobList',
+  '/pages/message/message',
+  '/pages/profile/profile'
+]
+
+const existingPageUrls = [
+  ...tabBarPageUrls,
+  '/pages/schedule/schedule',
+  '/pages/attendance/clockIn',
+  '/pages/earnings/earnings',
+  '/pages/auth/realName'
+]
+
+const stats = [
+  { value: '4,680', label: '累计收入' },
+  { value: '156', label: '累计工时' },
+  { value: '28', label: '出勤天数' }
+]
+
+const menuGroups = [
+  [
+    { title: '我的排班', url: '/pages/schedule/schedule', icon: '排', iconClass: 'icon-green' },
+    { title: '我的报名', url: '/pages/signup/signup', icon: '报', iconClass: 'icon-blue' },
+    { title: '打卡记录', url: '/pages/attendance/clockIn', icon: '卡', iconClass: 'icon-orange' },
+    { title: '收入明细', url: '/pages/earnings/earnings', icon: '收', iconClass: 'icon-gold' }
+  ],
+  [
+    { title: '电子合同', url: '/pages/contract/contract', icon: '合', iconClass: 'icon-purple' },
+    { title: '技能认证', url: '/pages/certification/skills', icon: '技', iconClass: 'icon-cyan' },
+    { title: '意外保障', url: '/pages/insurance/insurance', icon: '保', iconClass: 'icon-red' }
+  ],
+  [
+    { title: '邀请好友', url: '/pages/invite/invite', icon: '邀', iconClass: 'icon-green' },
+    { title: '帮助中心', url: '/pages/help/help', icon: '助', iconClass: 'icon-blue' },
+    { title: '设置', url: '/pages/settings/settings', icon: '设', iconClass: 'icon-gray' }
+  ]
+]
+
+const displayName = computed(() => {
+  return profile.value?.name || profile.value?.realName || profile.value?.nickname || '未设置姓名'
+})
+
+const displayPhone = computed(() => {
+  return profile.value?.phone || profile.value?.mobile || '未绑定手机号'
+})
+
+const realNameStatus = computed(() => {
+  const status = profile.value?.realNameStatus || profile.value?.authStatus
+  if (profile.value?.isRealName || status === 'verified' || status === 'approved') return '已实名'
+  return '未实名'
+})
+
 function navTo(url: string) {
+  if (!existingPageUrls.includes(url)) {
+    uni.showToast({ title: '功能建设中', icon: 'none' })
+    return
+  }
+  if (tabBarPageUrls.includes(url)) {
+    uni.switchTab({ url })
+    return
+  }
   uni.navigateTo({ url })
 }
 
@@ -106,116 +148,178 @@ onMounted(async () => {
     const res: any = await getProfile()
     profile.value = res
     authStore.setWorkerInfo(res)
-  } catch {}
+  } catch {
+    uni.showToast({ title: '个人资料加载失败，已展示默认信息', icon: 'none' })
+  }
 })
 </script>
 
 <style scoped>
 .profile-page {
   min-height: 100vh;
-  background: #f5f5f5;
-  padding: 30rpx;
-  padding-bottom: 40rpx;
+  background: #f6f7f8;
+  padding: 24rpx 24rpx 40rpx;
+  box-sizing: border-box;
 }
 .profile-header {
-  background: linear-gradient(135deg, #07c160, #059d50);
-  margin: -30rpx -30rpx 60rpx;
-  padding: 80rpx 30rpx 200rpx;
+  background: linear-gradient(135deg, #19c876 0%, #08a657 100%);
+  border-radius: 0 0 36rpx 36rpx;
+  margin: -24rpx -24rpx 24rpx;
+  padding: 88rpx 48rpx 36rpx;
   color: #fff;
-  border-bottom-left-radius: 30rpx;
-  border-bottom-right-radius: 30rpx;
+  box-shadow: 0 12rpx 32rpx rgba(7, 193, 96, 0.24);
+}
+.profile-top {
+  display: flex;
+  align-items: center;
+}
+.avatar {
+  width: 132rpx;
+  height: 132rpx;
+  border-radius: 66rpx;
+  border: 6rpx solid rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+.user-info {
+  flex: 1;
+  min-width: 0;
+  margin-left: 26rpx;
+}
+.name-row {
+  display: flex;
+  align-items: center;
+}
+.nickname {
+  max-width: 300rpx;
+  font-size: 42rpx;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.auth-badge {
+  margin-left: 16rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.22);
+  border: 2rpx solid rgba(255, 255, 255, 0.46);
+  font-size: 24rpx;
+  line-height: 1.3;
+}
+.phone {
+  display: block;
+  margin-top: 14rpx;
+  font-size: 28rpx;
+  opacity: 0.86;
+}
+.stats-panel {
+  display: flex;
+  margin-top: 42rpx;
+  padding: 26rpx 0;
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.16);
+}
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-right: 2rpx solid rgba(255, 255, 255, 0.22);
+}
+.stat-item:last-child {
+  border-right: none;
+}
+.stat-value {
+  font-size: 38rpx;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.stat-label {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  opacity: 0.82;
+}
+.income-card,
+.menu-group {
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 28rpx rgba(26, 35, 48, 0.06);
+  overflow: hidden;
+}
+.income-card {
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+}
+.card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-title {
+  font-size: 32rpx;
+  color: #1f2933;
+  font-weight: 700;
+}
+.card-link {
+  font-size: 26rpx;
+  color: #07c160;
+}
+.income-main {
+  display: flex;
+  align-items: baseline;
+  margin-top: 30rpx;
+}
+.income-symbol {
+  font-size: 32rpx;
+  color: #ff8a00;
+  font-weight: 700;
+}
+.income-amount {
+  margin-left: 8rpx;
+  font-size: 58rpx;
+  color: #ff8a00;
+  font-weight: 800;
+  line-height: 1;
+}
+.income-sub-row {
+  display: flex;
+  align-items: center;
+  margin-top: 34rpx;
+  padding-top: 28rpx;
+  border-top: 2rpx solid #f2f4f6;
+}
+.income-sub-item {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-.avatar-wrap {
-  position: relative;
-  margin-bottom: 24rpx;
-}
-.avatar {
-  width: 160rpx;
-  height: 160rpx;
-  border-radius: 50%;
-  position: relative;
-  z-index: 1;
-}
-.avatar-ring {
-  position: absolute;
-  top: -8rpx;
-  left: -8rpx;
-  width: 176rpx;
-  height: 176rpx;
-  border-radius: 50%;
-  border: 4rpx solid rgba(255,255,255,0.4);
-}
-.nickname {
-  font-size: 44rpx;
+.income-sub-value {
+  font-size: 30rpx;
+  color: #1f2933;
   font-weight: 700;
-  margin-bottom: 10rpx;
 }
-.phone {
-  font-size: 30rpx;
-  opacity: 0.9;
+.income-sub-label {
+  margin-top: 10rpx;
+  font-size: 24rpx;
+  color: #8792a2;
 }
-.info-card {
-  background: #fff;
-  border-radius: 24rpx;
-  margin: -120rpx 24rpx 24rpx;
-  padding: 32rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.06);
-  position: relative;
-  z-index: 1;
+.income-divider {
+  width: 2rpx;
+  height: 48rpx;
+  background: #eef1f4;
 }
-.info-row {
-  display: flex;
-  flex-direction: column;
-  padding: 16rpx 0;
-}
-.info-row + .info-row {
-  border-top: 2rpx solid #f5f5f5;
-  margin-top: 8rpx;
-  padding-top: 24rpx;
-}
-.info-label {
-  font-size: 28rpx;
-  color: #999;
-  margin-bottom: 14rpx;
-}
-.skill-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14rpx;
-}
-.skill-tag {
-  padding: 10rpx 24rpx;
-  background: #ecfdf5;
-  border-radius: 12rpx;
-  font-size: 28rpx;
-  color: #07c160;
-  font-weight: 500;
-}
-.empty-tip {
-  font-size: 28rpx;
-  color: #ccc;
-}
-.info-value {
-  font-size: 30rpx;
-  color: #333;
-  line-height: 1.5;
-}
-.menu-list {
-  background: #fff;
-  border-radius: 24rpx;
-  margin: 0 24rpx 24rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.06);
-  overflow: hidden;
+.menu-group {
+  margin-bottom: 24rpx;
 }
 .menu-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 32rpx;
-  border-bottom: 2rpx solid #f5f5f5;
+  padding: 30rpx 32rpx;
+  border-bottom: 2rpx solid #f2f4f6;
 }
 .menu-item:last-child {
   border-bottom: none;
@@ -223,33 +327,68 @@ onMounted(async () => {
 .menu-left {
   display: flex;
   align-items: center;
-  gap: 16rpx;
 }
 .menu-icon {
-  font-size: 36rpx;
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 22rpx;
+  font-size: 24rpx;
+  color: #fff;
+  font-weight: 700;
+}
+.icon-green {
+  background: #19c876;
+}
+.icon-blue {
+  background: #3b82f6;
+}
+.icon-orange {
+  background: #ff8a00;
+}
+.icon-gold {
+  background: #f5b400;
+}
+.icon-purple {
+  background: #8b5cf6;
+}
+.icon-cyan {
+  background: #06b6d4;
+}
+.icon-red {
+  background: #f05252;
+}
+.icon-gray {
+  background: #94a3b8;
 }
 .menu-text {
-  font-size: 34rpx;
-  color: #333;
+  font-size: 30rpx;
+  color: #1f2933;
   font-weight: 500;
 }
 .arrow {
   font-size: 44rpx;
-  color: #ccc;
-  font-weight: 300;
+  color: #c6ccd4;
+  line-height: 1;
 }
 .logout-area {
-  padding: 0 24rpx;
+  padding: 8rpx 0 0;
 }
 .logout-btn {
   width: 100%;
-  height: 100rpx;
-  line-height: 100rpx;
+  height: 96rpx;
+  line-height: 96rpx;
   background: #fff;
-  color: #ff3b30;
-  border-radius: 50rpx;
-  font-size: 34rpx;
+  color: #ef4444;
+  border-radius: 24rpx;
+  font-size: 32rpx;
   font-weight: 600;
-  border: 2rpx solid #ff3b30;
+  box-shadow: 0 8rpx 28rpx rgba(26, 35, 48, 0.06);
+}
+.logout-btn::after {
+  border: none;
 }
 </style>

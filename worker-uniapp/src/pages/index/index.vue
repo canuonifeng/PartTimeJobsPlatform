@@ -1,96 +1,89 @@
 <template>
-  <view class="home-page">
+  <scroll-view scroll-y class="home-page">
     <view class="header">
       <view class="greeting-row">
-        <text class="greeting">{{ greeting }}，{{ authStore.workerInfo?.name || '工人' }}</text>
-      </view>
-      <view class="date-row">
-        <text class="date">{{ todayDate }}</text>
-        <text class="weekday">{{ todayWeekday }}</text>
-        <text class="shift-count">{{ todayShifts.length === 0 ? '今日无班次' : '今日 ' + todayShifts.length + ' 个班次' }}</text>
+        <view>
+          <text class="greeting">{{ greeting }}，{{ authStore.workerInfo?.name || '工人' }}</text>
+          <text class="date-line">{{ todayDate }} {{ todayWeekday }}</text>
+        </view>
+        <view class="shift-count">
+          <text class="shift-count-num">{{ todayShifts.length }}</text>
+          <text class="shift-count-text">今日班次</text>
+        </view>
       </view>
     </view>
 
-    <view v-if="!authStore.token" class="card">
-      <text class="empty-title">请先登录</text>
-      <text class="empty-desc">登录后可以看到今日排班和签到状态</text>
-      <button class="btn-primary" @click="navTo('/pages/login/login')">去登录</button>
+    <view class="content">
+      <view class="stats-card">
+        <view class="stat-item"><text class="stat-value">156</text><text class="stat-label">本月工时</text></view>
+        <view class="stat-line"></view>
+        <view class="stat-item"><text class="stat-value">4,680</text><text class="stat-label">本月收入</text></view>
+        <view class="stat-line"></view>
+        <view class="stat-item"><text class="stat-value">28</text><text class="stat-label">出勤天数</text></view>
+      </view>
+
+      <view v-if="!authStore.token" class="card login-card">
+        <text class="empty-title">请先登录</text>
+        <text class="empty-desc">登录后可以看到今日排班和签到状态</text>
+        <view class="btn-primary" @click="navTo('/pages/login/login')">去登录</view>
+      </view>
+
+      <template v-else>
+        <view class="section-title-row">
+          <text class="section-title">今日排班</text>
+          <text class="section-subtitle">{{ todayShifts.length }} 个班次待处理</text>
+        </view>
+
+        <view v-for="shift in todayShifts" :key="shift.id" class="card shift-card">
+          <view class="job-row">
+            <view class="job-left">
+              <view class="job-icon"><text>岗</text></view>
+              <view class="job-info"><text class="job-title">{{ shift.jobTitle }}</text><text class="job-desc">{{ isFallbackShift(shift) ? '兜底排班' : '接口排班' }}</text></view>
+            </view>
+            <view class="status-tag" :class="statusClass(shift.status)"><text>{{ statusLabel(shift.status) }}</text></view>
+          </view>
+          <view class="shift-meta">
+            <view class="meta-item"><text class="meta-icon">时</text><text class="meta-text">{{ shift.date }} {{ shift.startTime }} - {{ shift.endTime }}</text></view>
+            <view class="meta-item" @click="openMap(shift)"><text class="meta-icon">地</text><text class="meta-text">{{ formatAddress(shift.location) }}</text></view>
+            <view class="meta-item"><text class="meta-icon">距</text><text class="meta-text">{{ distanceLabel(shift) }}</text></view>
+          </view>
+          <view class="tip" :class="tipClass(shift)"><text>{{ tipText(shift) }}</text></view>
+          <view v-if="canCheckIn(shift)" class="btn-primary" @click="handleCheckIn(shift)">签到</view>
+          <view v-else-if="canCheckOut(shift)" class="btn-primary" @click="handleCheckOut(shift)">签退</view>
+          <view v-else class="btn-disabled">{{ isFallbackShift(shift) ? '示例不可操作' : statusLabel(shift.status) }}</view>
+        </view>
+
+        <view class="card future-card">
+          <view class="card-header">
+            <text class="section-title">未来排班</text>
+            <text class="more" @click="navTo('/pages/schedule/schedule')">全部</text>
+          </view>
+          <view class="future-list">
+            <view v-for="shift in futureShifts.slice(0, 5)" :key="shift.id" class="future-item">
+              <view class="future-date-box"><text class="future-day">{{ shift.date?.slice(8) }}</text><text class="future-month">{{ shift.date?.slice(5, 7) }}月</text></view>
+              <view class="future-left"><text class="future-job">{{ shift.jobTitle }}</text><text class="future-location">{{ formatAddress(shift.location) }}</text></view>
+              <view class="future-right"><text class="future-time">{{ shift.startTime }}</text><text class="future-time">{{ shift.endTime }}</text></view>
+            </view>
+          </view>
+        </view>
+      </template>
     </view>
-
-    <template v-else>
-      <view v-if="currentShift" class="card current-shift-card">
-        <view class="job-row">
-          <text class="job-title">{{ currentShift.jobTitle }}</text>
-          <view class="status-tag" :class="statusClass(currentShift.status)">
-            {{ statusLabel(currentShift.status) }}
-          </view>
-        </view>
-        <view class="shift-meta">
-          <view class="meta-item">
-            <uni-icons type="calendar" size="18" color="#07c160"></uni-icons>
-            <text class="meta-text">{{ currentShift.date }} {{ currentShift.startTime }} - {{ currentShift.endTime }}</text>
-          </view>
-          <view class="meta-item location-item" @click="openMap(currentShift.location)">
-            <uni-icons type="location" size="18" color="#07c160"></uni-icons>
-            <text class="meta-text">{{ formatAddress(currentShift.location) }}</text>
-            <text class="location-arrow">›</text>
-          </view>
-        </view>
-
-        <view v-if="checkTip" class="tip" :class="checkTip.type === 'warn' ? 'tip-warn' : checkTip.type === 'late' ? 'tip-late' : checkTip.type === 'countdown' ? 'tip-countdown' : 'tip-info'">
-            {{ checkTip.text }}
-        </view>
-
-        <view v-if="canCheckIn" class="btn-primary" @click="handleCheckIn">签到</view>
-        <view v-else-if="canCheckOut" class="btn-primary" @click="handleCheckOut">签退</view>
-        <view v-else-if="!checkTip" class="btn-disabled">
-          {{ statusLabel(currentShift.status) }}
-        </view>
-      </view>
-
-      <view v-else class="card empty-shift-card">
-        <text class="empty-icon">📅</text>
-        <text class="empty-text">今日暂无排班</text>
-        <button class="btn-secondary" @click="navTo('/pages/schedule/schedule')">查看排班</button>
-      </view>
-
-      <view class="card future-card">
-        <view class="card-header">
-          <text class="card-title">我的未来排班</text>
-          <text class="more" @click="navTo('/pages/schedule/schedule')">全部 ›</text>
-        </view>
-
-        <view v-if="futureShifts.length" class="future-list">
-          <view v-for="shift in futureShifts.slice(todayShifts.length > 0 ? 1 : 0, todayShifts.length > 0 ? 6 : 5)" :key="shift.id" class="future-item">
-            <view class="future-left">
-              <text class="future-job">{{ shift.jobTitle }}</text>
-              <text class="future-location">{{ shift.location || '暂无地点' }}</text>
-            </view>
-            <view class="future-right">
-              <text class="future-date">{{ shift.date?.slice(5) }}</text>
-              <text class="future-time">{{ shift.startTime }}-{{ shift.endTime }}</text>
-            </view>
-          </view>
-        </view>
-
-        <view v-else class="empty-future">
-          <text class="empty-text">暂无未来排班</text>
-        </view>
-      </view>
-    </template>
-  </view>
+  </scroll-view>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
+import { ref, computed } from 'vue'
+import { onShow, onHide, onUnload } from '@dcloudio/uni-app'
 import { useAuthStore } from '@/store'
 import { getMyTopShifts } from '@/api/schedule'
 import { checkIn, checkOut } from '@/api/attendance'
 
 const authStore = useAuthStore()
-const shifts = ref<any[]>([])
+const shifts = ref<Shift[]>([])
 const checking = ref(false)
+const countdown = ref('')
+let countdownTimer: any = null
+let currentLocation: { lat: number; lng: number } | null = null
 
 type Shift = {
   id: number
@@ -100,6 +93,9 @@ type Shift = {
   endTime: string
   date: string
   status: string
+  lat?: number
+  lng?: number
+  distance?: string
 }
 
 const greeting = computed(() => {
@@ -130,21 +126,53 @@ function formatDateKey(date: Date) {
   return `${y}-${m}-${d}`
 }
 
+function addDays(days: number) {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  return formatDateKey(d)
+}
+
 function normalizeShift(shift: any): Shift {
   return {
-    id: shift.id ?? shift.shiftId,
-    jobTitle: shift.jobTitle || shift.title || '排班',
-    location: shift.jobLocation || shift.location || shift.locationName || '',
+    id: Number(shift.id ?? shift.shiftId),
+    jobTitle: shift.jobTitle || shift.title || shift.positionName || '排班',
+    location: shift.jobLocation || shift.location || shift.locationName || shift.address || '',
     startTime: shift.startTime || '',
     endTime: shift.endTime || '',
     date: shift.date || shift.shiftDate || '',
-    status: shift.status || 'SCHEDULED'
+    status: shift.status || 'SCHEDULED',
+    lat: shift.lat ?? shift.latitude,
+    lng: shift.lng ?? shift.longitude,
+    distance: shift.distance || shift.distanceText
   }
+}
+
+function parseShiftDateTime(date: string, time: string) {
+  const [y = 0, m = 1, d = 1] = String(date).split('-').map(Number)
+  const [h = 0, min = 0] = String(time).split(':').map(Number)
+  return new Date(y, m - 1, d, h, min)
+}
+
+function fallbackShifts(): Shift[] {
+  const today = formatDateKey(new Date())
+  return [
+    { id: -1, jobTitle: '仓库分拣员', location: '绿地物流园3号仓', startTime: '09:00', endTime: '18:00', date: today, status: 'SCHEDULED' },
+    { id: -2, jobTitle: '餐厅服务员', location: '阳光餐厅人民路店', startTime: '18:30', endTime: '22:30', date: today, status: 'ON_DUTY' },
+    { id: -3, jobTitle: '展会协助员', location: '国际会展中心A馆', startTime: '09:00', endTime: '17:00', date: addDays(1), status: 'SCHEDULED' },
+    { id: -4, jobTitle: '快递分拣员', location: '城北快递中转站', startTime: '08:00', endTime: '16:00', date: addDays(2), status: 'SCHEDULED' },
+    { id: -5, jobTitle: '餐厅服务员', location: '湖滨商业街', startTime: '11:00', endTime: '20:00', date: addDays(3), status: 'SCHEDULED' },
+    { id: -6, jobTitle: '超市理货员', location: '安心超市中心店', startTime: '10:00', endTime: '18:00', date: addDays(4), status: 'SCHEDULED' },
+    { id: -7, jobTitle: '家政保洁员', location: '万家社区服务站', startTime: '09:30', endTime: '15:30', date: addDays(5), status: 'SCHEDULED' }
+  ]
+}
+
+function isFallbackShift(shift: Shift) {
+  return shift.id < 0
 }
 
 function statusLabel(status?: string) {
   if (status === 'ON_DUTY') return '工作中'
-  if (status === 'COMPLETED') return '已完成'
+  if (status === 'COMPLETED' || status === 'OFF_DUTY') return '已完成'
   if (status === 'ABSENT') return '缺勤'
   if (status === 'LATE') return '迟到'
   if (status === 'EARLY_LEAVE') return '早退'
@@ -152,10 +180,43 @@ function statusLabel(status?: string) {
 }
 
 function statusClass(status?: string) {
-  if (status === 'ON_DUTY') return 'status-in'
-  if (status === 'OFF_DUTY') return 'status-out'
-  if (status === 'ABSENT' || status === 'LATE' || status === 'EARLY_LEAVE') return 'status-danger'
-  return 'status-wait'
+  if (status === 'ON_DUTY') return 'status-green'
+  if (status === 'COMPLETED' || status === 'OFF_DUTY') return 'status-gray'
+  if (status === 'ABSENT' || status === 'LATE' || status === 'EARLY_LEAVE') return 'status-red'
+  return 'status-yellow'
+}
+
+function tipClass(shift: Shift) {
+  if (shift.id < 0) return 'tip-info'
+  if (shift.status === 'ABSENT' || shift.status === 'LATE' || shift.status === 'EARLY_LEAVE') return 'tip-red'
+  if (shift.status === 'ON_DUTY') return 'tip-green'
+  if (shift.status === 'COMPLETED' || shift.status === 'OFF_DUTY') return 'tip-gray'
+  return 'tip-yellow'
+}
+
+function tipText(shift: Shift) {
+  if (shift.id < 0) return '当前为兜底排班，仅用于展示首页样式'
+  if (shift.status === 'ON_DUTY' || shift.status === 'LATE') return '已签到，完成工作后可在此签退'
+  if (shift.status === 'COMPLETED' || shift.status === 'OFF_DUTY') return '本班次已完成，辛苦了'
+  if (shift.status === 'EARLY_LEAVE') return '已记录早退，请留意考勤规则'
+  if (shift.status === 'ABSENT') return '本班次已记录缺勤'
+  const now = new Date()
+  const start = parseShiftDateTime(shift.date, shift.startTime)
+  const diffMs = start.getTime() - now.getTime()
+  if (diffMs > 3600000) return '还未到签到时间，请提前规划路线'
+  if (diffMs > 0) return `距离签到还有${countdown.value || '00:00:00'}`
+  const lateMins = Math.max(0, Math.floor((now.getTime() - start.getTime()) / 60000))
+  return lateMins > 0 ? `迟到${lateMins}分钟，点击签到` : '已到签到时间，请及时签到'
+}
+
+function canCheckIn(shift: Shift) {
+  if (isFallbackShift(shift) || checking.value) return false
+  return !['ON_DUTY', 'OFF_DUTY', 'COMPLETED', 'ABSENT', 'LATE', 'EARLY_LEAVE'].includes(shift.status)
+}
+
+function canCheckOut(shift: Shift) {
+  if (isFallbackShift(shift) || checking.value) return false
+  return shift.status === 'ON_DUTY' || shift.status === 'LATE'
 }
 
 const sortedShifts = computed(() => {
@@ -176,48 +237,17 @@ const futureShifts = computed(() => {
   return sortedShifts.value.filter((shift) => shift.date > today)
 })
 
-const currentShift = computed(() => todayShifts.value[0] || null)
-
-const countdown = ref('')
-let countdownTimer: any = null
-
-const checkTip = computed(() => {
-  if (!currentShift.value) return null
-  if (currentShift.value.status === 'ON_DUTY' || currentShift.value.status === 'LATE') {
-    return { type: 'info', text: '工作中，可点击签退' }
-  }
-  if (currentShift.value.status === 'COMPLETED' || currentShift.value.status === 'EARLY_LEAVE' || currentShift.value.status === 'ABSENT') {
-    return null
-  }
-  // SCHEDULED状态 - 待上岗
-  const now = new Date()
-  const start = new Date(`${currentShift.value.date} ${currentShift.value.startTime}`)
-  const diffMs = start.getTime() - now.getTime()
-  if (diffMs > 3600000) return { type: 'warn', text: '还未到签到时间' }
-  if (diffMs > 0) return { type: 'countdown', text: `距离签到还有${countdown.value}` }
-  const lateMins = Math.floor((now.getTime() - start.getTime()) / 60000)
-  return { type: 'late', text: `迟到${lateMins}分钟，点击签到` }
-})
-
-const canCheckIn = computed(() => {
-  const s = currentShift.value
-  if (!s) return false
-  if (s.status === 'ON_DUTY' || s.status === 'OFF_DUTY' || s.status === 'ABSENT' || s.status === 'LATE' || s.status === 'EARLY_LEAVE') return false
-  return true
-})
-
-const canCheckOut = computed(() => {
-  return currentShift.value?.status === 'ON_DUTY'
-})
-
 function startCountdown() {
   clearInterval(countdownTimer)
-  if (!currentShift.value || currentShift.value.status === 'ON_DUTY') return
-  const start = new Date(`${currentShift.value.date} ${currentShift.value.startTime}`)
   countdownTimer = setInterval(() => {
+    const nextShift = todayShifts.value.find((shift) => shift.id > 0 && shift.status === 'SCHEDULED')
+    if (!nextShift) {
+      countdown.value = ''
+      return
+    }
+    const start = parseShiftDateTime(nextShift.date, nextShift.startTime)
     const diff = start.getTime() - Date.now()
     if (diff <= 0) {
-      clearInterval(countdownTimer)
       countdown.value = ''
       return
     }
@@ -226,11 +256,6 @@ function startCountdown() {
     const s = Math.floor((diff % 60000) / 1000)
     countdown.value = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
   }, 1000)
-}
-
-function parseTime(timeStr: string) {
-  const [h, m] = timeStr.split(':').map(Number)
-  return { h, m }
 }
 
 function calcDistance(lat1: number, lng1: number, lat2: number, lng2: number) {
@@ -243,8 +268,6 @@ function calcDistance(lat1: number, lng1: number, lat2: number, lng2: number) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-let currentLocation: { lat: number; lng: number } | null = null
-
 async function getLocation(): Promise<{ lat: number; lng: number } | null> {
   try {
     const pos: any = await uni.getLocation({ type: 'gcj02' })
@@ -256,13 +279,12 @@ async function getLocation(): Promise<{ lat: number; lng: number } | null> {
   }
 }
 
-async function checkDistance(): Promise<boolean> {
+async function checkDistance(shift: Shift): Promise<boolean> {
   const pos = await getLocation()
   if (!pos) return false
-  // 实际项目中这里应拉取企业设置的签到点和距离，这里简化
   const checkDistance = 100
-  const workLat = currentShift.value?.lat || 0
-  const workLng = currentShift.value?.lng || 0
+  const workLat = shift.lat || 0
+  const workLng = shift.lng || 0
   if (!workLat || !workLng) return true
   const dist = calcDistance(pos.lat, pos.lng, workLat, workLng)
   if (dist > checkDistance) {
@@ -272,17 +294,17 @@ async function checkDistance(): Promise<boolean> {
   return true
 }
 
-async function handleCheckIn() {
-  if (!currentShift.value || checking.value || !canCheckIn.value) return
-  const ok = await checkDistance()
+async function handleCheckIn(shift: Shift) {
+  if (checking.value || !canCheckIn(shift)) return
+  const ok = await checkDistance(shift)
   if (!ok) return
   const now = new Date()
-  const start = new Date(`${currentShift.value.date} ${currentShift.value.startTime}`)
+  const start = parseShiftDateTime(shift.date, shift.startTime)
   const isLate = now > start
   checking.value = true
   try {
     await checkIn({
-      shiftId: currentShift.value.id,
+      shiftId: shift.id,
       lat: currentLocation?.lat,
       lng: currentLocation?.lng
     })
@@ -292,8 +314,8 @@ async function handleCheckIn() {
     } else {
       uni.showToast({ title: '签到成功', icon: 'success' })
     }
-    const shift = shifts.value.find(s => s.id === currentShift.value.id)
-    if (shift) shift.status = isLate ? 'LATE' : 'ON_DUTY'
+    const target = shifts.value.find(s => s.id === shift.id)
+    if (target) target.status = isLate ? 'LATE' : 'ON_DUTY'
   } catch (e: any) {
     uni.showToast({ title: e?.message || '签到失败', icon: 'none' })
   } finally {
@@ -301,17 +323,17 @@ async function handleCheckIn() {
   }
 }
 
-async function handleCheckOut() {
-  if (!currentShift.value || checking.value || !canCheckOut.value) return
-  const ok = await checkDistance()
+async function handleCheckOut(shift: Shift) {
+  if (checking.value || !canCheckOut(shift)) return
+  const ok = await checkDistance(shift)
   if (!ok) return
   const now = new Date()
-  const end = new Date(`${currentShift.value.date} ${currentShift.value.endTime}`)
+  const end = parseShiftDateTime(shift.date, shift.endTime)
   const isEarly = now < end
   checking.value = true
   try {
     await checkOut({
-      shiftId: currentShift.value.id,
+      shiftId: shift.id,
       lat: currentLocation?.lat,
       lng: currentLocation?.lng
     })
@@ -321,8 +343,8 @@ async function handleCheckOut() {
     } else {
       uni.showToast({ title: '签退成功', icon: 'success' })
     }
-    const shift = shifts.value.find(s => s.id === currentShift.value.id)
-    if (shift) shift.status = isEarly ? 'EARLY_LEAVE' : 'OFF_DUTY'
+    const target = shifts.value.find(s => s.id === shift.id)
+    if (target) target.status = isEarly ? 'EARLY_LEAVE' : 'OFF_DUTY'
   } catch (e: any) {
     uni.showToast({ title: e?.message || '签退失败', icon: 'none' })
   } finally {
@@ -334,15 +356,16 @@ async function loadShifts() {
   if (!authStore.token) return
   try {
     const res: any = await getMyTopShifts()
-    const all = []
+    const all: Shift[] = []
     if (res.currentShift) {
       all.push(normalizeShift(res.currentShift))
     }
     if (res.futureShifts) {
       all.push(...res.futureShifts.map(normalizeShift))
     }
-    shifts.value = all
+    shifts.value = all.length ? all : fallbackShifts()
   } catch {
+    shifts.value = fallbackShifts()
   }
 }
 
@@ -355,13 +378,30 @@ function formatAddress(addr: string) {
   return addr.replace(/^(北京市|上海市|天津市|重庆市|.*?省|.*?市|.*?区|.*?县)/, '')
 }
 
-function openMap(addr: string) {
-  if (!addr) return
+function openMap(shift: Shift) {
+  if (!shift.lat || !shift.lng) {
+    uni.showToast({ title: '暂无可导航坐标', icon: 'none' })
+    return
+  }
   uni.openLocation({
-    address: addr,
-    name: '工作地点',
+    latitude: shift.lat,
+    longitude: shift.lng,
+    address: shift.location,
+    name: shift.jobTitle || '工作地点',
     fail: () => uni.showToast({ title: '打开地图失败', icon: 'none' })
   })
+}
+
+function distanceLabel(shift: Shift) {
+  if (shift.distance) return shift.distance
+  if (shift.id < 0) return '约 2.3km'
+  if (shift.lat && shift.lng && currentLocation) return `${Math.round(calcDistance(currentLocation.lat, currentLocation.lng, shift.lat, shift.lng))}米`
+  return ''
+}
+
+function stopCountdown() {
+  clearInterval(countdownTimer)
+  countdownTimer = null
 }
 
 async function refreshHome() {
@@ -370,262 +410,351 @@ async function refreshHome() {
   startCountdown()
 }
 
-onMounted(refreshHome)
 onShow(refreshHome)
+onHide(stopCountdown)
+onUnload(stopCountdown)
 </script>
 
 <style scoped>
 .home-page {
   min-height: 100vh;
-  background: #f5f5f5;
-  padding: 30rpx;
+  background: #f6f8f7;
 }
 
 .header {
-  background: linear-gradient(135deg, #07c160, #059d50);
-  margin: -30rpx -30rpx 60rpx;
-  padding: 50rpx 30rpx 200rpx;
+  background: linear-gradient(135deg, #18c86b 0%, #08a95a 56%, #078a49 100%);
+  padding: 56rpx 32rpx 150rpx;
   color: #fff;
-  border-bottom-left-radius: 30rpx;
-  border-bottom-right-radius: 30rpx;
+  border-bottom-left-radius: 36rpx;
+  border-bottom-right-radius: 36rpx;
 }
 
-.greeting-row {
-  margin-bottom: 16rpx;
+.greeting-row,
+.job-row,
+.job-left,
+.meta-item,
+.card-header,
+.future-item {
+  display: flex;
+  align-items: center;
+}
+
+.greeting-row,
+.job-row,
+.card-header,
+.future-item {
+  justify-content: space-between;
 }
 
 .greeting {
-  font-size: 44rpx;
-  font-weight: 700;
-}
-
-.date-row {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-  font-size: 28rpx;
-  opacity: 0.95;
-}
-
-.shift-count {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 6rpx 16rpx;
-  border-radius: 20rpx;
-  font-size: 24rpx;
-}
-
-.card {
-  background: #fff;
-  border-radius: 20rpx;
-  padding: 36rpx;
-  margin-bottom: 24rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);
-}
-
-.current-shift-card {
-  border-left: 8rpx solid #07c160;
-  margin-top: -200rpx;
-}
-
-.job-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 24rpx;
-}
-
-.job-title {
-  flex: 1;
+  display: block;
   font-size: 44rpx;
   font-weight: 800;
-  color: #111;
-  line-height: 1.2;
-  margin-right: 20rpx;
-}
-
-.status-tag {
-  flex-shrink: 0;
-  padding: 10rpx 24rpx;
-  border-radius: 28rpx;
-  font-size: 26rpx;
-  font-weight: 600;
-}
-
-.status-wait {
-  background: #fff7e6;
-  color: #d97706;
-}
-
-.status-in {
-  background: #e8f3ff;
-  color: #2563eb;
-}
-
-.status-out {
-  background: #ecfdf5;
-  color: #059669;
-}
-
-.status-danger {
-  background: #fef2f2;
-  color: #dc2626;
-}
-
-.shift-meta {
-  margin-bottom: 28rpx;
-}
-
-.meta-item {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
   margin-bottom: 16rpx;
 }
 
+.date-line {
+  display: block;
+  font-size: 28rpx;
+  opacity: 0.9;
+}
+
+.shift-count {
+  width: 130rpx;
+  height: 130rpx;
+  border-radius: 36rpx;
+  background: rgba(255, 255, 255, 0.22);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.shift-count-num {
+  font-size: 46rpx;
+  font-weight: 800;
+  line-height: 54rpx;
+}
+
+.shift-count-text {
+  font-size: 22rpx;
+}
+
+.content {
+  padding: 0 28rpx 36rpx;
+  margin-top: -96rpx;
+}
+
+.card,
+.stats-card {
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
+}
+
+.stats-card {
+  display: flex;
+  align-items: center;
+  padding: 32rpx 12rpx;
+  margin-bottom: 30rpx;
+}
+
+.stat-item {
+  flex: 1;
+  text-align: center;
+}
+
+.stat-value,
+.stat-label,
+.empty-title,
+.empty-desc,
+.job-title,
+.job-desc,
+.meta-text,
+.future-job,
+.future-location,
+.future-day,
+.future-month,
+.future-time {
+  display: block;
+}
+
+.stat-value {
+  font-size: 38rpx;
+  color: #14231b;
+  font-weight: 800;
+  margin-bottom: 8rpx;
+}
+
+.stat-label {
+  font-size: 24rpx;
+  color: #8a9690;
+}
+
+.stat-line {
+  width: 1rpx;
+  height: 46rpx;
+  background: #edf1ef;
+}
+
+.card {
+  padding: 30rpx;
+  margin-bottom: 28rpx;
+}
+
+.login-card {
+  text-align: center;
+}
+
+.section-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin: 8rpx 4rpx 20rpx;
+}
+
+.section-title {
+  font-size: 36rpx;
+  color: #15231b;
+  font-weight: 800;
+}
+
+.section-subtitle {
+  font-size: 24rpx;
+  color: #8c9892;
+}
+
+.shift-card {
+  border: 1rpx solid #edf3ef;
+}
+
+.job-row {
+  margin-bottom: 28rpx;
+}
+
+.job-icon {
+  width: 76rpx;
+  height: 76rpx;
+  line-height: 76rpx;
+  text-align: center;
+  border-radius: 22rpx;
+  background: #eafaf1;
+  color: #07a857;
+  font-size: 28rpx;
+  font-weight: 700;
+  margin-right: 20rpx;
+}
+
+.job-title {
+  font-size: 34rpx;
+  color: #16251d;
+  font-weight: 800;
+  margin-bottom: 8rpx;
+}
+
+.job-desc {
+  font-size: 24rpx;
+  color: #98a39d;
+}
+
+.status-tag {
+  padding: 10rpx 22rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.status-green {
+  background: #e7f8ef;
+  color: #08a857;
+}
+
+.status-yellow {
+  background: #fff7df;
+  color: #d28a00;
+}
+
+.status-red {
+  background: #feecec;
+  color: #df3b30;
+}
+
+.status-gray {
+  background: #eef1f0;
+  color: #7b8580;
+}
+
+.shift-meta {
+  background: #f8faf9;
+  border-radius: 20rpx;
+  padding: 22rpx 24rpx 6rpx;
+  margin-bottom: 22rpx;
+}
+
 .meta-item {
-  cursor: pointer;
+  margin-bottom: 18rpx;
+}
+
+.meta-icon {
+  width: 42rpx;
+  height: 42rpx;
+  line-height: 42rpx;
+  text-align: center;
+  border-radius: 14rpx;
+  background: #e9f7ef;
+  color: #08a857;
+  font-size: 22rpx;
+  margin-right: 16rpx;
 }
 
 .meta-text {
   flex: 1;
-  font-size: 30rpx;
-  color: #555;
-}
-
-.location-item {
-  background: #f0fdf4;
-  margin: 0 -8rpx;
-  padding: 12rpx 8rpx;
-  border-radius: 12rpx;
-}
-
-.location-arrow {
-  font-size: 36rpx;
-  color: #07c160;
-  font-weight: 500;
+  font-size: 27rpx;
+  color: #52605a;
 }
 
 .tip {
-  padding: 20rpx 24rpx;
-  border-radius: 14rpx;
-  font-size: 28rpx;
-  margin-bottom: 28rpx;
+  padding: 18rpx 22rpx;
+  border-radius: 18rpx;
+  font-size: 26rpx;
+  margin-bottom: 24rpx;
 }
 
-.tip-warn {
-  background: #fffbeb;
-  color: #d97706;
+.tip-green {
+  background: #eafaf1;
+  color: #07984f;
 }
 
+.tip-yellow {
+  background: #fff8e8;
+  color: #bd7b00;
+}
+
+.tip-red {
+  background: #fff0f0;
+  color: #d93025;
+}
+
+.tip-gray,
 .tip-info {
-  background: #f0f9ff;
-  color: #0369a1;
-}
-
-.tip-late {
-  background: #fef2f2;
-  color: #dc2626;
-}
-
-.tip-countdown {
-  background: #f0fdf4;
-  color: #16a34a;
-  font-weight: 600;
+  background: #f1f4f3;
+  color: #7d8883;
 }
 
 .btn-primary,
-.btn-secondary,
 .btn-disabled {
-  width: 100%;
-  height: 100rpx;
-  line-height: 100rpx;
+  height: 88rpx;
+  line-height: 88rpx;
   text-align: center;
-  border-radius: 50rpx;
-  font-size: 34rpx;
-  font-weight: 600;
+  border-radius: 44rpx;
+  font-size: 31rpx;
+  font-weight: 800;
 }
 
 .btn-primary {
-  background: #07c160;
+  background: linear-gradient(135deg, #18c86b, #08a95a);
   color: #fff;
 }
 
-.btn-secondary {
-  background: #f5f5f5;
-  color: #333;
-}
-
 .btn-disabled {
-  background: #e5e5e5;
-  color: #999;
-}
-
-.empty-shift-card {
-  text-align: center;
-  padding: 60rpx 36rpx;
-  margin-top: -220rpx;
-}
-
-.empty-icon {
-  display: block;
-  font-size: 100rpx;
-  margin-bottom: 20rpx;
-}
-
-.empty-text {
-  display: block;
-  font-size: 30rpx;
-  color: #999;
-  margin-bottom: 28rpx;
+  background: #eef1f0;
+  color: #9aa39f;
 }
 
 .empty-title {
-  display: block;
   font-size: 34rpx;
-  font-weight: 700;
-  color: #333;
+  color: #15231b;
+  font-weight: 800;
   margin-bottom: 16rpx;
 }
 
 .empty-desc {
-  display: block;
-  font-size: 28rpx;
-  color: #999;
+  font-size: 27rpx;
+  color: #8c9892;
   margin-bottom: 28rpx;
-}
-
-.future-card .card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24rpx;
-}
-
-.card-title {
-  font-size: 34rpx;
-  font-weight: 700;
-  color: #333;
 }
 
 .more {
   font-size: 28rpx;
-  color: #07c160;
+  color: #08a857;
+  font-weight: 700;
 }
 
 .future-list {
-  padding-top: 10rpx;
+  margin-top: 16rpx;
 }
 
 .future-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 28rpx 0;
-  border-bottom: 1rpx solid #f5f5f5;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f0f3f1;
 }
 
 .future-item:last-child {
   border-bottom: none;
+}
+
+.future-date-box {
+  width: 86rpx;
+  height: 86rpx;
+  border-radius: 22rpx;
+  background: #eafaf1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+}
+
+.future-day {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #08a857;
+  line-height: 36rpx;
+}
+
+.future-month {
+  font-size: 22rpx;
+  color: #58b987;
 }
 
 .future-left {
@@ -633,38 +762,24 @@ onShow(refreshHome)
 }
 
 .future-job {
-  display: block;
-  font-size: 32rpx;
-  color: #333;
-  font-weight: 600;
-  margin-bottom: 10rpx;
+  font-size: 30rpx;
+  color: #18251e;
+  font-weight: 800;
+  margin-bottom: 8rpx;
 }
 
 .future-location {
-  font-size: 26rpx;
-  color: #999;
+  font-size: 24rpx;
+  color: #96a09b;
 }
 
 .future-right {
   text-align: right;
-  flex-shrink: 0;
-}
-
-.future-date {
-  display: block;
-  font-size: 28rpx;
-  color: #07c160;
-  font-weight: 600;
-  margin-bottom: 6rpx;
 }
 
 .future-time {
   font-size: 24rpx;
-  color: #999;
-}
-
-.empty-future {
-  text-align: center;
-  padding: 20rpx 0;
+  color: #7c8882;
+  line-height: 34rpx;
 }
 </style>
