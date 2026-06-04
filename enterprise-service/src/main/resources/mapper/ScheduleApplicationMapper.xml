@@ -99,17 +99,20 @@
         <result property="endTime" column="end_time"/>
         <result property="status" column="status"/>
         <result property="appliedAt" column="applied_at"/>
+        <result property="workerAge" column="worker_age"/>
     </resultMap>
 
     <select id="findVOByCompanyId" resultMap="ScheduleApplicationVOResultMap">
         SELECT sa.id as application_id, sa.schedule_id, j.id as job_id, j.title as job_title,
                sa.worker_id, w.name as worker_name, w.phone as worker_phone,
                js.schedule_date, js.start_time, js.end_time,
-               sa.status, sa.applied_at
+               sa.status, sa.applied_at,
+               TIMESTAMPDIFF(YEAR, wp.birthday, CURDATE()) AS worker_age
         FROM schedule_applications sa
         JOIN job_schedules js ON sa.schedule_id = js.id
         JOIN jobs j ON js.job_id = j.id
         LEFT JOIN c_worker w ON sa.worker_id = w.id
+        LEFT JOIN worker_profiles wp ON sa.worker_id = wp.worker_id
         WHERE j.company_id = #{companyId}
         ORDER BY sa.applied_at DESC
     </select>

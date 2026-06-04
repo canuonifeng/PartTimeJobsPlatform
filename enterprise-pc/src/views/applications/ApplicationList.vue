@@ -118,6 +118,7 @@ onMounted(() => {
       <el-table :data="applications" v-loading="loading" stripe style="width: 100%">
         <el-table-column prop="jobTitle" label="职位" min-width="140" />
         <el-table-column prop="workerName" label="应聘者" width="100" />
+        <el-table-column prop="workerAge" label="年龄" width="70" />
         <el-table-column prop="workerPhone" label="手机号" width="130" />
         <el-table-column label="排班日期" width="100">
           <template #default="{ row }">

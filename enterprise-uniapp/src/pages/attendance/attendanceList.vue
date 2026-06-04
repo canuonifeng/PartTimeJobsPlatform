@@ -132,6 +132,7 @@ function settlementStatusLabel(s) {
             </view>
             <view class="card-body">
               <text class="info">日期：{{ r.recordDate || '-' }}</text>
+              <text class="info">年龄：{{ r.workerAge ?? '-' }}岁</text>
               <text class="info">工时：{{ r.totalHours ?? '-' }}</text>
               <text class="info">应付：¥{{ r.payablePay ?? r.scheduledPay ?? '0' }}</text>
             </view>

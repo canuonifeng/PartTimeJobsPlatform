@@ -66,6 +66,7 @@ function toggleStatus(worker) {
           </view>
           <text class="info">编号：{{ w.workerId || w.id }}</text>
           <text class="info">电话：{{ w.phone || '-' }}</text>
+          <text class="info">年龄：{{ w.workerAge ?? '-' }}岁</text>
           <text class="info">首次联系：{{ w.firstContactAt || '-' }}</text>
           <text class="info">最近联系：{{ w.lastContactAt || '-' }}</text>
           <view class="card-actions">

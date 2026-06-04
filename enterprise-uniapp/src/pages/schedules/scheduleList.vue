@@ -78,6 +78,10 @@ function handleDelete(id) {
               <text class="card-val">{{ s.workerName || '-' }}</text>
             </view>
             <view class="card-row">
+              <text class="card-label">年龄</text>
+              <text class="card-val">{{ s.workerAge ?? '-' }}</text>
+            </view>
+            <view class="card-row">
               <text class="card-label">岗位</text>
               <text class="card-val">{{ s.jobTitle || '-' }}</text>
             </view>

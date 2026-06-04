@@ -7,6 +7,7 @@
     <el-table :data="workers" v-loading="loading" stripe style="width:100%">
       <el-table-column prop="workerId" label="编号" width="100" />
       <el-table-column prop="name" label="姓名" width="120" />
+      <el-table-column prop="workerAge" label="年龄" width="70" />
       <el-table-column prop="phone" label="电话" width="140" />
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">

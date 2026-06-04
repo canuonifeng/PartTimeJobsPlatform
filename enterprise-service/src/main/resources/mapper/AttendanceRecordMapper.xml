@@ -73,17 +73,20 @@
         <result property="settlementStatus" column="settlement_status"/>
         <result property="checkInTime" column="check_in_time"/>
         <result property="checkOutTime" column="check_out_time"/>
+        <result property="workerAge" column="worker_age"/>
     </resultMap>
 
     <select id="findHours" resultMap="HoursResultMap">
         SELECT a.id, a.worker_id, w.name AS worker_name,
                a.job_id, j.title AS job_title, s.shift_date, s.start_time, s.end_time,
                s.salary_type, s.salary_amount, a.total_hours, a.scheduled_pay, a.payable_pay, a.settlement_status,
-               a.check_in_time, a.check_out_time
+               a.check_in_time, a.check_out_time,
+               TIMESTAMPDIFF(YEAR, wp.birthday, CURDATE()) AS worker_age
         FROM attendance_records a
         JOIN schedule_shifts s ON a.shift_id = s.id
         JOIN jobs j ON a.job_id = j.id
         LEFT JOIN c_worker w ON a.worker_id = w.id
+        LEFT JOIN worker_profiles wp ON a.worker_id = wp.worker_id
         WHERE a.company_id = #{companyId}
         <if test="workerName != null and workerName != ''">
             AND w.name LIKE CONCAT('%', #{workerName}, '%')

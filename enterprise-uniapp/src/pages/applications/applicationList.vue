@@ -89,7 +89,7 @@ async function handleReject(applicationId) {
             </view>
             <text class="status">{{ statusLabel(app.status) }}</text>
           </view>
-          <text class="phone">{{ app.workerPhone || '暂无手机号' }}</text>
+          <text class="phone">{{ app.workerPhone || '暂无手机号' }} · {{ app.workerAge ?? '-' }}岁</text>
           <text class="time">排班：{{ app.scheduleDate || '' }} {{ app.startTime || '' }}-{{ app.endTime || '' }}</text>
           <text class="time">{{ app.appliedAt || '暂无申请时间' }}</text>
           <view v-if="app.status === 'PENDING'" class="actions">

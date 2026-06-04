@@ -215,6 +215,7 @@ onMounted(() => {
           <template #default="{ row }">{{ row.startTime }}~{{ row.endTime }}</template>
         </el-table-column>
         <el-table-column prop="workerName" label="姓名" width="120" />
+        <el-table-column prop="workerAge" label="年龄" width="70" />
         <el-table-column label="工时" width="80">
           <template #default="{ row }">{{ n(row.totalHours) }}</template>
         </el-table-column>

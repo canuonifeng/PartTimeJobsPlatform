@@ -197,6 +197,7 @@ onMounted(() => {
           <el-table :data="shifts" v-loading="loading" stripe style="width: 100%">
             <el-table-column prop="jobTitle" label="职位" min-width="160" />
             <el-table-column prop="workerName" label="人员" width="120" />
+            <el-table-column prop="workerAge" label="年龄" width="70" />
             <el-table-column prop="shiftDate" label="日期" width="120" />
             <el-table-column label="时段" width="160">
               <template #default="{ row }">
@@ -264,6 +265,7 @@ onMounted(() => {
           <el-table :data="corrections" v-loading="correctionLoading" stripe style="width: 100%">
             <el-table-column prop="jobTitle" label="职位" min-width="140" />
             <el-table-column prop="workerName" label="人员" width="120" />
+            <el-table-column prop="workerAge" label="年龄" width="70" />
             <el-table-column prop="shiftDate" label="排班日期" width="120" />
             <el-table-column label="时段" width="150">
               <template #default="{ row }">
