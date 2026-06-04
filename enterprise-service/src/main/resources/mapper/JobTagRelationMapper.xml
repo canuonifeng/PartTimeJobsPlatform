@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.enterprise.mapper.JobTagRelationMapper">
+
+    <resultMap id="JobTagResultMap" type="com.parttime.enterprise.pojo.entity.JobTag">
+        <id property="id" column="id"/>
+        <result property="groupId" column="group_id"/>
+        <result property="groupName" column="group_name"/>
+        <result property="name" column="name"/>
+        <result property="code" column="code"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <delete id="deleteByJobId">
+        DELETE FROM job_tag_relations WHERE job_id = #{jobId}
+    </delete>
+
+    <insert id="insert">
+        INSERT INTO job_tag_relations (job_id, tag_id)
+        VALUES (#{jobId}, #{tagId})
+    </insert>
+
+    <select id="findTagIdsByJobId" resultType="java.lang.Long">
+        SELECT r.tag_id
+        FROM job_tag_relations r
+        INNER JOIN job_tags t ON r.tag_id = t.id
+        INNER JOIN job_tag_groups g ON t.group_id = g.id
+        WHERE r.job_id = #{jobId} AND t.status = 'ACTIVE' AND g.status = 'ACTIVE'
+        ORDER BY r.id ASC
+    </select>
+
+    <select id="findTagsByJobId" resultMap="JobTagResultMap">
+        SELECT t.*, g.name AS group_name
+        FROM job_tag_relations r
+        INNER JOIN job_tags t ON r.tag_id = t.id
+        INNER JOIN job_tag_groups g ON t.group_id = g.id
+        WHERE r.job_id = #{jobId} AND t.status = 'ACTIVE' AND g.status = 'ACTIVE'
+        ORDER BY r.id ASC
+    </select>
+
+</mapper>

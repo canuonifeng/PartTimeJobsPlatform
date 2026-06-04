@@ -78,6 +78,37 @@ public class InMemoryMappers {
         };
     }
 
+    public static ScheduleApplicationMapper createScheduleApplicationMapper() {
+        return new ScheduleApplicationMapper() {
+            private final ConcurrentHashMap<Long, ScheduleApplication> store = new ConcurrentHashMap<>();
+            private final AtomicLong idGen = new AtomicLong(1);
+
+            @Override public int insert(ScheduleApplication app) {
+                if (app.getId() == null) app.setId(idGen.getAndIncrement());
+                if (app.getAppliedAt() == null) app.setAppliedAt(LocalDateTime.now());
+                store.put(app.getId(), app);
+                return 1;
+            }
+            @Override public Optional<ScheduleApplication> findByScheduleIdAndWorkerId(Long scheduleId, Long workerId) {
+                return store.values().stream()
+                        .filter(a -> scheduleId.equals(a.getScheduleId()) && workerId.equals(a.getWorkerId()))
+                        .findFirst();
+            }
+            @Override public List<ScheduleApplication> findByWorkerId(Long workerId) {
+                return store.values().stream().filter(a -> workerId.equals(a.getWorkerId())).collect(Collectors.toList());
+            }
+            @Override public List<Long> findScheduleIdsByWorkerIdAndJobId(Long workerId, Long jobId) {
+                return store.values().stream()
+                        .filter(a -> workerId.equals(a.getWorkerId()))
+                        .map(ScheduleApplication::getScheduleId)
+                        .collect(Collectors.toList());
+            }
+            @Override public int countByScheduleId(Long scheduleId) {
+                return (int) store.values().stream().filter(a -> scheduleId.equals(a.getScheduleId())).count();
+            }
+        };
+    }
+
     public static JobApplicationMapper createJobApplicationMapper() {
         return new JobApplicationMapper() {
             private final ConcurrentHashMap<Long, JobApplication> store = new ConcurrentHashMap<>();
@@ -127,6 +158,22 @@ public class InMemoryMappers {
             @Override public List<ShiftEntity> findByWorkerId(Long workerId) {
                 return store.values().stream().filter(s -> workerId.equals(s.getWorkerId())).collect(Collectors.toList());
             }
+            @Override public List<ShiftEntity> findRecentByWorkerId(Long workerId) {
+                return findByWorkerId(workerId);
+            }
+            @Override public List<ShiftEntity> findTodayByWorkerId(Long workerId, LocalDate date) {
+                return store.values().stream()
+                        .filter(s -> workerId.equals(s.getWorkerId()) && date.equals(s.getShiftDate()))
+                        .collect(Collectors.toList());
+            }
+            @Override public List<ShiftEntity> findFutureByWorkerId(Long workerId, LocalDate date, int size) {
+                return store.values().stream()
+                        .filter(s -> workerId.equals(s.getWorkerId()))
+                        .filter(s -> !s.getShiftDate().isBefore(date))
+                        .sorted(Comparator.comparing(ShiftEntity::getShiftDate))
+                        .limit(size)
+                        .collect(Collectors.toList());
+            }
             @Override public List<ShiftEntity> findByWorkerIdAndDateRange(Long workerId, LocalDate startDate, LocalDate endDate) {
                 return store.values().stream()
                         .filter(s -> s.getWorkerId().equals(workerId))
@@ -165,6 +212,12 @@ public class InMemoryMappers {
             }
             @Override public List<AttendanceRecordEntity> findByWorkerId(Long workerId) {
                 return store.values().stream().filter(r -> workerId.equals(r.getWorkerId())).collect(Collectors.toList());
+            }
+            @Override public BigDecimal sumMonthlyHours(Long workerId, LocalDateTime startTime, LocalDateTime endTime) {
+                return BigDecimal.ZERO;
+            }
+            @Override public Integer countMonthlyAttendanceDays(Long workerId, LocalDateTime startTime, LocalDateTime endTime) {
+                return 0;
             }
             @Override public int update(AttendanceRecordEntity record) {
                 store.put(record.getId(), record);
@@ -282,6 +335,16 @@ public class InMemoryMappers {
                         .sorted(Comparator.comparing(JobSchedule::getScheduleDate)
                                 .thenComparing(JobSchedule::getStartTime))
                         .collect(Collectors.toList());
+            }
+
+            @Override public List<JobSchedule> findActiveByJobId(Long jobId) {
+                return findByJobId(jobId).stream()
+                        .filter(s -> s.getStatus() == null || "ACTIVE".equals(s.getStatus()))
+                        .collect(Collectors.toList());
+            }
+
+            @Override public Optional<JobSchedule> findById(Long id) {
+                return Optional.ofNullable(store.get(id));
             }
         };
     }

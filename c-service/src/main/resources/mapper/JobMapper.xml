@@ -18,6 +18,8 @@
         <result property="companyName" column="company_name"/>
         <result property="companyLogo" column="company_logo"/>
         <result property="categoryName" column="category_name"/>
+        <result property="requirements" column="requirements"/>
+        <result property="contactPhone" column="contact_phone"/>
         <collection property="rates" ofType="com.parttime.cservice.pojo.vo.JobRateInfoVO">
             <id property="id" column="jr_id"/>
             <result property="type" column="jr_type"/>
@@ -28,6 +30,8 @@
 
     <sql id="jobSelectWithJoins">
         SELECT j.*,
+               j.requirements,
+               j.contact_phone,
                e.company_name, e.company_logo,
                jc.name AS category_name,
                jr.id AS jr_id,

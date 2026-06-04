@@ -16,6 +16,9 @@
         <el-menu-item index="/categories">
           <el-icon><Folder /></el-icon><span>职位分类</span>
         </el-menu-item>
+        <el-menu-item index="/job-tags">
+          <el-icon><CollectionTag /></el-icon><span>标签管理</span>
+        </el-menu-item>
         <el-menu-item index="/enterprises">
           <el-icon><OfficeBuilding /></el-icon><span>企业管理</span>
         </el-menu-item>
@@ -49,7 +52,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
-import { DataAnalysis, Warning, Setting, Folder, OfficeBuilding, User, Money, Avatar, Postcard } from '@element-plus/icons-vue'
+import { DataAnalysis, Warning, Setting, Folder, CollectionTag, OfficeBuilding, User, Money, Avatar, Postcard } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()

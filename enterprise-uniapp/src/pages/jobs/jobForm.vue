@@ -1,7 +1,7 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, nextTick } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import { createJob, updateJob, getJob, getCategories, getRates, getSchedules } from '@/api/jobs'
+import { createJob, updateJob, getJob, getCategories, getJobTags, getRates, getSchedules } from '@/api/jobs'
 import { listTemplates } from '@/api/templates'
 import { listLocations } from '@/api/locations'
 import regions from '@/assets/regions.json'
@@ -10,10 +10,16 @@ const isEdit = ref(false)
 const jobId = ref('')
 const saving = ref(false)
 const categories = ref([])
+const tagGroups = ref([])
+const selectedTagIds = ref([])
+const responsibilityEditorReady = ref(false)
+const requirementEditorReady = ref(false)
 
 const formData = ref({
   title: '',
   description: '',
+  requirements: '',
+  contactPhone: '',
   categoryId: '',
   headcount: 1,
   deadline: '',
@@ -50,6 +56,35 @@ function getCitiesForProvince(pIdx) {
 
 function getDistrictsForProvinceCity(pIdx, cIdx) {
   return regions[pIdx]?.children?.[cIdx]?.children?.map(d => d.label) || []
+}
+
+function getResponseList(res) {
+  if (Array.isArray(res)) return res
+  if (!res || typeof res !== 'object') return []
+  if (Array.isArray(res.data)) return res.data
+  if (Array.isArray(res.records)) return res.records
+  return []
+}
+
+function normalizeTagId(id) {
+  const numericId = Number(id)
+  return Number.isFinite(numericId) ? numericId : null
+}
+
+function normalizeTagIds(ids) {
+  const source = Array.isArray(ids) ? ids : []
+  return [...new Set(source.map(normalizeTagId).filter(id => id !== null))]
+}
+
+function getGroupTags(group) {
+  return Array.isArray(group?.tags) ? group.tags : []
+}
+
+function normalizeTagGroups(groups) {
+  return getResponseList(groups).map(group => ({
+    ...group,
+    tags: getGroupTags(group)
+  }))
 }
 
 const cityList = ref([])
@@ -93,6 +128,45 @@ function previewImage() {
   })
 }
 
+function setEditorContents() {
+  nextTick(() => {
+    if (responsibilityEditorReady.value) {
+      uni.createSelectorQuery()
+        .select('#responsibilityEditor')
+        .context(res => {
+          res?.context?.setContents({ html: formData.value.description || '' })
+        })
+        .exec()
+    }
+    if (requirementEditorReady.value) {
+      uni.createSelectorQuery()
+        .select('#requirementEditor')
+        .context(res => {
+          res?.context?.setContents({ html: formData.value.requirements || '' })
+        })
+        .exec()
+    }
+  })
+}
+
+function onResponsibilityEditorReady() {
+  responsibilityEditorReady.value = true
+  setEditorContents()
+}
+
+function onRequirementEditorReady() {
+  requirementEditorReady.value = true
+  setEditorContents()
+}
+
+function onResponsibilityEditorInput(e) {
+  formData.value.description = e.detail.html || ''
+}
+
+function onRequirementEditorInput(e) {
+  formData.value.requirements = e.detail.html || ''
+}
+
 function chooseLocation() {
   uni.chooseLocation({
     success: (res) => {
@@ -118,6 +192,7 @@ function onTemplatePick(e) {
   if (!tpl) return
   formData.value.title = tpl.title || ''
   formData.value.description = tpl.description || ''
+  formData.value.requirements = tpl.requirements || ''
   formData.value.categoryId = tpl.categoryId ?? ''
   formData.value.province = tpl.province || ''
   formData.value.city = tpl.city || ''
@@ -126,6 +201,7 @@ function onTemplatePick(e) {
   formData.value.latitude = tpl.latitude || null
   formData.value.longitude = tpl.longitude || null
   selectedTemplateName.value = tpl.title || ''
+  setEditorContents()
 }
 
 async function openLocationPicker() {
@@ -151,6 +227,7 @@ onLoad(async (params) => {
     jobId.value = params.id
   }
   await loadCategories()
+  await loadJobTags()
   await openTemplatePicker()
   await openLocationPicker()
   if (isEdit.value) {
@@ -185,7 +262,7 @@ function flattenCategories(list, parents = []) {
 async function loadCategories() {
   try {
     const res = await getCategories()
-    const list = Array.isArray(res) ? res : (res.data || res.records || [])
+    const list = getResponseList(res)
     const flatList = flattenCategories(list)
     categories.value = flatList
     categoryNames.value = flatList.map(c => c.pickerLabel)
@@ -194,12 +271,23 @@ async function loadCategories() {
   }
 }
 
+async function loadJobTags() {
+  try {
+    const res = await getJobTags()
+    tagGroups.value = normalizeTagGroups(res)
+  } catch (e) {
+    console.error('Failed to load job tags', e)
+  }
+}
+
 async function loadJobDetail() {
   try {
-    const job = await getJob(jobId.value)
+    const job = await getJob(jobId.value) || {}
     formData.value = {
       title: job.title || '',
       description: job.description || '',
+      requirements: job.requirements || '',
+      contactPhone: job.contactPhone || '',
       location: job.location || '',
       province: job.province || '',
       city: job.city || '',
@@ -209,8 +297,13 @@ async function loadJobDetail() {
       longitude: job.longitude || null,
       categoryId: job.categoryId ?? '',
       headcount: job.headcount || 1,
-      deadline: job.deadline || ''
+      deadline: job.deadline || '',
+      imageUrl: job.imageUrl || '',
+      salaryRates: [{ type: '', amount: '' }],
+      schedules: [{ date: '', startTime: '', endTime: '' }]
     }
+    selectedTagIds.value = normalizeTagIds(job.tagIds || (Array.isArray(job.tags) ? job.tags.map(tag => getTagId(tag)) : []))
+    setEditorContents()
     try {
       const rateRes = await getRates(jobId.value)
       rates.value = Array.isArray(rateRes)
@@ -240,6 +333,9 @@ function buildPayload() {
   return {
     title: formData.value.title,
     description: formData.value.description,
+    requirements: formData.value.requirements,
+    contactPhone: formData.value.contactPhone,
+    tagIds: normalizeTagIds(selectedTagIds.value),
     location: formData.value.location,
     province: formData.value.province || null,
     city: formData.value.city || null,
@@ -298,6 +394,26 @@ function onCategoryChange(e) {
   const cat = categories.value[idx]
   if (cat) {
     formData.value.categoryId = getCategoryId(cat)
+  }
+}
+
+function getTagId(tag) {
+  return tag?.id ?? tag?.tagId ?? ''
+}
+
+function isTagSelected(tag) {
+  const id = normalizeTagId(getTagId(tag))
+  return id !== null && selectedTagIds.value.includes(id)
+}
+
+function toggleTag(tag) {
+  const id = normalizeTagId(getTagId(tag))
+  if (id === null) return
+  const index = selectedTagIds.value.indexOf(id)
+  if (index >= 0) {
+    selectedTagIds.value.splice(index, 1)
+  } else {
+    selectedTagIds.value = normalizeTagIds([...selectedTagIds.value, id])
   }
 }
 
@@ -378,8 +494,46 @@ async function handleSave() {
         </view>
 
         <view class="form-item">
-          <text class="label">职位描述</text>
-          <textarea v-model="formData.description" class="textarea" placeholder="请输入职位描述" />
+          <text class="label">岗位职责</text>
+          <editor
+            id="responsibilityEditor"
+            class="editor"
+            placeholder="请输入岗位职责"
+            @ready="onResponsibilityEditorReady"
+            @input="onResponsibilityEditorInput"
+          />
+        </view>
+
+        <view class="form-item">
+          <text class="label">任职要求</text>
+          <editor
+            id="requirementEditor"
+            class="editor"
+            placeholder="请输入任职要求"
+            @ready="onRequirementEditorReady"
+            @input="onRequirementEditorInput"
+          />
+        </view>
+
+        <view class="form-item">
+          <text class="label">联系方式</text>
+          <input v-model="formData.contactPhone" class="input" type="number" placeholder="请输入联系电话" />
+        </view>
+
+        <view v-if="tagGroups.length" class="form-item">
+          <text class="label">岗位标签</text>
+          <view v-for="group in tagGroups" :key="group.id" class="tag-group">
+            <text class="tag-group-title">{{ group.name }}</text>
+            <view class="tag-list">
+              <text
+                v-for="tag in getGroupTags(group)"
+                :key="tag.id"
+                class="tag-chip"
+                :class="{ active: isTagSelected(tag) }"
+                @click="toggleTag(tag)"
+              >{{ tag.name }}</text>
+            </view>
+          </view>
         </view>
 
         <view class="form-item">
@@ -587,14 +741,41 @@ async function handleSave() {
   font-size: 28rpx;
   box-sizing: border-box;
 }
-.textarea {
+.editor {
   width: 100%;
-  height: 160rpx;
+  min-height: 220rpx;
   border: 2rpx solid #e0e0e0;
   border-radius: 8rpx;
   padding: 16rpx 20rpx;
   font-size: 28rpx;
   box-sizing: border-box;
+}
+.tag-group {
+  margin-top: 16rpx;
+}
+.tag-group-title {
+  display: block;
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+}
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+.tag-chip {
+  padding: 10rpx 20rpx;
+  border: 2rpx solid #dcdfe6;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  color: #606266;
+  background: #fff;
+}
+.tag-chip.active {
+  border-color: #409eff;
+  color: #409eff;
+  background: #ecf5ff;
 }
 .picker {
   height: 72rpx;

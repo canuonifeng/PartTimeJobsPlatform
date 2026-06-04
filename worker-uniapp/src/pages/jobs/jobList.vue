@@ -76,6 +76,7 @@ type JobItem = {
   companyLogo?: string
   iconText?: string
   settlement?: string[]
+  tags?: ({ id: number, name?: string | null, groupName?: string } | null)[]
   jobType?: string
   experience?: string
 }
@@ -231,6 +232,10 @@ function goDetail(id: number) {
 }
 
 function getSettlementTags(job: JobItem): string[] {
+  if (Array.isArray(job.tags) && job.tags.length > 0) {
+    const tagNames = job.tags.map((tag) => tag?.name?.trim()).filter(Boolean) as string[]
+    if (tagNames.length > 0) return tagNames
+  }
   if (Array.isArray(job.settlement) && job.settlement.length > 0) return job.settlement
   const tags: string[] = []
   if (job.jobType) tags.push(job.jobType)

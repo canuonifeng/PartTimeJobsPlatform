@@ -3,10 +3,13 @@ package com.parttime.enterprise.service;
 import com.parttime.enterprise.enums.JobRateType;
 import com.parttime.enterprise.enums.JobStatus;
 import com.parttime.enterprise.exception.BusinessException;
-import com.parttime.enterprise.mapper.JobApplicationMapper;
+import com.parttime.enterprise.mapper.JobCategoryMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.JobRateMapper;
 import com.parttime.enterprise.mapper.JobScheduleMapper;
+import com.parttime.enterprise.mapper.JobTagMapper;
+import com.parttime.enterprise.mapper.JobTagRelationMapper;
+import com.parttime.enterprise.mapper.ScheduleApplicationMapper;
 import com.parttime.enterprise.pojo.cmd.JobCreateCmd;
 import com.parttime.enterprise.pojo.cmd.JobRateCmd;
 import com.parttime.enterprise.pojo.cmd.JobScheduleCmd;
@@ -53,7 +56,16 @@ class JobServiceTest {
     private JobScheduleMapper jobScheduleMapper;
 
     @Mock
-    private JobApplicationMapper jobApplicationMapper;
+    private ScheduleApplicationMapper scheduleApplicationMapper;
+
+    @Mock
+    private JobTagRelationMapper jobTagRelationMapper;
+
+    @Mock
+    private JobTagMapper jobTagMapper;
+
+    @Mock
+    private JobCategoryMapper jobCategoryMapper;
 
     @Captor
     private ArgumentCaptor<Job> jobCaptor;
@@ -98,6 +110,8 @@ class JobServiceTest {
         when(jobMapper.findById(100L)).thenReturn(Optional.of(job));
         when(jobRateMapper.findByJobId(100L)).thenReturn(List.of(rate));
         when(jobScheduleMapper.findByJobId(100L)).thenReturn(List.of(schedule));
+        when(jobTagRelationMapper.findTagIdsByJobId(100L)).thenReturn(List.of());
+        when(jobTagRelationMapper.findTagsByJobId(100L)).thenReturn(List.of());
 
         JobVO response = jobService.getJobById(100L);
 
@@ -133,10 +147,14 @@ class JobServiceTest {
         when(jobRateMapper.findByJobId(2L)).thenReturn(List.of());
         when(jobScheduleMapper.findByJobId(1L)).thenReturn(List.of());
         when(jobScheduleMapper.findByJobId(2L)).thenReturn(List.of());
-        when(jobApplicationMapper.countByJobId(1L)).thenReturn(8);
-        when(jobApplicationMapper.countByJobId(2L)).thenReturn(3);
-        when(jobApplicationMapper.countByJobIdAndStatus(1L, "PENDING")).thenReturn(2);
-        when(jobApplicationMapper.countByJobIdAndStatus(2L, "PENDING")).thenReturn(1);
+        when(jobTagRelationMapper.findTagIdsByJobId(1L)).thenReturn(List.of());
+        when(jobTagRelationMapper.findTagIdsByJobId(2L)).thenReturn(List.of());
+        when(jobTagRelationMapper.findTagsByJobId(1L)).thenReturn(List.of());
+        when(jobTagRelationMapper.findTagsByJobId(2L)).thenReturn(List.of());
+        when(scheduleApplicationMapper.countByJobId(1L)).thenReturn(8);
+        when(scheduleApplicationMapper.countByJobId(2L)).thenReturn(3);
+        when(scheduleApplicationMapper.countByJobIdAndStatus(1L, "PENDING")).thenReturn(2);
+        when(scheduleApplicationMapper.countByJobIdAndStatus(2L, "PENDING")).thenReturn(1);
 
         List<JobVO> jobs = jobService.getJobsByCompany(1L, null, null, null);
 
@@ -154,7 +172,7 @@ class JobServiceTest {
         job.setStatus("CLOSED");
 
         when(jobMapper.findById(1L)).thenReturn(Optional.of(job));
-        when(jobApplicationMapper.countByJobId(1L)).thenReturn(0);
+        when(scheduleApplicationMapper.countByJobId(1L)).thenReturn(0);
 
         jobService.deleteJob(1L);
 
@@ -181,7 +199,7 @@ class JobServiceTest {
         job.setStatus("CLOSED");
 
         when(jobMapper.findById(1L)).thenReturn(Optional.of(job));
-        when(jobApplicationMapper.countByJobId(1L)).thenReturn(2);
+        when(scheduleApplicationMapper.countByJobId(1L)).thenReturn(2);
 
         assertThatThrownBy(() -> jobService.deleteJob(1L))
                 .isInstanceOf(BusinessException.class)
@@ -241,6 +259,94 @@ class JobServiceTest {
 
         verify(jobScheduleMapper).insert(scheduleCaptor.capture());
         assertThat(scheduleCaptor.getValue().getSlotsAvailable()).isEqualTo(5);
+    }
+
+    @Test
+    void createJob_shouldPersistRequirementsContactPhoneAndDeduplicatedTagIds() {
+        JobCreateCmd request = new JobCreateCmd();
+        request.setCompanyId(1L);
+        request.setTitle("Software Engineer");
+        request.setDescription("<p>岗位职责</p>");
+        request.setRequirements("<p>任职要求</p>");
+        request.setContactPhone("13800138000");
+        request.setCategoryId(10L);
+        request.setHeadcount(3);
+        request.setTagIds(List.of(2L, 2L, 1L));
+
+        doAnswer(invocation -> {
+            Job job = invocation.getArgument(0);
+            job.setId(100L);
+            return 1;
+        }).when(jobMapper).insert(any(Job.class));
+        when(jobTagMapper.findActiveExistingIds(List.of(2L, 1L))).thenReturn(List.of(2L, 1L));
+        when(jobTagRelationMapper.findTagIdsByJobId(100L)).thenReturn(List.of(2L, 1L));
+        when(jobTagRelationMapper.findTagsByJobId(100L)).thenReturn(List.of());
+
+        JobVO response = jobService.createJob(request);
+
+        verify(jobMapper).insert(jobCaptor.capture());
+        Job savedJob = jobCaptor.getValue();
+        assertThat(savedJob.getDescription()).isEqualTo("<p>岗位职责</p>");
+        assertThat(savedJob.getRequirements()).isEqualTo("<p>任职要求</p>");
+        assertThat(savedJob.getContactPhone()).isEqualTo("13800138000");
+        verify(jobTagRelationMapper).deleteByJobId(100L);
+        verify(jobTagRelationMapper).insert(100L, 2L);
+        verify(jobTagRelationMapper).insert(100L, 1L);
+        assertThat(response.getRequirements()).isEqualTo("<p>任职要求</p>");
+        assertThat(response.getContactPhone()).isEqualTo("13800138000");
+        assertThat(response.getTagIds()).containsExactly(2L, 1L);
+    }
+
+    @Test
+    void updateJob_shouldUpdateRequirementsContactPhoneAndReplaceDeduplicatedTagIds() {
+        Job existing = new Job();
+        existing.setId(1L);
+        existing.setCompanyId(1L);
+        existing.setTitle("Old Title");
+        existing.setDescription("Old Description");
+        existing.setStatus("DRAFT");
+
+        UpdateJobCmd request = new UpdateJobCmd();
+        request.setRequirements("<p>新要求</p>");
+        request.setContactPhone("13900139000");
+        request.setTagIds(List.of(3L, 3L, 4L));
+
+        when(jobMapper.findById(1L)).thenReturn(Optional.of(existing));
+        when(jobTagMapper.findActiveExistingIds(List.of(3L, 4L))).thenReturn(List.of(3L, 4L));
+        when(jobTagRelationMapper.findTagIdsByJobId(1L)).thenReturn(List.of(3L, 4L));
+        when(jobTagRelationMapper.findTagsByJobId(1L)).thenReturn(List.of());
+
+        JobVO response = jobService.updateJob(1L, request);
+
+        verify(jobMapper).update(existing);
+        assertThat(existing.getRequirements()).isEqualTo("<p>新要求</p>");
+        assertThat(existing.getContactPhone()).isEqualTo("13900139000");
+        verify(jobTagRelationMapper).deleteByJobId(1L);
+        verify(jobTagRelationMapper).insert(1L, 3L);
+        verify(jobTagRelationMapper).insert(1L, 4L);
+        assertThat(response.getRequirements()).isEqualTo("<p>新要求</p>");
+        assertThat(response.getContactPhone()).isEqualTo("13900139000");
+        assertThat(response.getTagIds()).containsExactly(3L, 4L);
+    }
+
+    @Test
+    void createJob_shouldRejectInvalidOrDisabledTagIds() {
+        JobCreateCmd request = new JobCreateCmd();
+        request.setCompanyId(1L);
+        request.setTitle("Software Engineer");
+        request.setHeadcount(3);
+        request.setTagIds(List.of(2L, 2L, 99L));
+
+        doAnswer(invocation -> {
+            Job job = invocation.getArgument(0);
+            job.setId(100L);
+            return 1;
+        }).when(jobMapper).insert(any(Job.class));
+        when(jobTagMapper.findActiveExistingIds(List.of(2L, 99L))).thenReturn(List.of(2L));
+
+        assertThatThrownBy(() -> jobService.createJob(request))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("存在无效或已停用的岗位标签");
     }
 
     @Test

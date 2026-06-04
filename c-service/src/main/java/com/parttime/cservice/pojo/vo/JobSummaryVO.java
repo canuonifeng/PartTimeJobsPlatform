@@ -12,6 +12,8 @@ public class JobSummaryVO {
     private Long id;
     @Schema(description = "岗位标题")
     private String title;
+    @Schema(description = "岗位标签列表")
+    private List<JobTagVO> tags;
     @Schema(description = "工作地点")
     private String location;
     @Schema(description = "省")

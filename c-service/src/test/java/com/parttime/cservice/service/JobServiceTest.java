@@ -2,9 +2,13 @@ package com.parttime.cservice.service;
 
 import com.parttime.cservice.service.impl.JobServiceImpl;
 import com.parttime.cservice.mapper.CompanyWorkerInsertMapper;
-import com.parttime.cservice.pojo.vo.ApplicationVO;
+import com.parttime.cservice.mapper.JobMapper;
+import com.parttime.cservice.mapper.JobTagRelationMapper;
+import com.parttime.cservice.pojo.entity.Job;
+import com.parttime.cservice.pojo.entity.ScheduleApplication;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
+import com.parttime.cservice.pojo.vo.JobTagVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -12,6 +16,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -21,12 +26,15 @@ class JobServiceTest {
 
     @InjectMocks
     private JobServiceImpl jobService;
+    private CountingJobTagRelationMapper jobTagRelationMapper;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        jobTagRelationMapper = new CountingJobTagRelationMapper();
         ReflectionTestUtils.setField(jobService, "jobMapper", InMemoryMappers.createJobMapper());
-        ReflectionTestUtils.setField(jobService, "jobApplicationMapper", InMemoryMappers.createJobApplicationMapper());
+        ReflectionTestUtils.setField(jobService, "jobTagRelationMapper", jobTagRelationMapper);
+        ReflectionTestUtils.setField(jobService, "scheduleApplicationMapper", InMemoryMappers.createScheduleApplicationMapper());
         ReflectionTestUtils.setField(jobService, "jobScheduleMapper", InMemoryMappers.createJobScheduleMapper());
         ReflectionTestUtils.setField(jobService, "companyWorkerInsertMapper", new CompanyWorkerInsertMapper() {
             @Override
@@ -111,6 +119,53 @@ class JobServiceTest {
     }
 
     @Test
+    void getJobDetail_returnsRequirementsContactPhoneAndTags() {
+        Job taggedJob = new Job();
+        taggedJob.setId(20L);
+        taggedJob.setJobId(20L);
+        taggedJob.setTitle("Tagged Job");
+        taggedJob.setDescription("负责门店运营");
+        taggedJob.setRequirements("需要健康证");
+        taggedJob.setContactPhone("13800138000");
+        taggedJob.setStatus("PUBLISHED");
+        jobTagRelationMapper.addTag(20L, "日结");
+        jobTagRelationMapper.addTag(20L, "按时");
+        JobMapper jobMapper = (JobMapper) ReflectionTestUtils.getField(jobService, "jobMapper");
+        jobMapper.insert(taggedJob);
+
+        JobDetailVO detail = jobService.getJobDetail(20L);
+
+        assertThat(detail.getRequirements()).isEqualTo("需要健康证");
+        assertThat(detail.getContactPhone()).isEqualTo("13800138000");
+        assertThat(detail.getTags()).extracting(JobTagVO::getName).containsExactly("日结", "按时");
+        assertThat(jobTagRelationMapper.singleFetchCount).isEqualTo(1);
+    }
+
+    @Test
+    void searchJobs_fetchesTagsInOneBatch() {
+        jobTagRelationMapper.addTag(1L, "日结");
+        jobTagRelationMapper.addTag(2L, "按时");
+
+        List<JobSummaryVO> results = jobService.searchJobs(null, null, null, null, null, null, null);
+
+        assertThat(results).hasSize(3);
+        assertThat(results.get(0).getTags()).extracting(JobTagVO::getName).containsExactly("日结");
+        assertThat(results.get(1).getTags()).extracting(JobTagVO::getName).containsExactly("按时");
+        assertThat(jobTagRelationMapper.batchFetchCount).isEqualTo(1);
+        assertThat(jobTagRelationMapper.singleFetchCount).isZero();
+        assertThat(jobTagRelationMapper.lastBatchJobIds).containsExactlyInAnyOrder(1L, 2L, 3L);
+    }
+
+    @Test
+    void searchJobs_doesNotFetchTagsWhenNoJobsMatch() {
+        List<JobSummaryVO> results = jobService.searchJobs("missing", null, null, null, null, null, null);
+
+        assertThat(results).isEmpty();
+        assertThat(jobTagRelationMapper.batchFetchCount).isZero();
+        assertThat(jobTagRelationMapper.singleFetchCount).isZero();
+    }
+
+    @Test
     void getJobDetail_withWorkerId_setsApplyStatusWhenApplicationExists() {
         jobService.applyForJob(100L, 1L, List.of(1L));
 
@@ -132,11 +187,10 @@ class JobServiceTest {
 
         assertThat(result).isTrue();
 
-        List<ApplicationVO> statuses = jobService.getApplicationStatus(100L, 1L);
-        assertThat(statuses).hasSize(1);
+        List<ScheduleApplication> statuses = jobService.getApplicationStatus(100L, 1L);
+        assertThat(statuses).hasSize(2);
         assertThat(statuses.get(0).getStatus()).isEqualTo("PENDING");
-        assertThat(statuses.get(0).getJobId()).isEqualTo(1L);
-        assertThat(statuses.get(0).getAppliedAt()).isNotNull();
+        assertThat(statuses.get(0).getScheduleId()).isEqualTo(1L);
     }
 
     @Test
@@ -150,8 +204,41 @@ class JobServiceTest {
 
     @Test
     void getApplicationStatus_returnsEmptyListWhenNoApplication() {
-        List<ApplicationVO> statuses = jobService.getApplicationStatus(999L, 1L);
+        List<ScheduleApplication> statuses = jobService.getApplicationStatus(999L, 1L);
 
         assertThat(statuses).isEmpty();
+    }
+
+    private static class CountingJobTagRelationMapper implements JobTagRelationMapper {
+        private final List<JobTagVO> tags = new ArrayList<>();
+        private int singleFetchCount;
+        private int batchFetchCount;
+        private List<Long> lastBatchJobIds = List.of();
+
+        void addTag(Long jobId, String name) {
+            JobTagVO tag = new JobTagVO();
+            tag.setId((long) tags.size() + 1);
+            tag.setJobId(jobId);
+            tag.setName(name);
+            tag.setStatus("ACTIVE");
+            tags.add(tag);
+        }
+
+        @Override
+        public List<JobTagVO> findTagsByJobId(Long jobId) {
+            singleFetchCount++;
+            return tags.stream()
+                    .filter(tag -> jobId.equals(tag.getJobId()))
+                    .toList();
+        }
+
+        @Override
+        public List<JobTagVO> findTagsByJobIds(List<Long> jobIds) {
+            batchFetchCount++;
+            lastBatchJobIds = jobIds;
+            return tags.stream()
+                    .filter(tag -> jobIds.contains(tag.getJobId()))
+                    .toList();
+        }
     }
 }

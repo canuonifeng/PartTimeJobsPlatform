@@ -1,9 +1,11 @@
 package com.parttime.enterprise.pojo.entity;
 
+import com.parttime.enterprise.pojo.vo.JobTagVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class Job {
@@ -14,8 +16,16 @@ public class Job {
     private Long companyId;
     @Schema(description = "岗位标题")
     private String title;
-    @Schema(description = "岗位描述")
+    @Schema(description = "岗位职责")
     private String description;
+    @Schema(description = "任职要求")
+    private String requirements;
+    @Schema(description = "岗位联系方式")
+    private String contactPhone;
+    @Schema(description = "岗位标签ID列表")
+    private List<Long> tagIds;
+    @Schema(description = "岗位标签列表")
+    private List<JobTagVO> tags;
     @Schema(description = "工作地点")
     private String location;
     @Schema(description = "省")

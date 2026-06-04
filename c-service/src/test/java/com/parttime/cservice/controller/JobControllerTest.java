@@ -2,7 +2,7 @@ package com.parttime.cservice.controller;
 
 import com.parttime.cservice.pojo.vo.JobScheduleInfoVO;
 import com.parttime.cservice.pojo.cmd.ApplyJobCmd;
-import com.parttime.cservice.pojo.vo.ApplicationVO;
+import com.parttime.cservice.pojo.entity.ScheduleApplication;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
 import com.parttime.cservice.pojo.vo.JobRateInfoVO;
@@ -189,9 +189,10 @@ class JobControllerTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("1", null, List.of()));
 
-        ApplicationVO app = new ApplicationVO();
-        app.setApplicationId(10L);
-        app.setJobId(1L);
+        ScheduleApplication app = new ScheduleApplication();
+        app.setId(10L);
+        app.setScheduleId(1L);
+        app.setWorkerId(1L);
         app.setStatus("PENDING");
         app.setAppliedAt(LocalDateTime.now());
 
@@ -200,7 +201,7 @@ class JobControllerTest {
         mockMvc.perform(get("/api/jobs/application?id=1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].applicationId").value(10))
+                .andExpect(jsonPath("$[0].id").value(10))
                 .andExpect(jsonPath("$[0].status").value("PENDING"));
     }
 

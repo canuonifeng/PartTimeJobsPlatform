@@ -47,12 +47,14 @@
 
         <view class="card">
           <view class="card-title"><text class="card-icon">🧾</text><text>岗位职责</text></view>
-          <view v-for="(item, index) in duties" :key="index" class="list-row"><text class="list-dot"></text><text class="list-text">{{ item }}</text></view>
+          <rich-text v-if="responsibilitiesHtml" class="rich-content" :nodes="responsibilitiesHtml" />
+          <view v-else v-for="(item, index) in duties" :key="index" class="list-row"><text class="list-dot"></text><text class="list-text">{{ item }}</text></view>
         </view>
 
         <view class="card">
           <view class="card-title"><text class="card-icon">✅</text><text>任职要求</text></view>
-          <view v-for="(item, index) in needs" :key="index" class="list-row"><text class="list-dot green"></text><text class="list-text">{{ item }}</text></view>
+          <rich-text v-if="requirementsHtml" class="rich-content" :nodes="requirementsHtml" />
+          <view v-else v-for="(item, index) in needs" :key="index" class="list-row"><text class="list-dot green"></text><text class="list-text">{{ item }}</text></view>
         </view>
 
         <view class="company-card">
@@ -124,8 +126,29 @@ const salaryText = computed(() => {
   if (job.value?.minRate) return `${job.value.minRate}元起/小时`
   return '薪资面议'
 })
+const responsibilitiesHtml = computed(() => htmlContent(job.value?.responsibilities || job.value?.description))
+const requirementsHtml = computed(() => htmlContent(job.value?.requirements))
 const duties = computed(() => splitItems(job.value?.responsibilities || job.value?.description, ['按排班时间准时到岗，完成岗位工作', '服从现场安排，保障服务质量', '及时沟通异常情况']))
 const needs = computed(() => splitItems(job.value?.requirements, ['身体健康，能适应岗位节奏', '责任心强，时间观念好', '会使用智能手机，沟通顺畅']))
+
+function htmlContent(value: any) {
+  if (!value) return ''
+  const content = String(value).trim()
+  return /<[^>]+>/.test(content) ? sanitizeHtmlContent(content) : ''
+}
+
+function sanitizeHtmlContent(content: string) {
+  const allowedTags = new Set(['p', 'br', 'div', 'span', 'strong', 'b', 'em', 'i', 'u', 'ul', 'ol', 'li'])
+  return content
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<(script|style|iframe|object|embed|link|meta|svg|math)\b[\s\S]*?<\/\1>/gi, '')
+    .replace(/<(script|style|iframe|object|embed|link|meta|svg|math)\b[^>]*\/?>/gi, '')
+    .replace(/<\/?([a-z][a-z0-9]*)\b[^>]*>/gi, (match, tag) => {
+      const normalizedTag = String(tag).toLowerCase()
+      if (!allowedTags.has(normalizedTag)) return ''
+      return match.startsWith('</') ? `</${normalizedTag}>` : `<${normalizedTag}>`
+    })
+}
 
 function splitItems(value: any, fallback: string[]) {
   if (!value) return fallback
@@ -202,7 +225,7 @@ function handleBack() {
 }
 
 function handlePhone() {
-  const phone = job.value?.phone || job.value?.contactPhone || job.value?.mobile
+  const phone = job.value?.contactPhone || job.value?.phone || job.value?.mobile
   if (!phone) {
     uni.showToast({ title: '暂无联系电话', icon: 'none' })
     return
@@ -285,8 +308,8 @@ onShareAppMessage(() => ({
 .banner-card { margin: 24rpx 24rpx 0; min-height: 300rpx; border-radius: 36rpx; background: linear-gradient(135deg, #16c784, #0ea66b); overflow: hidden; position: relative; box-shadow: 0 18rpx 40rpx rgba(14, 166, 107, 0.22); }
 .banner-image { width: 100%; height: 300rpx; }
 .banner-emoji { height: 210rpx; line-height: 210rpx; text-align: center; font-size: 118rpx; }
-.banner-info { padding: 34rpx 34rpx 34rpx; }
-.banner-title { display: block; color: #fff; font-size: 46rpx; font-weight: 800; }
+.banner-info { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 34rpx; text-align: center; }
+.banner-title { display: block; color: #fff; font-size: 46rpx; font-weight: 800; text-align: center; }
 .content { padding: 24rpx; }
 .salary-card, .card, .company-card { margin-bottom: 22rpx; padding: 30rpx; border-radius: 28rpx; background: #fff; box-shadow: 0 8rpx 30rpx rgba(31, 41, 55, 0.06); }
 .salary-card { background: #fff8ef; border: 2rpx solid #ffe4bd; }
@@ -319,6 +342,7 @@ onShareAppMessage(() => ({
 .list-dot { width: 12rpx; height: 12rpx; margin-top: 14rpx; margin-right: 16rpx; border-radius: 6rpx; background: #ff8a00; }
 .list-dot.green { background: #10b981; }
 .list-text { flex: 1; color: #475569; font-size: 29rpx; line-height: 44rpx; }
+.rich-content { display: block; color: #475569; font-size: 29rpx; line-height: 44rpx; }
 .company-card { display: flex; align-items: center; }
 .company-logo { width: 96rpx; height: 96rpx; line-height: 96rpx; margin-right: 22rpx; border-radius: 48rpx; text-align: center; background: #ecfdf5; color: #0f9f5f; font-size: 42rpx; font-weight: 800; }
 .company-info { flex: 1; }

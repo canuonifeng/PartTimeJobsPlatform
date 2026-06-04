@@ -8,6 +8,8 @@ import com.parttime.enterprise.mapper.JobCategoryMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.JobRateMapper;
 import com.parttime.enterprise.mapper.JobScheduleMapper;
+import com.parttime.enterprise.mapper.JobTagMapper;
+import com.parttime.enterprise.mapper.JobTagRelationMapper;
 import com.parttime.enterprise.pojo.cmd.JobCreateCmd;
 import com.parttime.enterprise.pojo.cmd.JobRateCmd;
 import com.parttime.enterprise.pojo.cmd.JobScheduleCmd;
@@ -15,11 +17,14 @@ import com.parttime.enterprise.pojo.cmd.UpdateJobCmd;
 import com.parttime.enterprise.pojo.entity.Job;
 import com.parttime.enterprise.pojo.entity.JobRate;
 import com.parttime.enterprise.pojo.entity.JobSchedule;
+import com.parttime.enterprise.pojo.entity.JobTag;
 import com.parttime.enterprise.pojo.vo.JobRateVO;
 import com.parttime.enterprise.pojo.vo.JobScheduleVO;
+import com.parttime.enterprise.pojo.vo.JobTagVO;
 import com.parttime.enterprise.pojo.vo.JobVO;
 import com.parttime.enterprise.service.JobService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 
@@ -40,13 +45,20 @@ public class JobServiceImpl implements JobService {
     private ScheduleApplicationMapper scheduleApplicationMapper;
     @Resource
     private JobCategoryMapper jobCategoryMapper;
+    @Resource
+    private JobTagRelationMapper jobTagRelationMapper;
+    @Resource
+    private JobTagMapper jobTagMapper;
 
     @Override
+    @Transactional
     public JobVO createJob(JobCreateCmd request) {
         Job job = new Job();
         job.setCompanyId(request.getCompanyId());
         job.setTitle(request.getTitle());
         job.setDescription(request.getDescription());
+        job.setRequirements(request.getRequirements());
+        job.setContactPhone(request.getContactPhone());
         job.setLocation(request.getLocation());
         job.setProvince(request.getProvince());
         job.setCity(request.getCity());
@@ -69,6 +81,7 @@ public class JobServiceImpl implements JobService {
         job.setImageUrl(request.getImageUrl());
 
         jobMapper.insert(job);
+        replaceJobTags(job.getId(), request.getTagIds());
 
         if (request.getRates() != null) {
             for (JobRateCmd rateReq : request.getRates()) {
@@ -97,11 +110,14 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    @Transactional
     public JobVO updateJob(Long id, UpdateJobCmd request) {
         Job job = jobMapper.findById(id)
                 .orElseThrow(() -> new RuntimeException("Job not found: " + id));
         if (request.getTitle() != null) job.setTitle(request.getTitle());
         if (request.getDescription() != null) job.setDescription(request.getDescription());
+        if (request.getRequirements() != null) job.setRequirements(request.getRequirements());
+        if (request.getContactPhone() != null) job.setContactPhone(request.getContactPhone());
         if (request.getLocation() != null) job.setLocation(request.getLocation());
         if (request.getProvince() != null) job.setProvince(request.getProvince());
         if (request.getCity() != null) job.setCity(request.getCity());
@@ -114,6 +130,9 @@ public class JobServiceImpl implements JobService {
         if (request.getDeadline() != null) job.setDeadline(request.getDeadline());
         if (request.getImageUrl() != null) job.setImageUrl(request.getImageUrl());
         jobMapper.update(job);
+        if (request.getTagIds() != null) {
+            replaceJobTags(id, request.getTagIds());
+        }
         if (request.getRates() != null) {
             jobRateMapper.deleteByJobId(id);
             for (JobRateCmd rateReq : request.getRates()) {
@@ -334,6 +353,42 @@ public class JobServiceImpl implements JobService {
         jobScheduleMapper.delete(scheduleId);
     }
 
+    private void replaceJobTags(Long jobId, List<Long> tagIds) {
+        jobTagRelationMapper.deleteByJobId(jobId);
+        if (tagIds == null) {
+            return;
+        }
+        List<Long> distinctTagIds = tagIds.stream().filter(Objects::nonNull).distinct().toList();
+        if (distinctTagIds.isEmpty()) {
+            return;
+        }
+        List<Long> activeTagIds = jobTagMapper.findActiveExistingIds(distinctTagIds);
+        if (activeTagIds.size() != distinctTagIds.size() || !activeTagIds.containsAll(distinctTagIds)) {
+            throw new RuntimeException("存在无效或已停用的岗位标签");
+        }
+        for (Long tagId : distinctTagIds) {
+            jobTagRelationMapper.insert(jobId, tagId);
+        }
+    }
+
+    private List<JobTagVO> toTagResponses(List<JobTag> tags) {
+        return tags.stream().map(this::toTagResponse).collect(Collectors.toList());
+    }
+
+    private JobTagVO toTagResponse(JobTag tag) {
+        JobTagVO response = new JobTagVO();
+        response.setId(tag.getId());
+        response.setGroupId(tag.getGroupId());
+        response.setGroupName(tag.getGroupName());
+        response.setName(tag.getName());
+        response.setCode(tag.getCode());
+        response.setSortOrder(tag.getSortOrder());
+        response.setStatus(tag.getStatus());
+        response.setCreatedAt(tag.getCreatedAt());
+        response.setUpdatedAt(tag.getUpdatedAt());
+        return response;
+    }
+
     private List<JobRateVO> toRateResponses(List<JobRate> rates) {
         return rates.stream().map(this::toRateResponse).collect(Collectors.toList());
     }
@@ -374,6 +429,12 @@ public class JobServiceImpl implements JobService {
         response.setCompanyId(job.getCompanyId());
         response.setTitle(job.getTitle());
         response.setDescription(job.getDescription());
+        response.setRequirements(job.getRequirements());
+        response.setContactPhone(job.getContactPhone());
+        List<Long> tagIds = jobTagRelationMapper.findTagIdsByJobId(job.getId());
+        List<JobTag> tags = jobTagRelationMapper.findTagsByJobId(job.getId());
+        response.setTagIds(tagIds == null ? List.of() : tagIds);
+        response.setTags(tags == null ? List.of() : toTagResponses(tags));
         response.setLocation(job.getLocation());
         response.setProvince(job.getProvince());
         response.setCity(job.getCity());

@@ -63,6 +63,10 @@ export function getCategories() {
   return request('GET', '/job-categories')
 }
 
+export function getJobTags() {
+  return request('GET', '/job-tags')
+}
+
 export function getRates(jobId) {
   return request('GET', `/jobs/rates?jobId=${jobId}`)
 }

@@ -2,6 +2,7 @@ package com.parttime.cservice.pojo.entity;
 
 import com.parttime.cservice.pojo.vo.JobRateInfoVO;
 import com.parttime.cservice.pojo.vo.JobScheduleInfoVO;
+import com.parttime.cservice.pojo.vo.JobTagVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -25,6 +26,12 @@ public class Job {
     private String title;
     @Schema(description = "岗位描述")
     private String description;
+    @Schema(description = "任职要求")
+    private String requirements;
+    @Schema(description = "岗位联系方式")
+    private String contactPhone;
+    @Schema(description = "岗位标签列表")
+    private List<JobTagVO> tags;
     @Schema(description = "工作地点")
     private String location;
     @Schema(description = "省")

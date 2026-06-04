@@ -266,11 +266,65 @@ CREATE TABLE `job_schedules` (
   KEY `idx_job_id` (`job_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
+CREATE TABLE `job_tag_groups` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL COMMENT '标签组名称',
+  `code` varchar(50) NOT NULL COMMENT '标签组编码',
+  `sort_order` int NOT NULL DEFAULT '0' COMMENT '排序',
+  `status` varchar(20) NOT NULL DEFAULT 'ACTIVE' COMMENT 'ACTIVE / DISABLED',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_job_tag_groups_code` (`code`),
+  KEY `idx_status` (`status`),
+  KEY `idx_sort_order` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='岗位标签组';
+
+CREATE TABLE `job_tags` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `group_id` bigint NOT NULL COMMENT '标签组ID',
+  `name` varchar(50) NOT NULL COMMENT '标签名称',
+  `code` varchar(50) NOT NULL COMMENT '标签编码',
+  `sort_order` int NOT NULL DEFAULT '0' COMMENT '排序',
+  `status` varchar(20) NOT NULL DEFAULT 'ACTIVE' COMMENT 'ACTIVE / DISABLED',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_job_tags_group_code` (`group_id`,`code`),
+  KEY `idx_group_id` (`group_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_sort_order` (`sort_order`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='岗位标签';
+
+CREATE TABLE `job_tag_relations` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `job_id` bigint NOT NULL COMMENT '岗位ID',
+  `tag_id` bigint NOT NULL COMMENT '标签ID',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_job_tag_relations_job_tag` (`job_id`,`tag_id`),
+  KEY `idx_job_id` (`job_id`),
+  KEY `idx_tag_id` (`tag_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='岗位标签关系';
+
+INSERT INTO `job_tag_groups` (`name`, `code`, `sort_order`, `status`) VALUES
+('结算周期', 'settlement_cycle', 10, 'ACTIVE'),
+('结算方式', 'settlement_method', 20, 'ACTIVE');
+
+INSERT INTO `job_tags` (`group_id`, `name`, `code`, `sort_order`, `status`) VALUES
+((SELECT `id` FROM `job_tag_groups` WHERE `code` = 'settlement_cycle'), '日结', 'daily', 10, 'ACTIVE'),
+((SELECT `id` FROM `job_tag_groups` WHERE `code` = 'settlement_cycle'), '周结', 'weekly', 20, 'ACTIVE'),
+((SELECT `id` FROM `job_tag_groups` WHERE `code` = 'settlement_cycle'), '月结', 'monthly', 30, 'ACTIVE'),
+((SELECT `id` FROM `job_tag_groups` WHERE `code` = 'settlement_method'), '计件', 'piecework', 10, 'ACTIVE'),
+((SELECT `id` FROM `job_tag_groups` WHERE `code` = 'settlement_method'), '按时', 'hourly', 20, 'ACTIVE');
+
 CREATE TABLE `jobs` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `company_id` bigint NOT NULL,
   `title` varchar(200) NOT NULL,
-  `description` text,
+  `description` longtext,
+  `requirements` longtext COMMENT '任职要求富文本',
+  `contact_phone` varchar(30) DEFAULT NULL COMMENT '岗位联系方式',
   `location` varchar(500) DEFAULT NULL,
   `province` varchar(50) DEFAULT NULL COMMENT '省',
   `city` varchar(50) DEFAULT NULL COMMENT '市',

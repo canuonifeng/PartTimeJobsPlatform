@@ -3,6 +3,7 @@ package com.parttime.cservice.service.impl;
 import com.parttime.cservice.mapper.CompanyWorkerInsertMapper;
 import com.parttime.cservice.mapper.JobMapper;
 import com.parttime.cservice.mapper.JobScheduleMapper;
+import com.parttime.cservice.mapper.JobTagRelationMapper;
 import com.parttime.cservice.mapper.ScheduleApplicationMapper;
 import com.parttime.cservice.pojo.entity.Job;
 import com.parttime.cservice.pojo.entity.JobSchedule;
@@ -11,6 +12,7 @@ import com.parttime.cservice.pojo.vo.JobDetailVO;
 import com.parttime.cservice.pojo.vo.JobRateInfoVO;
 import com.parttime.cservice.pojo.vo.JobScheduleInfoVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
+import com.parttime.cservice.pojo.vo.JobTagVO;
 import com.parttime.cservice.service.JobService;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +27,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyList;
 
@@ -39,6 +43,8 @@ public class JobServiceImpl implements JobService {
     private CompanyWorkerInsertMapper companyWorkerInsertMapper;
     @Resource
     private JobScheduleMapper jobScheduleMapper;
+    @Resource
+    private JobTagRelationMapper jobTagRelationMapper;
 
     @Override
     public List<JobSummaryVO> searchJobs(String keyword, Long categoryId, String location,
@@ -64,7 +70,7 @@ public class JobServiceImpl implements JobService {
                             distance(latitude, longitude, b.getLatitude(), b.getLongitude())))
                     .toList();
         }
-        return jobs.stream()
+        jobs = jobs.stream()
                 .filter(job -> {
                     if (minRate == null) return true;
                     List<JobRateInfoVO> rates = job.getRates();
@@ -83,7 +89,10 @@ public class JobServiceImpl implements JobService {
                     BigDecimal jobRate = job.getRateAmount() != null ? job.getRateAmount() : BigDecimal.ZERO;
                     return jobRate.compareTo(maxRate) <= 0;
                 })
-                .map(job -> toSummary(job, latitude, longitude))
+                .toList();
+        Map<Long, List<JobTagVO>> tagsByJobId = loadTagsByJobId(jobs);
+        return jobs.stream()
+                .map(job -> toSummary(job, latitude, longitude, tagsByJobId.get(job.getId())))
                 .toList();
     }
 
@@ -230,7 +239,7 @@ public class JobServiceImpl implements JobService {
         return scheduleApplicationMapper.findByWorkerId(workerId);
     }
 
-    private JobSummaryVO toSummary(Job job, BigDecimal latitude, BigDecimal longitude) {
+    private JobSummaryVO toSummary(Job job, BigDecimal latitude, BigDecimal longitude, List<JobTagVO> tags) {
         List<JobRateInfoVO> rates = job.getRates();
         BigDecimal minRate;
         BigDecimal maxRate;
@@ -253,6 +262,7 @@ public class JobServiceImpl implements JobService {
         JobSummaryVO summary = new JobSummaryVO();
         summary.setId(job.getId());
         summary.setTitle(job.getTitle());
+        summary.setTags(tags == null ? emptyList() : tags);
         summary.setLocation(job.getAddress());
         summary.setProvince(job.getProvince());
         summary.setCity(job.getCity());
@@ -282,11 +292,36 @@ public class JobServiceImpl implements JobService {
         }).toList();
     }
 
+    private Map<Long, List<JobTagVO>> loadTagsByJobId(List<Job> jobs) {
+        if (jobTagRelationMapper == null || jobs == null || jobs.isEmpty()) return Map.of();
+        List<Long> jobIds = jobs.stream()
+                .map(Job::getId)
+                .filter(id -> id != null)
+                .distinct()
+                .toList();
+        if (jobIds.isEmpty()) return Map.of();
+        List<JobTagVO> tags = jobTagRelationMapper.findTagsByJobIds(jobIds);
+        if (tags == null || tags.isEmpty()) return Map.of();
+        return tags.stream()
+                .filter(tag -> tag.getJobId() != null)
+                .collect(Collectors.groupingBy(JobTagVO::getJobId));
+    }
+
+    private List<JobTagVO> resolveTags(Job job) {
+        if (job.getTags() != null) return job.getTags();
+        if (jobTagRelationMapper == null || job.getId() == null) return emptyList();
+        List<JobTagVO> tags = jobTagRelationMapper.findTagsByJobId(job.getId());
+        return tags == null ? emptyList() : tags;
+    }
+
     private JobDetailVO toDetail(Job job, Long workerId) {
         JobDetailVO detail = new JobDetailVO();
         detail.setId(job.getId());
         detail.setTitle(job.getTitle());
         detail.setDescription(job.getDescription());
+        detail.setRequirements(job.getRequirements());
+        detail.setContactPhone(job.getContactPhone());
+        detail.setTags(resolveTags(job));
         detail.setLocation(job.getAddress());
         detail.setProvince(job.getProvince());
         detail.setCity(job.getCity());
