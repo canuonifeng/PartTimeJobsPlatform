@@ -6,6 +6,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class WorkerShiftVO {
@@ -27,6 +28,12 @@ public class WorkerShiftVO {
     private String endTime;
     @Schema(description = "班次状态")
     private String status;
+    @Schema(description = "签到时间")
+    private LocalDateTime checkInTime;
+    @Schema(description = "签退时间")
+    private LocalDateTime checkOutTime;
+    @Schema(description = "工时")
+    private BigDecimal workHours;
     @Schema(description = "补卡状态: PENDING/APPROVED/REJECTED/null")
     private String correctionStatus;
     @Schema(description = "打卡纬度")

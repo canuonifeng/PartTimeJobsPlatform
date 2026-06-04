@@ -62,8 +62,23 @@ public class AttendanceServiceImpl implements AttendanceService {
     public List<WorkerShiftVO> getMyShifts(Long workerId, LocalDate startDate, LocalDate endDate) {
         return shiftMapper.findByWorkerIdAndDateRange(workerId, startDate, endDate).stream()
                 .filter(s -> !"CANCELLED".equals(s.getStatus()))
+                .peek(this::markPastUnattendedShiftAbsent)
                 .map(workerShiftVOConverter::toWorkerShiftResponse)
                 .collect(Collectors.toList());
+    }
+
+    private void markPastUnattendedShiftAbsent(ShiftEntity shift) {
+        if (!ShiftStatus.SCHEDULED.name().equals(shift.getStatus())) {
+            return;
+        }
+        if (shift.getShiftDate() == null || shift.getEndTime() == null) {
+            return;
+        }
+        if (LocalDateTime.now().isAfter(LocalDateTime.of(shift.getShiftDate(), shift.getEndTime()))) {
+            shift.setStatus(ShiftStatus.ABSENT.name());
+            shift.setUpdatedAt(LocalDateTime.now());
+            shiftMapper.update(shift);
+        }
     }
 
     @Override
@@ -172,9 +187,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         checkIn.setUpdatedAt(now);
         attendanceCheckInMapper.insert(checkIn);
 
-        Duration duration = Duration.between(record.getCheckInTime(), now);
-        BigDecimal hours = BigDecimal.valueOf(duration.toMinutes() / 60.0)
-                .setScale(2, RoundingMode.HALF_UP);
+        BigDecimal hours = calculateBillableHours(record.getCheckInTime(), now, shift.getShiftDate(), shift.getStartTime(), shift.getEndTime());
 
         BigDecimal scheduledPay = BigDecimal.ZERO;
         String rateType = shift.getSalaryType() != null ? shift.getSalaryType() : "HOURLY";
@@ -211,6 +224,18 @@ public class AttendanceServiceImpl implements AttendanceService {
         return attendanceRecordMapper.findByWorkerId(workerId).stream()
                 .map(this::toAttendanceResponse)
                 .collect(Collectors.toList());
+    }
+
+    public static BigDecimal calculateBillableHours(LocalDateTime checkInTime, LocalDateTime checkOutTime, LocalDate shiftDate, LocalTime startTime, LocalTime endTime) {
+        LocalDateTime shiftStart = LocalDateTime.of(shiftDate, startTime);
+        LocalDateTime shiftEnd = LocalDateTime.of(shiftDate, endTime);
+        LocalDateTime effectiveStart = checkInTime.isBefore(shiftStart) ? shiftStart : checkInTime;
+        LocalDateTime effectiveEnd = checkOutTime.isAfter(shiftEnd) ? shiftEnd : checkOutTime;
+        long minutes = Duration.between(effectiveStart, effectiveEnd).toMinutes();
+        if (minutes <= 0) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+        return BigDecimal.valueOf(minutes / 60.0).setScale(2, RoundingMode.HALF_UP);
     }
 
     private double haversine(double lat1, double lon1, double lat2, double lon2) {

@@ -1,6 +1,9 @@
 package com.parttime.cservice.service;
 
+import com.parttime.cservice.mapper.AttendanceCorrectionMapper;
+import com.parttime.cservice.mapper.AttendanceRecordMapper;
 import com.parttime.cservice.service.impl.AttendanceServiceImpl;
+import com.parttime.cservice.service.impl.WorkerShiftVOConverter;
 import com.parttime.cservice.pojo.vo.AttendanceVO;
 import com.parttime.cservice.pojo.vo.WorkerShiftVO;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +14,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -25,9 +29,15 @@ class AttendanceServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        AttendanceRecordMapper attendanceRecordMapper = InMemoryMappers.createAttendanceRecordMapper();
+        AttendanceCorrectionMapper correctionMapper = InMemoryMappers.createAttendanceCorrectionMapper();
+        WorkerShiftVOConverter converter = new WorkerShiftVOConverter();
+        ReflectionTestUtils.setField(converter, "attendanceRecordMapper", attendanceRecordMapper);
+        ReflectionTestUtils.setField(converter, "correctionMapper", correctionMapper);
         ReflectionTestUtils.setField(attendanceService, "shiftMapper", InMemoryMappers.createShiftMapper());
-        ReflectionTestUtils.setField(attendanceService, "attendanceRecordMapper", InMemoryMappers.createAttendanceRecordMapper());
-        ReflectionTestUtils.setField(attendanceService, "correctionMapper", InMemoryMappers.createAttendanceCorrectionMapper());
+        ReflectionTestUtils.setField(attendanceService, "attendanceRecordMapper", attendanceRecordMapper);
+        ReflectionTestUtils.setField(attendanceService, "workerShiftVOConverter", converter);
+        ReflectionTestUtils.setField(attendanceService, "attendanceCheckInMapper", InMemoryMappers.createAttendanceCheckInMapper());
     }
 
     @Test
@@ -56,6 +66,18 @@ class AttendanceServiceTest {
     }
 
     @Test
+    void getMyShifts_shouldMarkPastUnattendedShiftsAbsent() {
+        attendanceService.addShift(10L, "Job1", "Loc1", 1L,
+                LocalDate.of(2026, 1, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
+                null, null, null, null);
+
+        List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
+
+        assertThat(shifts).hasSize(1);
+        assertThat(shifts.get(0).getStatus()).isEqualTo("ABSENT");
+    }
+
+    @Test
     void getMyShifts_shouldFilterByDateRange() {
         attendanceService.addShift(10L, "Job1", "Loc1", 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
@@ -72,16 +94,18 @@ class AttendanceServiceTest {
 
     @Test
     void checkIn_shouldCreateAttendanceRecord() {
-        attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
+        Long shiftId = attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
-                null, null, null, null);
-
-        List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
-        Long shiftId = shifts.get(0).getId();
+                null, null, null, null).getId();
 
         AttendanceVO response = attendanceService.checkIn(1L, shiftId, null, null);
-        assertThat(response.getStatus()).isEqualTo("CHECKED_IN");
+        List<WorkerShiftVO> updatedShifts = attendanceService.getMyShifts(1L, null, null);
+
+        assertThat(response.getStatus()).isEqualTo("LATE");
         assertThat(response.getCheckInTime()).isNotNull();
+        assertThat(updatedShifts.get(0).getStatus()).isEqualTo("LATE");
+        assertThat(updatedShifts.get(0).getCheckInTime()).isNotNull();
+        assertThat(updatedShifts.get(0).getCheckOutTime()).isNull();
     }
 
     @Test
@@ -93,12 +117,9 @@ class AttendanceServiceTest {
 
     @Test
     void checkIn_shouldThrowWhenNotOwnShift() {
-        attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
+        Long shiftId = attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
-                null, null, null, null);
-
-        List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
-        Long shiftId = shifts.get(0).getId();
+                null, null, null, null).getId();
 
         assertThatThrownBy(() -> attendanceService.checkIn(2L, shiftId, null, null))
                 .isInstanceOf(RuntimeException.class)
@@ -107,12 +128,9 @@ class AttendanceServiceTest {
 
     @Test
     void checkIn_shouldThrowWhenDuplicate() {
-        attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
+        Long shiftId = attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
-                null, null, null, null);
-
-        List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
-        Long shiftId = shifts.get(0).getId();
+                null, null, null, null).getId();
 
         attendanceService.checkIn(1L, shiftId, null, null);
 
@@ -123,12 +141,9 @@ class AttendanceServiceTest {
 
     @Test
     void checkIn_shouldRejectWhenLocationOutOfRange() {
-        attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
+        Long shiftId = attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
-                new BigDecimal("31.2304"), new BigDecimal("121.4737"), 10, null);
-
-        List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
-        Long shiftId = shifts.get(0).getId();
+                new BigDecimal("31.2304"), new BigDecimal("121.4737"), 10, null).getId();
 
         assertThatThrownBy(() -> attendanceService.checkIn(1L, shiftId,
                 new BigDecimal("31.3000"), new BigDecimal("121.5000")))
@@ -137,49 +152,80 @@ class AttendanceServiceTest {
     }
 
     @Test
-    void checkOut_shouldUpdateRecord() {
-        attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
-                LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
-                null, null, null, null);
+    void calculateBillableHours_shouldClampToShiftWindow() {
+        BigDecimal hours = AttendanceServiceImpl.calculateBillableHours(
+                LocalDateTime.of(2026, 6, 1, 8, 30),
+                LocalDateTime.of(2026, 6, 1, 18, 30),
+                LocalDate.of(2026, 6, 1),
+                LocalTime.of(9, 0),
+                LocalTime.of(18, 0));
 
-        List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
-        Long shiftId = shifts.get(0).getId();
+        assertThat(hours).isEqualByComparingTo(new BigDecimal("9.00"));
+    }
+
+    @Test
+    void calculateBillableHours_shouldUseActualTimesInsideShiftWindow() {
+        BigDecimal hours = AttendanceServiceImpl.calculateBillableHours(
+                LocalDateTime.of(2026, 6, 1, 10, 15),
+                LocalDateTime.of(2026, 6, 1, 17, 45),
+                LocalDate.of(2026, 6, 1),
+                LocalTime.of(9, 0),
+                LocalTime.of(18, 0));
+
+        assertThat(hours).isEqualByComparingTo(new BigDecimal("7.50"));
+    }
+
+    @Test
+    void calculateBillableHours_shouldReturnZeroWhenEffectiveEndBeforeStart() {
+        BigDecimal hours = AttendanceServiceImpl.calculateBillableHours(
+                LocalDateTime.of(2026, 6, 1, 19, 0),
+                LocalDateTime.of(2026, 6, 1, 19, 30),
+                LocalDate.of(2026, 6, 1),
+                LocalTime.of(9, 0),
+                LocalTime.of(18, 0));
+
+        assertThat(hours).isEqualByComparingTo(BigDecimal.ZERO);
+    }
+
+    @Test
+    void checkOut_shouldUpdateRecord() {
+        Long shiftId = attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
+                LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
+                null, null, null, null).getId();
 
         attendanceService.checkIn(1L, shiftId, null, null);
         AttendanceVO response = attendanceService.checkOut(1L, shiftId, null, null);
+        List<WorkerShiftVO> updatedShifts = attendanceService.getMyShifts(1L, null, null);
 
-        assertThat(response.getStatus()).isEqualTo("CHECKED_OUT");
+        assertThat(response.getStatus()).isEqualTo("COMPLETED");
         assertThat(response.getCheckOutTime()).isNotNull();
         assertThat(response.getTotalHours()).isNotNull();
+        assertThat(updatedShifts.get(0).getStatus()).isEqualTo("COMPLETED");
+        assertThat(updatedShifts.get(0).getCheckInTime()).isNotNull();
+        assertThat(updatedShifts.get(0).getCheckOutTime()).isNotNull();
     }
 
     @Test
     void checkOut_shouldThrowWhenNotCheckedIn() {
-        attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
+        Long shiftId = attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
-                null, null, null, null);
-
-        List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
-        Long shiftId = shifts.get(0).getId();
+                null, null, null, null).getId();
 
         assertThatThrownBy(() -> attendanceService.checkOut(1L, shiftId, null, null))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("No check-in record");
+                .hasMessageContaining("Cannot check out");
     }
 
     @Test
     void getMyAttendance_shouldReturnRecords() {
-        attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
+        Long shiftId = attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
-                null, null, null, null);
-
-        List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
-        Long shiftId = shifts.get(0).getId();
+                null, null, null, null).getId();
 
         attendanceService.checkIn(1L, shiftId, null, null);
 
         List<AttendanceVO> records = attendanceService.getMyAttendance(1L);
         assertThat(records).hasSize(1);
-        assertThat(records.get(0).getStatus()).isEqualTo("CHECKED_IN");
+        assertThat(records.get(0).getStatus()).isEqualTo("LATE");
     }
 }

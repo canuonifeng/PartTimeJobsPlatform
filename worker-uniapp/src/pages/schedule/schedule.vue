@@ -139,18 +139,6 @@ function addDays(start: Date, days: number): Date {
   return d
 }
 
-function fallbackShifts(start = currentWeekStart.value): Shift[] {
-  const dates = [0, 1, 2, 3, 4, 5, 6].map((day) => formatFullDate(addDays(start, day)))
-  return [
-    { id: -1, jobTitle: '仓库分拣员', location: '绿地物流园3号仓', startTime: '09:00', endTime: '18:00', date: dates[0], status: 'CHECKED_OUT', correctionStatus: null, canApplyCorrection: false, checkInTime: '08:58', checkOutTime: '18:02', workHours: '9h' },
-    { id: -2, jobTitle: '餐厅服务员', location: '阳光餐厅人民路店', startTime: '18:30', endTime: '22:30', date: dates[1], status: 'LATE', correctionStatus: 'PENDING', canApplyCorrection: false, checkInTime: '18:42', checkOutTime: '', workHours: '0h' },
-    { id: -3, jobTitle: '展会协助员', location: '国际会展中心A馆', startTime: '09:00', endTime: '17:00', date: dates[2], status: 'SCHEDULED', correctionStatus: null, canApplyCorrection: false, checkInTime: '', checkOutTime: '', workHours: '0h' },
-    { id: -4, jobTitle: '快递分拣员', location: '城北快递中转站', startTime: '08:00', endTime: '16:00', date: dates[3], status: 'ABSENT', correctionStatus: 'REJECTED', canApplyCorrection: false, checkInTime: '', checkOutTime: '', workHours: '0h' },
-    { id: -5, jobTitle: '超市理货员', location: '安心超市中心店', startTime: '10:00', endTime: '18:00', date: dates[4], status: 'CHECKED_IN', correctionStatus: null, canApplyCorrection: false, checkInTime: '10:00', checkOutTime: '', workHours: '进行中' },
-    { id: -6, jobTitle: '家政保洁员', location: '万家社区服务站', startTime: '09:30', endTime: '15:30', date: dates[5], status: 'SCHEDULED', correctionStatus: null, canApplyCorrection: false, checkInTime: '', checkOutTime: '', workHours: '0h' },
-    { id: -7, jobTitle: '商超促销员', location: '万达广场中庭', startTime: '14:00', endTime: '20:00', date: dates[6], status: 'SCHEDULED', correctionStatus: null, canApplyCorrection: false, checkInTime: '', checkOutTime: '', workHours: '0h' }
-  ]
-}
 
 function isShiftEnded(shift: Shift): boolean {
   if (!shift.date || !shift.endTime) return false
@@ -167,12 +155,15 @@ function canApplyCorrection(shift: Shift): boolean {
 
 function statusClass(shift: Shift): string {
   if (['CHECKED_OUT', 'COMPLETED', 'OFF_DUTY'].includes(shift.status)) return 'completed'
+  if (shift.checkInTime && !shift.checkOutTime) return 'in-progress'
   if (['CHECKED_IN', 'ON_DUTY'].includes(shift.status)) return 'in-progress'
   if (['ABSENT', 'LATE', 'EARLY_LEAVE'].includes(shift.status)) return 'warning'
   return 'pending'
 }
 
 function statusText(shift: Shift): string {
+  if (shift.checkOutTime) return '已完成'
+  if (shift.checkInTime) return '已签到'
   const map: Record<string, string> = { SCHEDULED: '待上岗', CHECKED_IN: '已签到', ON_DUTY: '工作中', CHECKED_OUT: '已完成', COMPLETED: '已完成', OFF_DUTY: '已完成', ABSENT: '缺勤', LATE: '迟到', EARLY_LEAVE: '早退' }
   return map[shift.status] || shift.status || '待上岗'
 }
@@ -225,10 +216,10 @@ async function loadShifts() {
   try {
     const res: any = await getMyShifts({ startDate: weekDays.value[0].fullDate, endDate: weekDays.value[6].fullDate })
     const list = Array.isArray(res) ? res : (res?.list || [])
-    allShifts.value = list.length ? list.map(normalizeShift) : fallbackShifts()
+    allShifts.value = list.map(normalizeShift)
   } catch {
-    allShifts.value = fallbackShifts()
-    uni.showToast({ title: '加载失败，已展示兜底排班', icon: 'none' })
+    allShifts.value = []
+    uni.showToast({ title: '排班加载失败', icon: 'none' })
   } finally {
     buildWeekDays(currentWeekStart.value)
     const todayIndex = weekDays.value.findIndex((d) => d.isToday)

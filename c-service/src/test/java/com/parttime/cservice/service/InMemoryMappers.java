@@ -349,6 +349,34 @@ public class InMemoryMappers {
         };
     }
 
+    public static AttendanceCheckInMapper createAttendanceCheckInMapper() {
+        return new AttendanceCheckInMapper() {
+            private final ConcurrentHashMap<Long, AttendanceCheckIn> store = new ConcurrentHashMap<>();
+            private final AtomicLong idGen = new AtomicLong(1);
+
+            @Override public int insert(AttendanceCheckIn record) {
+                if (record.getId() == null) record.setId(idGen.getAndIncrement());
+                store.put(record.getId(), record);
+                return 1;
+            }
+            @Override public int update(AttendanceCheckIn record) {
+                store.put(record.getId(), record);
+                return 1;
+            }
+            @Override public List<AttendanceCheckIn> findByShiftId(Long shiftId) {
+                return store.values().stream().filter(r -> shiftId.equals(r.getShiftId())).collect(Collectors.toList());
+            }
+            @Override public List<AttendanceCheckIn> findByShiftIdAndWorkerId(Long shiftId, Long workerId) {
+                return store.values().stream()
+                        .filter(r -> shiftId.equals(r.getShiftId()) && workerId.equals(r.getWorkerId()))
+                        .collect(Collectors.toList());
+            }
+            @Override public AttendanceCheckIn findById(Long id) {
+                return store.get(id);
+            }
+        };
+    }
+
     public static AttendanceCorrectionMapper createAttendanceCorrectionMapper() {
         return new AttendanceCorrectionMapper() {
             private final ConcurrentHashMap<Long, AttendanceCorrectionEntity> store = new ConcurrentHashMap<>();
