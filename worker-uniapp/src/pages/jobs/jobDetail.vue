@@ -17,7 +17,6 @@
         <view v-else class="banner-emoji">{{ heroEmoji }}</view>
         <view class="banner-info">
           <text class="banner-title">{{ title }}</text>
-          <text class="banner-company">{{ companyName }}</text>
         </view>
       </view>
 
@@ -25,17 +24,11 @@
         <view class="salary-card">
           <text class="salary-label">薪资待遇</text>
           <text class="salary-value">{{ salaryText }}</text>
-          <view class="tag-row">
-            <text class="salary-tag">{{ scheduleText }}</text>
-            <text class="salary-tag">{{ statusText }}</text>
-          </view>
         </view>
 
         <view class="card">
-          <view class="card-title"><text class="card-icon">💼</text><text>基本信息</text></view>
-          <view class="info-row"><text class="info-label">工作地点</text><view class="info-value-row" @click="handleOpenLocation"><text class="info-value">{{ locationText }}</text><text class="map-link">导航</text></view></view>
-          <view class="info-row"><text class="info-label">招聘企业</text><text class="info-value">{{ companyName }}</text></view>
-          <view class="info-row"><text class="info-label">岗位状态</text><text class="info-value">{{ statusText }}</text></view>
+          <view class="card-title"><text class="card-icon">💼</text><text>工作地点</text></view>
+          <view class="info-row"><view class="info-value-row" @click="handleOpenLocation"><text class="info-value">{{ locationText }}</text><text class="map-link">导航</text></view></view>
         </view>
 
         <view class="card">
@@ -46,6 +39,7 @@
               <text v-else-if="pendingScheduleIds.includes(Number(slot.id))" class="block-badge selected">已选</text>
               <text class="block-date">{{ scheduleDate(slot) }}</text>
               <text class="block-time">{{ scheduleTime(slot) }}</text>
+              <text class="block-duration">{{ scheduleDuration(slot) }}</text>
             </view>
           </view>
           <view v-else class="empty-hint">暂无可用排班</view>
@@ -115,8 +109,12 @@ const companyName = computed(() => job.value?.companyName || fallbackJob.company
 const locationText = computed(() => job.value?.location || fallbackJob.location)
 const schedules = computed(() => Array.isArray(job.value?.schedules) ? job.value.schedules : [])
 const heroEmoji = computed(() => title.value.indexOf('外卖') >= 0 || title.value.indexOf('配送') >= 0 ? '🛵' : '💼')
-const statusText = computed(() => job.value?.status === 'CLOSED' ? '已关闭' : '招聘中')
-const scheduleText = computed(() => schedules.value.length ? `${schedules.value.length}个排班可选` : '暂无排班')
+const companyAuthStatus = computed(() => normalizeCompanyAuthStatus(job.value))
+const companyAuthText = computed(() => {
+  const map: Record<string, string> = { APPROVED: '已实名', PENDING: '认证中', REJECTED: '未实名', NONE: '未实名' }
+  return map[companyAuthStatus.value] || '未实名'
+})
+const companyAuthClass = computed(() => companyAuthStatus.value === 'APPROVED' ? 'approved' : (companyAuthStatus.value === 'PENDING' ? 'pending' : ''))
 const companyInitial = computed(() => companyName.value.slice(0, 1))
 const salaryText = computed(() => {
   const rates = Array.isArray(job.value?.rates) ? job.value.rates : []
@@ -171,6 +169,32 @@ function scheduleDate(slot: any) {
 function scheduleTime(slot: any) {
   if (slot?.startTime && slot?.endTime) return `${slot.startTime}-${slot.endTime}`
   return '时间待定'
+}
+
+function scheduleDuration(slot: any) {
+  const minutes = diffMinutes(slot?.startTime, slot?.endTime)
+  if (!minutes) return '工时待定'
+  const hours = minutes / 60
+  return `${Number.isInteger(hours) ? hours : hours.toFixed(1)}小时`
+}
+
+function diffMinutes(start?: string, end?: string) {
+  if (!start || !end) return 0
+  const startParts = String(start).split(':').map(Number)
+  const endParts = String(end).split(':').map(Number)
+  if (startParts.length < 2 || endParts.length < 2 || startParts.some(Number.isNaN) || endParts.some(Number.isNaN)) return 0
+  const startMinutes = startParts[0] * 60 + startParts[1]
+  const endMinutes = endParts[0] * 60 + endParts[1]
+  return endMinutes > startMinutes ? endMinutes - startMinutes : 0
+}
+
+function normalizeCompanyAuthStatus(source: any) {
+  const raw = source?.companyRealNameStatus || source?.companyAuthStatus || source?.enterpriseRealNameStatus || source?.enterpriseAuthStatus
+  const status = raw ? String(raw).toUpperCase() : ''
+  if (source?.companyRealNamed || source?.companyVerified || source?.enterpriseVerified || status === 'VERIFIED' || status === 'APPROVED') return 'APPROVED'
+  if (status === 'PENDING' || status === 'REVIEWING') return 'PENDING'
+  if (status === 'REJECTED') return 'REJECTED'
+  return 'NONE'
 }
 
 function handleBack() {
@@ -261,9 +285,8 @@ onShareAppMessage(() => ({
 .banner-card { margin: 24rpx 24rpx 0; min-height: 300rpx; border-radius: 36rpx; background: linear-gradient(135deg, #16c784, #0ea66b); overflow: hidden; position: relative; box-shadow: 0 18rpx 40rpx rgba(14, 166, 107, 0.22); }
 .banner-image { width: 100%; height: 300rpx; }
 .banner-emoji { height: 210rpx; line-height: 210rpx; text-align: center; font-size: 118rpx; }
-.banner-info { padding: 0 34rpx 34rpx; }
+.banner-info { padding: 34rpx 34rpx 34rpx; }
 .banner-title { display: block; color: #fff; font-size: 46rpx; font-weight: 800; }
-.banner-company { display: block; margin-top: 14rpx; color: #eafff5; font-size: 28rpx; }
 .content { padding: 24rpx; }
 .salary-card, .card, .company-card { margin-bottom: 22rpx; padding: 30rpx; border-radius: 28rpx; background: #fff; box-shadow: 0 8rpx 30rpx rgba(31, 41, 55, 0.06); }
 .salary-card { background: #fff8ef; border: 2rpx solid #ffe4bd; }
@@ -278,6 +301,9 @@ onShareAppMessage(() => ({
 .info-value { flex: 1; color: #1f2937; font-size: 29rpx; line-height: 42rpx; }
 .info-value-row { flex: 1; display: flex; align-items: center; }
 .map-link { margin-left: 12rpx; padding: 6rpx 16rpx; border-radius: 20rpx; background: #ecfdf5; color: #0f9f5f; font-size: 24rpx; }
+.auth-badge { flex-shrink: 0; margin-left: 12rpx; padding: 6rpx 16rpx; border-radius: 20rpx; background: #f1f5f9; color: #64748b; font-size: 24rpx; }
+.auth-badge.approved { background: #ecfdf5; color: #0f9f5f; }
+.auth-badge.pending { background: #fff7ed; color: #f97316; }
 .schedule-grid { display: flex; flex-wrap: wrap; }
 .schedule-block { position: relative; width: 284rpx; margin-right: 18rpx; margin-bottom: 18rpx; padding: 28rpx 12rpx; border-radius: 20rpx; border: 2rpx solid #e5e7eb; background: #f8fafc; text-align: center; }
 .schedule-block:nth-child(2n) { margin-right: 0; }
@@ -287,6 +313,7 @@ onShareAppMessage(() => ({
 .block-badge.selected { background: #10b981; }
 .block-date { display: block; color: #111827; font-size: 30rpx; font-weight: 700; }
 .block-time { display: block; margin-top: 10rpx; color: #64748b; font-size: 26rpx; }
+.block-duration { display: block; margin-top: 8rpx; color: #0f9f5f; font-size: 24rpx; font-weight: 700; }
 .empty-hint { padding: 36rpx 0; text-align: center; color: #9ca3af; font-size: 28rpx; }
 .list-row { display: flex; margin-bottom: 18rpx; }
 .list-dot { width: 12rpx; height: 12rpx; margin-top: 14rpx; margin-right: 16rpx; border-radius: 6rpx; background: #ff8a00; }
