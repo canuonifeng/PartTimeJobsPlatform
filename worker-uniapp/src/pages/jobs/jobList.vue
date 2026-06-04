@@ -35,7 +35,7 @@
             </view>
             <view class="job-meta">
               <text class="job-location">{{ job.location || '附近' }}</text>
-              <text v-if="job.distanceKm != null" class="job-distance">{{ job.distanceKm }}km</text>
+              <text v-if="job.distanceKm != null" class="job-distance">距 {{ job.distanceKm }}km</text>
             </view>
             <view class="job-tags">
               <text v-for="tag in getSettlementTags(job)" :key="tag" class="tag">{{ tag }}</text>
@@ -409,10 +409,12 @@ onMounted(async () => {
 .job-meta {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 16rpx;
 }
 .job-location {
-  max-width: 240rpx;
+  flex: 1;
+  min-width: 0;
   font-size: 25rpx;
   color: #6b7280;
   overflow: hidden;
@@ -420,9 +422,13 @@ onMounted(async () => {
   white-space: nowrap;
 }
 .job-distance {
-  margin-left: 14rpx;
-  font-size: 25rpx;
-  color: #9ca3af;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding-left: 18rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #07c160;
+  white-space: nowrap;
 }
 .job-tags {
   display: flex;
