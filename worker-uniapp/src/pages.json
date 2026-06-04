@@ -43,6 +43,12 @@
       }
     },
     {
+      "path": "pages/settings/settings",
+      "style": {
+        "navigationBarTitleText": "设置"
+      }
+    },
+    {
       "path": "pages/auth/realName",
       "style": {
         "navigationBarTitleText": "实名认证"

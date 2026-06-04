@@ -6,20 +6,20 @@
     </view>
 
     <view class="body-wrap">
-      <view v-if="card.id" class="card-preview">
-        <view class="card-bg">
+      <view class="card-preview">
+        <view class="card-bg" :class="{ empty: !card.id }">
           <view class="card-chip"></view>
-          <text class="card-bank">{{ card.bankName }}</text>
-          <text class="card-number">{{ maskCard(card.cardNumber) }}</text>
+          <text class="card-bank">{{ card.bankName || form.bankName || '未绑定银行卡' }}</text>
+          <text class="card-number">{{ previewNumber }}</text>
           <view class="card-footer-row">
             <view class="card-holder-wrap">
               <text class="card-holder-label">持卡人</text>
-              <text class="card-holder-name">{{ card.cardHolder }}</text>
+              <text class="card-holder-name">{{ card.cardHolder || form.cardHolder || '请填写持卡人' }}</text>
             </view>
-            <view class="card-brand">💳</view>
+            <view class="card-brand">CARD</view>
           </view>
         </view>
-        <view v-if="card.bankBranch" class="card-branch">{{ card.bankBranch }}</view>
+        <view v-if="card.bankBranch || form.bankBranch" class="card-branch">{{ card.bankBranch || form.bankBranch }}</view>
       </view>
 
       <view class="form-card">
@@ -35,73 +35,118 @@
         </view>
         <view class="form-item">
           <text class="form-label">银行卡号</text>
-          <input v-model="form.cardNumber" placeholder="请输入卡号" type="number" class="form-input" />
+          <input v-model="form.cardNumber" placeholder="请输入卡号" type="number" maxlength="19" class="form-input" />
         </view>
         <view class="form-item">
           <text class="form-label">开户支行（选填）</text>
           <input v-model="form.bankBranch" placeholder="请输入开户支行" class="form-input" />
         </view>
 
-        <button class="submit-btn" @click="onSubmit">{{ card.id ? '更新' : '绑定' }}</button>
-        <button v-if="card.id" class="unbind-btn" @click="onDelete">解绑银行卡</button>
+        <button class="submit-btn" :loading="submitting" :disabled="submitting" @click="onSubmit">
+          {{ submitting ? '保存中' : (card.id ? '更新' : '绑定') }}
+        </button>
+        <button v-if="card.id" class="unbind-btn" :loading="deleting" :disabled="deleting" @click="onDelete">解绑银行卡</button>
       </view>
     </view>
   </view>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { getBankCard, upsertBankCard, deleteBankCard } from '@/api/bankCard.js'
 
 const card = ref({})
+const submitting = ref(false)
+const deleting = ref(false)
 const form = reactive({ bankName: '', cardHolder: '', cardNumber: '', bankBranch: '' })
 
+const previewNumber = computed(() => maskCard(card.value.cardNumber || form.cardNumber) || '****  ****  ****  ****')
+
+function resetForm() {
+  card.value = {}
+  form.bankName = ''
+  form.cardHolder = ''
+  form.cardNumber = ''
+  form.bankBranch = ''
+}
+
 function maskCard(no) {
-  if (!no || no.length < 8) return no
-  return no.slice(0, 4) + '  ****  ' + no.slice(-4)
+  const value = String(no || '').replace(/\s/g, '')
+  if (!value) return ''
+  if (value.length < 8) return value
+  return value.slice(0, 4) + '  ****  ' + value.slice(-4)
 }
 
 async function load() {
   try {
     const res = await getBankCard()
-    if (res) {
+    if (res && res.id) {
       card.value = res
-      form.bankName = res.bankName
-      form.cardHolder = res.cardHolder
-      form.cardNumber = res.cardNumber
+      form.bankName = res.bankName || ''
+      form.cardHolder = res.cardHolder || ''
+      form.cardNumber = res.cardNumber || ''
       form.bankBranch = res.bankBranch || ''
+    } else {
+      resetForm()
     }
-  } catch {}
+  } catch {
+    resetForm()
+  }
+}
+
+function validateCardNumber(no) {
+  return /^\d{16,19}$/.test(no)
 }
 
 async function onSubmit() {
-  if (!form.bankName || !form.cardHolder || !form.cardNumber) {
+  if (submitting.value) return
+  const bankName = form.bankName.trim()
+  const cardHolder = form.cardHolder.trim()
+  const cardNumber = String(form.cardNumber || '').replace(/\s/g, '')
+  const bankBranch = form.bankBranch.trim()
+  if (!bankName || !cardHolder || !cardNumber) {
     uni.showToast({ title: '请填写完整', icon: 'none' })
     return
   }
+  if (!validateCardNumber(cardNumber)) {
+    uni.showToast({ title: '银行卡号格式不正确', icon: 'none' })
+    return
+  }
+  submitting.value = true
   try {
-    await upsertBankCard(form)
+    await upsertBankCard({ bankName, cardHolder, cardNumber, bankBranch })
     uni.showToast({ title: '保存成功', icon: 'success' })
-    load()
+    await load()
   } catch (e) {
     uni.showToast({ title: e?.message || '保存失败', icon: 'none' })
+  } finally {
+    submitting.value = false
   }
 }
 
-async function onDelete() {
+async function doDelete() {
+  if (deleting.value) return
+  deleting.value = true
+  try {
+    await deleteBankCard()
+    resetForm()
+    uni.showToast({ title: '已解绑' })
+  } catch (e) {
+    uni.showToast({ title: e?.message || '解绑失败', icon: 'none' })
+  } finally {
+    deleting.value = false
+  }
+}
+
+function onDelete() {
   uni.showModal({
     title: '解绑',
     content: '确认解绑银行卡？',
-    success: async ({ confirm }) => {
-      if (!confirm) return
-      await deleteBankCard()
-      card.value = {}
-      form.bankName = ''
-      form.cardHolder = ''
-      form.cardNumber = ''
-      form.bankBranch = ''
-      uni.showToast({ title: '已解绑' })
+    success: ({ confirm }) => {
+      if (confirm) {
+        doDelete()
+      }
     }
   })
 }
@@ -112,9 +157,10 @@ onShow(load)
 <style scoped>
 .page {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: #f5f7fa;
   padding: 30rpx;
   padding-bottom: 40rpx;
+  box-sizing: border-box;
 }
 .header-banner {
   background: linear-gradient(135deg, #07c160, #059d50);
@@ -149,7 +195,10 @@ onShow(load)
   border-radius: 24rpx;
   padding: 40rpx 32rpx;
   color: #fff;
-  box-shadow: 0 8rpx 32rpx rgba(26, 115, 232, 0.35);
+  box-shadow: 0 8rpx 32rpx rgba(26, 115, 232, 0.28);
+}
+.card-bg.empty {
+  background: linear-gradient(135deg, #9ca3af, #6b7280);
 }
 .card-chip {
   width: 48rpx;
@@ -171,7 +220,7 @@ onShow(load)
   font-weight: 700;
   letter-spacing: 4rpx;
   margin-bottom: 32rpx;
-  font-family: 'Courier New', monospace;
+  font-family: monospace;
 }
 .card-footer-row {
   display: flex;
@@ -189,7 +238,10 @@ onShow(load)
   font-weight: 600;
 }
 .card-brand {
-  font-size: 48rpx;
+  padding: 8rpx 12rpx;
+  border: 2rpx solid rgba(255, 255, 255, 0.5);
+  border-radius: 8rpx;
+  font-size: 22rpx;
 }
 .card-branch {
   font-size: 26rpx;
@@ -201,7 +253,7 @@ onShow(load)
   background: #fff;
   border-radius: 24rpx;
   padding: 36rpx;
-  box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.06);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.06);
 }
 .form-title {
   display: block;
@@ -230,22 +282,18 @@ onShow(load)
   box-sizing: border-box;
   background: #fafafa;
 }
-.form-input:focus {
-  border-color: #07c160;
-  background: #fff;
-}
 .submit-btn {
   width: 100%;
   height: 96rpx;
   line-height: 96rpx;
-  background: linear-gradient(135deg, #07c160, #059d50);
+  background: #07c160;
   color: #fff;
   border-radius: 48rpx;
   font-size: 34rpx;
   font-weight: 700;
   border: none;
   margin-top: 16rpx;
-  box-shadow: 0 4rpx 16rpx rgba(7, 193, 96, 0.35);
+  box-shadow: 0 4rpx 16rpx rgba(7, 193, 96, 0.28);
 }
 .unbind-btn {
   width: 100%;

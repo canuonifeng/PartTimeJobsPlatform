@@ -29,7 +29,7 @@
             @input="validateAmount"
           />
         </view>
-        <text class="amount-tip">最低提现10元，可提现余额{{ availableBalance }}元</text>
+        <text class="amount-tip">{{ balanceLoaded ? `最低提现10元，可提现余额${availableBalance}元` : '余额加载失败，请稍后重试' }}</text>
       </view>
 
       <view class="quick-amounts">
@@ -38,7 +38,7 @@
           :key="val"
           class="quick-chip"
           :class="{ selected: amount === String(val) }"
-          @click="amount = String(val)"
+          @click="setQuickAmount(val)"
         >
           {{ val }}元
         </view>
@@ -67,23 +67,35 @@ import { getBankCard } from '@/api/bankCard.js'
 
 const amount = ref('')
 const availableBalance = ref(0)
+const balanceLoaded = ref(false)
 const submitting = ref(false)
 const realNameOk = ref(false)
 const bankCardOk = ref(false)
 
-const quickAmounts = [50, 100, 200, 500]
+const baseQuickAmounts = [50, 100, 200, 500]
 
 const ready = computed(() => realNameOk.value && bankCardOk.value)
+const quickAmounts = computed(() => baseQuickAmounts.filter(val => val <= availableBalance.value))
 
-const canSubmit = computed(() => {
-  const val = parseFloat(amount.value)
-  return ready.value && val >= 10 && val <= availableBalance.value
-})
+const canSubmit = computed(() => ready.value && balanceLoaded.value && !submitting.value && isValidAmount(amount.value))
+
+function isValidAmount(value: string) {
+  if (!/^\d+(\.\d{1,2})?$/.test(value)) return false
+  const val = Number(value)
+  return Number.isFinite(val) && val > 0 && val >= 10 && val <= availableBalance.value
+}
 
 function validateAmount() {
-  const val = parseFloat(amount.value)
-  if (val > availableBalance.value) {
+  if (!amount.value) return
+  const val = Number(amount.value)
+  if (Number.isFinite(val) && val > availableBalance.value) {
     amount.value = String(availableBalance.value)
+  }
+}
+
+function setQuickAmount(val: number) {
+  if (val <= availableBalance.value) {
+    amount.value = String(val)
   }
 }
 
@@ -96,6 +108,7 @@ function goBankCard() {
 }
 
 async function handleWithdraw() {
+  if (submitting.value) return
   if (!ready.value) {
     if (!realNameOk.value) goRealName()
     else if (!bankCardOk.value) goBankCard()
@@ -104,7 +117,7 @@ async function handleWithdraw() {
   if (!canSubmit.value) return
   submitting.value = true
   try {
-    await createWithdrawal({ amount: parseFloat(amount.value) })
+    await createWithdrawal({ amount: Number(amount.value) })
     uni.showToast({ title: '提现申请已提交', icon: 'success' })
     uni.$emit('earningsRefresh')
     uni.navigateBack()
@@ -134,24 +147,32 @@ onMounted(async () => {
   await loadGates()
   try {
     const res = await getEarningsSummary()
-    availableBalance.value = res.pendingWithdrawal || 0
+    const balance = Number(res?.pendingWithdrawal ?? res?.availableBalance ?? res?.balance ?? 0)
+    availableBalance.value = Number.isFinite(balance) && balance > 0 ? balance : 0
+    balanceLoaded.value = true
   } catch {
-    // ignore
+    availableBalance.value = 0
+    balanceLoaded.value = false
+    uni.showToast({ title: '余额加载失败，请稍后重试', icon: 'none' })
   }
 })
 </script>
 
 <style scoped>
 .withdraw-page {
+  min-height: 100vh;
   padding: 30rpx;
+  background: #f7f8fa;
+  box-sizing: border-box;
 }
 
 .balance-card {
-  background: linear-gradient(135deg, #07c160, #06ad56);
-  border-radius: 20rpx;
-  padding: 40rpx 30rpx;
-  margin-bottom: 30rpx;
+  background: linear-gradient(135deg, #ff9f2d, #ff6a00);
+  border-radius: 28rpx;
+  padding: 42rpx 32rpx;
+  margin-bottom: 24rpx;
   color: #fff;
+  box-shadow: 0 12rpx 30rpx rgba(255, 106, 0, 0.18);
 }
 
 .balance-label {
@@ -162,14 +183,15 @@ onMounted(async () => {
 }
 
 .balance-amount {
-  font-size: 56rpx;
+  font-size: 64rpx;
+  line-height: 76rpx;
   font-weight: 700;
 }
 
 .form-card {
   background: #fff;
-  border-radius: 16rpx;
-  padding: 30rpx;
+  border-radius: 20rpx;
+  padding: 32rpx;
   margin-bottom: 30rpx;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
 }
@@ -216,8 +238,9 @@ onMounted(async () => {
 
 .quick-amounts {
   display: flex;
-  gap: 16rpx;
   flex-wrap: wrap;
+  margin-right: -16rpx;
+  margin-bottom: -16rpx;
 }
 
 .quick-chip {
@@ -226,6 +249,8 @@ onMounted(async () => {
   background: #f5f5f5;
   font-size: 26rpx;
   color: #666;
+  margin-right: 16rpx;
+  margin-bottom: 16rpx;
 }
 
 .quick-chip.selected {

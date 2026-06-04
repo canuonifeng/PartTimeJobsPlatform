@@ -1,74 +1,79 @@
 <template>
   <view class="edit-page">
     <view class="avatar-section" @click="changeAvatar">
-      <image class="avatar" :src="form.avatar || '/static/default-avatar.png'" mode="aspectFill" />
-      <text class="avatar-tip">点击更换头像</text>
-    </view>
-
-    <view class="form-group">
-      <text class="form-label">姓名</text>
-      <input class="form-input" v-model="form.name" placeholder="请输入姓名" />
-    </view>
-
-    <view class="form-group">
-      <text class="form-label">手机号</text>
-      <input class="form-input" v-model="form.phone" type="number" maxlength="11" placeholder="请输入手机号" />
-    </view>
-
-    <view class="form-group">
-      <text class="form-label">性别</text>
-      <view class="gender-row">
-        <view
-          v-for="opt in genderOptions"
-          :key="opt.value"
-          class="gender-chip"
-          :class="{ selected: form.gender === opt.value }"
-          @click="form.gender = opt.value"
-        >
-          {{ opt.label }}
-        </view>
+      <image class="avatar" :src="previewAvatar || form.avatar || '/static/default-avatar.png'" mode="aspectFill" />
+      <view class="avatar-text">
+        <text class="avatar-title">个人资料</text>
+        <text class="avatar-tip">点击更换头像</text>
       </view>
     </view>
 
-    <view class="form-group">
-      <text class="form-label">出生日期</text>
-      <picker mode="date" :value="form.birthday" :end="todayStr" @change="onBirthdayChange">
-        <view class="form-input picker-value">{{ form.birthday || '请选择出生日期' }}</view>
-      </picker>
+    <view class="form-card">
+      <view class="form-group">
+        <text class="form-label">姓名</text>
+        <input class="form-input" v-model="form.name" placeholder="请输入姓名" />
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">手机号</text>
+        <input class="form-input" v-model="form.phone" type="number" maxlength="11" placeholder="请输入手机号" />
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">性别</text>
+        <view class="gender-row">
+          <view
+            v-for="(opt, index) in genderOptions"
+            :key="opt.value"
+            class="gender-chip"
+            :class="[{ selected: form.gender === opt.value }, index < genderOptions.length - 1 ? 'chip-space' : '']"
+            @click="form.gender = opt.value"
+          >
+            {{ opt.label }}
+          </view>
+        </view>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">出生日期</text>
+        <picker mode="date" :value="form.birthday" :end="todayStr" @change="onBirthdayChange">
+          <view class="form-input picker-value">{{ form.birthday || '请选择出生日期' }}</view>
+        </picker>
+      </view>
     </view>
 
-    <view class="form-group">
-      <text class="form-label">技能标签</text>
-      <view class="skill-input-area">
+    <view class="form-card">
+      <view class="form-group">
+        <text class="form-label">技能标签</text>
         <view class="skill-tags">
           <view v-for="(skill, i) in form.skills" :key="i" class="skill-tag">
             <text>{{ skill }}</text>
             <text class="tag-remove" @click="removeSkill(i)">x</text>
           </view>
         </view>
-        <view class="skill-add">
-          <input class="skill-input" v-model="newSkill" placeholder="输入技能，按确认添加" @confirm="addSkill" />
-        </view>
+        <input class="skill-input" v-model="newSkill" placeholder="输入技能，按确认添加" @confirm="addSkill" />
       </view>
-    </view>
 
-    <view class="form-group">
-      <text class="form-label">可工作日期</text>
-      <view class="day-checkboxes">
-        <view
-          v-for="day in weekDays"
-          :key="day.value"
-          class="day-chip"
-          :class="{ selected: form.availableDays?.includes(day.value) }"
-          @click="toggleDay(day.value)"
-        >
-          {{ day.label }}
+      <view class="form-group last-group">
+        <text class="form-label">可工作日期</text>
+        <view class="day-checkboxes">
+          <view
+            v-for="(day, index) in weekDays"
+            :key="day.value"
+            class="day-chip"
+            :class="[{ selected: form.availableDays.includes(day.value) }, index % 3 !== 2 ? 'day-space' : '']"
+            @click="toggleDay(day.value)"
+          >
+            {{ day.label }}
+          </view>
         </view>
       </view>
     </view>
 
     <view class="save-area">
-      <button class="save-btn" type="primary" @click="handleSave" :loading="saving">保存</button>
+      <button class="save-btn" type="primary" :loading="saving" :disabled="saving" @click="handleSave">
+        {{ saving ? '保存中' : '保存' }}
+      </button>
     </view>
   </view>
 </template>
@@ -78,6 +83,7 @@ import { ref, onMounted, reactive } from 'vue'
 import { getProfile, updateProfile } from '@/api/profile'
 import { useAuthStore } from '@/store'
 
+const previewAvatar = ref('')
 const authStore = useAuthStore()
 
 const weekDays = [
@@ -140,25 +146,61 @@ function changeAvatar() {
   uni.chooseImage({
     count: 1,
     success: (res) => {
-      const tempPath = res.tempFilePaths[0]
-      form.avatar = tempPath
+      previewAvatar.value = res.tempFilePaths[0]
     }
   })
 }
 
 async function handleSave() {
-  if (!form.name) {
+  if (saving.value) return
+  const name = form.name.trim()
+  const phone = form.phone.trim()
+  if (!name) {
     uni.showToast({ title: '请输入姓名', icon: 'none' })
     return
   }
+  if (phone && !/^1\d{10}$/.test(phone)) {
+    uni.showToast({ title: '手机号格式不正确', icon: 'none' })
+    return
+  }
   saving.value = true
+  if (previewAvatar.value) {
+    const payloadWithoutAvatar = {
+      name,
+      phone,
+      gender: form.gender,
+      birthday: form.birthday,
+      skills: [...form.skills],
+      availableDays: [...form.availableDays]
+    }
+    try {
+      await updateProfile(payloadWithoutAvatar)
+      authStore.setWorkerInfo({ ...payloadWithoutAvatar, avatar: form.avatar })
+      uni.showToast({ title: '头像上传暂未接入，已保存其他资料', icon: 'none' })
+      uni.navigateBack()
+    } catch (e: any) {
+      uni.showToast({ title: e?.message || '保存失败', icon: 'none' })
+    } finally {
+      saving.value = false
+    }
+    return
+  }
+  const payload = {
+    name,
+    phone,
+    avatar: previewAvatar.value || form.avatar,
+    gender: form.gender,
+    birthday: form.birthday,
+    skills: [...form.skills],
+    availableDays: [...form.availableDays]
+  }
   try {
-    await updateProfile({ ...form })
-    authStore.setWorkerInfo({ ...form })
+    await updateProfile(payload)
+    authStore.setWorkerInfo(payload)
     uni.showToast({ title: '保存成功', icon: 'success' })
     uni.navigateBack()
-  } catch {
-    uni.showToast({ title: '保存失败', icon: 'none' })
+  } catch (e: any) {
+    uni.showToast({ title: e?.message || '保存失败', icon: 'none' })
   } finally {
     saving.value = false
   }
@@ -173,47 +215,77 @@ onMounted(async () => {
       form.avatar = res.avatar || res.avatarUrl || ''
       form.gender = res.gender || ''
       form.birthday = res.birthday || ''
-      form.skills = res.skills || []
-      form.availableDays = res.availableDays || []
+      form.skills = Array.isArray(res.skills) ? res.skills : []
+      form.availableDays = Array.isArray(res.availableDays) ? res.availableDays : []
     }
-  } catch {
-    // ignore
+  } catch (e: any) {
+    uni.showToast({ title: e?.message || '资料加载失败', icon: 'none' })
   }
 })
 </script>
 
 <style scoped>
 .edit-page {
+  min-height: 100vh;
   padding: 30rpx;
+  background: #f5f7fa;
+  box-sizing: border-box;
 }
 
 .avatar-section {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  padding: 40rpx 0;
+  padding: 34rpx;
   background: #fff;
-  border-radius: 16rpx;
-  margin-bottom: 20rpx;
+  border-radius: 24rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 18rpx rgba(0, 0, 0, 0.05);
 }
 
 .avatar {
-  width: 140rpx;
-  height: 140rpx;
-  border-radius: 50%;
-  margin-bottom: 16rpx;
+  width: 132rpx;
+  height: 132rpx;
+  border-radius: 66rpx;
+  margin-right: 28rpx;
+  background: #f1f1f1;
+}
+
+.avatar-text {
+  flex: 1;
+}
+
+.avatar-title {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 12rpx;
 }
 
 .avatar-tip {
+  display: block;
   font-size: 24rpx;
   color: #999;
 }
 
-.form-group {
+.form-card {
   background: #fff;
-  border-radius: 16rpx;
+  border-radius: 24rpx;
   padding: 30rpx;
-  margin-bottom: 20rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 18rpx rgba(0, 0, 0, 0.05);
+}
+
+.form-group {
+  padding-bottom: 28rpx;
+  margin-bottom: 28rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.last-group {
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: none;
 }
 
 .form-label {
@@ -225,30 +297,37 @@ onMounted(async () => {
 
 .form-input {
   width: 100%;
-  height: 72rpx;
+  height: 76rpx;
+  padding: 0 20rpx;
   font-size: 28rpx;
   color: #333;
-  border-bottom: 1rpx solid #f0f0f0;
+  border: 2rpx solid #edf0f3;
+  border-radius: 14rpx;
+  background: #fafafa;
+  box-sizing: border-box;
 }
 
 .picker-value {
-  line-height: 72rpx;
+  line-height: 76rpx;
   color: #333;
 }
 
 .gender-row {
   display: flex;
-  gap: 16rpx;
 }
 
 .gender-chip {
   flex: 1;
   text-align: center;
-  padding: 16rpx 0;
-  border-radius: 8rpx;
+  padding: 18rpx 0;
+  border-radius: 12rpx;
   background: #f5f5f5;
   font-size: 26rpx;
   color: #666;
+}
+
+.chip-space {
+  margin-right: 16rpx;
 }
 
 .gender-chip.selected {
@@ -256,60 +335,61 @@ onMounted(async () => {
   color: #fff;
 }
 
-.skill-input-area {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12rpx;
-}
-
 .skill-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 12rpx;
-  width: 100%;
+  margin-bottom: 16rpx;
 }
 
 .skill-tag {
   display: flex;
   align-items: center;
-  padding: 8rpx 20rpx;
+  padding: 10rpx 20rpx;
+  margin-right: 12rpx;
+  margin-bottom: 12rpx;
   background: #e8f8ee;
-  border-radius: 8rpx;
+  border-radius: 28rpx;
   font-size: 24rpx;
   color: #07c160;
 }
 
 .tag-remove {
-  margin-left: 8rpx;
-  color: #ccc;
+  margin-left: 10rpx;
+  color: #9ca3af;
   font-size: 24rpx;
-}
-
-.skill-add {
-  width: 100%;
-  margin-top: 12rpx;
 }
 
 .skill-input {
   width: 100%;
-  height: 60rpx;
+  height: 72rpx;
+  padding: 0 20rpx;
   font-size: 26rpx;
   color: #333;
-  border-bottom: 1rpx solid #f0f0f0;
+  border: 2rpx solid #edf0f3;
+  border-radius: 14rpx;
+  background: #fafafa;
+  box-sizing: border-box;
 }
 
 .day-checkboxes {
   display: flex;
   flex-wrap: wrap;
-  gap: 12rpx;
 }
 
 .day-chip {
-  padding: 12rpx 24rpx;
+  width: 30%;
+  text-align: center;
+  padding: 16rpx 0;
+  margin-bottom: 14rpx;
   border-radius: 40rpx;
   background: #f5f5f5;
   font-size: 26rpx;
   color: #666;
+  box-sizing: border-box;
+}
+
+.day-space {
+  margin-right: 5%;
 }
 
 .day-chip.selected {
@@ -318,7 +398,7 @@ onMounted(async () => {
 }
 
 .save-area {
-  padding: 20rpx 0;
+  padding: 10rpx 0 20rpx;
 }
 
 .save-btn {

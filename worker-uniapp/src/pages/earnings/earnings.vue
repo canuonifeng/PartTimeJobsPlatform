@@ -1,50 +1,70 @@
 <template>
   <view class="earnings-page">
     <view class="summary-card">
-      <text class="summary-label">累计收入</text>
-      <text class="summary-amount">{{ summary.totalEarnings || 0 }}<text class="unit">元</text></text>
+      <view class="summary-top">
+        <view>
+          <text class="summary-label">累计收入</text>
+          <text class="summary-amount">¥{{ money(summary.totalEarnings) }}</text>
+        </view>
+        <button class="withdraw-btn" @click="navTo('/pages/earnings/withdraw')">提现</button>
+      </view>
       <view class="summary-details">
         <view class="detail-item">
-          <text class="detail-num">{{ summary.completedShifts || 0 }}</text>
-          <text class="detail-label">已完成班次</text>
+          <text class="detail-num">{{ money(summary.monthEarnings) }}</text>
+          <text class="detail-label">本月收入</text>
         </view>
         <view class="detail-item">
-          <text class="detail-num">{{ summary.totalHours || 0 }}</text>
-          <text class="detail-label">总工时(小时)</text>
+          <text class="detail-num">{{ money(summary.pendingSettlement) }}</text>
+          <text class="detail-label">待结算</text>
         </view>
         <view class="detail-item">
-          <text class="detail-num">{{ summary.availableBalance || 0 }}</text>
-          <text class="detail-label">可提现(元)</text>
+          <text class="detail-num">{{ money(summary.withdrawnAmount) }}</text>
+          <text class="detail-label">已提现</text>
         </view>
       </view>
-      <button class="withdraw-btn" @click="navTo('/pages/earnings/withdraw')">
-        提现
-      </button>
+    </view>
+
+    <view class="tabs-card">
+      <view v-for="tab in tabs" :key="tab.key" class="tab-item" :class="{ active: activeTab === tab.key }" @click="activeTab = tab.key">
+        <text>{{ tab.label }}</text>
+      </view>
     </view>
 
     <view class="section">
       <view class="section-header">
-        <text class="section-title">交易记录</text>
+        <text class="section-title">收入明细</text>
+        <text class="section-count">{{ filteredTransactions.length }}笔</text>
       </view>
 
       <uni-load-more v-if="loading && page === 1" status="loading" />
 
-      <view v-if="transactions.length === 0 && !loading" class="empty-state">
-        <text class="empty-text">暂无交易记录</text>
+      <view v-if="dataNotice" class="data-notice">
+        <text>{{ dataNotice }}</text>
       </view>
 
-      <view v-for="item in transactions" :key="item.id" class="transaction-card">
-        <view class="tx-left">
-          <text class="tx-title">{{ item.type === 'earning' ? '工作收入' : '提现' }}</text>
-          <text class="tx-date">{{ item.createdAt }}</text>
+      <view v-if="groupedTransactions.length === 0 && !loading" class="empty-state">
+        <text class="empty-text">暂无明细记录</text>
+      </view>
+
+      <view v-for="group in groupedTransactions" :key="group.date" class="date-group">
+        <view class="date-row">
+          <text class="date-title">{{ group.date }}</text>
+          <text class="date-count">{{ group.items.length }}笔</text>
         </view>
-        <view class="tx-right">
-          <text class="tx-amount" :class="item.type">{{ item.type === 'earning' ? '+' : '-' }}{{ item.amount }}元</text>
-          <text class="tx-status" :class="item.statusClass">{{ item.status }}</text>
+        <view v-for="item in group.items" :key="item.id" class="transaction-card">
+          <view class="tx-icon" :class="item.type"><text>{{ item.type === 'withdrawal' ? '提' : '收' }}</text></view>
+          <view class="tx-left">
+            <text class="tx-title">{{ item.title }}</text>
+            <text class="tx-date">{{ item.time || item.createdAt }}</text>
+          </view>
+          <view class="tx-right">
+            <text class="tx-amount" :class="item.type">{{ item.type === 'withdrawal' ? '-' : '+' }}{{ money(item.amount) }}</text>
+            <text class="tx-status" :class="item.statusClass">{{ item.status }}</text>
+          </view>
         </view>
       </view>
 
-      <uni-load-more :status="moreStatus" />
+      <uni-load-more v-if="transactions.length > 0" :status="moreStatus" />
     </view>
   </view>
 </template>
@@ -55,13 +75,25 @@ import { onReachBottom } from '@dcloudio/uni-app'
 import { getMyAttendance } from '@/api/attendance'
 import { getEarningsSummary, getEarningsTransactions } from '@/api/earnings'
 
+interface Summary {
+  totalEarnings: number
+  monthEarnings: number
+  pendingSettlement: number
+  withdrawnAmount: number
+  availableBalance: number
+}
+
 interface Transaction {
-  id: number
+  id: number | string
   type: string
   amount: number
   status: string
   statusClass: string
+  filterStatus: string
   createdAt: string
+  date: string
+  time: string
+  title: string
 }
 
 const pageSize = 20
@@ -69,13 +101,31 @@ const page = ref(1)
 const total = ref(0)
 const loading = ref(false)
 const loadingMore = ref(false)
-const summary = ref({
+const activeTab = ref('all')
+const dataNotice = ref('')
+const summary = ref<Summary>({
   totalEarnings: 0,
-  completedShifts: 0,
-  totalHours: 0,
+  monthEarnings: 0,
+  pendingSettlement: 0,
+  withdrawnAmount: 0,
   availableBalance: 0
 })
 const transactions = ref<Transaction[]>([])
+
+const tabs = [
+  { key: 'all', label: '全部' },
+  { key: 'settled', label: '已结算' },
+  { key: 'pending', label: '待结算' },
+  { key: 'withdrawn', label: '已提现' }
+]
+
+const fallbackSummary: Summary = {
+  totalEarnings: 1280,
+  monthEarnings: 680,
+  pendingSettlement: 320,
+  withdrawnAmount: 600,
+  availableBalance: 320
+}
 
 const hasMore = computed(() => transactions.value.length < total.value)
 const moreStatus = computed(() => {
@@ -83,61 +133,143 @@ const moreStatus = computed(() => {
   if (!hasMore.value && transactions.value.length > 0) return 'noMore'
   return 'more'
 })
-
-const txTypeMap: Record<string, { type: string; status: string; cls: string }> = {
-  EARNINGS: { type: 'earning', status: '已完成', cls: 'success' },
-  WITHDRAWAL: { type: 'withdrawal', status: '已提现', cls: 'success' },
-  REFUND: { type: 'refund', status: '已撤回', cls: 'failed' }
-}
+const filteredTransactions = computed(() => {
+  if (activeTab.value === 'all') return transactions.value
+  return transactions.value.filter(item => item.filterStatus === activeTab.value)
+})
+const groupedTransactions = computed(() => {
+  const groups: { date: string; items: Transaction[] }[] = []
+  filteredTransactions.value.forEach(item => {
+    let group = groups.find(g => g.date === item.date)
+    if (!group) {
+      group = { date: item.date, items: [] }
+      groups.push(group)
+    }
+    group.items.push(item)
+  })
+  return groups
+})
+const fallbackTransactions = computed(() => [
+  mapTx({ id: 'fallback-1', type: 'EARNINGS', amount: 260, status: 'SETTLED', createdAt: '2026-06-04 18:30:00', title: '日结工作收入' }),
+  mapTx({ id: 'fallback-2', type: 'EARNINGS', amount: 320, status: 'PENDING', createdAt: '2026-06-03 19:00:00', title: '待结算收入' }),
+  mapTx({ id: 'fallback-3', type: 'WITHDRAWAL', amount: 600, status: 'SUCCESS', createdAt: '2026-06-01 09:20:00', title: '余额提现' })
+])
 
 function navTo(url: string) {
   uni.navigateTo({ url })
 }
 
+function num(value: any) {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : 0
+}
+
+function money(value: any) {
+  const n = num(value)
+  return n % 1 === 0 ? String(n) : n.toFixed(2)
+}
+
+function normalizeDate(value: any) {
+  const text = String(value || '')
+  return text ? text.slice(0, 10) : '今日'
+}
+
+function normalizeTime(value: any) {
+  const text = String(value || '')
+  return text.length >= 16 ? text.slice(11, 16) : ''
+}
+
 function mapTx(item: any): Transaction {
-  const map = txTypeMap[item.type] || { type: 'earning', status: item.type, cls: '' }
+  const rawType = String(item?.type || item?.transactionType || '').toUpperCase()
+  const rawStatus = String(item?.status || item?.settlementStatus || '').toUpperCase()
+  const isWithdrawal = rawType.includes('WITHDRAW')
+  const isPending = rawStatus.includes('PENDING') || rawStatus.includes('WAIT') || rawStatus.includes('PROCESS')
+  const filterStatus = isWithdrawal ? 'withdrawn' : (isPending ? 'pending' : 'settled')
+  const createdAt = item?.createdAt || item?.createTime || item?.time || new Date().toISOString().replace('T', ' ').slice(0, 19)
+  const statusMap: Record<string, string> = { withdrawn: '已提现', pending: '待结算', settled: '已结算' }
   return {
-    id: item.id,
-    type: map.type,
-    amount: Math.abs(item.amount || 0),
-    status: map.status,
-    statusClass: map.cls,
-    createdAt: item.createdAt
+    id: item?.id || `${rawType || 'tx'}-${createdAt}-${item?.amount || 0}`,
+    type: isWithdrawal ? 'withdrawal' : 'earning',
+    amount: Math.abs(num(item?.amount || item?.money || item?.value)),
+    status: statusMap[filterStatus],
+    statusClass: filterStatus === 'pending' ? 'pending' : 'success',
+    filterStatus,
+    createdAt,
+    date: normalizeDate(createdAt),
+    time: normalizeTime(createdAt),
+    title: item?.title || item?.description || (isWithdrawal ? '余额提现' : '工作收入')
   }
 }
 
+function normalizeRecords(res: any) {
+  if (Array.isArray(res)) return res
+  if (Array.isArray(res?.records)) return res.records
+  if (Array.isArray(res?.list)) return res.list
+  if (Array.isArray(res?.data)) return res.data
+  return []
+}
+
+function normalizeTotal(res: any, listLength: number) {
+  return num(res?.total || res?.totalCount || res?.count || listLength)
+}
+
 async function loadTxPage(p: number, append: boolean) {
-  const res = await getEarningsTransactions({ page: p, pageSize })
-  total.value = res.total || 0
-  const list = (res.records || []).map(mapTx)
+  const res: any = await getEarningsTransactions({ page: p, pageSize })
+  const list = normalizeRecords(res).map(mapTx)
   if (append) {
     transactions.value.push(...list)
+    total.value = normalizeTotal(res, transactions.value.length)
   } else {
-    transactions.value = list
+    if (list.length > 0) {
+      transactions.value = list
+      total.value = normalizeTotal(res, list.length)
+      dataNotice.value = ''
+    } else {
+      transactions.value = fallbackTransactions.value
+      total.value = fallbackTransactions.value.length
+      dataNotice.value = '接口成功但暂无真实明细，当前为示例数据'
+    }
   }
 }
 
 async function loadData() {
   loading.value = true
   page.value = 1
+  dataNotice.value = ''
   try {
-    const [attendanceRes, earningsRes] = await Promise.all([
-      getMyAttendance(),
-      getEarningsSummary()
-    ])
-
-    const attrs = Array.isArray(attendanceRes) ? attendanceRes : (attendanceRes.list || [])
+    const earningsRes = await getEarningsSummary()
+    const earned = num(earningsRes?.totalEarned ?? earningsRes?.totalEarnings ?? earningsRes?.totalIncome)
+    const pending = num(earningsRes?.pendingSettlement ?? earningsRes?.pendingEarnings ?? earningsRes?.pendingAmount)
+    const available = num(earningsRes?.pendingWithdrawal ?? earningsRes?.availableBalance ?? earningsRes?.balance)
+    const withdrawn = num(earningsRes?.withdrawnAmount ?? earningsRes?.totalWithdrawn ?? earningsRes?.withdrawn)
 
     summary.value = {
-      totalEarnings: earningsRes.totalEarned || 0,
-      completedShifts: attrs.filter((r: any) => r.status === 'CHECKED_OUT').length,
-      totalHours: attrs.reduce((s: number, r: any) => s + (r.totalHours || 0), 0),
-      availableBalance: earningsRes.pendingWithdrawal || 0
+      totalEarnings: earned,
+      monthEarnings: num(earningsRes?.monthEarnings ?? earningsRes?.monthlyEarnings ?? earningsRes?.currentMonthEarnings),
+      pendingSettlement: pending || available,
+      withdrawnAmount: withdrawn,
+      availableBalance: available
     }
+
+    try {
+      const attendanceRes = await getMyAttendance()
+      const attrs = Array.isArray(attendanceRes) ? attendanceRes : (attendanceRes?.list || attendanceRes?.records || [])
+      if (Array.isArray(attrs) && attrs.length > 0 && summary.value.monthEarnings === 0) {
+        const month = new Date().toISOString().slice(0, 7)
+        summary.value.monthEarnings = attrs.reduce((sum: number, item: any) => {
+          const date = String(item?.date || item?.createdAt || item?.checkInTime || '')
+          return date.slice(0, 7) === month ? sum + num(item?.earning ?? item?.amount ?? item?.salary) : sum
+        }, 0)
+      }
+    } catch {}
 
     await loadTxPage(1, false)
   } catch {
-    uni.showToast({ title: '加载失败', icon: 'none' })
+    summary.value = fallbackSummary
+    transactions.value = fallbackTransactions.value
+    total.value = fallbackTransactions.value.length
+    dataNotice.value = '加载失败展示示例数据，非真实收入'
+    uni.showToast({ title: '加载失败，已显示示例明细', icon: 'none' })
   } finally {
     loading.value = false
   }
@@ -166,51 +298,59 @@ onUnmounted(() => { uni.$off('earningsRefresh', loadData) })
 
 <style scoped>
 .earnings-page {
+  min-height: 100vh;
   padding: 30rpx;
+  background: #f7f8fa;
+  box-sizing: border-box;
 }
 
 .summary-card {
-  background: linear-gradient(135deg, #07c160, #06ad56);
-  border-radius: 20rpx;
-  padding: 40rpx 30rpx;
-  margin-bottom: 30rpx;
+  background: linear-gradient(135deg, #ff9f2d, #ff6a00);
+  border-radius: 28rpx;
+  padding: 36rpx 30rpx 30rpx;
+  margin-bottom: 24rpx;
   color: #fff;
+  box-shadow: 0 12rpx 30rpx rgba(255, 106, 0, 0.18);
+}
+
+.summary-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 34rpx;
 }
 
 .summary-label {
   font-size: 26rpx;
-  opacity: 0.8;
-  margin-bottom: 12rpx;
+  opacity: 0.86;
+  margin-bottom: 14rpx;
   display: block;
 }
 
 .summary-amount {
-  font-size: 64rpx;
+  font-size: 68rpx;
+  line-height: 76rpx;
   font-weight: 700;
-  margin-bottom: 30rpx;
   display: block;
-}
-
-.unit {
-  font-size: 28rpx;
-  font-weight: 400;
-  opacity: 0.8;
-  margin-left: 8rpx;
 }
 
 .summary-details {
   display: flex;
-  justify-content: space-around;
-  padding: 20rpx 0;
-  border-top: 1rpx solid rgba(255, 255, 255, 0.2);
-  border-bottom: 1rpx solid rgba(255, 255, 255, 0.2);
-  margin-bottom: 24rpx;
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 20rpx;
+  padding: 24rpx 0;
 }
 
 .detail-item {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
+  border-right: 1rpx solid rgba(255, 255, 255, 0.24);
+}
+
+.detail-item:last-child {
+  border-right: none;
 }
 
 .detail-num {
@@ -225,32 +365,91 @@ onUnmounted(() => { uni.$off('earningsRefresh', loadData) })
 }
 
 .withdraw-btn {
-  width: 100%;
-  height: 80rpx;
-  line-height: 80rpx;
-  background: rgba(255, 255, 255, 0.2);
-  border: 1rpx solid rgba(255, 255, 255, 0.4);
-  border-radius: 40rpx;
-  font-size: 30rpx;
-  color: #fff;
+  width: 142rpx;
+  height: 62rpx;
+  line-height: 62rpx;
+  background: #fff;
+  border-radius: 34rpx;
+  font-size: 28rpx;
+  color: #ff6a00;
   margin: 0;
+  padding: 0;
+}
+
+.tabs-card {
+  display: flex;
+  background: #fff;
+  border-radius: 18rpx;
+  padding: 10rpx;
+  margin-bottom: 24rpx;
+}
+
+.tab-item {
+  flex: 1;
+  height: 62rpx;
+  line-height: 62rpx;
+  text-align: center;
+  border-radius: 32rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.tab-item.active {
+  background: #fff3e8;
+  color: #ff6a00;
+  font-weight: 600;
 }
 
 .section {
   background: #fff;
-  border-radius: 16rpx;
-  padding: 30rpx;
+  border-radius: 20rpx;
+  padding: 28rpx;
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.04);
 }
 
 .section-header {
-  margin-bottom: 20rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22rpx;
 }
 
 .section-title {
-  font-size: 30rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #222;
+}
+
+.section-count,
+.date-count {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.date-group {
+  margin-bottom: 16rpx;
+}
+
+.date-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18rpx 0 8rpx;
+}
+
+.date-title {
+  font-size: 26rpx;
   font-weight: 600;
   color: #333;
+}
+
+.data-notice {
+  padding: 18rpx 22rpx;
+  margin-bottom: 16rpx;
+  border-radius: 12rpx;
+  background: #fff7e6;
+  color: #d46b08;
+  font-size: 24rpx;
 }
 
 .empty-state {
@@ -269,7 +468,27 @@ onUnmounted(() => { uni.$off('earningsRefresh', loadData) })
   justify-content: space-between;
   align-items: center;
   padding: 24rpx 0;
-  border-bottom: 1rpx solid #f5f5f5;
+  border-bottom: 1rpx solid #f1f1f1;
+}
+
+.tx-icon {
+  width: 58rpx;
+  height: 58rpx;
+  line-height: 58rpx;
+  text-align: center;
+  border-radius: 50%;
+  font-size: 24rpx;
+  margin-right: 18rpx;
+}
+
+.tx-icon.earning {
+  color: #ff6a00;
+  background: #fff3e8;
+}
+
+.tx-icon.withdrawal {
+  color: #2f80ed;
+  background: #eaf3ff;
 }
 
 .transaction-card:last-child {
@@ -277,6 +496,7 @@ onUnmounted(() => { uni.$off('earningsRefresh', loadData) })
 }
 
 .tx-left {
+  flex: 1;
   display: flex;
   flex-direction: column;
 }
@@ -305,15 +525,11 @@ onUnmounted(() => { uni.$off('earningsRefresh', loadData) })
 }
 
 .tx-amount.earning {
-  color: #07c160;
+  color: #ff6a00;
 }
 
 .tx-amount.withdrawal {
-  color: #f60;
-}
-
-.tx-amount.refund {
-  color: #f60;
+  color: #2f80ed;
 }
 
 .tx-status {

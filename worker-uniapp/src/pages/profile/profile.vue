@@ -79,7 +79,8 @@ const existingPageUrls = [
   '/pages/schedule/schedule',
   '/pages/attendance/clockIn',
   '/pages/earnings/earnings',
-  '/pages/auth/realName'
+  '/pages/auth/realName',
+  '/pages/settings/settings'
 ]
 
 const stats = [
