@@ -43,7 +43,7 @@
           <view class="job-row">
             <view class="job-left">
               <view class="job-icon"><text>岗</text></view>
-              <view class="job-info"><text class="job-title">{{ shift.jobTitle }}</text><text class="job-desc">接口排班</text></view>
+              <view class="job-info"><text class="job-title">{{ shift.jobTitle }}</text></view>
             </view>
             <view class="status-tag" :class="statusClass(shift.status)"><text>{{ statusLabel(shift.status) }}</text></view>
           </view>
