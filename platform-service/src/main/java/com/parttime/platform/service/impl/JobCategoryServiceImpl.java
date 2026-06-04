@@ -17,6 +17,9 @@ import java.util.stream.Collectors;
 @Service
 public class JobCategoryServiceImpl implements JobCategoryService {
 
+    private static final String ACTIVE = "ACTIVE";
+    private static final String DISABLED = "DISABLED";
+
     @Resource
     private JobCategoryMapper jobCategoryMapper;
 
@@ -47,6 +50,7 @@ public class JobCategoryServiceImpl implements JobCategoryService {
         cat.setName(cmd.getName());
         cat.setParentId(cmd.getParentId());
         cat.setSortOrder(cmd.getSortOrder());
+        cat.setStatus(normalizeStatus(cmd.getStatus()));
         jobCategoryMapper.insert(cat);
         return toVO(cat);
     }
@@ -58,13 +62,25 @@ public class JobCategoryServiceImpl implements JobCategoryService {
         cat.setName(cmd.getName());
         cat.setParentId(cmd.getParentId());
         cat.setSortOrder(cmd.getSortOrder());
+        cat.setStatus(resolveUpdateStatus(cmd.getStatus(), cat.getStatus()));
         jobCategoryMapper.update(cat);
         return toVO(cat);
     }
 
     @Override
     public void deleteCategory(Long id) {
-        jobCategoryMapper.delete(id);
+        JobCategory cat = jobCategoryMapper.findById(id)
+                .orElseThrow(() -> new BusinessException("JobCategory not found: " + id));
+        cat.setStatus(DISABLED);
+        jobCategoryMapper.update(cat);
+    }
+
+    private String normalizeStatus(String status) {
+        return status == null || status.isBlank() ? ACTIVE : status;
+    }
+
+    private String resolveUpdateStatus(String requestStatus, String existingStatus) {
+        return requestStatus == null || requestStatus.isBlank() ? existingStatus : requestStatus;
     }
 
     private JobCategoryVO toVO(JobCategory cat) {
@@ -73,6 +89,7 @@ public class JobCategoryServiceImpl implements JobCategoryService {
         vo.setName(cat.getName());
         vo.setParentId(cat.getParentId());
         vo.setSortOrder(cat.getSortOrder());
+        vo.setStatus(cat.getStatus());
         vo.setCreatedAt(cat.getCreatedAt());
         vo.setUpdatedAt(cat.getUpdatedAt());
         return vo;

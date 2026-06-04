@@ -266,6 +266,11 @@ function calcDistance(lat1: number, lng1: number, lat2: number, lng2: number) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
+function formatDistance(meters: number) {
+  if (meters < 1000) return `${Math.round(meters)}米`
+  return `${(meters / 1000).toFixed(meters < 10000 ? 1 : 0)}km`
+}
+
 async function getLocation(showError = true): Promise<{ lat: number; lng: number } | null> {
   return new Promise((resolve) => {
     uni.getLocation({
@@ -413,7 +418,7 @@ function openMap(shift: Shift) {
 function distanceLabel(shift: Shift) {
   if (shift.distance) return shift.distance
 
-  if (shift.lat && shift.lng && currentLocation.value) return `${Math.round(calcDistance(currentLocation.value.lat, currentLocation.value.lng, shift.lat, shift.lng))}米`
+  if (shift.lat && shift.lng && currentLocation.value) return formatDistance(calcDistance(currentLocation.value.lat, currentLocation.value.lng, shift.lat, shift.lng))
   return ''
 }
 

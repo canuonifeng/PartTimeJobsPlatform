@@ -1,8 +1,8 @@
-package com.parttime.enterprise.pojo.vo;
+package com.parttime.cservice.pojo.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import java.time.LocalDateTime;
+
 import java.util.List;
 
 @Data
@@ -20,8 +20,4 @@ public class JobCategoryVO {
     private String status;
     @Schema(description = "子分类列表")
     private List<JobCategoryVO> children;
-    @Schema(description = "创建时间")
-    private LocalDateTime createdAt;
-    @Schema(description = "更新时间")
-    private LocalDateTime updatedAt;
 }

@@ -17,6 +17,8 @@ public class JobCategoryVO {
     private Long parentId;
     @Schema(description = "排序号")
     private Integer sortOrder;
+    @Schema(description = "分类状态")
+    private String status;
     @Schema(description = "子分类列表")
     private List<JobCategoryVO> children;
     @Schema(description = "创建时间")

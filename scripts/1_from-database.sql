@@ -214,6 +214,7 @@ CREATE TABLE `job_categories` (
   `name` varchar(100) NOT NULL,
   `parent_id` bigint DEFAULT NULL,
   `sort_order` int DEFAULT '0',
+  `status` varchar(20) NOT NULL DEFAULT 'ACTIVE',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

@@ -36,27 +36,32 @@ class JobCategoryServiceTest {
     private JobCategoryServiceImpl jobCategoryService;
 
     @Test
-    void getAllCategories_shouldReturnTreeStructure() {
+    void getAllCategories_shouldReturnActiveTreeStructure() {
         JobCategory parent = new JobCategory();
         parent.setId(1L);
         parent.setName("Parent");
         parent.setParentId(null);
         parent.setSortOrder(1);
+        parent.setStatus("ACTIVE");
 
         JobCategory child = new JobCategory();
         child.setId(2L);
         child.setName("Child");
         child.setParentId(1L);
         child.setSortOrder(1);
+        child.setStatus("ACTIVE");
 
-        when(jobCategoryMapper.findAll()).thenReturn(List.of(parent, child));
+        when(jobCategoryMapper.findActive()).thenReturn(List.of(parent, child));
 
         List<JobCategoryVO> result = jobCategoryService.getAllCategories();
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getName()).isEqualTo("Parent");
+        assertThat(result.get(0).getStatus()).isEqualTo("ACTIVE");
         assertThat(result.get(0).getChildren()).hasSize(1);
         assertThat(result.get(0).getChildren().get(0).getName()).isEqualTo("Child");
+        assertThat(result.get(0).getChildren().get(0).getStatus()).isEqualTo("ACTIVE");
+        verify(jobCategoryMapper).findActive();
     }
 
     @Test
@@ -100,26 +105,32 @@ class JobCategoryServiceTest {
 
         assertThat(response.getId()).isEqualTo(100L);
         assertThat(response.getName()).isEqualTo("New Category");
-        verify(jobCategoryMapper).insert(any(JobCategory.class));
+        assertThat(response.getStatus()).isEqualTo("ACTIVE");
+        verify(jobCategoryMapper).insert(categoryCaptor.capture());
+        assertThat(categoryCaptor.getValue().getStatus()).isEqualTo("ACTIVE");
     }
 
     @Test
-    void updateCategory_shouldModifyAndReturn() {
+    void updateCategory_shouldPreserveExistingStatusWhenRequestStatusBlank() {
         JobCategory existing = new JobCategory();
         existing.setId(1L);
         existing.setName("Old Name");
         existing.setSortOrder(1);
+        existing.setStatus("DISABLED");
 
         JobCategoryCmd request = new JobCategoryCmd();
         request.setName("New Name");
         request.setSortOrder(2);
+        request.setStatus(" ");
 
         when(jobCategoryMapper.findById(1L)).thenReturn(Optional.of(existing));
 
         JobCategoryVO response = jobCategoryService.updateCategory(1L, request);
 
         assertThat(response.getName()).isEqualTo("New Name");
-        verify(jobCategoryMapper).update(existing);
+        assertThat(response.getStatus()).isEqualTo("DISABLED");
+        verify(jobCategoryMapper).update(categoryCaptor.capture());
+        assertThat(categoryCaptor.getValue().getStatus()).isEqualTo("DISABLED");
     }
 
     @Test

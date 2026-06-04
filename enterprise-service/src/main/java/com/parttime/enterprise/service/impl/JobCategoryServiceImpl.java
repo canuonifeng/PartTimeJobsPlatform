@@ -22,7 +22,7 @@ public class JobCategoryServiceImpl implements JobCategoryService {
 
     @Override
     public List<JobCategoryVO> getAllCategories() {
-        List<JobCategory> all = jobCategoryMapper.findAll();
+        List<JobCategory> all = jobCategoryMapper.findActive();
         Map<Long, List<JobCategory>> byParent = all.stream()
                 .collect(Collectors.groupingBy(c -> c.getParentId() != null ? c.getParentId() : 0L));
         return buildTree(byParent.getOrDefault(0L, List.of()), byParent);
@@ -54,6 +54,7 @@ public class JobCategoryServiceImpl implements JobCategoryService {
         cat.setName(request.getName());
         cat.setParentId(request.getParentId());
         cat.setSortOrder(request.getSortOrder());
+        cat.setStatus(defaultStatus(request.getStatus()));
         jobCategoryMapper.insert(cat);
         return toResponse(cat);
     }
@@ -65,6 +66,9 @@ public class JobCategoryServiceImpl implements JobCategoryService {
         cat.setName(request.getName());
         cat.setParentId(request.getParentId());
         cat.setSortOrder(request.getSortOrder());
+        if (request.getStatus() != null && !request.getStatus().isBlank()) {
+            cat.setStatus(request.getStatus());
+        }
         jobCategoryMapper.update(cat);
         return toResponse(cat);
     }
@@ -74,12 +78,17 @@ public class JobCategoryServiceImpl implements JobCategoryService {
         jobCategoryMapper.delete(id);
     }
 
+    private String defaultStatus(String status) {
+        return status == null || status.isBlank() ? "ACTIVE" : status;
+    }
+
     private JobCategoryVO toResponse(JobCategory cat) {
         JobCategoryVO resp = new JobCategoryVO();
         resp.setId(cat.getId());
         resp.setName(cat.getName());
         resp.setParentId(cat.getParentId());
         resp.setSortOrder(cat.getSortOrder());
+        resp.setStatus(cat.getStatus());
         resp.setCreatedAt(cat.getCreatedAt());
         resp.setUpdatedAt(cat.getUpdatedAt());
         return resp;

@@ -10,7 +10,7 @@
 
     <scroll-view class="category-scroll" scroll-x :show-scrollbar="false">
       <view class="category-tabs">
-        <view v-for="cat in categories" :key="cat.name" class="category-tab" :class="{ active: categoryId === cat.id }" @click="onCategoryChange(cat.id)">
+        <view v-for="cat in categories" :key="cat.key" class="category-tab" :class="{ active: categoryId === cat.id }" @click="onCategoryChange(cat.id)">
           <text>{{ cat.name }}</text>
         </view>
       </view>
@@ -57,9 +57,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getJobs } from '@/api/jobs'
+import { getCategories, getJobs } from '@/api/jobs'
 
 type SearchEvent = { detail?: { value?: string }, value?: string }
+type JobCategory = { id?: number, name: string, key?: string, children?: JobCategory[] }
 type JobRate = { amount: number | string, type: string }
 type JobItem = {
   id: number
@@ -90,15 +91,8 @@ const loadingMore = ref(false)
 const refreshing = ref(false)
 const currentLocation = ref<{ latitude: number; longitude: number } | null>(null)
 
-const categories = [
-  { id: undefined, name: '全部' },
-  { id: 1, name: '餐饮服务' },
-  { id: 2, name: '物流配送' },
-  { id: 3, name: '家政保洁' },
-  { id: 4, name: '活动促销' },
-  { id: 5, name: '仓库分拣' },
-  { id: 6, name: '零售导购' }
-]
+const allCategory = { id: undefined, name: '全部', key: 'all' }
+const categories = ref<JobCategory[]>([allCategory])
 
 const fallbackJobs = [
   { id: -1, categoryId: 2, title: '外卖配送员', minRate: 220, maxRate: 320, location: '望京商圈', distanceKm: 1.2, companyName: '蜂鸟配送站', iconText: '配', settlement: ['日结', '周结'] },
@@ -110,6 +104,27 @@ const fallbackJobs = [
   { id: -7, categoryId: 6, title: '超市理货员', minRate: 24, maxRate: 30, location: '大悦城', distanceKm: 2.9, companyName: '惠民生活超市', iconText: '货', settlement: ['周结'] },
   { id: -8, categoryId: 6, title: '促销导购员', minRate: 180, maxRate: 260, location: '合生汇', distanceKm: 3.2, companyName: '优选零售', iconText: '促', settlement: ['日结', '周结'] }
 ]
+
+function flattenCategories(list: JobCategory[], parentName?: string): JobCategory[] {
+  return list.reduce((result: JobCategory[], item) => {
+    const name = parentName ? `${parentName} / ${item.name}` : item.name
+    result.push({ id: item.id, name, key: String(item.id ?? name) })
+    if (Array.isArray(item.children) && item.children.length > 0) {
+      result.push(...flattenCategories(item.children, name))
+    }
+    return result
+  }, [])
+}
+
+async function loadCategories() {
+  try {
+    const res = await getCategories()
+    const list = Array.isArray(res) ? res : []
+    categories.value = [allCategory, ...flattenCategories(list)]
+  } catch {
+    categories.value = [allCategory]
+  }
+}
 
 function getFallbackJobs() {
   let list = fallbackJobs
@@ -151,9 +166,10 @@ async function fetchJobs(p: number, append: boolean = false) {
     const list = Array.isArray(res) ? res : (res?.list || [])
     applyJobs(list, append)
   } catch {
-    if (!append) jobList.value = getFallbackJobs()
+    const showFallback = !append && shouldShowFallback()
+    if (!append) jobList.value = showFallback ? getFallbackJobs() : []
     hasMore.value = false
-    uni.showToast({ title: '加载失败，已展示推荐岗位', icon: 'none' })
+    uni.showToast({ title: showFallback ? '加载失败，已展示推荐岗位' : '加载失败', icon: 'none' })
   } finally {
     loading.value = false
     loadingMore.value = false
@@ -238,6 +254,7 @@ function formatRates(rates?: JobRate[], fallbackMin?: number, fallbackMax?: numb
 }
 
 onMounted(async () => {
+  await loadCategories()
   await loadCurrentLocation()
   fetchJobs(1)
 })

@@ -34,7 +34,7 @@ onLoad(async (params) => {
       form.value = {
         title: data.title || '',
         description: data.description || '',
-        categoryId: data.categoryId || null,
+        categoryId: data.categoryId ?? null,
         imageUrl: data.imageUrl || '',
         province: data.province || '',
         city: data.city || '',
@@ -47,12 +47,37 @@ onLoad(async (params) => {
   }
 })
 
+function getCategoryId(category) {
+  return category.id ?? category.categoryId ?? category.code ?? ''
+}
+
+function sameCategoryId(a, b) {
+  return String(a ?? '') === String(b ?? '')
+}
+
+function getCategoryName(category) {
+  return category.name || category.categoryName || ''
+}
+
+function flattenCategories(list, parents = []) {
+  return list.flatMap(category => {
+    const name = getCategoryName(category)
+    const path = [...parents, name].filter(Boolean)
+    const item = {
+      ...category,
+      pickerLabel: path.join(' / ')
+    }
+    return [item, ...flattenCategories(category.children || [], path)]
+  })
+}
+
 async function loadCategories() {
   try {
     const res = await getCategories()
     const list = Array.isArray(res) ? res : (res.data || res.records || [])
-    categories.value = list
-    categoryNames.value = list.map(c => c.name || c.categoryName || '')
+    const flatList = flattenCategories(list)
+    categories.value = flatList
+    categoryNames.value = flatList.map(c => c.pickerLabel)
   } catch {}
 }
 
@@ -60,13 +85,18 @@ function onCategoryChange(e) {
   const idx = e.detail.value
   const cat = categories.value[idx]
   if (cat) {
-    form.value.categoryId = cat.id || cat.categoryId || cat.code || ''
+    form.value.categoryId = getCategoryId(cat)
   }
 }
 
 function getCategoryIndex() {
   const id = form.value.categoryId
-  return categories.value.findIndex(c => (c.id || c.categoryId || c.code) === id)
+  return categories.value.findIndex(c => sameCategoryId(getCategoryId(c), id))
+}
+
+function getSelectedCategoryName() {
+  const index = getCategoryIndex()
+  return index >= 0 ? categoryNames.value[index] : ''
 }
 
 function parseAddress(addr) {
@@ -160,7 +190,8 @@ async function handleSave() {
             @change="onCategoryChange"
           >
             <view class="picker">
-              <text class="picker-value">{{ form.categoryId ? categoryNames[getCategoryIndex()] : '请选择类别' }}</text>
+              <text v-if="getSelectedCategoryName()" class="picker-value">{{ getSelectedCategoryName() }}</text>
+              <text v-else class="picker-placeholder">请选择类别</text>
             </view>
           </picker>
         </view>

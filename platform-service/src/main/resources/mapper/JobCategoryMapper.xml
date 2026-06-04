@@ -7,13 +7,14 @@
         <result property="name" column="name"/>
         <result property="parentId" column="parent_id"/>
         <result property="sortOrder" column="sort_order"/>
+        <result property="status" column="status"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO job_categories (name, parent_id, sort_order)
-        VALUES (#{name}, #{parentId}, #{sortOrder})
+        INSERT INTO job_categories (name, parent_id, sort_order, status)
+        VALUES (#{name}, #{parentId}, #{sortOrder}, #{status})
     </insert>
 
     <select id="findById" resultMap="JobCategoryResultMap">
@@ -30,7 +31,7 @@
 
     <update id="update">
         UPDATE job_categories
-        SET name = #{name}, parent_id = #{parentId}, sort_order = #{sortOrder}
+        SET name = #{name}, parent_id = #{parentId}, sort_order = #{sortOrder}, status = #{status}
         WHERE id = #{id}
     </update>
 

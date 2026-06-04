@@ -1,12 +1,12 @@
-package com.parttime.enterprise.pojo.vo;
+package com.parttime.cservice.pojo.entity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
-public class JobCategoryVO {
+public class JobCategory {
 
     @Schema(description = "分类ID")
     private Long id;
@@ -18,8 +18,6 @@ public class JobCategoryVO {
     private Integer sortOrder;
     @Schema(description = "状态：ACTIVE-启用，DISABLED-停用")
     private String status;
-    @Schema(description = "子分类列表")
-    private List<JobCategoryVO> children;
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")

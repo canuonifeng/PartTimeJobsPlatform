@@ -118,7 +118,7 @@ function onTemplatePick(e) {
   if (!tpl) return
   formData.value.title = tpl.title || ''
   formData.value.description = tpl.description || ''
-  formData.value.categoryId = tpl.categoryId || ''
+  formData.value.categoryId = tpl.categoryId ?? ''
   formData.value.province = tpl.province || ''
   formData.value.city = tpl.city || ''
   formData.value.district = tpl.district || ''
@@ -158,12 +158,37 @@ onLoad(async (params) => {
   }
 })
 
+function getCategoryId(category) {
+  return category.id ?? category.categoryId ?? category.code ?? ''
+}
+
+function sameCategoryId(a, b) {
+  return String(a ?? '') === String(b ?? '')
+}
+
+function getCategoryName(category) {
+  return category.name || category.categoryName || ''
+}
+
+function flattenCategories(list, parents = []) {
+  return list.flatMap(category => {
+    const name = getCategoryName(category)
+    const path = [...parents, name].filter(Boolean)
+    const item = {
+      ...category,
+      pickerLabel: path.join(' / ')
+    }
+    return [item, ...flattenCategories(category.children || [], path)]
+  })
+}
+
 async function loadCategories() {
   try {
     const res = await getCategories()
     const list = Array.isArray(res) ? res : (res.data || res.records || [])
-    categories.value = list
-    categoryNames.value = list.map(c => c.name || c.categoryName || '')
+    const flatList = flattenCategories(list)
+    categories.value = flatList
+    categoryNames.value = flatList.map(c => c.pickerLabel)
   } catch (e) {
     console.error('Failed to load categories', e)
   }
@@ -182,7 +207,7 @@ async function loadJobDetail() {
       address: job.address || '',
       latitude: job.latitude || null,
       longitude: job.longitude || null,
-      categoryId: job.categoryId || '',
+      categoryId: job.categoryId ?? '',
       headcount: job.headcount || 1,
       deadline: job.deadline || ''
     }
@@ -222,7 +247,7 @@ function buildPayload() {
     address: formData.value.address || null,
     latitude: formData.value.latitude ?? null,
     longitude: formData.value.longitude ?? null,
-    categoryId: formData.value.categoryId || null,
+    categoryId: formData.value.categoryId === '' ? null : formData.value.categoryId,
     headcount: formData.value.headcount,
     deadline: formData.value.deadline ? `${formData.value.deadline} 23:59:59` : null,
     rates: rates.value
@@ -272,13 +297,18 @@ function onCategoryChange(e) {
   const idx = e.detail.value
   const cat = categories.value[idx]
   if (cat) {
-    formData.value.categoryId = cat.id || cat.categoryId || cat.code || ''
+    formData.value.categoryId = getCategoryId(cat)
   }
 }
 
 function getCategoryIndex() {
   const id = formData.value.categoryId
-  return categories.value.findIndex(c => (c.id || c.categoryId || c.code) === id)
+  return categories.value.findIndex(c => sameCategoryId(getCategoryId(c), id))
+}
+
+function getSelectedCategoryName() {
+  const index = getCategoryIndex()
+  return index >= 0 ? categoryNames.value[index] : ''
 }
 
 async function handleSave() {
@@ -341,7 +371,7 @@ async function handleSave() {
             @change="onCategoryChange"
           >
             <view class="picker">
-              <text v-if="formData.categoryId" class="picker-value">{{ categoryNames[getCategoryIndex()] }}</text>
+              <text v-if="getSelectedCategoryName()" class="picker-value">{{ getSelectedCategoryName() }}</text>
               <text v-else class="picker-placeholder">请选择职位类型</text>
             </view>
           </picker>

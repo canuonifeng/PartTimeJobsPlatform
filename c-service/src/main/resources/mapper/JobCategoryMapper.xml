@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.cservice.mapper.JobCategoryMapper">
+
+    <resultMap id="JobCategoryResultMap" type="com.parttime.cservice.pojo.entity.JobCategory">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findActive" resultMap="JobCategoryResultMap">
+        SELECT * FROM job_categories WHERE status = 'ACTIVE' ORDER BY sort_order ASC, id ASC
+    </select>
+
+</mapper>

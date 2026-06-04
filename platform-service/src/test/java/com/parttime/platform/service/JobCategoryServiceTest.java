@@ -18,7 +18,9 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -61,6 +63,7 @@ class JobCategoryServiceTest {
         cmd.setName("New Category");
         cmd.setParentId(null);
         cmd.setSortOrder(1);
+        cmd.setStatus("DISABLED");
 
         doAnswer(invocation -> {
             JobCategory cat = invocation.getArgument(0);
@@ -72,7 +75,27 @@ class JobCategoryServiceTest {
 
         assertThat(response.getId()).isEqualTo(100L);
         assertThat(response.getName()).isEqualTo("New Category");
-        verify(jobCategoryMapper).insert(any(JobCategory.class));
+        assertThat(response.getStatus()).isEqualTo("DISABLED");
+        verify(jobCategoryMapper).insert(argThat(cat -> "DISABLED".equals(cat.getStatus())));
+    }
+
+    @Test
+    void createCategory_blankStatus_shouldDefaultActive() {
+        JobCategoryCmd cmd = new JobCategoryCmd();
+        cmd.setName("New Category");
+        cmd.setSortOrder(1);
+        cmd.setStatus(" ");
+
+        doAnswer(invocation -> {
+            JobCategory cat = invocation.getArgument(0);
+            cat.setId(100L);
+            return 1;
+        }).when(jobCategoryMapper).insert(any(JobCategory.class));
+
+        JobCategoryVO response = jobCategoryService.createCategory(cmd);
+
+        assertThat(response.getStatus()).isEqualTo("ACTIVE");
+        verify(jobCategoryMapper).insert(argThat(cat -> "ACTIVE".equals(cat.getStatus())));
     }
 
     @Test
@@ -85,12 +108,35 @@ class JobCategoryServiceTest {
         JobCategoryCmd cmd = new JobCategoryCmd();
         cmd.setName("New Name");
         cmd.setSortOrder(2);
+        cmd.setStatus("DISABLED");
 
         when(jobCategoryMapper.findById(1L)).thenReturn(Optional.of(existing));
 
         JobCategoryVO response = jobCategoryService.updateCategory(1L, cmd);
 
         assertThat(response.getName()).isEqualTo("New Name");
+        assertThat(response.getStatus()).isEqualTo("DISABLED");
+        verify(jobCategoryMapper).update(existing);
+    }
+
+    @Test
+    void updateCategory_blankStatus_shouldPreserveExistingStatus() {
+        JobCategory existing = new JobCategory();
+        existing.setId(1L);
+        existing.setName("Old Name");
+        existing.setSortOrder(1);
+        existing.setStatus("DISABLED");
+
+        JobCategoryCmd cmd = new JobCategoryCmd();
+        cmd.setName("New Name");
+        cmd.setSortOrder(2);
+        cmd.setStatus(" ");
+
+        when(jobCategoryMapper.findById(1L)).thenReturn(Optional.of(existing));
+
+        JobCategoryVO response = jobCategoryService.updateCategory(1L, cmd);
+
+        assertThat(response.getStatus()).isEqualTo("DISABLED");
         verify(jobCategoryMapper).update(existing);
     }
 
@@ -104,8 +150,27 @@ class JobCategoryServiceTest {
     }
 
     @Test
-    void deleteCategory_shouldDelete() {
+    void deleteCategory_shouldDisable() {
+        JobCategory existing = new JobCategory();
+        existing.setId(1L);
+        existing.setName("Category");
+        existing.setStatus("ACTIVE");
+
+        when(jobCategoryMapper.findById(1L)).thenReturn(Optional.of(existing));
+
         jobCategoryService.deleteCategory(1L);
-        verify(jobCategoryMapper).delete(1L);
+
+        assertThat(existing.getStatus()).isEqualTo("DISABLED");
+        verify(jobCategoryMapper).update(existing);
+        verify(jobCategoryMapper, never()).delete(1L);
+    }
+
+    @Test
+    void deleteCategory_notFound_shouldThrow() {
+        when(jobCategoryMapper.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> jobCategoryService.deleteCategory(99L))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("not found");
     }
 }

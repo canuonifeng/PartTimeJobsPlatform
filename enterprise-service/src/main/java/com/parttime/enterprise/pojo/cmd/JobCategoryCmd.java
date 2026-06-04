@@ -12,4 +12,6 @@ public class JobCategoryCmd {
     private Long parentId;
     @Schema(description = "排序号")
     private Integer sortOrder;
+    @Schema(description = "状态：ACTIVE-启用，DISABLED-停用")
+    private String status;
 }

@@ -7,10 +7,19 @@
     <el-table :data="categories" v-loading="loading" stripe row-key="id" default-expand-all style="width:100%">
       <el-table-column prop="name" label="分类名称" min-width="200" />
       <el-table-column prop="sortOrder" label="排序" width="100" />
+      <el-table-column prop="status" label="状态" width="100">
+        <template #default="{ row }">
+          <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'danger'">
+            {{ row.status === 'ACTIVE' ? '启用' : '禁用' }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" size="small" text @click="handleEdit(row)">编辑</el-button>
-          <el-button type="danger" size="small" text @click="handleDelete(row)">删除</el-button>
+          <el-button :type="row.status === 'ACTIVE' ? 'warning' : 'success'" size="small" text @click="handleToggleStatus(row)">
+            {{ row.status === 'ACTIVE' ? '禁用' : '启用' }}
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -25,6 +34,12 @@
         </el-form-item>
         <el-form-item label="排序">
           <el-input-number v-model="dialog.form.sortOrder" :min="0" />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="dialog.form.status" style="width:100%">
+            <el-option label="启用" value="ACTIVE" />
+            <el-option label="禁用" value="DISABLED" />
+          </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -45,18 +60,52 @@ const categories = ref([])
 const dialog = ref({
   visible: false,
   isEdit: false,
-  form: { name: '', parentId: null, sortOrder: 0 }
+  form: { name: '', parentId: null, sortOrder: 0, status: 'ACTIVE' }
 })
 
+const flatCategories = computed(() => flattenCategories(categories.value))
+
 const categoryTree = computed(() => {
-  function buildTree(items, parentId) {
-    return items.filter(i => i.parentId === parentId).map(i => ({
-      ...i,
-      children: buildTree(items, i.id)
-    }))
-  }
-  return [{ id: null, name: '无（顶级）' }, ...buildTree(categories.value, null)]
+  const excludedIds = getExcludedCategoryIds(flatCategories.value, dialog.value.form.id)
+  const items = flatCategories.value.filter(i => !excludedIds.has(i.id))
+  return [{ id: null, name: '无（顶级）' }, ...buildTree(items, null)]
 })
+
+function flattenCategories(items = []) {
+  return (items || []).flatMap(({ children, ...item }) => [item, ...flattenCategories(children || [])])
+}
+
+function buildTree(items, parentId) {
+  return items.filter(i => (i.parentId ?? null) === parentId).map(i => ({
+    ...i,
+    children: buildTree(items, i.id)
+  }))
+}
+
+function getExcludedCategoryIds(items, categoryId) {
+  if (!dialog.value.isEdit || categoryId == null) return new Set()
+  const excludedIds = new Set([categoryId])
+  let changed = true
+  while (changed) {
+    changed = false
+    items.forEach(i => {
+      if (!excludedIds.has(i.id) && excludedIds.has(i.parentId)) {
+        excludedIds.add(i.id)
+        changed = true
+      }
+    })
+  }
+  return excludedIds
+}
+
+function buildCategoryPayload(category) {
+  return {
+    name: category.name,
+    parentId: category.parentId ?? null,
+    sortOrder: category.sortOrder ?? 0,
+    status: category.status
+  }
+}
 
 async function fetchData() {
   loading.value = true
@@ -69,7 +118,7 @@ async function fetchData() {
 }
 
 function handleAdd() {
-  dialog.value = { visible: true, isEdit: false, form: { name: '', parentId: null, sortOrder: 0 } }
+  dialog.value = { visible: true, isEdit: false, form: { name: '', parentId: null, sortOrder: 0, status: 'ACTIVE' } }
 }
 
 function handleEdit(row) {
@@ -79,7 +128,7 @@ function handleEdit(row) {
 async function confirmSave() {
   const d = dialog.value
   if (d.isEdit) {
-    await updateCategory(d.form.id, d.form)
+    await updateCategory(d.form.id, buildCategoryPayload(d.form))
     ElMessage.success('分类已更新')
   } else {
     await createCategory(d.form)
@@ -89,11 +138,16 @@ async function confirmSave() {
   await fetchData()
 }
 
-async function handleDelete(row) {
+async function handleToggleStatus(row) {
   try {
-    await ElMessageBox.confirm(`确认删除分类 "${row.name}"？`, '确认')
-    await deleteCategory(row.id)
-    ElMessage.success('分类已删除')
+    if (row.status === 'ACTIVE') {
+      await ElMessageBox.confirm(`确认禁用分类 “${row.name}”？`, '确认')
+      await deleteCategory(row.id)
+      ElMessage.success('分类已禁用')
+    } else {
+      await updateCategory(row.id, buildCategoryPayload({ ...row, status: 'ACTIVE' }))
+      ElMessage.success('分类已启用')
+    }
     await fetchData()
   } catch { /* cancelled */ }
 }

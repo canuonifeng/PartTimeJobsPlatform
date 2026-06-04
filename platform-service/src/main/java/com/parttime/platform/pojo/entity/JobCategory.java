@@ -16,6 +16,8 @@ public class JobCategory {
     private Long parentId;
     @Schema(description = "排序号")
     private Integer sortOrder;
+    @Schema(description = "分类状态")
+    private String status;
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")

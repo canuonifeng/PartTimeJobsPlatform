@@ -26,10 +26,35 @@ async function loadTemplates() {
   }
 }
 
+function getCategoryId(category) {
+  return category.id ?? category.categoryId ?? category.code ?? ''
+}
+
+function sameCategoryId(a, b) {
+  return String(a ?? '') === String(b ?? '')
+}
+
+function getCategoryName(category) {
+  return category.name || category.categoryName || ''
+}
+
+function flattenCategories(list, parents = []) {
+  return list.flatMap(category => {
+    const name = getCategoryName(category)
+    const path = [...parents, name].filter(Boolean)
+    const item = {
+      ...category,
+      pickerLabel: path.join(' / ')
+    }
+    return [item, ...flattenCategories(category.children || [], path)]
+  })
+}
+
 async function loadCategories() {
   try {
     const res = await getCategories()
-    categories.value = Array.isArray(res) ? res : (res.data || res.records || [])
+    const list = Array.isArray(res) ? res : (res.data || res.records || [])
+    categories.value = flattenCategories(list)
   } catch {}
 }
 
@@ -61,8 +86,8 @@ function handleDelete(id) {
 }
 
 function categoryName(id) {
-  const c = categories.value.find(c => (c.id || c.categoryId || c.code) === id)
-  return c?.name || c?.categoryName || '-'
+  const c = categories.value.find(c => sameCategoryId(getCategoryId(c), id))
+  return c?.pickerLabel || c?.name || c?.categoryName || '-'
 }
 </script>
 

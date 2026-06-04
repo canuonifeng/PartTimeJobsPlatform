@@ -15,6 +15,10 @@ public interface JobCategoryMapper {
 
     List<JobCategory> findAll();
 
+    List<JobCategory> findActive();
+
+    List<JobCategory> findByParentId(Long parentId);
+
     int update(JobCategory category);
 
     int delete(Long id);

@@ -12,4 +12,6 @@ public class JobCategoryCmd {
     private Long parentId;
     @Schema(description = "排序号")
     private Integer sortOrder;
+    @Schema(description = "分类状态")
+    private String status;
 }

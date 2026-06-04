@@ -8,6 +8,13 @@ export function getJobs(params) {
   })
 }
 
+export function getCategories() {
+  return request({
+    url: '/api/job-categories',
+    method: 'GET'
+  })
+}
+
 export function getJobDetail(id) {
   return request({
     url: '/api/jobs/detail',
