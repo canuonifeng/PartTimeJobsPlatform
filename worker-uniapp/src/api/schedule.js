@@ -7,10 +7,3 @@ export function getMyShifts(params) {
     data: params
   })
 }
-
-export function getMyTopShifts() {
-  return request({
-    url: '/api/schedule-shifts/my-top',
-    method: 'GET'
-  })
-}

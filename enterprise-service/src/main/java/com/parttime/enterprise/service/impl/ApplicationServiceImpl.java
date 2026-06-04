@@ -124,10 +124,14 @@ public class ApplicationServiceImpl implements ApplicationService {
             ScheduleShift shift = new ScheduleShift();
             shift.setApplicationId(app.getId());
             shift.setJobId(job.getId());
+            shift.setCompanyId(job.getCompanyId());
             shift.setWorkerId(app.getWorkerId());
             shift.setShiftDate(schedule.getScheduleDate());
             shift.setStartTime(schedule.getStartTime());
             shift.setEndTime(schedule.getEndTime());
+            shift.setLocationLat(job.getLatitude());
+            shift.setLocationLng(job.getLongitude());
+            shift.setLocationName(job.getAddress());
             if (rate != null) {
                 shift.setSalaryType(rate.getType());
                 shift.setSalaryAmount(rate.getAmount());

@@ -15,11 +15,11 @@
 
     <view class="content">
       <view class="stats-card">
-        <view class="stat-item"><text class="stat-value">156</text><text class="stat-label">本月工时</text></view>
+        <view class="stat-item"><text class="stat-value">{{ formatNumber(stats.monthHours) }}</text><text class="stat-label">本月工时</text></view>
         <view class="stat-line"></view>
-        <view class="stat-item"><text class="stat-value">4,680</text><text class="stat-label">本月收入</text></view>
+        <view class="stat-item"><text class="stat-value">{{ formatNumber(stats.monthIncome) }}</text><text class="stat-label">本月收入</text></view>
         <view class="stat-line"></view>
-        <view class="stat-item"><text class="stat-value">28</text><text class="stat-label">出勤天数</text></view>
+        <view class="stat-item"><text class="stat-value">{{ stats.attendanceDays }}</text><text class="stat-label">出勤天数</text></view>
       </view>
 
       <view v-if="!authStore.token" class="card login-card">
@@ -34,23 +34,32 @@
           <text class="section-subtitle">{{ todayShifts.length }} 个班次待处理</text>
         </view>
 
+        <view v-if="todayShifts.length === 0" class="card login-card">
+          <text class="empty-title">今日暂无排班</text>
+          <text class="empty-desc">有新的排班会在这里显示</text>
+        </view>
+
         <view v-for="shift in todayShifts" :key="shift.id" class="card shift-card">
           <view class="job-row">
             <view class="job-left">
               <view class="job-icon"><text>岗</text></view>
-              <view class="job-info"><text class="job-title">{{ shift.jobTitle }}</text><text class="job-desc">{{ isFallbackShift(shift) ? '兜底排班' : '接口排班' }}</text></view>
+              <view class="job-info"><text class="job-title">{{ shift.jobTitle }}</text><text class="job-desc">接口排班</text></view>
             </view>
             <view class="status-tag" :class="statusClass(shift.status)"><text>{{ statusLabel(shift.status) }}</text></view>
           </view>
           <view class="shift-meta">
             <view class="meta-item"><text class="meta-icon">时</text><text class="meta-text">{{ shift.date }} {{ shift.startTime }} - {{ shift.endTime }}</text></view>
-            <view class="meta-item" @click="openMap(shift)"><text class="meta-icon">地</text><text class="meta-text">{{ formatAddress(shift.location) }}</text></view>
+            <view class="meta-item address-action" :class="{ 'address-disabled': !shift.lat || !shift.lng }" @click="openMap(shift)">
+              <text class="meta-icon">地</text>
+              <text class="meta-text address-text">{{ formatAddress(shift.location) }}</text>
+              <text class="nav-hint">📍</text>
+            </view>
             <view class="meta-item"><text class="meta-icon">距</text><text class="meta-text">{{ distanceLabel(shift) }}</text></view>
           </view>
           <view class="tip" :class="tipClass(shift)"><text>{{ tipText(shift) }}</text></view>
           <view v-if="canCheckIn(shift)" class="btn-primary" @click="handleCheckIn(shift)">签到</view>
           <view v-else-if="canCheckOut(shift)" class="btn-primary" @click="handleCheckOut(shift)">签退</view>
-          <view v-else class="btn-disabled">{{ isFallbackShift(shift) ? '示例不可操作' : statusLabel(shift.status) }}</view>
+          <view v-else class="btn-disabled">{{ statusLabel(shift.status) }}</view>
         </view>
 
         <view class="card future-card">
@@ -59,6 +68,9 @@
             <text class="more" @click="navTo('/pages/schedule/schedule')">全部</text>
           </view>
           <view class="future-list">
+            <view v-if="futureShifts.length === 0" class="future-item">
+              <text class="empty-desc">暂无未来排班</text>
+            </view>
             <view v-for="shift in futureShifts.slice(0, 5)" :key="shift.id" class="future-item">
               <view class="future-date-box"><text class="future-day">{{ shift.date?.slice(8) }}</text><text class="future-month">{{ shift.date?.slice(5, 7) }}月</text></view>
               <view class="future-left"><text class="future-job">{{ shift.jobTitle }}</text><text class="future-location">{{ formatAddress(shift.location) }}</text></view>
@@ -75,15 +87,16 @@
 import { ref, computed } from 'vue'
 import { onShow, onHide, onUnload } from '@dcloudio/uni-app'
 import { useAuthStore } from '@/store'
-import { getMyTopShifts } from '@/api/schedule'
+import { getHomeStats, getHomeSchedules } from '@/api/home'
 import { checkIn, checkOut } from '@/api/attendance'
 
 const authStore = useAuthStore()
+const stats = ref({ monthHours: 0, monthIncome: 0, attendanceDays: 0 })
 const shifts = ref<Shift[]>([])
 const checking = ref(false)
 const countdown = ref('')
 let countdownTimer: any = null
-let currentLocation: { lat: number; lng: number } | null = null
+const currentLocation = ref<{ lat: number; lng: number } | null>(null)
 
 type Shift = {
   id: number
@@ -126,10 +139,13 @@ function formatDateKey(date: Date) {
   return `${y}-${m}-${d}`
 }
 
-function addDays(days: number) {
-  const d = new Date()
-  d.setDate(d.getDate() + days)
-  return formatDateKey(d)
+function formatNumber(value: number) {
+  return Number(value || 0).toLocaleString('zh-CN')
+}
+
+function normalizeCoordinate(value: any) {
+  const coordinate = Number(value)
+  return Number.isFinite(coordinate) ? coordinate : undefined
 }
 
 function normalizeShift(shift: any): Shift {
@@ -141,8 +157,8 @@ function normalizeShift(shift: any): Shift {
     endTime: shift.endTime || '',
     date: shift.date || shift.shiftDate || '',
     status: shift.status || 'SCHEDULED',
-    lat: shift.lat ?? shift.latitude,
-    lng: shift.lng ?? shift.longitude,
+    lat: normalizeCoordinate(shift.lat ?? shift.latitude ?? shift.locationLat),
+    lng: normalizeCoordinate(shift.lng ?? shift.longitude ?? shift.locationLng),
     distance: shift.distance || shift.distanceText
   }
 }
@@ -153,22 +169,6 @@ function parseShiftDateTime(date: string, time: string) {
   return new Date(y, m - 1, d, h, min)
 }
 
-function fallbackShifts(): Shift[] {
-  const today = formatDateKey(new Date())
-  return [
-    { id: -1, jobTitle: '仓库分拣员', location: '绿地物流园3号仓', startTime: '09:00', endTime: '18:00', date: today, status: 'SCHEDULED' },
-    { id: -2, jobTitle: '餐厅服务员', location: '阳光餐厅人民路店', startTime: '18:30', endTime: '22:30', date: today, status: 'ON_DUTY' },
-    { id: -3, jobTitle: '展会协助员', location: '国际会展中心A馆', startTime: '09:00', endTime: '17:00', date: addDays(1), status: 'SCHEDULED' },
-    { id: -4, jobTitle: '快递分拣员', location: '城北快递中转站', startTime: '08:00', endTime: '16:00', date: addDays(2), status: 'SCHEDULED' },
-    { id: -5, jobTitle: '餐厅服务员', location: '湖滨商业街', startTime: '11:00', endTime: '20:00', date: addDays(3), status: 'SCHEDULED' },
-    { id: -6, jobTitle: '超市理货员', location: '安心超市中心店', startTime: '10:00', endTime: '18:00', date: addDays(4), status: 'SCHEDULED' },
-    { id: -7, jobTitle: '家政保洁员', location: '万家社区服务站', startTime: '09:30', endTime: '15:30', date: addDays(5), status: 'SCHEDULED' }
-  ]
-}
-
-function isFallbackShift(shift: Shift) {
-  return shift.id < 0
-}
 
 function statusLabel(status?: string) {
   if (status === 'ON_DUTY') return '工作中'
@@ -187,7 +187,6 @@ function statusClass(status?: string) {
 }
 
 function tipClass(shift: Shift) {
-  if (shift.id < 0) return 'tip-info'
   if (shift.status === 'ABSENT' || shift.status === 'LATE' || shift.status === 'EARLY_LEAVE') return 'tip-red'
   if (shift.status === 'ON_DUTY') return 'tip-green'
   if (shift.status === 'COMPLETED' || shift.status === 'OFF_DUTY') return 'tip-gray'
@@ -195,7 +194,6 @@ function tipClass(shift: Shift) {
 }
 
 function tipText(shift: Shift) {
-  if (shift.id < 0) return '当前为兜底排班，仅用于展示首页样式'
   if (shift.status === 'ON_DUTY' || shift.status === 'LATE') return '已签到，完成工作后可在此签退'
   if (shift.status === 'COMPLETED' || shift.status === 'OFF_DUTY') return '本班次已完成，辛苦了'
   if (shift.status === 'EARLY_LEAVE') return '已记录早退，请留意考勤规则'
@@ -210,12 +208,12 @@ function tipText(shift: Shift) {
 }
 
 function canCheckIn(shift: Shift) {
-  if (isFallbackShift(shift) || checking.value) return false
+  if (checking.value) return false
   return !['ON_DUTY', 'OFF_DUTY', 'COMPLETED', 'ABSENT', 'LATE', 'EARLY_LEAVE'].includes(shift.status)
 }
 
 function canCheckOut(shift: Shift) {
-  if (isFallbackShift(shift) || checking.value) return false
+  if (checking.value) return false
   return shift.status === 'ON_DUTY' || shift.status === 'LATE'
 }
 
@@ -268,15 +266,20 @@ function calcDistance(lat1: number, lng1: number, lat2: number, lng2: number) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-async function getLocation(): Promise<{ lat: number; lng: number } | null> {
-  try {
-    const pos: any = await uni.getLocation({ type: 'gcj02' })
-    currentLocation = { lat: pos.latitude, lng: pos.longitude }
-    return currentLocation
-  } catch {
-    uni.showToast({ title: '获取定位失败', icon: 'none' })
-    return null
-  }
+async function getLocation(showError = true): Promise<{ lat: number; lng: number } | null> {
+  return new Promise((resolve) => {
+    uni.getLocation({
+      type: 'gcj02',
+      success: (pos: any) => {
+        currentLocation.value = { lat: pos.latitude, lng: pos.longitude }
+        resolve(currentLocation.value)
+      },
+      fail: () => {
+        if (showError) uni.showToast({ title: '获取定位失败', icon: 'none' })
+        resolve(null)
+      }
+    })
+  })
 }
 
 async function checkDistance(shift: Shift): Promise<boolean> {
@@ -305,8 +308,8 @@ async function handleCheckIn(shift: Shift) {
   try {
     await checkIn({
       shiftId: shift.id,
-      lat: currentLocation?.lat,
-      lng: currentLocation?.lng
+      lat: currentLocation.value?.lat,
+      lng: currentLocation.value?.lng
     })
     if (isLate) {
       const lateMins = Math.round((now.getTime() - start.getTime()) / 60000)
@@ -334,8 +337,8 @@ async function handleCheckOut(shift: Shift) {
   try {
     await checkOut({
       shiftId: shift.id,
-      lat: currentLocation?.lat,
-      lng: currentLocation?.lng
+      lat: currentLocation.value?.lat,
+      lng: currentLocation.value?.lng
     })
     if (isEarly) {
       const earlyMins = Math.round((end.getTime() - now.getTime()) / 60000)
@@ -353,19 +356,34 @@ async function handleCheckOut(shift: Shift) {
 }
 
 async function loadShifts() {
-  if (!authStore.token) return
+  if (!authStore.token) {
+    shifts.value = []
+    return
+  }
   try {
-    const res: any = await getMyTopShifts()
-    const all: Shift[] = []
-    if (res.currentShift) {
-      all.push(normalizeShift(res.currentShift))
-    }
-    if (res.futureShifts) {
-      all.push(...res.futureShifts.map(normalizeShift))
-    }
-    shifts.value = all.length ? all : fallbackShifts()
+    const res: any = await getHomeSchedules()
+    const today = Array.isArray(res?.todayShifts) ? res.todayShifts : []
+    const future = Array.isArray(res?.futureShifts) ? res.futureShifts : []
+    shifts.value = [...today, ...future].map(normalizeShift)
   } catch {
-    shifts.value = fallbackShifts()
+    shifts.value = []
+  }
+}
+
+async function loadStats() {
+  if (!authStore.token) {
+    stats.value = { monthHours: 0, monthIncome: 0, attendanceDays: 0 }
+    return
+  }
+  try {
+    const res: any = await getHomeStats()
+    stats.value = {
+      monthHours: Number(res?.monthHours || 0),
+      monthIncome: Number(res?.monthIncome || 0),
+      attendanceDays: Number(res?.attendanceDays || 0)
+    }
+  } catch {
+    stats.value = { monthHours: 0, monthIncome: 0, attendanceDays: 0 }
   }
 }
 
@@ -394,8 +412,8 @@ function openMap(shift: Shift) {
 
 function distanceLabel(shift: Shift) {
   if (shift.distance) return shift.distance
-  if (shift.id < 0) return '约 2.3km'
-  if (shift.lat && shift.lng && currentLocation) return `${Math.round(calcDistance(currentLocation.lat, currentLocation.lng, shift.lat, shift.lng))}米`
+
+  if (shift.lat && shift.lng && currentLocation.value) return `${Math.round(calcDistance(currentLocation.value.lat, currentLocation.value.lng, shift.lat, shift.lng))}米`
   return ''
 }
 
@@ -406,7 +424,14 @@ function stopCountdown() {
 
 async function refreshHome() {
   await authStore.loadSession()
-  await loadShifts()
+  if (!authStore.token) {
+    stats.value = { monthHours: 0, monthIncome: 0, attendanceDays: 0 }
+    shifts.value = []
+    currentLocation.value = null
+  } else {
+    await Promise.all([loadStats(), loadShifts()])
+    if (shifts.value.some((shift) => shift.lat && shift.lng)) await getLocation(false)
+  }
   startCountdown()
 }
 
@@ -653,6 +678,27 @@ onUnload(stopCountdown)
   color: #52605a;
 }
 
+.address-text {
+  color: #078a49;
+  font-weight: 700;
+}
+
+.address-disabled .address-text {
+  color: #8c9892;
+  font-weight: 500;
+}
+
+.nav-hint {
+  font-size: 24rpx;
+  color: #08a857;
+  font-weight: 700;
+  margin-left: 16rpx;
+}
+
+.address-disabled .nav-hint {
+  color: #a0aaa5;
+}
+
 .tip {
   padding: 18rpx 22rpx;
   border-radius: 18rpx;
@@ -675,8 +721,7 @@ onUnload(stopCountdown)
   color: #d93025;
 }
 
-.tip-gray,
-.tip-info {
+.tip-gray {
   background: #f1f4f3;
   color: #7d8883;
 }

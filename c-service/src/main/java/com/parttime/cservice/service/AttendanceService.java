@@ -3,7 +3,6 @@ package com.parttime.cservice.service;
 import com.parttime.cservice.pojo.entity.AttendanceRecordEntity;
 import com.parttime.cservice.pojo.entity.ShiftEntity;
 import com.parttime.cservice.pojo.vo.AttendanceVO;
-import com.parttime.cservice.pojo.vo.MyTopShiftsVO;
 import com.parttime.cservice.pojo.vo.WorkerShiftVO;
 
 import java.math.BigDecimal;
@@ -20,6 +19,4 @@ public interface AttendanceService {
     AttendanceVO checkIn(Long workerId, Long shiftId, BigDecimal lat, BigDecimal lng);
     AttendanceVO checkOut(Long workerId, Long shiftId, BigDecimal lat, BigDecimal lng);
     List<AttendanceVO> getMyAttendance(Long workerId);
-
-    MyTopShiftsVO getMyTopShifts(Long workerId, int size);
 }

@@ -2,29 +2,23 @@ package com.parttime.cservice.service.impl;
 
 import com.parttime.cservice.enums.ShiftStatus;
 import com.parttime.cservice.mapper.AttendanceCheckInMapper;
-import com.parttime.cservice.mapper.AttendanceCorrectionMapper;
 import com.parttime.cservice.mapper.AttendanceRecordMapper;
 import com.parttime.cservice.mapper.ShiftMapper;
 import com.parttime.cservice.pojo.entity.AttendanceCheckIn;
 import com.parttime.cservice.pojo.entity.AttendanceRecordEntity;
 import com.parttime.cservice.pojo.entity.ShiftEntity;
 import com.parttime.cservice.pojo.vo.AttendanceVO;
-import com.parttime.cservice.pojo.vo.MyTopShiftsVO;
 import com.parttime.cservice.pojo.vo.WorkerShiftVO;
 import com.parttime.cservice.service.AttendanceService;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
-import org.springframework.util.CollectionUtils;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,7 +30,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Resource
     private AttendanceRecordMapper attendanceRecordMapper;
     @Resource
-    private AttendanceCorrectionMapper correctionMapper;
+    private WorkerShiftVOConverter workerShiftVOConverter;
     @Resource
     private AttendanceCheckInMapper attendanceCheckInMapper;
 
@@ -68,7 +62,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     public List<WorkerShiftVO> getMyShifts(Long workerId, LocalDate startDate, LocalDate endDate) {
         return shiftMapper.findByWorkerIdAndDateRange(workerId, startDate, endDate).stream()
                 .filter(s -> !"CANCELLED".equals(s.getStatus()))
-                .map(this::toWorkerShiftResponse)
+                .map(workerShiftVOConverter::toWorkerShiftResponse)
                 .collect(Collectors.toList());
     }
 
@@ -219,23 +213,6 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public MyTopShiftsVO getMyTopShifts(Long workerId, int size) {
-        List<ShiftEntity> futureEntities = shiftMapper.findLtStartTimeByWorkerId(workerId, size);
-        ShiftEntity currentEntity = shiftMapper.getGtEndTimeByWorkerId(workerId);
-
-        MyTopShiftsVO vo = new MyTopShiftsVO();
-        if (currentEntity != null) {
-            vo.setCurrentShift(toWorkerShiftResponse(currentEntity));
-        }
-        if (futureEntities != null && !futureEntities.isEmpty()) {
-            vo.setFutureShifts(futureEntities.stream()
-                    .map(this::toWorkerShiftResponse)
-                    .collect(Collectors.toList()));
-        }
-        return vo;
-    }
-
     private double haversine(double lat1, double lon1, double lat2, double lon2) {
         double R = 6371000;
         double dLat = Math.toRadians(lat2 - lat1);
@@ -247,24 +224,6 @@ public class AttendanceServiceImpl implements AttendanceService {
         return R * c;
     }
 
-    private WorkerShiftVO toWorkerShiftResponse(ShiftEntity shift) {
-        WorkerShiftVO resp = new WorkerShiftVO();
-        resp.setId(shift.getId());
-        resp.setJobId(shift.getJobId());
-        resp.setJobTitle(shift.getJobTitle());
-        resp.setLocation(shift.getJobLocation());
-        resp.setDate(shift.getShiftDate());
-        resp.setStartTime(shift.getStartTime() != null ? shift.getStartTime().toString() : null);
-        resp.setEndTime(shift.getEndTime() != null ? shift.getEndTime().toString() : null);
-        resp.setStatus(shift.getStatus());
-        resp.setLocationLat(shift.getLocationLat());
-        resp.setLocationLng(shift.getLocationLng());
-        resp.setLocationRadius(shift.getLocationRadius());
-        resp.setLocationName(shift.getLocationName());
-        correctionMapper.findByShiftId(shift.getId()).ifPresent(c ->
-                resp.setCorrectionStatus(c.getStatus()));
-        return resp;
-    }
 
     private AttendanceVO toAttendanceResponse(AttendanceRecordEntity record) {
         AttendanceVO resp = new AttendanceVO();

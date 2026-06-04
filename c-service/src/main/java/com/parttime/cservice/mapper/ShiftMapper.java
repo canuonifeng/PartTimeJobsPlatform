@@ -16,11 +16,10 @@ public interface ShiftMapper {
     List<ShiftEntity> findByWorkerId(Long workerId);
     List<ShiftEntity> findByWorkerIdAndDateRange(@Param("workerId") Long workerId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
     List<ShiftEntity> findRecentByWorkerId(@Param("workerId") Long workerId);
+    List<ShiftEntity> findTodayByWorkerId(@Param("workerId") Long workerId, @Param("date") LocalDate date);
+    List<ShiftEntity> findFutureByWorkerId(@Param("workerId") Long workerId, @Param("date") LocalDate date, @Param("size") int size);
     List<ShiftEntity> findByJobId(Long jobId);
     int updateStatus(@Param("id") Long id, @Param("status") String status);
     int update(ShiftEntity shift);
 
-    List<ShiftEntity> findLtStartTimeByWorkerId(@Param("workerId") Long workerId, @Param("size") int size);
-
-    ShiftEntity getGtEndTimeByWorkerId(@Param("workerId") Long workerId);
 }

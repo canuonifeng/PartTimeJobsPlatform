@@ -27,6 +27,22 @@
         SELECT * FROM attendance_records WHERE worker_id = #{workerId}
     </select>
 
+    <select id="sumMonthlyHours" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(total_hours), 0)
+        FROM attendance_records
+        WHERE worker_id = #{workerId}
+          AND check_in_time &gt;= #{startTime}
+          AND check_in_time &lt; #{endTime}
+    </select>
+
+    <select id="countMonthlyAttendanceDays" resultType="java.lang.Integer">
+        SELECT COUNT(DISTINCT DATE(check_in_time))
+        FROM attendance_records
+        WHERE worker_id = #{workerId}
+          AND check_in_time &gt;= #{startTime}
+          AND check_in_time &lt; #{endTime}
+    </select>
+
     <update id="update">
         UPDATE attendance_records
         SET check_in_time = #{checkInTime}, check_in_lat = #{checkInLat}, check_in_lng = #{checkInLng},
