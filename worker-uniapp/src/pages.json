@@ -67,6 +67,12 @@
       }
     },
     {
+      "path": "pages/signup/signup",
+      "style": {
+        "navigationBarTitleText": "我的报名"
+      }
+    },
+    {
       "path": "pages/attendance/clockIn",
       "style": {
         "navigationBarTitleText": "打卡"

@@ -38,10 +38,6 @@
 
       <uni-load-more v-if="loading && page === 1" status="loading" />
 
-      <view v-if="dataNotice" class="data-notice">
-        <text>{{ dataNotice }}</text>
-      </view>
-
       <view v-if="groupedTransactions.length === 0 && !loading" class="empty-state">
         <text class="empty-text">暂无明细记录</text>
       </view>
@@ -102,7 +98,6 @@ const total = ref(0)
 const loading = ref(false)
 const loadingMore = ref(false)
 const activeTab = ref('all')
-const dataNotice = ref('')
 const summary = ref<Summary>({
   totalEarnings: 0,
   monthEarnings: 0,
@@ -118,14 +113,6 @@ const tabs = [
   { key: 'pending', label: '待结算' },
   { key: 'withdrawn', label: '已提现' }
 ]
-
-const fallbackSummary: Summary = {
-  totalEarnings: 1280,
-  monthEarnings: 680,
-  pendingSettlement: 320,
-  withdrawnAmount: 600,
-  availableBalance: 320
-}
 
 const hasMore = computed(() => transactions.value.length < total.value)
 const moreStatus = computed(() => {
@@ -149,12 +136,6 @@ const groupedTransactions = computed(() => {
   })
   return groups
 })
-const fallbackTransactions = computed(() => [
-  mapTx({ id: 'fallback-1', type: 'EARNINGS', amount: 260, status: 'SETTLED', createdAt: '2026-06-04 18:30:00', title: '日结工作收入' }),
-  mapTx({ id: 'fallback-2', type: 'EARNINGS', amount: 320, status: 'PENDING', createdAt: '2026-06-03 19:00:00', title: '待结算收入' }),
-  mapTx({ id: 'fallback-3', type: 'WITHDRAWAL', amount: 600, status: 'SUCCESS', createdAt: '2026-06-01 09:20:00', title: '余额提现' })
-])
-
 function navTo(url: string) {
   uni.navigateTo({ url })
 }
@@ -220,22 +201,14 @@ async function loadTxPage(p: number, append: boolean) {
     transactions.value.push(...list)
     total.value = normalizeTotal(res, transactions.value.length)
   } else {
-    if (list.length > 0) {
-      transactions.value = list
-      total.value = normalizeTotal(res, list.length)
-      dataNotice.value = ''
-    } else {
-      transactions.value = fallbackTransactions.value
-      total.value = fallbackTransactions.value.length
-      dataNotice.value = '接口成功但暂无真实明细，当前为示例数据'
-    }
+    transactions.value = list
+    total.value = normalizeTotal(res, list.length)
   }
 }
 
 async function loadData() {
   loading.value = true
   page.value = 1
-  dataNotice.value = ''
   try {
     const earningsRes = await getEarningsSummary()
     const earned = num(earningsRes?.totalEarned ?? earningsRes?.totalEarnings ?? earningsRes?.totalIncome)
@@ -265,11 +238,10 @@ async function loadData() {
 
     await loadTxPage(1, false)
   } catch {
-    summary.value = fallbackSummary
-    transactions.value = fallbackTransactions.value
-    total.value = fallbackTransactions.value.length
-    dataNotice.value = '加载失败展示示例数据，非真实收入'
-    uni.showToast({ title: '加载失败，已显示示例明细', icon: 'none' })
+    summary.value = { totalEarnings: 0, monthEarnings: 0, pendingSettlement: 0, withdrawnAmount: 0, availableBalance: 0 }
+    transactions.value = []
+    total.value = 0
+    uni.showToast({ title: '收入明细加载失败', icon: 'none' })
   } finally {
     loading.value = false
   }

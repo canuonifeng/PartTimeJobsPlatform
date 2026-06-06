@@ -32,10 +32,18 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useAuthStore } from '@/store'
+import { getProfile } from '@/api/profile'
+import { getBankCard } from '@/api/bankCard'
+import { getRealNameStatus } from '@/api/realName'
+import { getSettings, updateSettings } from '@/api/settings'
 
 const authStore = useAuthStore()
+const profile = ref({})
+const bankCard = ref(null)
+const realName = ref(null)
+const savingKey = ref('')
 
 const switchValues = reactive({
   push: true,
@@ -43,16 +51,13 @@ const switchValues = reactive({
   quiet: false
 })
 
-const existingPageUrls = ['/pages/auth/realName', '/pages/bank/bankCard']
-
-const settingGroups = [
+const settingGroups = computed(() => [
   {
     title: '账号与安全',
     items: [
-      { title: '手机号', value: '去绑定', icon: '手', iconClass: 'icon-green' },
-      { title: '修改密码', icon: '密', iconClass: 'icon-blue' },
-      { title: '实名认证', url: '/pages/auth/realName', icon: '实', iconClass: 'icon-orange' },
-      { title: '银行卡管理', url: '/pages/bank/bankCard', icon: '卡', iconClass: 'icon-purple' }
+      { title: '手机号', value: profile.value?.phone || profile.value?.mobile || '未绑定', icon: '手', iconClass: 'icon-green' },
+      { title: '实名认证', value: realNameStatusText.value, url: '/pages/auth/realName', icon: '实', iconClass: 'icon-orange' },
+      { title: '银行卡管理', value: bankCard.value?.cardNumber ? '已绑定' : '未绑定', url: '/pages/bank/bankCard', icon: '卡', iconClass: 'icon-purple' }
     ]
   },
   {
@@ -66,40 +71,62 @@ const settingGroups = [
   {
     title: '通用',
     items: [
-      { title: '语言', value: '简体中文', icon: '语', iconClass: 'icon-blue' },
-      { title: '字体大小', value: '标准', icon: '字', iconClass: 'icon-orange' },
-      { title: '清除缓存', value: '12.8MB', icon: '清', iconClass: 'icon-red' }
-    ]
-  },
-  {
-    title: '其他',
-    items: [
-      { title: '用户协议', icon: '协', iconClass: 'icon-green' },
-      { title: '隐私政策', icon: '隐', iconClass: 'icon-blue' },
-      { title: '关于', value: 'v1.0.0', icon: '关', iconClass: 'icon-gray' }
+      { title: '语言', value: '简体中文', icon: '语', iconClass: 'icon-blue' }
     ]
   }
-]
+])
 
-function showBuildingToast() {
-  uni.showToast({ title: '功能建设中', icon: 'none' })
-}
+const realNameStatusText = computed(() => {
+  const status = String(realName.value?.status || profile.value?.realNameStatus || '').toUpperCase()
+  if (status === 'APPROVED' || status === 'VERIFIED') return '已实名'
+  if (status === 'PENDING') return '审核中'
+  if (status === 'REJECTED') return '未通过'
+  return '未实名'
+})
 
 function handleItem(item) {
   if (item.type === 'switch') return
-  if (!item.url) {
-    showBuildingToast()
-    return
-  }
-  if (!existingPageUrls.includes(item.url)) {
-    showBuildingToast()
-    return
-  }
-  uni.navigateTo({ url: item.url })
+  if (item.url) uni.navigateTo({ url: item.url })
 }
 
-function toggleSwitch(key, event) {
-  switchValues[key] = event.detail.value
+async function toggleSwitch(key, event) {
+  const previous = switchValues[key]
+  const next = event.detail.value
+  switchValues[key] = next
+  savingKey.value = key
+  try {
+    await updateSettings({
+      pushEnabled: switchValues.push,
+      locationEnabled: switchValues.location,
+      quietEnabled: switchValues.quiet
+    })
+  } catch (err) {
+    switchValues[key] = previous
+    uni.showToast({ title: err?.message || '设置保存失败', icon: 'none' })
+  } finally {
+    savingKey.value = ''
+  }
+}
+
+async function loadSettingsPage() {
+  try {
+    const [profileRes, settingsRes, bankRes, realNameRes] = await Promise.allSettled([
+      getProfile(),
+      getSettings(),
+      getBankCard(),
+      getRealNameStatus()
+    ])
+    if (profileRes.status === 'fulfilled') profile.value = profileRes.value || {}
+    if (settingsRes.status === 'fulfilled') {
+      switchValues.push = settingsRes.value?.pushEnabled !== false
+      switchValues.location = settingsRes.value?.locationEnabled !== false
+      switchValues.quiet = settingsRes.value?.quietEnabled === true
+    }
+    if (bankRes.status === 'fulfilled') bankCard.value = bankRes.value
+    if (realNameRes.status === 'fulfilled') realName.value = realNameRes.value
+  } catch {
+    uni.showToast({ title: '设置加载失败', icon: 'none' })
+  }
 }
 
 function handleLogout() {
@@ -111,6 +138,8 @@ function handleLogout() {
     }
   })
 }
+
+onMounted(loadSettingsPage)
 </script>
 
 <style scoped>

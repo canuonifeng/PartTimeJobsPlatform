@@ -6,6 +6,10 @@ import com.parttime.cservice.pojo.entity.ScheduleApplication;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
 import com.parttime.cservice.pojo.vo.JobRateInfoVO;
+import com.parttime.cservice.pojo.vo.PageVO;
+import com.parttime.cservice.pojo.vo.ProfileCompletenessVO;
+import com.parttime.cservice.pojo.vo.WorkerSignupVO;
+import com.parttime.cservice.service.ProfileService;
 import com.parttime.cservice.service.impl.JobServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +26,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -36,6 +41,8 @@ class JobControllerTest {
     private MockMvc mockMvc;
     @Mock
     private JobServiceImpl jobService;
+    @Mock
+    private ProfileService profileService;
     @InjectMocks
     private JobController controller;
     private ObjectMapper objectMapper;
@@ -165,6 +172,7 @@ class JobControllerTest {
 
         ApplyJobCmd request = new ApplyJobCmd(1L, List.of(1L, 2L));
 
+        when(profileService.getCompleteness(1L)).thenReturn(new ProfileCompletenessVO(true, List.of()));
         when(jobService.applyForJob(1L, 1L, List.of(1L, 2L))).thenReturn(true);
 
         mockMvc.perform(post("/api/jobs/apply?id=1")
@@ -181,6 +189,43 @@ class JobControllerTest {
         mockMvc.perform(post("/api/jobs/apply?id=1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getMySignups_withAuth_shouldReturnPagedApplications() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("1", null, List.of()));
+
+        WorkerSignupVO signup = new WorkerSignupVO();
+        signup.setApplicationId(10L);
+        signup.setJobId(2L);
+        signup.setScheduleId(3L);
+        signup.setJobTitle("仓库分拣员");
+        signup.setCompanyName("绿地物流");
+        signup.setStatus("PENDING");
+        signup.setWorkDate(LocalDate.of(2026, 6, 7));
+        signup.setStartTime(LocalTime.of(9, 0));
+        signup.setEndTime(LocalTime.of(18, 0));
+        signup.setLocation("绿地物流园");
+        signup.setPayAmount(new BigDecimal("180.00"));
+        signup.setPayType("DAILY");
+        signup.setAppliedAt(LocalDateTime.of(2026, 6, 6, 10, 0));
+
+        when(jobService.getMySignups(1L, 1, 10)).thenReturn(new PageVO<>(List.of(signup), 1));
+
+        mockMvc.perform(get("/api/jobs/applications/my?page=1&pageSize=10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.records.length()").value(1))
+                .andExpect(jsonPath("$.records[0].applicationId").value(10))
+                .andExpect(jsonPath("$.records[0].jobTitle").value("仓库分拣员"))
+                .andExpect(jsonPath("$.records[0].companyName").value("绿地物流"));
+    }
+
+    @Test
+    void getMySignups_withoutAuth_shouldReturn401() throws Exception {
+        mockMvc.perform(get("/api/jobs/applications/my"))
                 .andExpect(status().isUnauthorized());
     }
 

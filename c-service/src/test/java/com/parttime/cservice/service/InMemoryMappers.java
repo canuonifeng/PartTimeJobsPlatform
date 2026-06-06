@@ -3,6 +3,7 @@ package com.parttime.cservice.service;
 import com.parttime.cservice.mapper.*;
 import com.parttime.cservice.pojo.entity.*;
 import com.parttime.cservice.pojo.vo.NotificationVO;
+import com.parttime.cservice.pojo.vo.WorkerSignupVO;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -96,6 +97,24 @@ public class InMemoryMappers {
             }
             @Override public List<ScheduleApplication> findByWorkerId(Long workerId) {
                 return store.values().stream().filter(a -> workerId.equals(a.getWorkerId())).collect(Collectors.toList());
+            }
+            @Override public List<WorkerSignupVO> findMySignups(Long workerId, int offset, int pageSize) {
+                return store.values().stream()
+                        .filter(a -> workerId.equals(a.getWorkerId()))
+                        .skip(offset)
+                        .limit(pageSize)
+                        .map(a -> {
+                            WorkerSignupVO vo = new WorkerSignupVO();
+                            vo.setApplicationId(a.getId());
+                            vo.setScheduleId(a.getScheduleId());
+                            vo.setStatus(a.getStatus());
+                            vo.setAppliedAt(a.getAppliedAt());
+                            return vo;
+                        })
+                        .collect(Collectors.toList());
+            }
+            @Override public long countMySignups(Long workerId) {
+                return store.values().stream().filter(a -> workerId.equals(a.getWorkerId())).count();
             }
             @Override public List<Long> findScheduleIdsByWorkerIdAndJobId(Long workerId, Long jobId) {
                 return store.values().stream()

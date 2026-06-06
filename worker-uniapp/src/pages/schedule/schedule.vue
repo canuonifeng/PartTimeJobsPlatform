@@ -39,7 +39,7 @@
           <view class="attendance-item"><text class="attendance-label">工时</text><text class="attendance-value">{{ shift.workHours || calcWorkHoursText(shift) }}</text></view>
         </view>
         <view class="card-footer">
-          <text class="footer-tip">{{ shift.id < 0 ? '兜底排班，仅用于展示' : correctionTip(shift) }}</text>
+          <text class="footer-tip">{{ correctionTip(shift) }}</text>
           <view v-if="shift.correctionStatus === 'PENDING'" class="correction-tag pending">补卡审批中</view>
           <view v-else-if="shift.correctionStatus === 'APPROVED'" class="correction-tag approved">补卡已通过</view>
           <view v-else-if="shift.correctionStatus === 'REJECTED'" class="correction-tag rejected">补卡已拒绝</view>

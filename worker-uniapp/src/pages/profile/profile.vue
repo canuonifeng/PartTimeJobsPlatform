@@ -80,6 +80,7 @@ const tabBarPageUrls = [
 const existingPageUrls = [
   ...tabBarPageUrls,
   '/pages/schedule/schedule',
+  '/pages/signup/signup',
   '/pages/attendance/clockIn',
   '/pages/earnings/earnings',
   '/pages/auth/realName',

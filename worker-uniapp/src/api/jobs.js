@@ -30,3 +30,11 @@ export function applyJob(id, data) {
     data
   })
 }
+
+export function getMySignups(params) {
+  return request({
+    url: '/api/jobs/applications/my',
+    method: 'GET',
+    data: params
+  })
+}

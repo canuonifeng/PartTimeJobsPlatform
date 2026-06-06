@@ -26,6 +26,6 @@ export function getEarningsTransactions(params) {
   return request({
     url: '/api/earnings/transactions',
     method: 'GET',
-    params
+    data: params
   })
 }

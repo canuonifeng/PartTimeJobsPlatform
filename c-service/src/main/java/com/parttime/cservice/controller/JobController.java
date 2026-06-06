@@ -4,7 +4,9 @@ import com.parttime.cservice.pojo.cmd.ApplyJobCmd;
 import com.parttime.cservice.pojo.entity.ScheduleApplication;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
+import com.parttime.cservice.pojo.vo.PageVO;
 import com.parttime.cservice.pojo.vo.ProfileCompletenessVO;
+import com.parttime.cservice.pojo.vo.WorkerSignupVO;
 import com.parttime.cservice.service.JobService;
 import com.parttime.cservice.service.ProfileService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -77,6 +79,18 @@ public class JobController {
         }
         boolean success = jobService.applyForJob(workerId, id, request.scheduleIds());
         return ResponseEntity.ok(Map.of("success", success));
+    }
+
+    @Operation(summary = "获取我的报名", description = "获取当前工人的报名记录")
+    @GetMapping("/applications/my")
+    public ResponseEntity<PageVO<WorkerSignupVO>> getMySignups(@RequestParam(defaultValue = "1") Integer page,
+                                                                @RequestParam(defaultValue = "10") Integer pageSize) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        Long workerId = Long.valueOf(auth.getName());
+        return ResponseEntity.ok(jobService.getMySignups(workerId, page, pageSize));
     }
 
     @Operation(summary = "获取申请状态", description = "获取工人在指定岗位的申请状态")

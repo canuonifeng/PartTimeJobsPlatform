@@ -15,6 +15,50 @@
         SELECT * FROM schedule_applications WHERE worker_id = #{workerId} ORDER BY applied_at DESC
     </select>
 
+    <resultMap id="workerSignupVOMap" type="com.parttime.cservice.pojo.vo.WorkerSignupVO">
+        <id column="application_id" property="applicationId"/>
+        <result column="job_id" property="jobId"/>
+        <result column="schedule_id" property="scheduleId"/>
+        <result column="job_title" property="jobTitle"/>
+        <result column="company_name" property="companyName"/>
+        <result column="status" property="status"/>
+        <result column="work_date" property="workDate"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+        <result column="location" property="location"/>
+        <result column="pay_amount" property="payAmount"/>
+        <result column="pay_type" property="payType"/>
+        <result column="applied_at" property="appliedAt"/>
+    </resultMap>
+
+    <select id="findMySignups" resultMap="workerSignupVOMap">
+        SELECT
+            sa.id AS application_id,
+            js.job_id,
+            sa.schedule_id,
+            j.title AS job_title,
+            e.company_name,
+            sa.status,
+            js.schedule_date AS work_date,
+            js.start_time,
+            js.end_time,
+            COALESCE(j.address, j.location, '') AS location,
+            COALESCE((SELECT jr.amount FROM job_rates jr WHERE jr.job_id = j.id ORDER BY jr.id LIMIT 1), j.rate_amount) AS pay_amount,
+            COALESCE((SELECT jr.type FROM job_rates jr WHERE jr.job_id = j.id ORDER BY jr.id LIMIT 1), j.rate_type) AS pay_type,
+            sa.applied_at
+        FROM schedule_applications sa
+        LEFT JOIN job_schedules js ON sa.schedule_id = js.id
+        LEFT JOIN jobs j ON js.job_id = j.id
+        LEFT JOIN enterprises e ON j.company_id = e.id
+        WHERE sa.worker_id = #{workerId}
+        ORDER BY sa.applied_at DESC, sa.id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countMySignups" resultType="long">
+        SELECT COUNT(*) FROM schedule_applications WHERE worker_id = #{workerId}
+    </select>
+
     <select id="findScheduleIdsByWorkerIdAndJobId" resultType="java.lang.Long">
         SELECT sa.schedule_id FROM schedule_applications sa
         JOIN job_schedules js ON sa.schedule_id = js.id

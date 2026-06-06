@@ -7,6 +7,8 @@ import com.parttime.cservice.pojo.vo.JobDetailVO;
 import com.parttime.cservice.pojo.vo.JobRateInfoVO;
 import com.parttime.cservice.pojo.vo.JobScheduleInfoVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
+import com.parttime.cservice.pojo.vo.PageVO;
+import com.parttime.cservice.pojo.vo.WorkerSignupVO;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -22,5 +24,6 @@ public interface JobService {
     JobDetailVO getJobDetail(Long jobId);
     JobDetailVO getJobDetail(Long jobId, Long workerId);
     boolean applyForJob(Long workerId, Long jobId, List<Long> scheduleIds);
+    PageVO<WorkerSignupVO> getMySignups(Long workerId, Integer page, Integer pageSize);
     List<ScheduleApplication> getApplicationStatus(Long workerId, Long jobId);
 }

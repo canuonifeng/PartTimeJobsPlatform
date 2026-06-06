@@ -167,12 +167,12 @@ class JobServiceTest {
     }
 
     @Test
-    void getJobDetail_withWorkerId_setsApplyStatusWhenApplicationExists() {
+    void getJobDetail_withWorkerId_setsAppliedScheduleIdsWhenApplicationExists() {
         jobService.applyForJob(100L, 1L, List.of(1L));
 
         JobDetailVO detail = jobService.getJobDetail(1L, 100L);
 
-        assertThat(detail.getApplyStatus()).isEqualTo("已报名");
+        assertThat(detail.getAppliedScheduleIds()).containsExactly(1L);
     }
 
     @Test
@@ -212,12 +212,13 @@ class JobServiceTest {
     }
 
     @Test
-    void applyForJob_failsIfAlreadyApplied() {
+    void applyForJob_allowsDifferentScheduleAfterAlreadyApplied() {
         jobService.applyForJob(100L, 1L, List.of(1L));
 
         boolean result = jobService.applyForJob(100L, 1L, List.of(2L));
 
-        assertThat(result).isFalse();
+        assertThat(result).isTrue();
+        assertThat(jobService.getApplicationStatus(100L, 1L)).hasSize(2);
     }
 
     @Test

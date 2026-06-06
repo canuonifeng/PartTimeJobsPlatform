@@ -13,6 +13,8 @@ import com.parttime.cservice.pojo.vo.JobRateInfoVO;
 import com.parttime.cservice.pojo.vo.JobScheduleInfoVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
 import com.parttime.cservice.pojo.vo.JobTagVO;
+import com.parttime.cservice.pojo.vo.PageVO;
+import com.parttime.cservice.pojo.vo.WorkerSignupVO;
 import com.parttime.cservice.service.JobService;
 import org.springframework.stereotype.Service;
 
@@ -130,6 +132,7 @@ public class JobServiceImpl implements JobService {
                 js.setStartTime(java.time.LocalTime.parse(s.getStartTime()));
                 js.setEndTime(java.time.LocalTime.parse(s.getEndTime()));
                 js.setSlotsAvailable(s.getSlotsAvailable());
+                js.setStatus("ACTIVE");
                 jobScheduleMapper.insert(js);
             }
         }
@@ -235,6 +238,16 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    public PageVO<WorkerSignupVO> getMySignups(Long workerId, Integer page, Integer pageSize) {
+        int currentPage = page == null || page < 1 ? 1 : page;
+        int currentPageSize = pageSize == null || pageSize < 1 ? 10 : Math.min(pageSize, 50);
+        int offset = (currentPage - 1) * currentPageSize;
+        List<WorkerSignupVO> records = scheduleApplicationMapper.findMySignups(workerId, offset, currentPageSize);
+        long total = scheduleApplicationMapper.countMySignups(workerId);
+        return new PageVO<>(records, total);
+    }
+
+    @Override
     public List<ScheduleApplication> getApplicationStatus(Long workerId, Long jobId) {
         return scheduleApplicationMapper.findByWorkerId(workerId);
     }
@@ -263,7 +276,7 @@ public class JobServiceImpl implements JobService {
         summary.setId(job.getId());
         summary.setTitle(job.getTitle());
         summary.setTags(tags == null ? emptyList() : tags);
-        summary.setLocation(job.getAddress());
+        summary.setLocation(job.getAddress() != null ? job.getAddress() : job.getLocation());
         summary.setProvince(job.getProvince());
         summary.setCity(job.getCity());
         summary.setDistrict(job.getDistrict());
@@ -326,7 +339,7 @@ public class JobServiceImpl implements JobService {
         detail.setRequirements(job.getRequirements());
         detail.setContactPhone(job.getContactPhone());
         detail.setTags(resolveTags(job));
-        detail.setLocation(job.getAddress());
+        detail.setLocation(job.getAddress() != null ? job.getAddress() : job.getLocation());
         detail.setProvince(job.getProvince());
         detail.setCity(job.getCity());
         detail.setDistrict(job.getDistrict());

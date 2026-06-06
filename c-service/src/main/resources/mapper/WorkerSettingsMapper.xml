@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.cservice.mapper.WorkerSettingsMapper">
+    <resultMap id="workerSettingsMap" type="com.parttime.cservice.pojo.entity.WorkerSettings">
+        <id column="id" property="id"/>
+        <result column="worker_id" property="workerId"/>
+        <result column="push_enabled" property="pushEnabled"/>
+        <result column="location_enabled" property="locationEnabled"/>
+        <result column="quiet_enabled" property="quietEnabled"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="findByWorkerId" resultMap="workerSettingsMap">
+        SELECT id, worker_id, push_enabled, location_enabled, quiet_enabled, created_at, updated_at
+        FROM worker_settings
+        WHERE worker_id = #{workerId}
+    </select>
+
+    <insert id="upsert">
+        INSERT INTO worker_settings (worker_id, push_enabled, location_enabled, quiet_enabled)
+        VALUES (#{workerId}, #{pushEnabled}, #{locationEnabled}, #{quietEnabled})
+        ON DUPLICATE KEY UPDATE
+            push_enabled = VALUES(push_enabled),
+            location_enabled = VALUES(location_enabled),
+            quiet_enabled = VALUES(quiet_enabled),
+            updated_at = CURRENT_TIMESTAMP
+    </insert>
+</mapper>

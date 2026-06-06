@@ -17,6 +17,7 @@
     <uni-load-more v-if="loading" status="loading" />
     <scroll-view class="shift-scroll" scroll-y>
       <view class="section-row"><text class="section-title">打卡记录</text><text class="section-subtitle">{{ sourceTip }}</text></view>
+      <view v-if="shifts.length === 0 && !loading" class="empty-state"><text class="empty-text">今日暂无打卡记录</text></view>
       <view v-for="shift in shifts" :key="shift.id" class="shift-card">
         <view class="shift-header">
           <view class="job-left"><view class="job-icon"><text>岗</text></view><view class="job-info"><text class="shift-title">{{ shift.jobTitle }}</text><text class="shift-location">{{ shift.location }}</text></view></view>
@@ -42,7 +43,6 @@ interface Shift { id: number; jobTitle: string; location: string; startTime: str
 
 const loading = ref(false)
 const shifts = ref<Shift[]>([])
-const usingFallback = ref(false)
 const submittingKey = ref('')
 const weekDayNames = ['日', '一', '二', '三', '四', '五', '六']
 const checkedInStatuses = ['CHECKED_IN', 'CHECKED_OUT', 'ON_DUTY', 'OFF_DUTY', 'COMPLETED', 'LATE']
@@ -53,7 +53,7 @@ const todayDate = computed(() => {
   return `${d.getFullYear()}年${String(d.getMonth() + 1).padStart(2, '0')}月${String(d.getDate()).padStart(2, '0')}日`
 })
 const todayName = computed(() => `星期${weekDayNames[new Date().getDay()]}`)
-const sourceTip = computed(() => usingFallback.value ? '示例排班' : '实时排班')
+const sourceTip = computed(() => '实时排班')
 const stats = computed(() => ({ total: shifts.value.length, checkedIn: shifts.value.filter(hasCheckedIn).length, completed: shifts.value.filter(hasCheckedOut).length }))
 
 function formatFullDate(d: Date): string { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
@@ -76,13 +76,6 @@ function normalizeShift(s: any, index: number): Shift {
   const status = s.status || s.attendanceStatus || 'SCHEDULED'
   return { id: Number(s.id ?? s.shiftId ?? index + 1), jobTitle: s.jobTitle || s.title || s.positionName || s.jobName || '临时岗位', location: s.location || s.locationName || s.jobLocation || s.address || '暂无地点', startTime: normalizeTime(s.startTime || s.beginTime) || '09:00', endTime: normalizeTime(s.endTime || s.finishTime) || '18:00', date: normalizeDate(s.date || s.shiftDate), status, checkedIn: checkedInStatuses.includes(status), checkedOut: checkedOutStatuses.includes(status), checkInTime: normalizeTime(s.checkInTime || s.clockInTime || s.signInTime), checkOutTime: normalizeTime(s.checkOutTime || s.clockOutTime || s.signOutTime), attendanceId: s.attendanceId }
 }
-function fallbackShifts(): Shift[] {
-  const today = formatFullDate(new Date())
-  return [
-    { id: -1, jobTitle: '仓库分拣员', location: '绿地物流园3号仓', startTime: '09:00', endTime: '18:00', date: today, status: 'SCHEDULED', checkedIn: false, checkedOut: false, checkInTime: '', checkOutTime: '' },
-    { id: -2, jobTitle: '餐厅服务员', location: '阳光餐厅人民路店', startTime: '18:30', endTime: '22:30', date: today, status: 'ON_DUTY', checkedIn: true, checkedOut: false, checkInTime: '18:28', checkOutTime: '' }
-  ]
-}
 function hasCheckedIn(shift: Shift): boolean { return shift.checkedIn || checkedInStatuses.includes(shift.status) }
 function hasCheckedOut(shift: Shift): boolean { return shift.checkedOut || checkedOutStatuses.includes(shift.status) }
 function statusText(status: string): string {
@@ -103,7 +96,6 @@ function isActionDisabled(shift: Shift, type: 'in' | 'out'): boolean {
 function getLocation(): Promise<{ latitude: number; longitude: number }> {
   return new Promise((resolve, reject) => { uni.getLocation({ type: 'wgs84', success: (res) => resolve({ latitude: res.latitude, longitude: res.longitude }), fail: reject }) })
 }
-function showFallbackToast() { uni.showToast({ title: '示例排班暂不支持打卡', icon: 'none' }) }
 function isLocationError(err: any): boolean { return !!err?.errMsg || String(err?.message || '').includes('getLocation') }
 function showActionError(err: any, action: string) {
   if (isLocationError(err)) {
@@ -113,7 +105,6 @@ function showActionError(err: any, action: string) {
   }
 }
 async function handleCheckIn(shift: Shift) {
-  if (shift.id <= 0) return showFallbackToast()
   if (isActionDisabled(shift, 'in')) return
   submittingKey.value = `${shift.id}:in`
   try {
@@ -126,7 +117,6 @@ async function handleCheckIn(shift: Shift) {
   } catch (err: any) { showActionError(err, '签到') } finally { submittingKey.value = '' }
 }
 async function handleCheckOut(shift: Shift) {
-  if (shift.id <= 0) return showFallbackToast()
   if (isActionDisabled(shift, 'out')) return
   submittingKey.value = `${shift.id}:out`
   try {
@@ -144,12 +134,10 @@ async function loadTodayShifts() {
     const dateStr = formatFullDate(new Date())
     const res: any = await getMyShifts({ startDate: dateStr, endDate: dateStr })
     const list = Array.isArray(res) ? res : (res?.list || [])
-    shifts.value = list.length ? list.map(normalizeShift) : fallbackShifts()
-    usingFallback.value = !list.length
+    shifts.value = list.map(normalizeShift)
   } catch (err: any) {
-    shifts.value = fallbackShifts()
-    usingFallback.value = true
-    uni.showToast({ title: err?.message || '加载失败，已展示兜底排班', icon: 'none' })
+    shifts.value = []
+    uni.showToast({ title: err?.message || '打卡记录加载失败', icon: 'none' })
   } finally { loading.value = false }
 }
 
@@ -203,4 +191,6 @@ onMounted(loadTodayShifts)
 .action-btn.check-in { margin-right: 18rpx; background: #07c160; color: #ffffff; }
 .action-btn.check-out { background: #ffffff; color: #07c160; border: 1rpx solid #07c160; }
 .action-btn.disabled { background: #eef1f5; color: #b7c0cc; border-color: #eef1f5; }
+.empty-state { padding: 100rpx 0; text-align: center; }
+.empty-text { font-size: 28rpx; color: #98a2b3; }
 </style>
