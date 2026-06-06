@@ -1,5 +1,4 @@
-// 修改此处 BASE_URL 为实际部署地址（真机调试需改为电脑局域网IP）
-const BASE_URL = 'http://121.199.12.23:8081/api'
+const BASE_URL = import.meta.env.DEV ? 'http://localhost:8081/api' : 'http://121.199.12.23:8081/api'
 
 export function request(method, url, data = null) {
   const token = uni.getStorageSync('token')
