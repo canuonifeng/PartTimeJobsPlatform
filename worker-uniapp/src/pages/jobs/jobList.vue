@@ -11,7 +11,7 @@
     <scroll-view class="category-scroll" scroll-x :show-scrollbar="false">
       <view class="category-tabs">
         <view v-for="cat in categories" :key="cat.key" class="category-tab" :class="{ active: categoryId === cat.id }" @click="onCategoryChange(cat.id)">
-          <text>{{ cat.name }}</text>
+          <text class="category-name">{{ cat.name }}</text>
         </view>
       </view>
     </scroll-view>
@@ -281,12 +281,19 @@ onMounted(async () => {
 .category-tab {
   display: inline-flex;
   position: relative;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
+  max-width: 180rpx;
   height: 86rpx;
   margin-right: 42rpx;
   font-size: 28rpx;
   color: #6b7280;
+}
+.category-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .category-tab.active {
   color: #111827;
