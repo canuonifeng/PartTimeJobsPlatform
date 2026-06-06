@@ -1,7 +1,5 @@
 package com.parttime.enterprise.controller;
 
-import com.parttime.enterprise.config.JwtTokenProvider;
-import com.parttime.enterprise.config.SecurityConfig;
 import com.parttime.enterprise.enums.JobRateType;
 import com.parttime.enterprise.enums.JobStatus;
 import com.parttime.enterprise.pojo.cmd.JobRateCmd;
@@ -12,14 +10,17 @@ import com.parttime.enterprise.pojo.vo.JobVO;
 import com.parttime.enterprise.service.JobService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -33,24 +34,24 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(JobController.class)
-@Import(SecurityConfig.class)
+@ExtendWith(MockitoExtension.class)
 class JobControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
+    @Mock
     private JobService jobService;
 
-    @MockBean
-    private JwtTokenProvider jwtTokenProvider;
+    @InjectMocks
+    private JobController jobController;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private MockMvc mockMvc;
+    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders.standaloneSetup(jobController).build();
+    }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void publishJob_shouldReturnOk() throws Exception {
         JobVO response = new JobVO();
         response.setId(1L);
@@ -66,7 +67,6 @@ class JobControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void closeJob_shouldReturnOk() throws Exception {
         JobVO response = new JobVO();
         response.setId(1L);
@@ -82,7 +82,6 @@ class JobControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void reopenJob_shouldReturnOk() throws Exception {
         JobVO response = new JobVO();
         response.setId(1L);
@@ -98,7 +97,6 @@ class JobControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void getJobRates_shouldReturnRates() throws Exception {
         JobRateVO rate = new JobRateVO();
         rate.setId(1L);
@@ -117,7 +115,6 @@ class JobControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void addJobRate_shouldReturnCreated() throws Exception {
         JobRateCmd request = new JobRateCmd();
         request.setType(JobRateType.HOURLY);
@@ -142,7 +139,6 @@ class JobControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void updateJobRate_shouldReturnOk() throws Exception {
         JobRateCmd request = new JobRateCmd();
         request.setType(JobRateType.DAILY);
@@ -163,7 +159,6 @@ class JobControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void removeJobRate_shouldReturnNoContent() throws Exception {
         mockMvc.perform(delete("/api/jobs/rates").param("jobId", "100").param("rateId", "1"))
                 .andExpect(status().isNoContent());
@@ -172,7 +167,6 @@ class JobControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void getJobSchedules_shouldReturnSchedules() throws Exception {
         JobScheduleVO schedule = new JobScheduleVO();
         schedule.setId(1L);
@@ -192,7 +186,6 @@ class JobControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void addJobSchedule_shouldReturnCreated() throws Exception {
         JobScheduleCmd request = new JobScheduleCmd();
         request.setScheduleDate(LocalDate.of(2026, 6, 1));
@@ -215,7 +208,6 @@ class JobControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void removeJobSchedule_shouldReturnNoContent() throws Exception {
         mockMvc.perform(delete("/api/jobs/schedules").param("jobId", "100").param("scheduleId", "1"))
                 .andExpect(status().isNoContent());

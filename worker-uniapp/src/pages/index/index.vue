@@ -54,7 +54,6 @@
               <text class="meta-text address-text">{{ formatAddress(shift.location) }}</text>
               <text class="nav-hint">📍</text>
             </view>
-            <view class="meta-item"><text class="meta-icon">距</text><text class="meta-text">{{ distanceLabel(shift) }}</text></view>
           </view>
           <view class="tip" :class="tipClass(shift)"><text>{{ tipText(shift) }}</text></view>
           <view v-if="canCheckIn(shift)" class="btn-primary" @click="handleCheckIn(shift)">签到</view>

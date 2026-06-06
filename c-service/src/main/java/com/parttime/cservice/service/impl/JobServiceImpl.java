@@ -288,6 +288,10 @@ public class JobServiceImpl implements JobService {
             vo.setStartTime(e.getStartTime() != null ? e.getStartTime().toString() : null);
             vo.setEndTime(e.getEndTime() != null ? e.getEndTime().toString() : null);
             vo.setSlotsAvailable(e.getSlotsAvailable());
+            Integer capacity = e.getSlotsAvailable();
+            if (capacity != null) {
+                vo.setRemainingSlots(Math.max(0, capacity - scheduleApplicationMapper.countByScheduleId(e.getId())));
+            }
             return vo;
         }).toList();
     }

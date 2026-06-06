@@ -7,6 +7,8 @@ import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.pojo.entity.*;
 import com.parttime.enterprise.pojo.vo.AttendanceHoursVO;
+import com.parttime.enterprise.pojo.vo.CorrectionVO;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.impl.CorrectionServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -71,10 +73,9 @@ public class CorrectionServiceTest {
 
     @Test
     void testListCorrections() {
-        Map<String, Object> result = service.listCorrections(null, null, null, null, 1, 20);
-        assertEquals(1, result.get("total"));
-        List<?> records = (List<?>) result.get("records");
-        assertEquals(1, records.size());
+        PageVO<CorrectionVO> result = service.listCorrections(null, null, null, null, 1, 20);
+        assertEquals(1, result.getTotal());
+        assertEquals(1, result.getRecords().size());
     }
 
     @Test
@@ -192,6 +193,7 @@ public class CorrectionServiceTest {
         @Override public List<ScheduleShift> findByDateRange(LocalDate startDate, LocalDate endDate) { return List.of(); }
         @Override public int update(ScheduleShift s) { store.put(s.getId(), s); return 1; }
         @Override public int delete(Long id) { store.remove(id); return 1; }
+        @Override public int cancelShift(Long id) { return updateStatus(id, "CANCELLED"); }
         @Override public int updateStatus(Long id, String status) { return 0; }
         @Override public List<ScheduleShift> findCompletedByWorkerIdAndCompanyId(Long workerId, Long companyId) { return List.of(); }
     }
@@ -199,6 +201,7 @@ public class CorrectionServiceTest {
     static class TestWorkerSyncMapper implements WorkerSyncMapper {
         @Override public String findWorkerNameById(Long workerId) { return "测试工人"; }
         @Override public String findWorkerPhoneById(Long workerId) { return "13800138000"; }
+        @Override public LocalDate findWorkerBirthdayById(Long workerId) { return null; }
     }
 
     static class TestJobMapper implements JobMapper {

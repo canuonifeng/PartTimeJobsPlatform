@@ -95,17 +95,6 @@ const currentLocation = ref<{ latitude: number; longitude: number } | null>(null
 const allCategory = { id: undefined, name: '全部', key: 'all' }
 const categories = ref<JobCategory[]>([allCategory])
 
-const fallbackJobs = [
-  { id: -1, categoryId: 2, title: '外卖配送员', minRate: 220, maxRate: 320, location: '望京商圈', distanceKm: 1.2, companyName: '蜂鸟配送站', iconText: '配', settlement: ['日结', '周结'] },
-  { id: -2, categoryId: 5, title: '仓库分拣员', minRate: 180, maxRate: 260, location: '顺义物流园', distanceKm: 3.8, companyName: '京北仓储中心', iconText: '仓', settlement: ['日结'] },
-  { id: -3, categoryId: 3, title: '家庭保洁员', minRate: 45, maxRate: 65, location: '朝阳区', distanceKm: 2.4, companyName: '安心到家家政', iconText: '洁', settlement: ['日结'] },
-  { id: -4, categoryId: 3, title: '家电清洗师', minRate: 80, maxRate: 120, location: '海淀区', distanceKm: 4.1, companyName: '净享生活服务', iconText: '洗', settlement: ['周结'] },
-  { id: -5, categoryId: 1, title: '餐厅服务员', minRate: 22, maxRate: 28, location: '三里屯', distanceKm: 1.8, companyName: '悦味餐饮', iconText: '餐', settlement: ['日结'] },
-  { id: -6, categoryId: 4, title: '展会协助员', minRate: 180, maxRate: 240, location: '国展中心', distanceKm: 5.3, companyName: '星程会展', iconText: '展', settlement: ['日结'] },
-  { id: -7, categoryId: 6, title: '超市理货员', minRate: 24, maxRate: 30, location: '大悦城', distanceKm: 2.9, companyName: '惠民生活超市', iconText: '货', settlement: ['周结'] },
-  { id: -8, categoryId: 6, title: '促销导购员', minRate: 180, maxRate: 260, location: '合生汇', distanceKm: 3.2, companyName: '优选零售', iconText: '促', settlement: ['日结', '周结'] }
-]
-
 function flattenCategories(list: JobCategory[], parentName?: string): JobCategory[] {
   return list.reduce((result: JobCategory[], item) => {
     const name = parentName ? `${parentName} / ${item.name}` : item.name
@@ -127,27 +116,11 @@ async function loadCategories() {
   }
 }
 
-function getFallbackJobs() {
-  let list = fallbackJobs
-  if (categoryId.value !== undefined) {
-    list = list.filter(job => job.categoryId === categoryId.value)
-  }
-  if (keyword.value) {
-    list = list.filter(job => job.title.includes(keyword.value) || job.companyName.includes(keyword.value))
-  }
-  return list
-}
-
-function shouldShowFallback() {
-  return !keyword.value && categoryId.value === undefined
-}
-
 function applyJobs(list: JobItem[], append: boolean) {
-  const finalList = list.length > 0 ? list : (shouldShowFallback() ? getFallbackJobs() : [])
   if (append) {
     if (list.length > 0) jobList.value.push(...list)
   } else {
-    jobList.value = finalList
+    jobList.value = list
   }
   hasMore.value = list.length >= pageSize
 }
@@ -167,10 +140,9 @@ async function fetchJobs(p: number, append: boolean = false) {
     const list = Array.isArray(res) ? res : (res?.list || [])
     applyJobs(list, append)
   } catch {
-    const showFallback = !append && shouldShowFallback()
-    if (!append) jobList.value = showFallback ? getFallbackJobs() : []
+    if (!append) jobList.value = []
     hasMore.value = false
-    uni.showToast({ title: showFallback ? '加载失败，已展示推荐岗位' : '加载失败', icon: 'none' })
+    uni.showToast({ title: '加载失败', icon: 'none' })
   } finally {
     loading.value = false
     loadingMore.value = false
@@ -224,10 +196,6 @@ function onRefresh() {
 }
 
 function goDetail(id: number) {
-  if (id < 0) {
-    uni.showToast({ title: '推荐岗位暂无详情', icon: 'none' })
-    return
-  }
   uni.navigateTo({ url: `/pages/jobs/jobDetail?id=${id}` })
 }
 

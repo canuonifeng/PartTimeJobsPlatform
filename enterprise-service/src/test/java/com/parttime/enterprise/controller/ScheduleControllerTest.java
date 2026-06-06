@@ -1,50 +1,56 @@
 package com.parttime.enterprise.controller;
 
-import com.parttime.enterprise.config.JwtTokenProvider;
-import com.parttime.enterprise.config.SecurityConfig;
-import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
-import com.parttime.enterprise.pojo.vo.ScheduleShiftVO;
-import com.parttime.enterprise.service.ScheduleService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
+import com.parttime.enterprise.pojo.vo.PageVO;
+import com.parttime.enterprise.pojo.vo.ScheduleShiftVO;
+import com.parttime.enterprise.service.CorrectionService;
+import com.parttime.enterprise.service.ScheduleService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.HashMap;
-import java.util.Map;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(ScheduleController.class)
-@Import(SecurityConfig.class)
+@ExtendWith(MockitoExtension.class)
 class ScheduleControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
+    @Mock
     private ScheduleService scheduleService;
 
-    @MockBean
-    private JwtTokenProvider jwtTokenProvider;
+    @Mock
+    private CorrectionService correctionService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    @InjectMocks
+    private ScheduleController scheduleController;
+
+    private MockMvc mockMvc;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(scheduleController, "scheduleService", scheduleService);
+        ReflectionTestUtils.setField(scheduleController, "correctionService", correctionService);
+        mockMvc = MockMvcBuilders.standaloneSetup(scheduleController).build();
+    }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void assignShift_shouldReturnCreated() throws Exception {
         ScheduleShiftVO response = new ScheduleShiftVO();
         response.setId(99L);
@@ -73,15 +79,12 @@ class ScheduleControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void getShifts_shouldReturnList() throws Exception {
         ScheduleShiftVO shift = new ScheduleShiftVO();
         shift.setId(1L);
         shift.setJobId(10L);
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("records", List.of(shift));
-        result.put("total", 1);
+        PageVO<ScheduleShiftVO> result = new PageVO<>(List.of(shift), 1);
         when(scheduleService.getShifts(10L, null, null, 1, 20)).thenReturn(result);
 
         mockMvc.perform(get("/api/schedule-shifts")
@@ -91,7 +94,6 @@ class ScheduleControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void removeShift_shouldReturnNoContent() throws Exception {
         mockMvc.perform(delete("/api/schedule-shifts").param("id", "99"))
                 .andExpect(status().isNoContent());
@@ -99,7 +101,6 @@ class ScheduleControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void getAttendanceReport_shouldReturnList() throws Exception {
         AttendanceReportVO report = new AttendanceReportVO();
         report.setShiftId(1L);

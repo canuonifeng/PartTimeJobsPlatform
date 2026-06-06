@@ -7,6 +7,7 @@ import com.parttime.enterprise.mapper.ScheduleShiftMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
+import com.parttime.enterprise.pojo.entity.Job;
 import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
 import com.parttime.enterprise.pojo.vo.AttendanceRecordVO;
@@ -83,7 +84,10 @@ class ScheduleServiceTest {
         stored.setCreatedAt(java.time.LocalDateTime.of(2026, 6, 1, 9, 0));
         stored.setUpdatedAt(java.time.LocalDateTime.of(2026, 6, 1, 9, 0));
         when(shiftMapper.findById(99L)).thenReturn(Optional.of(stored));
-        when(jobMapper.findById(10L)).thenReturn(Optional.empty());
+        Job job = new Job();
+        job.setId(10L);
+        job.setCompanyId(30L);
+        when(jobMapper.findById(10L)).thenReturn(Optional.of(job));
         when(workerSyncMapper.findWorkerNameById(20L)).thenReturn("TestWorker");
 
         ScheduleShiftVO response = scheduleService.assignShift(request);
@@ -113,7 +117,6 @@ class ScheduleServiceTest {
         assertThat(response.getCalculatedAt()).isEqualTo(LocalDateTime.of(2026, 6, 1, 18, 30));
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     void getShifts_shouldFilterByJobIdAndDate() {
         ScheduleShift shift = new ScheduleShift();
@@ -126,15 +129,13 @@ class ScheduleServiceTest {
         when(jobMapper.findById(10L)).thenReturn(Optional.empty());
         when(workerSyncMapper.findWorkerNameById(20L)).thenReturn("TestWorker");
 
-        java.util.Map<String, Object> result = scheduleService.getShifts(10L, null, LocalDate.of(2026, 6, 1), 1, 20);
+        var result = scheduleService.getShifts(10L, null, LocalDate.of(2026, 6, 1), 1, 20);
 
-        assertThat(result.get("total")).isEqualTo(1);
-        List<ScheduleShiftVO> responses = (List<ScheduleShiftVO>) result.get("records");
-        assertThat(responses).hasSize(1);
-        assertThat(responses.get(0).getJobId()).isEqualTo(10L);
+        assertThat(result.getTotal()).isEqualTo(1);
+        assertThat(result.getRecords()).hasSize(1);
+        assertThat(result.getRecords().get(0).getJobId()).isEqualTo(10L);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     void getShifts_shouldFilterByWorkerId() {
         ScheduleShift shift = new ScheduleShift();
@@ -144,30 +145,27 @@ class ScheduleServiceTest {
         when(shiftMapper.findByWorkerId(20L)).thenReturn(List.of(shift));
         when(workerSyncMapper.findWorkerNameById(20L)).thenReturn("TestWorker");
 
-        java.util.Map<String, Object> result = scheduleService.getShifts(null, 20L, null, 1, 20);
+        var result = scheduleService.getShifts(null, 20L, null, 1, 20);
 
-        assertThat(result.get("total")).isEqualTo(1);
-        List<ScheduleShiftVO> responses = (List<ScheduleShiftVO>) result.get("records");
-        assertThat(responses).hasSize(1);
-        assertThat(responses.get(0).getWorkerId()).isEqualTo(20L);
+        assertThat(result.getTotal()).isEqualTo(1);
+        assertThat(result.getRecords()).hasSize(1);
+        assertThat(result.getRecords().get(0).getWorkerId()).isEqualTo(20L);
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     void getShifts_shouldReturnEmptyWithoutFilters() {
         when(shiftMapper.findAll()).thenReturn(List.of());
 
-        java.util.Map<String, Object> result = scheduleService.getShifts(null, null, null, 1, 20);
+        var result = scheduleService.getShifts(null, null, null, 1, 20);
 
-        assertThat(result.get("total")).isEqualTo(0);
-        List<ScheduleShiftVO> responses = (List<ScheduleShiftVO>) result.get("records");
-        assertThat(responses).isEmpty();
+        assertThat(result.getTotal()).isEqualTo(0);
+        assertThat(result.getRecords()).isEmpty();
     }
 
     @Test
     void removeShift_shouldCallRepository() {
         scheduleService.removeShift(99L);
-        verify(shiftMapper).delete(99L);
+        verify(shiftMapper).cancelShift(99L);
     }
 
     @Test

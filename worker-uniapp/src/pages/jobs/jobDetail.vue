@@ -11,6 +11,10 @@
 
     <uni-load-more v-if="loading" status="loading" />
 
+    <view v-if="!job && !loading" class="empty-state">
+      <text class="empty-text">岗位信息加载失败</text>
+    </view>
+
     <template v-if="job && !loading">
       <view class="banner-card">
         <image v-if="job.imageUrl" class="banner-image" :src="job.imageUrl" mode="aspectFill" />
@@ -36,8 +40,9 @@
         <view class="card">
           <view class="card-title"><text class="card-icon">📅</text><text>选择排班</text></view>
           <view v-if="schedules.length" class="schedule-grid">
-            <view v-for="slot in schedules" :key="slot.id" class="schedule-block" :class="scheduleBlockClass(slot.id)" @click="toggleSchedule(slot.id)">
+            <view v-for="slot in schedules" :key="slot.id" class="schedule-block" :class="scheduleBlockClass(slot)" @click="toggleSchedule(slot)">
               <text v-if="isScheduleApplied(slot.id)" class="block-badge">已报名</text>
+              <text v-else-if="isScheduleFull(slot)" class="block-badge full">已报满</text>
               <text v-else-if="pendingScheduleIds.includes(Number(slot.id))" class="block-badge selected">已选</text>
               <text class="block-date">{{ scheduleDate(slot) }}</text>
               <text class="block-time">{{ scheduleTime(slot) }}</text>
@@ -82,35 +87,17 @@
 import { ref, computed } from 'vue'
 import { onLoad, onShareAppMessage } from '@dcloudio/uni-app'
 import { getJobDetail } from '@/api/jobs'
-
-const fallbackJob = {
-  title: '外卖配送员',
-  companyName: '同城生活服务',
-  location: '附近商圈，就近分配',
-  description: '负责周边区域外卖订单配送，按要求准时取餐并送达。保持良好服务态度，及时沟通异常订单。',
-  minRate: 28,
-  maxRate: 35,
-  rates: [{ amount: 30, type: 'HOURLY' }],
-  schedules: [
-    { id: -101, date: '2026-06-05', startTime: '10:00', endTime: '14:00' },
-    { id: -102, date: '2026-06-05', startTime: '17:00', endTime: '21:00' },
-    { id: -103, date: '2026-06-06', startTime: '10:00', endTime: '14:00' }
-  ],
-  appliedScheduleIds: [],
-  status: 'OPEN',
-  phone: ''
-}
+import { getProfileCompleteness } from '@/api/profile'
 
 const job = ref<any>(null)
 const loading = ref(true)
 const jobId = ref(0)
-const isFallbackJob = ref(false)
 const pendingScheduleIds = ref<number[]>([])
 const appliedScheduleIds = ref<number[]>([])
 
-const title = computed(() => job.value?.title || fallbackJob.title)
-const companyName = computed(() => job.value?.companyName || fallbackJob.companyName)
-const locationText = computed(() => job.value?.location || fallbackJob.location)
+const title = computed(() => job.value?.title || '')
+const companyName = computed(() => job.value?.companyName || '')
+const locationText = computed(() => job.value?.location || '暂无地点')
 const headcountText = computed(() => job.value?.headcount ? `${job.value.headcount}人` : '不限')
 const deadlineText = computed(() => formatDateText(job.value?.deadline) || '长期有效')
 const schedules = computed(() => Array.isArray(job.value?.schedules) ? job.value.schedules : [])
@@ -160,9 +147,10 @@ function splitItems(value: any, fallback: string[]) {
   return list.length ? list : fallback
 }
 
-function scheduleBlockClass(scheduleId: number | string) {
-  const id = Number(scheduleId)
+function scheduleBlockClass(slot: any) {
+  const id = Number(slot?.id)
   if (appliedScheduleIds.value.includes(id)) return 'block-applied'
+  if (isScheduleFull(slot)) return 'block-full'
   if (pendingScheduleIds.value.includes(id)) return 'block-selected'
   return ''
 }
@@ -171,9 +159,20 @@ function isScheduleApplied(id: number | string) {
   return appliedScheduleIds.value.includes(Number(id))
 }
 
-function toggleSchedule(id: number | string) {
-  const scheduleId = Number(id)
+function isScheduleFull(slot: any) {
+  if (isScheduleApplied(slot?.id)) return false
+  const remaining = Number(slot?.remainingSlots ?? slot?.slotsAvailable)
+  return Number.isFinite(remaining) && remaining <= 0
+}
+
+function toggleSchedule(slot: any) {
+  const scheduleId = Number(slot?.id)
+  if (!Number.isFinite(scheduleId)) return
   if (isScheduleApplied(scheduleId) || job.value?.status === 'CLOSED') return
+  if (isScheduleFull(slot)) {
+    uni.showToast({ title: '该班次已报满', icon: 'none' })
+    return
+  }
   const idx = pendingScheduleIds.value.indexOf(scheduleId)
   if (idx >= 0) {
     pendingScheduleIds.value.splice(idx, 1)
@@ -256,13 +255,30 @@ function handleOpenLocation() {
   })
 }
 
-function handleApply() {
+async function handleApply() {
   if (pendingScheduleIds.value.length === 0) {
     uni.showToast({ title: '请先选择排班', icon: 'none' })
     return
   }
-  if (jobId.value <= 0 || isFallbackJob.value) {
-    uni.showToast({ title: '示例岗位暂不支持报名', icon: 'none' })
+  if (jobId.value <= 0 || !job.value?.id) {
+    uni.showToast({ title: '岗位信息无效', icon: 'none' })
+    return
+  }
+  try {
+    const completeness: any = await getProfileCompleteness()
+    if (!completeness?.complete) {
+      uni.showModal({
+        title: '完善个人资料',
+        content: '报名前需要先完善个人资料',
+        confirmText: '去完善',
+        success: (res) => {
+          if (res.confirm) uni.navigateTo({ url: '/pages/profile/edit' })
+        }
+      })
+      return
+    }
+  } catch {
+    uni.showToast({ title: '资料校验失败，请稍后重试', icon: 'none' })
     return
   }
   const scheduleIds = encodeURIComponent(pendingScheduleIds.value.join(','))
@@ -273,22 +289,20 @@ async function loadJob() {
   loading.value = true
   pendingScheduleIds.value = []
   if (jobId.value <= 0) {
-    job.value = { ...fallbackJob, id: jobId.value }
-    isFallbackJob.value = true
+    job.value = null
     appliedScheduleIds.value = []
     loading.value = false
+    uni.showToast({ title: '岗位信息无效', icon: 'none' })
     return
   }
   try {
     const res: any = await getJobDetail(jobId.value)
-    job.value = { ...fallbackJob, ...res }
-    isFallbackJob.value = false
-    appliedScheduleIds.value = Array.isArray(job.value.appliedScheduleIds) ? job.value.appliedScheduleIds.map(Number) : []
+    job.value = res || null
+    appliedScheduleIds.value = Array.isArray(job.value?.appliedScheduleIds) ? job.value.appliedScheduleIds.map(Number) : []
   } catch {
-    job.value = { ...fallbackJob, id: jobId.value }
-    isFallbackJob.value = true
+    job.value = null
     appliedScheduleIds.value = []
-    uni.showToast({ title: '已展示默认岗位', icon: 'none' })
+    uni.showToast({ title: '岗位信息加载失败', icon: 'none' })
   } finally {
     loading.value = false
   }
@@ -321,6 +335,8 @@ onShareAppMessage(() => ({
 .banner-info { margin-top: 0; padding: 30rpx 34rpx 36rpx; border-radius: 0 0 36rpx 36rpx; text-align: left; }
 .banner-title { display: block; color: #fff; font-size: 46rpx; line-height: 58rpx; font-weight: 800; text-align: left; }
 .content { padding: 24rpx; }
+.empty-state { display: flex; justify-content: center; padding: 160rpx 32rpx; }
+.empty-text { color: #9ca3af; font-size: 30rpx; }
 .salary-card, .card, .company-card { margin-bottom: 22rpx; padding: 30rpx; border-radius: 28rpx; background: #fff; box-shadow: 0 8rpx 30rpx rgba(31, 41, 55, 0.06); }
 .salary-card { background: #fff8ef; border: 2rpx solid #ffe4bd; }
 .salary-label { display: block; color: #9a5b12; font-size: 26rpx; }
@@ -341,9 +357,10 @@ onShareAppMessage(() => ({
 .schedule-block { position: relative; width: 284rpx; margin-right: 18rpx; margin-bottom: 18rpx; padding: 28rpx 12rpx; border-radius: 20rpx; border: 2rpx solid #e5e7eb; background: #f8fafc; text-align: center; }
 .schedule-block:nth-child(2n) { margin-right: 0; }
 .block-selected { border-color: #11b981; background: #ecfdf5; }
-.block-applied { border-color: #d1d5db; background: #f3f4f6; opacity: 0.72; }
+.block-applied, .block-full { border-color: #d1d5db; background: #f3f4f6; opacity: 0.72; }
 .block-badge { position: absolute; top: 0; right: 0; padding: 6rpx 14rpx; border-radius: 0 18rpx 0 14rpx; background: #9ca3af; color: #fff; font-size: 22rpx; }
 .block-badge.selected { background: #10b981; }
+.block-badge.full { background: #ef4444; }
 .block-date { display: block; color: #111827; font-size: 30rpx; font-weight: 700; }
 .block-time { display: block; margin-top: 10rpx; color: #64748b; font-size: 26rpx; }
 .block-duration { display: block; margin-top: 8rpx; color: #0f9f5f; font-size: 24rpx; font-weight: 700; }

@@ -1,20 +1,20 @@
 package com.parttime.enterprise.controller;
 
-import com.parttime.enterprise.config.JwtTokenProvider;
-import com.parttime.enterprise.config.SecurityConfig;
 import com.parttime.enterprise.pojo.cmd.JobCategoryCmd;
 import com.parttime.enterprise.pojo.vo.JobCategoryVO;
 import com.parttime.enterprise.service.JobCategoryService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 
@@ -25,24 +25,25 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(JobCategoryController.class)
-@Import(SecurityConfig.class)
+@ExtendWith(MockitoExtension.class)
 class JobCategoryControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
+    @Mock
     private JobCategoryService jobCategoryService;
 
-    @MockBean
-    private JwtTokenProvider jwtTokenProvider;
+    @InjectMocks
+    private JobCategoryController jobCategoryController;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+    private MockMvc mockMvc;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(jobCategoryController, "jobCategoryService", jobCategoryService);
+        mockMvc = MockMvcBuilders.standaloneSetup(jobCategoryController).build();
+    }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void getAllCategories_shouldReturnCategories() throws Exception {
         JobCategoryVO cat = new JobCategoryVO();
         cat.setId(1L);
@@ -58,7 +59,6 @@ class JobCategoryControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void createCategory_shouldReturnCreated() throws Exception {
         JobCategoryCmd request = new JobCategoryCmd();
         request.setName("New Cat");
@@ -79,7 +79,6 @@ class JobCategoryControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void updateCategory_shouldReturnOk() throws Exception {
         JobCategoryCmd request = new JobCategoryCmd();
         request.setName("Updated Cat");
@@ -98,7 +97,6 @@ class JobCategoryControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void deleteCategory_shouldReturnNoContent() throws Exception {
         mockMvc.perform(delete("/api/job-categories").param("id", "1"))
                 .andExpect(status().isNoContent());

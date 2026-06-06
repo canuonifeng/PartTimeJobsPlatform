@@ -19,4 +19,6 @@ public class JobScheduleInfoVO {
     private String endTime;
     @Schema(description = "可报名人数")
     private Integer slotsAvailable;
+    @Schema(description = "剩余可报名人数")
+    private Integer remainingSlots;
 }

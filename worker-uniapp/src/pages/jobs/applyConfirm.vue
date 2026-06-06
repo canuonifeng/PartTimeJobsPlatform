@@ -10,7 +10,7 @@
       <view class="hero"><view class="logo">{{ companyInitial }}</view><view class="hero-main"><text class="title">{{ title }}</text><text class="company">{{ companyName }}</text></view><text class="salary">{{ salaryText }}</text></view>
       <view class="card"><view class="card-title">岗位摘要</view><view class="row"><text class="label">工作地点</text><text class="value">{{ locationText }}</text></view><view class="row"><text class="label">报名时段</text><text class="value">{{ selectedScheduleIds.length }}个</text></view></view>
       <view class="card"><view class="card-title">工作日期选择</view><view v-if="dateOptions.length" class="chips"><view v-for="item in dateOptions" :key="item.date" class="chip" :class="{ active: item.selected }" @click="toggleDate(item.date)"><text class="main">{{ item.text }}</text><text class="sub">{{ item.count }}个时段</text></view></view><view v-else class="empty">暂无有效工作日期</view></view>
-      <view class="card"><view class="card-title">工作时段选择</view><view v-if="displaySchedules.length"><view v-for="slot in displaySchedules" :key="slot.id" class="time" :class="{ active: selectedScheduleIds.includes(slot.id) }" @click="toggleSchedule(slot.id)"><view class="time-main"><text class="main">{{ formatDate(slot.date) }}</text><text class="sub">{{ formatTime(slot) }}</text></view><text class="status">{{ selectedScheduleIds.includes(slot.id) ? '已选' : '选择' }}</text></view></view><view v-else class="empty">暂无有效工作时段</view></view>
+      <view class="card"><view class="card-title">工作时段选择</view><view v-if="displaySchedules.length"><view v-for="slot in displaySchedules" :key="slot.id" class="time" :class="{ active: selectedScheduleIds.includes(slot.id), disabled: isScheduleDisabled(slot) }" @click="toggleSchedule(slot)"><view class="time-main"><text class="main">{{ formatDate(slot.date) }}</text><text class="sub">{{ formatTime(slot) }}</text></view><text class="status" :class="{ full: isScheduleFull(slot) }">{{ scheduleStatusText(slot) }}</text></view></view><view v-else class="empty">暂无有效工作时段</view></view>
       <view class="card"><view class="card-title">报名须知</view><view v-for="item in notices" :key="item" class="notice"><text class="notice-dot"></text><text class="notice-text">{{ item }}</text></view></view>
       <view class="card phone-card"><view><text class="phone-label">联系人电话</text><text class="phone-value">{{ phoneText }}</text></view><button class="phone-btn" :disabled="!contactPhone" @click="handlePhone">拨打</button></view>
     </view>
@@ -23,7 +23,7 @@ import { computed, ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { applyJob, getJobDetail } from '@/api/jobs'
 
-interface ScheduleItem { id: number; date?: string; startTime?: string; endTime?: string }
+interface ScheduleItem { id: number; date?: string; startTime?: string; endTime?: string; remainingSlots?: number; slotsAvailable?: number }
 
 const fallbackJob = { title: '待确认岗位', companyName: '招聘企业', location: '工作地点待确认', rates: [] }
 const jobId = ref(0)
@@ -40,7 +40,8 @@ const locationText = computed(() => job.value?.location || job.value?.locationNa
 const contactPhone = computed(() => job.value?.phone || job.value?.contactPhone || job.value?.mobile || '')
 const phoneText = computed(() => contactPhone.value ? String(contactPhone.value) : '暂无联系电话')
 const companyInitial = computed(() => companyName.value.slice(0, 1))
-const schedules = computed<ScheduleItem[]>(() => (Array.isArray(job.value?.schedules) ? job.value.schedules : []).map((item: any) => ({ id: Number(item.id), date: item.date, startTime: item.startTime, endTime: item.endTime })).filter((item: ScheduleItem) => Number.isInteger(item.id) && item.id > 0))
+const appliedScheduleIds = computed(() => Array.isArray(job.value?.appliedScheduleIds) ? job.value.appliedScheduleIds.map(Number) : [])
+const schedules = computed<ScheduleItem[]>(() => (Array.isArray(job.value?.schedules) ? job.value.schedules : []).map((item: any) => ({ id: Number(item.id), date: item.date, startTime: item.startTime, endTime: item.endTime, remainingSlots: Number(item.remainingSlots), slotsAvailable: Number(item.slotsAvailable) })).filter((item: ScheduleItem) => Number.isInteger(item.id) && item.id > 0))
 const selectedSchedules = computed(() => {
   const known = schedules.value.filter((item) => selectedScheduleIds.value.includes(item.id))
   return known.length ? known : selectedScheduleIds.value.map((id) => ({ id }))
@@ -78,12 +79,29 @@ function parseScheduleIds(value: any) {
 function rateUnit(type: string) { return ({ HOURLY: '小时', DAILY: '日', PIECEWORK: '件', PIECE: '单', MONTHLY: '月' } as Record<string, string>)[type] || '小时' }
 function formatDate(value?: string) { const text = String(value || '日期待定'); return text.length > 5 ? text.slice(5) : text }
 function formatTime(slot: ScheduleItem) { return slot.startTime && slot.endTime ? `${slot.startTime}-${slot.endTime}` : '时间待定' }
+function isScheduleApplied(id: number) { return appliedScheduleIds.value.includes(Number(id)) }
+function isScheduleFull(slot: ScheduleItem) {
+  if (isScheduleApplied(slot.id)) return false
+  const remaining = Number(slot.remainingSlots ?? slot.slotsAvailable)
+  return Number.isFinite(remaining) && remaining <= 0
+}
+function isScheduleDisabled(slot: ScheduleItem) { return isScheduleApplied(slot.id) || isScheduleFull(slot) }
+function scheduleStatusText(slot: ScheduleItem) {
+  if (isScheduleApplied(slot.id)) return '已报名'
+  if (isScheduleFull(slot)) return '已报满'
+  return selectedScheduleIds.value.includes(slot.id) ? '已选' : '选择'
+}
 function toggleDate(date: string) {
-  const ids = displaySchedules.value.filter((slot) => (slot.date || '日期待定') === date).map((slot) => slot.id)
+  const ids = displaySchedules.value.filter((slot) => (slot.date || '日期待定') === date && !isScheduleDisabled(slot)).map((slot) => slot.id)
   const allSelected = ids.length > 0 && ids.every((id) => selectedScheduleIds.value.includes(id))
   selectedScheduleIds.value = allSelected ? selectedScheduleIds.value.filter((id) => !ids.includes(id)) : Array.from(new Set([...selectedScheduleIds.value, ...ids]))
 }
-function toggleSchedule(id: number) { const index = selectedScheduleIds.value.indexOf(id); index >= 0 ? selectedScheduleIds.value.splice(index, 1) : selectedScheduleIds.value.push(id) }
+function toggleSchedule(slot: ScheduleItem) {
+  if (isScheduleApplied(slot.id)) return
+  if (isScheduleFull(slot)) return uni.showToast({ title: '该班次已报满', icon: 'none' })
+  const index = selectedScheduleIds.value.indexOf(slot.id)
+  index >= 0 ? selectedScheduleIds.value.splice(index, 1) : selectedScheduleIds.value.push(slot.id)
+}
 function handlePhone() { contactPhone.value ? uni.makePhoneCall({ phoneNumber: String(contactPhone.value) }) : uni.showToast({ title: '暂无联系电话', icon: 'none' }) }
 function handleCancel() { uni.navigateBack({ delta: 1 }) }
 async function handleConfirm() {
@@ -101,7 +119,17 @@ async function handleConfirm() {
 async function loadJob() {
   if (jobId.value <= 0) return
   loading.value = true
-  try { job.value = { ...fallbackJob, ...await getJobDetail(jobId.value) } } catch { uni.showToast({ title: '岗位信息加载失败', icon: 'none' }) } finally { loading.value = false }
+  try {
+    job.value = { ...fallbackJob, ...await getJobDetail(jobId.value) }
+    selectedScheduleIds.value = selectedScheduleIds.value.filter((id) => {
+      const slot = schedules.value.find((item) => item.id === id)
+      return !slot || !isScheduleDisabled(slot)
+    })
+  } catch {
+    uni.showToast({ title: '岗位信息加载失败', icon: 'none' })
+  } finally {
+    loading.value = false
+  }
 }
 
 onLoad((params: any) => {
@@ -143,8 +171,11 @@ onLoad((params: any) => {
 .main { color: #111827; font-size: 30rpx; font-weight: 700; }
 .sub { margin-top: 8rpx; color: #64748b; font-size: 24rpx; }
 .time { align-items: center; margin-bottom: 18rpx; padding: 24rpx; border-radius: 22rpx; border: 2rpx solid #e5e7eb; background: #f8fafc; }
+.time.disabled { border-color: #d1d5db; background: #f3f4f6; opacity: 0.72; }
 .status { width: 96rpx; height: 48rpx; line-height: 48rpx; border-radius: 24rpx; background: #e5e7eb; color: #64748b; text-align: center; font-size: 24rpx; }
 .time.active .status { background: #10b981; color: #fff; }
+.time.disabled .status { background: #9ca3af; color: #fff; }
+.time.disabled .status.full { background: #ef4444; }
 .notice { margin-bottom: 18rpx; }
 .notice-dot { width: 12rpx; height: 12rpx; margin-top: 14rpx; margin-right: 16rpx; border-radius: 6rpx; background: #10b981; }
 .notice-text { color: #475569; font-size: 28rpx; line-height: 42rpx; }

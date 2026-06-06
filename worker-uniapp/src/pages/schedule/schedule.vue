@@ -1,10 +1,6 @@
 <template>
   <view class="schedule-page">
     <view class="top-panel">
-      <view class="mode-switch">
-        <view class="mode-item" :class="{ active: viewMode === 'week' }" @click="viewMode = 'week'">周</view>
-        <view class="mode-item" :class="{ active: viewMode === 'month' }" @click="viewMode = 'month'">月</view>
-      </view>
       <view class="week-nav">
         <view class="nav-arrow" @click="prevWeek">‹</view>
         <view class="period-info"><text class="period-title">{{ periodTitle }}</text><text class="period-subtitle">{{ weekLabel }}</text></view>
@@ -69,7 +65,6 @@ const allShifts = ref<Shift[]>([])
 const selectedIndex = ref(-1)
 const currentWeekStart = ref(getWeekStart(new Date()))
 const weekDays = ref<DayInfo[]>([])
-const viewMode = ref<'week' | 'month'>('week')
 const correctionDialogVisible = ref(false)
 const correctionTarget = ref<Shift | null>(null)
 const correctionReason = ref('')
@@ -198,7 +193,7 @@ function correctionTip(shift: Shift): string {
 const weekLabel = computed(() => weekDays.value.length < 7 ? '' : `${weekDays.value[0].fullDate} ~ ${weekDays.value[6].fullDate}`)
 const periodTitle = computed(() => {
   const d = currentWeekStart.value
-  return `${d.getFullYear()}年${d.getMonth() + 1}月${viewMode.value === 'week' ? '本周' : '本月'}`
+  return `${d.getFullYear()}年${d.getMonth() + 1}月本周`
 })
 const selectedDayLabel = computed(() => {
   const day = weekDays.value[selectedIndex.value]
@@ -295,9 +290,6 @@ onMounted(() => {
 <style scoped>
 .schedule-page { display: flex; flex-direction: column; height: 100vh; background: #f6f8f7; }
 .top-panel { background: linear-gradient(135deg, #18c86b 0%, #08a95a 56%, #078a49 100%); padding: 28rpx 28rpx 34rpx; border-bottom-left-radius: 36rpx; border-bottom-right-radius: 36rpx; }
-.mode-switch { display: flex; width: 240rpx; padding: 6rpx; border-radius: 999rpx; background: rgba(255, 255, 255, 0.22); margin: 0 auto 28rpx; }
-.mode-item { flex: 1; height: 54rpx; line-height: 54rpx; text-align: center; border-radius: 999rpx; color: #eafff2; font-size: 26rpx; font-weight: 700; }
-.mode-item.active { background: #fff; color: #08a857; }
 .week-nav { display: flex; justify-content: space-between; align-items: center; color: #fff; margin-bottom: 28rpx; }
 .nav-arrow { width: 70rpx; height: 70rpx; line-height: 66rpx; text-align: center; border-radius: 24rpx; background: rgba(255, 255, 255, 0.2); font-size: 42rpx; font-weight: 300; }
 .period-info { flex: 1; text-align: center; }

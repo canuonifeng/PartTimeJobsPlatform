@@ -3,7 +3,7 @@ package com.parttime.enterprise.controller;
 import com.parttime.enterprise.enums.ApplicationStatus;
 import com.parttime.enterprise.exception.BusinessException;
 import com.parttime.enterprise.exception.GlobalExceptionHandler;
-import com.parttime.enterprise.pojo.vo.JobApplicationVO;
+import com.parttime.enterprise.pojo.vo.ScheduleApplicationVO;
 import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.ApplicationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,7 +47,7 @@ class ApplicationControllerTest {
 
     @Test
     void getApplicationsByJob_shouldReturn200() throws Exception {
-        JobApplicationVO app = new JobApplicationVO();
+        ScheduleApplicationVO app = new ScheduleApplicationVO();
         app.setId(1L);
         app.setJobId(100L);
         app.setWorkerId(10L);
@@ -66,7 +66,7 @@ class ApplicationControllerTest {
 
     @Test
     void getApplicationsByJob_shouldSupportPageParams() throws Exception {
-        JobApplicationVO app = new JobApplicationVO();
+        ScheduleApplicationVO app = new ScheduleApplicationVO();
         app.setId(1L);
         app.setJobId(100L);
         app.setWorkerId(10L);
@@ -82,7 +82,7 @@ class ApplicationControllerTest {
 
     @Test
     void acceptApplication_shouldReturn200() throws Exception {
-        JobApplicationVO app = new JobApplicationVO();
+        ScheduleApplicationVO app = new ScheduleApplicationVO();
         app.setId(1L);
         app.setJobId(100L);
         app.setWorkerId(10L);
@@ -97,7 +97,7 @@ class ApplicationControllerTest {
 
     @Test
     void rejectApplication_shouldReturn200() throws Exception {
-        JobApplicationVO app = new JobApplicationVO();
+        ScheduleApplicationVO app = new ScheduleApplicationVO();
         app.setId(1L);
         app.setJobId(100L);
         app.setWorkerId(10L);

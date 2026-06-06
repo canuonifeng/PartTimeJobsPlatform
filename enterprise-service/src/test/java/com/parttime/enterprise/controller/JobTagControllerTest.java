@@ -1,17 +1,17 @@
 package com.parttime.enterprise.controller;
 
-import com.parttime.enterprise.config.JwtTokenProvider;
-import com.parttime.enterprise.config.SecurityConfig;
 import com.parttime.enterprise.pojo.vo.JobTagGroupVO;
 import com.parttime.enterprise.pojo.vo.JobTagVO;
 import com.parttime.enterprise.service.JobTagService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 
@@ -21,21 +21,24 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(JobTagController.class)
-@Import(SecurityConfig.class)
+@ExtendWith(MockitoExtension.class)
 class JobTagControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
+    @Mock
     private JobTagService jobTagService;
 
-    @MockBean
-    private JwtTokenProvider jwtTokenProvider;
+    @InjectMocks
+    private JobTagController jobTagController;
+
+    private MockMvc mockMvc;
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(jobTagController, "jobTagService", jobTagService);
+        mockMvc = MockMvcBuilders.standaloneSetup(jobTagController).build();
+    }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void getActiveTags_shouldReturnGroupsWithTags() throws Exception {
         JobTagVO tag = new JobTagVO();
         tag.setId(2L);

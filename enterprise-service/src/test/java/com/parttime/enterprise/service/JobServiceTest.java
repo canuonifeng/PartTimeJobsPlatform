@@ -259,7 +259,7 @@ class JobServiceTest {
         assertThat(rateCaptor.getValue().getType()).isEqualTo("HOURLY");
 
         verify(jobScheduleMapper).insert(scheduleCaptor.capture());
-        assertThat(scheduleCaptor.getValue().getSlotsAvailable()).isEqualTo(5);
+        assertThat(scheduleCaptor.getValue().getSlotsAvailable()).isEqualTo(3);
     }
 
     @Test
@@ -592,8 +592,9 @@ class JobServiceTest {
         schedule.setStartTime(LocalTime.of(9, 0));
         schedule.setEndTime(LocalTime.of(18, 0));
         schedule.setSlotsAvailable(5);
+        schedule.setStatus("ACTIVE");
 
-        when(jobScheduleMapper.findByJobId(100L)).thenReturn(List.of(schedule));
+        when(jobScheduleMapper.findActiveByJobId(100L)).thenReturn(List.of(schedule));
 
         List<JobScheduleVO> schedules = jobService.getJobSchedules(100L);
 
@@ -609,6 +610,10 @@ class JobServiceTest {
         request.setEndTime(LocalTime.of(18, 0));
         request.setSlotsAvailable(10);
 
+        Job job = new Job();
+        job.setId(100L);
+        job.setHeadcount(10);
+        when(jobMapper.findById(100L)).thenReturn(Optional.of(job));
         doAnswer(invocation -> {
             JobSchedule s = invocation.getArgument(0);
             s.setId(99L);
@@ -638,7 +643,11 @@ class JobServiceTest {
         request.setEndTime(LocalTime.of(17, 0));
         request.setSlotsAvailable(8);
 
+        Job job = new Job();
+        job.setId(100L);
+        job.setHeadcount(8);
         when(jobScheduleMapper.findById(1L)).thenReturn(Optional.of(existing));
+        when(jobMapper.findById(100L)).thenReturn(Optional.of(job));
 
         JobScheduleVO response = jobService.updateJobSchedule(1L, request);
 

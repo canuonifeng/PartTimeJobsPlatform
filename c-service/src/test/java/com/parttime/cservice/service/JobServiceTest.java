@@ -4,6 +4,7 @@ import com.parttime.cservice.service.impl.JobServiceImpl;
 import com.parttime.cservice.mapper.CompanyWorkerInsertMapper;
 import com.parttime.cservice.mapper.JobMapper;
 import com.parttime.cservice.mapper.JobTagRelationMapper;
+import com.parttime.cservice.mapper.ScheduleApplicationMapper;
 import com.parttime.cservice.pojo.entity.Job;
 import com.parttime.cservice.pojo.entity.ScheduleApplication;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
@@ -172,6 +173,23 @@ class JobServiceTest {
         JobDetailVO detail = jobService.getJobDetail(1L, 100L);
 
         assertThat(detail.getApplyStatus()).isEqualTo("已报名");
+    }
+
+    @Test
+    void getJobDetail_returnsRemainingSlotsForSchedules() {
+        ScheduleApplication application = new ScheduleApplication();
+        application.setScheduleId(4L);
+        application.setWorkerId(100L);
+        application.setStatus("PENDING");
+        ScheduleApplicationMapper mapper = (ScheduleApplicationMapper) ReflectionTestUtils.getField(jobService, "scheduleApplicationMapper");
+        mapper.insert(application);
+
+        JobDetailVO detail = jobService.getJobDetail(3L, 200L);
+
+        assertThat(detail.getSchedules())
+                .filteredOn(schedule -> schedule.getId().equals(4L))
+                .singleElement()
+                .satisfies(schedule -> assertThat(schedule.getRemainingSlots()).isEqualTo(schedule.getSlotsAvailable() - 1));
     }
 
     @Test

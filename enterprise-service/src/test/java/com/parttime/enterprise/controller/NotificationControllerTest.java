@@ -1,21 +1,22 @@
 package com.parttime.enterprise.controller;
 
-import com.parttime.enterprise.config.JwtTokenProvider;
-import com.parttime.enterprise.config.SecurityConfig;
 import com.parttime.enterprise.pojo.cmd.NotificationTemplateCmd;
 import com.parttime.enterprise.pojo.entity.NotificationTemplate;
 import com.parttime.enterprise.pojo.vo.NotificationLogVO;
 import com.parttime.enterprise.service.NotificationService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,24 +31,25 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(NotificationController.class)
-@Import(SecurityConfig.class)
+@ExtendWith(MockitoExtension.class)
 class NotificationControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @MockBean
+    @Mock
     private NotificationService notificationService;
 
-    @MockBean
-    private JwtTokenProvider jwtTokenProvider;
+    @InjectMocks
+    private NotificationController notificationController;
+
+    private MockMvc mockMvc;
+    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(notificationController, "notificationService", notificationService);
+        mockMvc = MockMvcBuilders.standaloneSetup(notificationController).build();
+    }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void getNotifications_shouldReturnList() throws Exception {
         NotificationLogVO response = new NotificationLogVO();
         response.setId(1L);
@@ -73,7 +75,6 @@ class NotificationControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void getNotifications_withDefaultRecipientType() throws Exception {
         when(notificationService.getNotificationsByRecipient(100L, "ENTERPRISE"))
                 .thenReturn(List.of());
@@ -85,7 +86,6 @@ class NotificationControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void getTemplates_shouldReturnList() throws Exception {
         NotificationTemplate template = new NotificationTemplate();
         template.setId(1L);
@@ -106,7 +106,6 @@ class NotificationControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void getTemplates_shouldReturnEmptyListWhenNone() throws Exception {
         when(notificationService.getNotificationTemplates("UNKNOWN", null)).thenReturn(List.of());
 
@@ -118,7 +117,6 @@ class NotificationControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void createTemplate_shouldReturnCreated() throws Exception {
         NotificationTemplate created = new NotificationTemplate();
         created.setId(1L);
@@ -144,7 +142,6 @@ class NotificationControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void updateTemplate_shouldReturnOk() throws Exception {
         NotificationTemplate updated = new NotificationTemplate();
         updated.setId(1L);
@@ -165,7 +162,6 @@ class NotificationControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void deleteTemplate_shouldReturnNoContent() throws Exception {
         mockMvc.perform(delete("/api/notification-templates").param("id", "1"))
                 .andExpect(status().isNoContent());

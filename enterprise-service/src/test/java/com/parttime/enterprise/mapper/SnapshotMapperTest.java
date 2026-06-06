@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
         "CREATE TABLE schedule_shifts (" +
                 "id BIGINT PRIMARY KEY AUTO_INCREMENT, " +
                 "job_id BIGINT NOT NULL, " +
+                "company_id BIGINT, " +
                 "application_id BIGINT, " +
                 "worker_id BIGINT NOT NULL, " +
                 "shift_date DATE NOT NULL, " +
@@ -35,10 +36,13 @@ import static org.assertj.core.api.Assertions.assertThat;
                 "location_name VARCHAR(255), " +
                 "status VARCHAR(20) NOT NULL DEFAULT 'SCHEDULED', " +
                 "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
-                "updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)" ,
+                "updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)",
         "CREATE TABLE attendance_records (" +
                 "id BIGINT PRIMARY KEY AUTO_INCREMENT, " +
                 "shift_id BIGINT NOT NULL, " +
+                "job_id BIGINT, " +
+                "company_id BIGINT, " +
+                "worker_id BIGINT, " +
                 "check_in_time DATETIME, " +
                 "check_in_lat DECIMAL(10,7), " +
                 "check_in_lng DECIMAL(10,7), " +
@@ -46,9 +50,12 @@ import static org.assertj.core.api.Assertions.assertThat;
                 "check_out_lat DECIMAL(10,7), " +
                 "check_out_lng DECIMAL(10,7), " +
                 "total_hours DECIMAL(5,2), " +
-                "pay_amount DECIMAL(10,2), " +
+                "scheduled_pay DECIMAL(10,2), " +
+                "payable_pay DECIMAL(10,2), " +
+                "settlement_status VARCHAR(20), " +
                 "calculated_at DATETIME, " +
                 "status VARCHAR(20) NOT NULL DEFAULT 'PENDING', " +
+                "remark VARCHAR(255), " +
                 "created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
                 "updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, " +
                 "FOREIGN KEY (shift_id) REFERENCES schedule_shifts(id))"

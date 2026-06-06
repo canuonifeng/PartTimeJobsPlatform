@@ -1,47 +1,53 @@
 package com.parttime.enterprise.controller;
 
-import com.parttime.enterprise.config.JwtTokenProvider;
-import com.parttime.enterprise.config.SecurityConfig;
 import com.parttime.enterprise.pojo.vo.EvaluationVO;
 import com.parttime.enterprise.pojo.vo.WorkHistoryVO;
 import com.parttime.enterprise.pojo.vo.WorkerProfileVO;
 import com.parttime.enterprise.service.WorkerProfileService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(WorkerProfileController.class)
-@Import(SecurityConfig.class)
+@ExtendWith(MockitoExtension.class)
 class WorkerProfileControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
+    @Mock
     private WorkerProfileService workerProfileService;
 
-    @MockBean
-    private JwtTokenProvider jwtTokenProvider;
+    @InjectMocks
+    private WorkerProfileController workerProfileController;
+
+    private MockMvc mockMvc;
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(workerProfileController, "workerProfileService", workerProfileService);
+        mockMvc = MockMvcBuilders.standaloneSetup(workerProfileController).build();
+    }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void getProfile_shouldReturnProfile() throws Exception {
         WorkerProfileVO response = new WorkerProfileVO();
         response.setWorkerId(10L);
@@ -61,7 +67,6 @@ class WorkerProfileControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void evaluateWorker_shouldReturnCreated() throws Exception {
         EvaluationVO response = new EvaluationVO();
         response.setId(99L);
@@ -88,7 +93,6 @@ class WorkerProfileControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void getEvaluations_shouldReturnList() throws Exception {
         EvaluationVO e1 = new EvaluationVO();
         e1.setId(1L);
@@ -104,7 +108,6 @@ class WorkerProfileControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void addToBlacklist_shouldReturnCreated() throws Exception {
         String json = """
                 {
@@ -122,7 +125,6 @@ class WorkerProfileControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void removeFromBlacklist_shouldReturnNoContent() throws Exception {
         mockMvc.perform(delete("/api/workers/blacklist")
                         .param("workerId", "10")
@@ -133,7 +135,6 @@ class WorkerProfileControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void getWorkHistory_shouldReturnList() throws Exception {
         WorkHistoryVO wh = new WorkHistoryVO();
         wh.setShiftId(100L);
@@ -153,7 +154,6 @@ class WorkerProfileControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void addToBlacklist_shouldIgnoreOptionalReason() throws Exception {
         String json = """
                 {
@@ -170,7 +170,6 @@ class WorkerProfileControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
     void evaluateWorker_shouldAcceptMinimalRequest() throws Exception {
         EvaluationVO response = new EvaluationVO();
         response.setId(1L);
