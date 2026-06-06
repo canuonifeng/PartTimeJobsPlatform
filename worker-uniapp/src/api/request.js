@@ -1,5 +1,5 @@
 // 修改此处 BASE_URL 为实际部署地址（真机调试需改为电脑局域网IP）
-const BASE_URL = 'http://localhost:8082'
+const BASE_URL = 'http://121.199.12.23:8082'
 
 function cleanParams(obj) {
   const result = {}
