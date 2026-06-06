@@ -95,7 +95,8 @@ const menuGroups = [
     { title: '我的报名', url: '/pages/signup/signup', icon: '报', iconClass: 'icon-blue' },
     { title: '打卡记录', url: '/pages/attendance/clockIn', icon: '卡', iconClass: 'icon-orange' },
     { title: '收入明细', url: '/pages/earnings/earnings', icon: '收', iconClass: 'icon-gold' }
-  ],
+  ]
+  /**
   [
     { title: '电子合同', url: '/pages/contract/contract', icon: '合', iconClass: 'icon-purple' },
     { title: '技能认证', url: '/pages/certification/skills', icon: '技', iconClass: 'icon-cyan' },
@@ -105,7 +106,8 @@ const menuGroups = [
     { title: '邀请好友', url: '/pages/invite/invite', icon: '邀', iconClass: 'icon-green' },
     { title: '帮助中心', url: '/pages/help/help', icon: '助', iconClass: 'icon-blue' },
     { title: '设置', url: '/pages/settings/settings', icon: '设', iconClass: 'icon-gray' }
-  ]
+  ],
+  **/
 ]
 
 const displayName = computed(() => {
