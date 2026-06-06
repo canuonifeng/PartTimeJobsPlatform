@@ -26,16 +26,16 @@
       </view>
       <view class="income-main">
         <text class="income-symbol">¥</text>
-        <text class="income-amount">4,680.00</text>
+          <text class="income-amount">{{ moneyText(monthIncome) }}</text>
       </view>
       <view class="income-sub-row">
         <view class="income-sub-item">
-          <text class="income-sub-value">¥680.00</text>
+          <text class="income-sub-value">¥{{ moneyText(pendingAmount) }}</text>
           <text class="income-sub-label">待结算</text>
         </view>
         <view class="income-divider"></view>
         <view class="income-sub-item">
-          <text class="income-sub-value">¥4,000.00</text>
+          <text class="income-sub-value">¥{{ moneyText(settledAmount) }}</text>
           <text class="income-sub-label">已结算</text>
         </view>
       </view>
@@ -62,10 +62,13 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useAuthStore } from '@/store'
-import { getProfile } from '@/api/profile'
+import { getProfileDashboard } from '@/api/profile'
 
 const authStore = useAuthStore()
 const profile = ref<any>(null)
+const dashboardStats = ref<any>({})
+const earningsSummary = ref<any>({})
+const realNameAuth = ref<any>({})
 
 const tabBarPageUrls = [
   '/pages/index/index',
@@ -83,11 +86,17 @@ const existingPageUrls = [
   '/pages/settings/settings'
 ]
 
-const stats = [
-  { value: '4,680', label: '累计收入' },
-  { value: '156', label: '累计工时' },
-  { value: '28', label: '出勤天数' }
-]
+const monthIncome = computed(() => numberValue(dashboardStats.value?.monthIncome))
+const monthHours = computed(() => numberValue(dashboardStats.value?.monthHours))
+const attendanceDays = computed(() => numberValue(dashboardStats.value?.attendanceDays))
+const totalEarned = computed(() => numberValue(earningsSummary.value?.totalEarned))
+const pendingAmount = computed(() => numberValue(earningsSummary.value?.pendingWithdrawal))
+const settledAmount = computed(() => Math.max(0, totalEarned.value - pendingAmount.value))
+const stats = computed(() => [
+  { value: moneyText(totalEarned.value), label: '累计收入' },
+  { value: decimalText(monthHours.value), label: '本月工时' },
+  { value: integerText(attendanceDays.value), label: '出勤天数' }
+])
 
 const menuGroups = [
   [
@@ -95,19 +104,10 @@ const menuGroups = [
     { title: '我的报名', url: '/pages/signup/signup', icon: '报', iconClass: 'icon-blue' },
     { title: '打卡记录', url: '/pages/attendance/clockIn', icon: '卡', iconClass: 'icon-orange' },
     { title: '收入明细', url: '/pages/earnings/earnings', icon: '收', iconClass: 'icon-gold' }
-  ]
-  /**
-  [
-    { title: '电子合同', url: '/pages/contract/contract', icon: '合', iconClass: 'icon-purple' },
-    { title: '技能认证', url: '/pages/certification/skills', icon: '技', iconClass: 'icon-cyan' },
-    { title: '意外保障', url: '/pages/insurance/insurance', icon: '保', iconClass: 'icon-red' }
   ],
   [
-    { title: '邀请好友', url: '/pages/invite/invite', icon: '邀', iconClass: 'icon-green' },
-    { title: '帮助中心', url: '/pages/help/help', icon: '助', iconClass: 'icon-blue' },
     { title: '设置', url: '/pages/settings/settings', icon: '设', iconClass: 'icon-gray' }
-  ],
-  **/
+  ]
 ]
 
 const displayName = computed(() => {
@@ -119,10 +119,29 @@ const displayPhone = computed(() => {
 })
 
 const realNameStatus = computed(() => {
-  const status = profile.value?.realNameStatus || profile.value?.authStatus
-  if (profile.value?.isRealName || status === 'verified' || status === 'approved') return '已实名'
+  const status = String(realNameAuth.value?.status || profile.value?.realNameStatus || profile.value?.authStatus || '').toUpperCase()
+  if (profile.value?.isRealName || status === 'APPROVED' || status === 'VERIFIED') return '已实名'
+  if (status === 'PENDING') return '审核中'
+  if (status === 'REJECTED') return '未通过'
   return '未实名'
 })
+
+function numberValue(value: any) {
+  const num = Number(value)
+  return Number.isFinite(num) ? num : 0
+}
+
+function moneyText(value: any) {
+  return numberValue(value).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+function decimalText(value: any) {
+  return numberValue(value).toLocaleString('zh-CN', { maximumFractionDigits: 1 })
+}
+
+function integerText(value: any) {
+  return Math.round(numberValue(value)).toLocaleString('zh-CN')
+}
 
 function navTo(url: string) {
   if (!existingPageUrls.includes(url)) {
@@ -148,11 +167,18 @@ function handleLogout() {
 
 onMounted(async () => {
   try {
-    const res: any = await getProfile()
-    profile.value = res
-    authStore.setWorkerInfo(res)
+    const res: any = await getProfileDashboard()
+    profile.value = res?.profile || null
+    dashboardStats.value = res?.stats || {}
+    earningsSummary.value = res?.earningsSummary || {}
+    realNameAuth.value = res?.realNameAuth || {}
+    if (profile.value) authStore.setWorkerInfo(profile.value)
   } catch {
-    uni.showToast({ title: '个人资料加载失败，已展示默认信息', icon: 'none' })
+    profile.value = null
+    dashboardStats.value = {}
+    earningsSummary.value = {}
+    realNameAuth.value = {}
+    uni.showToast({ title: '我的页面加载失败', icon: 'none' })
   }
 })
 </script>

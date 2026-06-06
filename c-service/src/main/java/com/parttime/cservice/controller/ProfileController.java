@@ -1,11 +1,15 @@
 package com.parttime.cservice.controller;
 
 import com.parttime.cservice.pojo.vo.ProfileCompletenessVO;
+import com.parttime.cservice.pojo.vo.ProfileDashboardVO;
 import com.parttime.cservice.pojo.vo.ProfileVO;
 import com.parttime.cservice.pojo.cmd.ProfileUpdateCmd;
 import com.parttime.cservice.pojo.vo.ResumeVO;
 import com.parttime.cservice.pojo.cmd.ResumeUploadCmd;
+import com.parttime.cservice.service.HomeService;
 import com.parttime.cservice.service.ProfileService;
+import com.parttime.cservice.service.WithdrawalService;
+import com.parttime.cservice.service.WorkerRealNameAuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.http.HttpStatus;
@@ -23,6 +27,12 @@ public class ProfileController {
 
     @Resource
     private ProfileService profileService;
+    @Resource
+    private HomeService homeService;
+    @Resource
+    private WithdrawalService withdrawalService;
+    @Resource
+    private WorkerRealNameAuthService workerRealNameAuthService;
 
     private Long getCurrentWorkerId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -45,6 +55,21 @@ public class ProfileController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
         }
+    }
+
+    @Operation(summary = "获取我的页聚合数据", description = "获取当前登录工人的档案、统计和收入汇总")
+    @GetMapping("/profile/dashboard")
+    public ResponseEntity<?> getDashboard() {
+        Long workerId = getCurrentWorkerId();
+        if (workerId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        ProfileDashboardVO response = new ProfileDashboardVO();
+        response.setProfile(profileService.getProfile(workerId));
+        response.setStats(homeService.getStats(workerId));
+        response.setEarningsSummary(withdrawalService.getEarningsSummary(workerId));
+        response.setRealNameAuth(workerRealNameAuthService.getStatus(workerId));
+        return ResponseEntity.ok(response);
     }
 
     @Operation(summary = "更新工人档案", description = "更新当前登录工人的档案信息")

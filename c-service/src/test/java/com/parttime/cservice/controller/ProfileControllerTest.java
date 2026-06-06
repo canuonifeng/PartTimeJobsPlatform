@@ -1,9 +1,15 @@
 package com.parttime.cservice.controller;
 
+import com.parttime.cservice.pojo.vo.EarningsSummaryVO;
+import com.parttime.cservice.pojo.vo.HomeStatsVO;
 import com.parttime.cservice.pojo.vo.ProfileVO;
 import com.parttime.cservice.pojo.cmd.ProfileUpdateCmd;
 import com.parttime.cservice.pojo.vo.ResumeVO;
+import com.parttime.cservice.pojo.vo.WorkerRealNameAuthVO;
 import com.parttime.cservice.pojo.cmd.ResumeUploadCmd;
+import com.parttime.cservice.service.HomeService;
+import com.parttime.cservice.service.WithdrawalService;
+import com.parttime.cservice.service.WorkerRealNameAuthService;
 import com.parttime.cservice.service.impl.ProfileServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -18,6 +24,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -30,6 +37,12 @@ class ProfileControllerTest {
     private MockMvc mockMvc;
     @Mock
     private ProfileServiceImpl profileService;
+    @Mock
+    private HomeService homeService;
+    @Mock
+    private WithdrawalService withdrawalService;
+    @Mock
+    private WorkerRealNameAuthService workerRealNameAuthService;
     @InjectMocks
     private ProfileController controller;
     private ObjectMapper objectMapper;
@@ -123,6 +136,50 @@ class ProfileControllerTest {
         mockMvc.perform(get("/api/profile/resumes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
+    }
+
+    @Test
+    void getDashboard_shouldReturnProfileStatsAndEarnings() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("1", null, List.of()));
+
+        ProfileVO profile = new ProfileVO();
+        profile.setWorkerId(1L);
+        profile.setName("John");
+
+        HomeStatsVO stats = new HomeStatsVO();
+        stats.setMonthHours(new BigDecimal("12.50"));
+        stats.setMonthIncome(new BigDecimal("680.00"));
+        stats.setAttendanceDays(3);
+
+        EarningsSummaryVO earnings = new EarningsSummaryVO();
+        earnings.setTotalEarned(new BigDecimal("4680.00"));
+        earnings.setTotalWithdrawn(new BigDecimal("4000.00"));
+        earnings.setPendingWithdrawal(new BigDecimal("680.00"));
+
+        WorkerRealNameAuthVO realNameAuth = new WorkerRealNameAuthVO();
+        realNameAuth.setStatus("APPROVED");
+        realNameAuth.setRealName("John");
+
+        when(profileService.getProfile(1L)).thenReturn(profile);
+        when(homeService.getStats(1L)).thenReturn(stats);
+        when(withdrawalService.getEarningsSummary(1L)).thenReturn(earnings);
+        when(workerRealNameAuthService.getStatus(1L)).thenReturn(realNameAuth);
+
+        mockMvc.perform(get("/api/profile/dashboard"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.profile.name").value("John"))
+                .andExpect(jsonPath("$.stats.monthHours").value(12.50))
+                .andExpect(jsonPath("$.stats.attendanceDays").value(3))
+                .andExpect(jsonPath("$.earningsSummary.totalEarned").value(4680.00))
+                .andExpect(jsonPath("$.realNameAuth.status").value("APPROVED"));
+    }
+
+    @Test
+    void getDashboard_shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
+        SecurityContextHolder.clearContext();
+        mockMvc.perform(get("/api/profile/dashboard"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test

@@ -7,6 +7,13 @@ export function getProfile() {
   })
 }
 
+export function getProfileDashboard() {
+  return request({
+    url: '/api/profile/dashboard',
+    method: 'GET'
+  })
+}
+
 export function updateProfile(data) {
   return request({
     url: '/api/profile',
