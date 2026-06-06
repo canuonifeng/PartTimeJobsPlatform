@@ -21,7 +21,7 @@ npm run build
 cd ../
 
 cd enterprise-uniapp
-npm run build
+npm run build:h5
 cd ../
 
 cd platform-pc
@@ -29,5 +29,5 @@ npm run build
 cd ../
 
 cd worker-uniapp
-npm run build
+npm run build:h5
 cd ../
