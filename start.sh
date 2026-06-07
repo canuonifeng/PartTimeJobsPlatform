@@ -1,3 +1,7 @@
+lsof -ti:8081 | xargs kill -9 2>/dev/null;
+lsof -ti:8082 | xargs kill -9 2>/dev/null;
+lsof -ti:8083 | xargs kill -9 2>/dev/null;
+
 cd c-service 
 mvn clean package -Dmaven.test.skip=true
 cd target
