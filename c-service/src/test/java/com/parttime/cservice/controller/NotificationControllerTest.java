@@ -1,6 +1,7 @@
 package com.parttime.cservice.controller;
 
 import com.parttime.cservice.pojo.vo.NotificationVO;
+import com.parttime.cservice.pojo.vo.PageVO;
 import com.parttime.cservice.service.impl.NotificationServiceImpl;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -16,8 +17,10 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -47,17 +50,37 @@ class NotificationControllerTest {
         response.setTitle("New Application");
         response.setContent("You have a new application");
         response.setStatus("SENT");
+        response.setCategory("application");
+        response.setRead(false);
+        response.setRelatedType("APPLICATION");
+        response.setRelatedId(10L);
         response.setSentAt(LocalDateTime.now());
 
-        when(notificationService.getMyNotifications(1L)).thenReturn(List.of(response));
+        when(notificationService.getMyNotifications(1L, 1, 20)).thenReturn(new PageVO<>(List.of(response), 1));
 
         mockMvc.perform(get("/api/notifications/my"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].type").value("APPLICATION_RECEIVED"))
-                .andExpect(jsonPath("$[0].title").value("New Application"))
-                .andExpect(jsonPath("$[0].status").value("SENT"));
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.records.length()").value(1))
+                .andExpect(jsonPath("$.records[0].id").value(1))
+                .andExpect(jsonPath("$.records[0].type").value("APPLICATION_RECEIVED"))
+                .andExpect(jsonPath("$.records[0].category").value("application"))
+                .andExpect(jsonPath("$.records[0].title").value("New Application"))
+                .andExpect(jsonPath("$.records[0].read").value(false))
+                .andExpect(jsonPath("$.records[0].relatedType").value("APPLICATION"))
+                .andExpect(jsonPath("$.records[0].relatedId").value(10))
+                .andExpect(jsonPath("$.records[0].status").value("SENT"));
+    }
+
+    @Test
+    void markNotificationRead_withOwner_shouldReturn204() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("1", null, List.of()));
+
+        mockMvc.perform(put("/api/notifications/10/read"))
+                .andExpect(status().isNoContent());
+
+        verify(notificationService).markAsRead(1L, 10L);
     }
 
     @Test
@@ -71,11 +94,12 @@ class NotificationControllerTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("2", null, List.of()));
 
-        when(notificationService.getMyNotifications(2L)).thenReturn(List.of());
+        when(notificationService.getMyNotifications(2L, 1, 20)).thenReturn(new PageVO<>(List.of(), 0));
 
         mockMvc.perform(get("/api/notifications/my"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.records").isArray())
+                .andExpect(jsonPath("$.records.length()").value(0))
+                .andExpect(jsonPath("$.total").value(0));
     }
 }

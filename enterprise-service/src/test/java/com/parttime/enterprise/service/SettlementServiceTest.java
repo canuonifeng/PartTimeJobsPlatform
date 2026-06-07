@@ -4,6 +4,7 @@ import com.parttime.enterprise.mapper.AttendanceRecordMapper;
 import com.parttime.enterprise.mapper.BalanceTransactionMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
 import com.parttime.enterprise.mapper.WorkerBalanceMapper;
+import com.parttime.enterprise.mapper.WorkerNotificationMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
 import com.parttime.enterprise.pojo.entity.BalanceTransaction;
@@ -18,6 +19,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.argThat;
@@ -39,9 +41,47 @@ class SettlementServiceTest {
     private BalanceTransactionMapper balanceTransactionMapper;
     @Mock
     private EnterpriseBalanceService enterpriseBalanceService;
+    @Mock
+    private WorkerNotificationMapper workerNotificationMapper;
 
     @InjectMocks
     private SettlementServiceImpl settlementService;
+
+    @Test
+    void payFromAttendanceRecords_shouldNotifyWorkerWhenEarningsSettled() {
+        AttendanceRecord record = new AttendanceRecord();
+        record.setId(1L);
+        record.setShiftId(2L);
+        record.setWorkerId(3L);
+        record.setSettlementStatus("UNPAID");
+        record.setPayablePay(new BigDecimal("120.00"));
+
+        ScheduleShift shift = new ScheduleShift();
+        shift.setId(2L);
+        shift.setWorkerId(3L);
+        shift.setShiftDate(LocalDate.of(2026, 5, 30));
+
+        WorkerBalance balance = new WorkerBalance();
+        balance.setBalance(new BigDecimal("80.00"));
+        balance.setTotalEarned(new BigDecimal("380.00"));
+        balance.setTotalWithdrawn(new BigDecimal("100.00"));
+
+        when(attendanceRecordMapper.findById(1L)).thenReturn(Optional.of(record));
+        when(scheduleShiftMapper.findById(2L)).thenReturn(Optional.of(shift));
+        when(workerSyncMapper.findWorkerNameById(3L)).thenReturn("张三");
+        when(workerBalanceMapper.findByWorkerId(3L)).thenReturn(balance);
+
+        settlementService.payFromAttendanceRecords(List.of(1L), 9L);
+
+        verify(workerNotificationMapper).insertWorkerNotification(
+                3L,
+                "EARNINGS_SETTLED",
+                "finance",
+                "收入到账",
+                "您有一笔兼职收入120.00元已到账",
+                "ATTENDANCE",
+                1L);
+    }
 
     @Test
     void unsettle_shouldUseAttendanceLinkedEarningsTransaction() {

@@ -8,6 +8,7 @@ import com.parttime.enterprise.mapper.JobRateMapper;
 import com.parttime.enterprise.mapper.JobScheduleMapper;
 import com.parttime.enterprise.mapper.ScheduleApplicationMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
+import com.parttime.enterprise.mapper.WorkerNotificationMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.entity.Job;
 import com.parttime.enterprise.pojo.entity.JobRate;
@@ -62,6 +63,9 @@ class ApplicationServiceTest {
 
     @Mock
     private ScheduleShiftMapper shiftMapper;
+
+    @Mock
+    private WorkerNotificationMapper workerNotificationMapper;
 
     @InjectMocks
     private ApplicationServiceImpl applicationService;
@@ -144,6 +148,14 @@ class ApplicationServiceTest {
         assertThat(result.getScheduleId()).isEqualTo(11L);
         assertThat(result.getJobId()).isEqualTo(100L);
         verify(applicationMapper).updateStatus(1L, "ACCEPTED");
+        verify(workerNotificationMapper).insertWorkerNotification(
+                10L,
+                "APPLICATION_ACCEPTED",
+                "application",
+                "报名已通过",
+                "您报名的测试岗位已通过审核",
+                "APPLICATION",
+                1L);
     }
 
     @Test
@@ -272,6 +284,14 @@ class ApplicationServiceTest {
 
         assertThat(result.getStatus()).isEqualTo(ApplicationStatus.REJECTED);
         verify(applicationMapper).updateStatus(1L, "REJECTED");
+        verify(workerNotificationMapper).insertWorkerNotification(
+                10L,
+                "APPLICATION_REJECTED",
+                "application",
+                "报名未通过",
+                "您报名的测试岗位未通过审核",
+                "APPLICATION",
+                1L);
     }
 
     @Test

@@ -13,6 +13,7 @@ import com.parttime.cservice.pojo.entity.WorkerRealNameAuth;
 import com.parttime.cservice.pojo.vo.EarningsSummaryVO;
 import com.parttime.cservice.pojo.vo.TransactionVO;
 import com.parttime.cservice.pojo.vo.WithdrawalVO;
+import com.parttime.cservice.service.NotificationService;
 import com.parttime.cservice.service.WithdrawalService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +49,9 @@ public class WithdrawalServiceImpl implements WithdrawalService {
 
     @Resource
     private WorkerBankCardMapper workerBankCardMapper;
+
+    @Resource
+    private NotificationService notificationService;
 
     private static final Random RANDOM = new Random();
 
@@ -104,6 +108,9 @@ public class WithdrawalServiceImpl implements WithdrawalService {
         bt.setRelatedWithdrawalId(record.getId());
         bt.setDescription("提现支出: " + amount);
         balanceTransactionMapper.insert(bt);
+
+        notificationService.createWorkerNotification(workerId, "WITHDRAWAL_COMPLETED", "finance",
+                "提现成功", "您申请的提现" + amount + "元已处理完成", "WITHDRAWAL", record.getId());
 
         return toResponse(record);
     }

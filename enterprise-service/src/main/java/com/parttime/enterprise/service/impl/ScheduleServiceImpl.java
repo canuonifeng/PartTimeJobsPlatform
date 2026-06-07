@@ -5,6 +5,7 @@ import com.parttime.enterprise.mapper.AttendanceRecordMapper;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
+import com.parttime.enterprise.mapper.WorkerNotificationMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
@@ -35,6 +36,8 @@ public class ScheduleServiceImpl implements ScheduleService {
     private CompanyWorkerMapper companyWorkerMapper;
     @Resource
     private WorkerSyncMapper workerSyncMapper;
+    @Resource
+    private WorkerNotificationMapper workerNotificationMapper;
 
     @Override
     public ScheduleShiftVO assignShift(ScheduleShiftCmd request) {
@@ -58,6 +61,8 @@ public class ScheduleServiceImpl implements ScheduleService {
                 .orElseThrow(() -> new RuntimeException("ScheduleShift not found: " + shiftId));
         if (shift.getWorkerId() != null) {
             companyWorkerMapper.upsert(job.getCompanyId(), shift.getWorkerId());
+            workerNotificationMapper.insertWorkerNotification(shift.getWorkerId(), "SCHEDULE_ASSIGNED", "schedule",
+                    "排班已生成", "您有新的排班，请及时查看", "SHIFT", shift.getId());
         }
         return toShiftResponse(shift);
     }
@@ -115,12 +120,22 @@ public class ScheduleServiceImpl implements ScheduleService {
         shiftMapper.update(shift);
         shift = shiftMapper.findById(id)
                 .orElseThrow(() -> new RuntimeException("ScheduleShift not found: " + id));
+        if (shift.getWorkerId() != null) {
+            workerNotificationMapper.insertWorkerNotification(shift.getWorkerId(), "SCHEDULE_UPDATED", "schedule",
+                    "排班已变更", "您的排班信息已变更，请及时查看", "SHIFT", shift.getId());
+        }
         return toShiftResponse(shift);
     }
 
     @Override
     public void removeShift(Long id) {
+        ScheduleShift shift = shiftMapper.findById(id)
+                .orElseThrow(() -> new RuntimeException("ScheduleShift not found: " + id));
         shiftMapper.cancelShift(id);
+        if (shift.getWorkerId() != null) {
+            workerNotificationMapper.insertWorkerNotification(shift.getWorkerId(), "SCHEDULE_CANCELLED", "schedule",
+                    "排班已取消", "您的排班已取消，请及时查看", "SHIFT", shift.getId());
+        }
     }
 
     @Override

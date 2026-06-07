@@ -4,6 +4,7 @@ import com.parttime.enterprise.mapper.AttendanceRecordMapper;
 import com.parttime.enterprise.mapper.BalanceTransactionMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
 import com.parttime.enterprise.mapper.WorkerBalanceMapper;
+import com.parttime.enterprise.mapper.WorkerNotificationMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
 import com.parttime.enterprise.pojo.entity.BalanceTransaction;
@@ -38,6 +39,8 @@ public class SettlementServiceImpl implements SettlementService {
 
     @Resource
     private EnterpriseBalanceService enterpriseBalanceService;
+    @Resource
+    private WorkerNotificationMapper workerNotificationMapper;
 
     @Override
     @Transactional
@@ -75,6 +78,8 @@ public class SettlementServiceImpl implements SettlementService {
 
             ar.setSettlementStatus("PAID");
             attendanceRecordMapper.update(ar);
+            workerNotificationMapper.insertWorkerNotification(workerId, "EARNINGS_SETTLED", "finance",
+                    "收入到账", "您有一笔兼职收入" + actualPay + "元已到账", "ATTENDANCE", ar.getId());
 
             totalPay = totalPay.add(actualPay);
         }

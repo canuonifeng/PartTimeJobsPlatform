@@ -328,11 +328,26 @@ public class InMemoryMappers {
                 store.put(notification.getId(), notification);
                 return 1;
             }
-            @Override public List<NotificationVO> findByRecipientId(Long recipientId, String recipientType) {
+            @Override public List<NotificationVO> findByRecipientId(Long recipientId, String recipientType, int offset, int pageSize) {
                 return store.values().stream()
                         .filter(n -> recipientId.equals(n.getRecipientId()) && recipientType.equals(n.getRecipientType()))
-                        .sorted((a, b) -> b.getSentAt().compareTo(a.getSentAt()))
+                        .sorted(Comparator.comparing(NotificationVO::getSentAt).reversed().thenComparing(Comparator.comparing(NotificationVO::getId).reversed()))
+                        .skip(offset)
+                        .limit(pageSize)
                         .collect(Collectors.toList());
+            }
+            @Override public long countByRecipientId(Long recipientId, String recipientType) {
+                return store.values().stream()
+                        .filter(n -> recipientId.equals(n.getRecipientId()) && recipientType.equals(n.getRecipientType()))
+                        .count();
+            }
+            @Override public int markAsRead(Long id, Long recipientId, String recipientType) {
+                NotificationVO notification = store.get(id);
+                if (notification != null && recipientId.equals(notification.getRecipientId()) && recipientType.equals(notification.getRecipientType())) {
+                    notification.setRead(true);
+                    return 1;
+                }
+                return 0;
             }
         };
     }

@@ -1,15 +1,18 @@
 <script setup>
 import { onLaunch, onShow, onHide } from '@dcloudio/uni-app'
 import { useAuthStore } from './store'
+import { refreshMessageTabBarBadge } from './utils/notificationBadge'
 
 const authStore = useAuthStore()
 
 onLaunch(() => {
   console.log('App Launch')
   authStore.loadSession()
+  refreshMessageTabBarBadge()
 })
 onShow(() => {
   console.log('App Show')
+  refreshMessageTabBarBadge()
 })
 onHide(() => {
   console.log('App Hide')

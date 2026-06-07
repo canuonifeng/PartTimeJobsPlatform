@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.WorkerNotificationMapper">
+
+    <insert id="insertWorkerNotification">
+        INSERT INTO c_notification (recipient_id, recipient_type, type, category, title, content, status, is_read, related_type, related_id, sent_at)
+        VALUES (#{workerId}, 'WORKER', #{type}, #{category}, #{title}, #{content}, 'SENT', 0, #{relatedType}, #{relatedId}, NOW())
+    </insert>
+
+</mapper>

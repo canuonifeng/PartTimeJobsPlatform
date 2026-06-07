@@ -1,5 +1,6 @@
 package com.parttime.platform.service.impl;
 
+import com.parttime.platform.mapper.WorkerNotificationMapper;
 import com.parttime.platform.mapper.WorkerRealNameAuthMapper;
 import com.parttime.platform.pojo.entity.WorkerRealNameAuth;
 import com.parttime.platform.pojo.vo.PageVO;
@@ -19,6 +20,9 @@ public class WorkerRealNameAuthReviewServiceImpl implements WorkerRealNameAuthRe
     @Resource
     private WorkerRealNameAuthMapper mapper;
 
+    @Resource
+    private WorkerNotificationMapper workerNotificationMapper;
+
     @Override
     public PageVO<WorkerRealNameAuthVO> list(String status, int page, int pageSize) {
         int offset = Math.max(page - 1, 0) * pageSize;
@@ -37,6 +41,14 @@ public class WorkerRealNameAuthReviewServiceImpl implements WorkerRealNameAuthRe
             throw new RuntimeException("状态不允许操作");
         }
         mapper.updateReview(id, "APPROVED", null, reviewerId, LocalDateTime.now());
+        workerNotificationMapper.insertWorkerNotification(
+                auth.getWorkerId(),
+                "REAL_NAME_APPROVED",
+                "system",
+                "实名认证已通过",
+                "您的实名认证已通过审核",
+                "REAL_NAME_AUTH",
+                id);
     }
 
     @Override
@@ -50,6 +62,14 @@ public class WorkerRealNameAuthReviewServiceImpl implements WorkerRealNameAuthRe
             throw new RuntimeException("状态不允许操作");
         }
         mapper.updateReview(id, "REJECTED", reason, reviewerId, LocalDateTime.now());
+        workerNotificationMapper.insertWorkerNotification(
+                auth.getWorkerId(),
+                "REAL_NAME_REJECTED",
+                "system",
+                "实名认证未通过",
+                "您的实名认证未通过审核，原因：" + reason,
+                "REAL_NAME_AUTH",
+                id);
     }
 
     private WorkerRealNameAuthVO toVO(WorkerRealNameAuth entity) {

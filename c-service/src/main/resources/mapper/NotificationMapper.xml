@@ -3,14 +3,29 @@
 <mapper namespace="com.parttime.cservice.mapper.NotificationMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO c_notification (recipient_id, recipient_type, type, title, content, status, sent_at)
-        VALUES (#{recipientId}, #{recipientType}, #{type}, #{title}, #{content}, #{status}, #{sentAt})
+        INSERT INTO c_notification (recipient_id, recipient_type, type, category, title, content, status, is_read, related_type, related_id, sent_at)
+        VALUES (#{recipientId}, #{recipientType}, #{type}, #{category}, #{title}, #{content}, #{status}, #{read}, #{relatedType}, #{relatedId}, #{sentAt})
     </insert>
 
     <select id="findByRecipientId" resultType="com.parttime.cservice.pojo.vo.NotificationVO">
-        SELECT * FROM c_notification
+        SELECT id, recipient_id, recipient_type, type, category, title, content, status, is_read AS `read`,
+               related_type, related_id, sent_at, sent_at AS created_at
+        FROM c_notification
         WHERE recipient_id = #{recipientId} AND recipient_type = #{recipientType}
-        ORDER BY sent_at DESC
+        ORDER BY sent_at DESC, id DESC
+        LIMIT #{offset}, #{pageSize}
     </select>
+
+    <select id="countByRecipientId" resultType="long">
+        SELECT COUNT(*)
+        FROM c_notification
+        WHERE recipient_id = #{recipientId} AND recipient_type = #{recipientType}
+    </select>
+
+    <update id="markAsRead">
+        UPDATE c_notification
+        SET is_read = 1
+        WHERE id = #{id} AND recipient_id = #{recipientId} AND recipient_type = #{recipientType}
+    </update>
 
 </mapper>

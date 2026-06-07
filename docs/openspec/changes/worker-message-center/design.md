@@ -52,9 +52,10 @@ worker-uniapp 消息页
 
 ### API
 
-- `GET /api/notifications/my`
-  - 返回当前登录工人的消息列表。
-  - 默认按 `created_at DESC` 排序。
+- `GET /api/notifications/my?page=1&pageSize=20`
+  - 返回当前登录工人的消息分页。
+  - 默认按 `sent_at DESC, id DESC` 排序。
+  - 返回 `PageVO<NotificationVO>`，包含 `records` 和 `total`。
 - `PUT /api/notifications/{id}/read`
   - 将当前登录工人的指定消息标记为已读。
   - 如果消息不属于当前工人，返回权限错误或未找到。
@@ -75,10 +76,13 @@ worker-uniapp 消息页
 
 `worker-uniapp/src/pages/message/message.vue` 改为真实接口驱动：
 
-- 页面加载时请求 `/api/notifications/my`。
+- 页面加载时请求 `/api/notifications/my?page=1&pageSize=20`。
+- 触底时按下一页继续加载，追加到当前消息列表。
 - 按后端返回 `category` 分组到 Tab。
 - 空列表展示空状态。
-- 点击消息卡片调用标记已读接口，并本地更新红点状态。
+- 底部消息 tabBar 基于首页消息分页中是否存在 `read=false` 消息显示或隐藏红点。
+- 消息页分类 Tab 基于已加载消息中当前分类下是否存在 `read=false` 消息显示或隐藏红点。
+- 点击消息卡片调用标记已读接口，并本地更新消息已读状态、分类 Tab 红点和底部消息 tabBar 红点。
 - 时间展示使用后端 `createdAt`，前端只做简短格式化。
 
 ## Data Flow

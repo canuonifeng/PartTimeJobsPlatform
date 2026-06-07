@@ -9,6 +9,7 @@ import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.JobRateMapper;
 import com.parttime.enterprise.mapper.JobScheduleMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
+import com.parttime.enterprise.mapper.WorkerNotificationMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.entity.Job;
 import com.parttime.enterprise.pojo.entity.ScheduleApplication;
@@ -47,6 +48,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     private WorkerSyncMapper workerSyncMapper;
     @Resource
     private CompanyWorkerMapper companyWorkerMapper;
+    @Resource
+    private WorkerNotificationMapper workerNotificationMapper;
 
     @Override
     public PageVO<ScheduleApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, String status, Integer page, Integer pageSize) {
@@ -105,6 +108,8 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         ensureShifts(app, job);
         companyWorkerMapper.upsert(job.getCompanyId(), app.getWorkerId());
+        workerNotificationMapper.insertWorkerNotification(app.getWorkerId(), "APPLICATION_ACCEPTED", "application",
+                "报名已通过", "您报名的" + job.getTitle() + "已通过审核", "APPLICATION", app.getId());
         return toResponse(app);
     }
 
@@ -151,6 +156,11 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         applicationMapper.updateStatus(applicationId, "REJECTED");
         app.setStatus("REJECTED");
+        JobSchedule schedule = jobScheduleMapper.findById(app.getScheduleId()).orElse(null);
+        Job job = schedule == null ? null : jobMapper.findById(schedule.getJobId()).orElse(null);
+        String jobTitle = job == null ? "岗位" : job.getTitle();
+        workerNotificationMapper.insertWorkerNotification(app.getWorkerId(), "APPLICATION_REJECTED", "application",
+                "报名未通过", "您报名的" + jobTitle + "未通过审核", "APPLICATION", app.getId());
         return toResponse(app);
     }
 

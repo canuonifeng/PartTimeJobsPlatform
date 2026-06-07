@@ -4,6 +4,7 @@ import com.parttime.enterprise.mapper.AttendanceRecordMapper;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
+import com.parttime.enterprise.mapper.WorkerNotificationMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
@@ -50,6 +51,9 @@ class ScheduleServiceTest {
 
     @Mock
     private WorkerSyncMapper workerSyncMapper;
+
+    @Mock
+    private WorkerNotificationMapper workerNotificationMapper;
 
     @Captor
     private ArgumentCaptor<ScheduleShift> shiftCaptor;
@@ -105,6 +109,14 @@ class ScheduleServiceTest {
 
         verify(shiftMapper).insert(shiftCaptor.capture());
         assertThat(shiftCaptor.getValue().getStatus()).isEqualTo("SCHEDULED");
+        verify(workerNotificationMapper).insertWorkerNotification(
+                20L,
+                "SCHEDULE_ASSIGNED",
+                "schedule",
+                "排班已生成",
+                "您有新的排班，请及时查看",
+                "SHIFT",
+                99L);
     }
 
     @Test
@@ -163,9 +175,53 @@ class ScheduleServiceTest {
     }
 
     @Test
-    void removeShift_shouldCallRepository() {
+    void updateShift_shouldNotifyWorker() {
+        ScheduleShift existing = new ScheduleShift();
+        existing.setId(99L);
+        existing.setJobId(10L);
+        existing.setWorkerId(20L);
+        existing.setStatus("SCHEDULED");
+
+        ScheduleShiftCmd request = new ScheduleShiftCmd();
+        request.setJobId(10L);
+        request.setWorkerId(20L);
+        request.setShiftDate(LocalDate.of(2026, 6, 2));
+        request.setStartTime(LocalTime.of(10, 0));
+        request.setEndTime(LocalTime.of(19, 0));
+
+        when(shiftMapper.findById(99L)).thenReturn(Optional.of(existing), Optional.of(existing));
+        when(workerSyncMapper.findWorkerNameById(20L)).thenReturn("TestWorker");
+
+        scheduleService.updateShift(99L, request);
+
+        verify(workerNotificationMapper).insertWorkerNotification(
+                20L,
+                "SCHEDULE_UPDATED",
+                "schedule",
+                "排班已变更",
+                "您的排班信息已变更，请及时查看",
+                "SHIFT",
+                99L);
+    }
+
+    @Test
+    void removeShift_shouldCallRepositoryAndNotifyWorker() {
+        ScheduleShift existing = new ScheduleShift();
+        existing.setId(99L);
+        existing.setWorkerId(20L);
+        when(shiftMapper.findById(99L)).thenReturn(Optional.of(existing));
+
         scheduleService.removeShift(99L);
+
         verify(shiftMapper).cancelShift(99L);
+        verify(workerNotificationMapper).insertWorkerNotification(
+                20L,
+                "SCHEDULE_CANCELLED",
+                "schedule",
+                "排班已取消",
+                "您的排班已取消，请及时查看",
+                "SHIFT",
+                99L);
     }
 
     @Test
