@@ -156,6 +156,14 @@ class ApplicationServiceTest {
                 "您报名的测试岗位已通过审核",
                 "APPLICATION",
                 1L);
+        verify(workerNotificationMapper).insertWorkerNotification(
+                10L,
+                "SCHEDULE_ASSIGNED",
+                "schedule",
+                "排班已生成",
+                "您报名的测试岗位已生成排班，请及时查看",
+                "SHIFT",
+                null);
     }
 
     @Test

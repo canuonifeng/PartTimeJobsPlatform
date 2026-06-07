@@ -106,14 +106,18 @@ public class ApplicationServiceImpl implements ApplicationService {
             app.setStatus("ACCEPTED");
         }
 
-        ensureShifts(app, job);
+        boolean shiftCreated = ensureShifts(app, job);
         companyWorkerMapper.upsert(job.getCompanyId(), app.getWorkerId());
         workerNotificationMapper.insertWorkerNotification(app.getWorkerId(), "APPLICATION_ACCEPTED", "application",
                 "报名已通过", "您报名的" + job.getTitle() + "已通过审核", "APPLICATION", app.getId());
+        if (shiftCreated) {
+            workerNotificationMapper.insertWorkerNotification(app.getWorkerId(), "SCHEDULE_ASSIGNED", "schedule",
+                    "排班已生成", "您报名的" + job.getTitle() + "已生成排班，请及时查看", "SHIFT", null);
+        }
         return toResponse(app);
     }
 
-    private void ensureShifts(ScheduleApplication app, Job job) {
+    private boolean ensureShifts(ScheduleApplication app, Job job) {
         JobSchedule schedule = jobScheduleMapper.findById(app.getScheduleId())
                 .orElseThrow(() -> new RuntimeException("Schedule not found: " + app.getScheduleId()));
         JobRate rate = jobRateMapper.findByJobId(job.getId()).stream()
@@ -144,9 +148,11 @@ public class ApplicationServiceImpl implements ApplicationService {
             }
             try {
                 shiftMapper.insert(shift);
+                return true;
             } catch (DuplicateKeyException ignored) {
             }
         }
+        return false;
     }
 
     @Override

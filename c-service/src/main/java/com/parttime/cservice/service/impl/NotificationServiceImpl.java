@@ -39,17 +39,6 @@ public class NotificationServiceImpl implements NotificationService {
         return notification;
     }
 
-    public NotificationVO createShiftStartReminder(Long workerId, Long shiftId, String jobTitle, String shiftDate, String startTime) {
-        return createWorkerNotification(
-                workerId,
-                "SCHEDULE_START_REMINDER",
-                "schedule",
-                "开工提醒",
-                "您报名的" + jobTitle + "将于" + shiftDate + " " + startTime + "开工，请按时到岗",
-                "SCHEDULE_SHIFT",
-                shiftId);
-    }
-
     public PageVO<NotificationVO> getMyNotifications(Long workerId, Integer page, Integer pageSize) {
         int currentPage = page == null || page < 1 ? 1 : page;
         int currentPageSize = pageSize == null || pageSize < 1 ? 20 : Math.min(pageSize, 50);

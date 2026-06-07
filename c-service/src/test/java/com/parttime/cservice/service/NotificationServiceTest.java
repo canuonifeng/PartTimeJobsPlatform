@@ -95,21 +95,4 @@ class NotificationServiceTest {
         assertThat(page.getRecords().get(0).getTitle()).isEqualTo("Middle");
     }
 
-    @Test
-    void createShiftStartReminder_shouldCreateScheduleNotification() {
-        NotificationVO response = notificationService.createShiftStartReminder(
-                100L,
-                200L,
-                "测试岗位",
-                "2026-06-08",
-                "09:00");
-
-        assertThat(response.getType()).isEqualTo("SCHEDULE_START_REMINDER");
-        assertThat(response.getCategory()).isEqualTo("schedule");
-        assertThat(response.getTitle()).isEqualTo("开工提醒");
-        assertThat(response.getContent()).isEqualTo("您报名的测试岗位将于2026-06-08 09:00开工，请按时到岗");
-        assertThat(response.getRelatedType()).isEqualTo("SCHEDULE_SHIFT");
-        assertThat(response.getRelatedId()).isEqualTo(200L);
-        assertThat(response.getRead()).isFalse();
-    }
 }
