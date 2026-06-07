@@ -2,7 +2,9 @@ package com.parttime.cservice.controller;
 
 import com.parttime.cservice.pojo.vo.EarningsSummaryVO;
 import com.parttime.cservice.pojo.cmd.WithdrawalCmd;
+import com.parttime.cservice.pojo.vo.TransactionVO;
 import com.parttime.cservice.pojo.vo.WithdrawalVO;
+import com.parttime.cservice.pojo.vo.PageVO;
 import com.parttime.cservice.service.impl.WithdrawalServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -124,6 +126,39 @@ class WithdrawalControllerTest {
 
         mockMvc.perform(get("/api/withdrawals/my"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getEarningsTransactions_shouldReturnShiftDisplayFields() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("1", null, List.of()));
+
+        TransactionVO transaction = new TransactionVO();
+        transaction.setId(1L);
+        transaction.setAmount(new BigDecimal("120.00"));
+        transaction.setType("EARNINGS");
+        transaction.setDescription("结算收入：张三 2026-06-06 10:00:00");
+        transaction.setCreatedAt("2026-06-06 10:00:00");
+        transaction.setJobTitle("仓库分拣员");
+        transaction.setCompanyName("绿地物流");
+        transaction.setLocation("绿地物流园3号仓");
+        transaction.setShiftDate("2026-06-05");
+        transaction.setStartTime("09:00");
+        transaction.setEndTime("18:00");
+        transaction.setTotalHours(new BigDecimal("8.00"));
+        transaction.setSettlementStatus("PAID");
+
+        when(withdrawalService.getTransactions(1L, 1, 20)).thenReturn(new PageVO<>(List.of(transaction), 1));
+
+        mockMvc.perform(get("/api/earnings/transactions?page=1&pageSize=20"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.records[0].jobTitle").value("仓库分拣员"))
+                .andExpect(jsonPath("$.records[0].companyName").value("绿地物流"))
+                .andExpect(jsonPath("$.records[0].location").value("绿地物流园3号仓"))
+                .andExpect(jsonPath("$.records[0].shiftDate").value("2026-06-05"))
+                .andExpect(jsonPath("$.records[0].startTime").value("09:00"))
+                .andExpect(jsonPath("$.records[0].endTime").value("18:00"))
+                .andExpect(jsonPath("$.records[0].settlementStatus").value("PAID"));
     }
 
     @Test

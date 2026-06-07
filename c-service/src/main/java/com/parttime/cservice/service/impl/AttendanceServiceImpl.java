@@ -260,6 +260,14 @@ public class AttendanceServiceImpl implements AttendanceService {
         resp.setScheduledPay(record.getScheduledPay());
         resp.setCalculatedAt(record.getCalculatedAt());
         resp.setStatus(record.getStatus());
+        resp.setJobTitle(record.getJobTitle());
+        resp.setCompanyName(record.getCompanyName());
+        resp.setLocation(record.getLocation());
+        resp.setShiftDate(record.getShiftDate() == null ? null : record.getShiftDate().toString());
+        resp.setStartTime(record.getStartTime() == null ? null : record.getStartTime().toString());
+        resp.setEndTime(record.getEndTime() == null ? null : record.getEndTime().toString());
+        resp.setPayablePay(record.getPayablePay());
+        resp.setSettlementStatus(record.getSettlementStatus());
         return resp;
     }
 }

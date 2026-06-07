@@ -51,7 +51,12 @@
           <view class="tx-icon" :class="item.type"><text>{{ item.type === 'withdrawal' ? '提' : '收' }}</text></view>
           <view class="tx-left">
             <text class="tx-title">{{ item.title }}</text>
-            <text class="tx-date">{{ item.time || item.createdAt }}</text>
+            <template v-if="item.type === 'earning'">
+              <text class="tx-date">{{ item.workTime }}</text>
+              <text class="tx-location">{{ item.location }}</text>
+              <text v-if="item.settlementTime" class="tx-settlement">结算时间：{{ item.settlementTime }}</text>
+            </template>
+            <text v-else class="tx-date">{{ item.subtitle || item.time || item.createdAt }}</text>
           </view>
           <view class="tx-right">
             <text class="tx-amount" :class="item.type">{{ item.type === 'withdrawal' ? '-' : '+' }}{{ money(item.amount) }}</text>
@@ -90,6 +95,11 @@ interface Transaction {
   date: string
   time: string
   title: string
+  subtitle?: string
+  location?: string
+  workTime?: string
+  settlementTime?: string
+  sortAt: string
 }
 
 const pageSize = 20
@@ -106,6 +116,7 @@ const summary = ref<Summary>({
   availableBalance: 0
 })
 const transactions = ref<Transaction[]>([])
+const pendingAttendanceTransactions = ref<Transaction[]>([])
 
 const tabs = [
   { key: 'all', label: '全部' },
@@ -121,8 +132,8 @@ const moreStatus = computed(() => {
   return 'more'
 })
 const filteredTransactions = computed(() => {
-  if (activeTab.value === 'all') return transactions.value
-  return transactions.value.filter(item => item.filterStatus === activeTab.value)
+  const list = activeTab.value === 'all' ? transactions.value : transactions.value.filter(item => item.filterStatus === activeTab.value)
+  return [...list].sort((a, b) => b.sortAt.localeCompare(a.sortAt))
 })
 const groupedTransactions = computed(() => {
   const groups: { date: string; items: Transaction[] }[] = []
@@ -160,26 +171,62 @@ function normalizeTime(value: any) {
   return text.length >= 16 ? text.slice(11, 16) : ''
 }
 
+function workLocation(item: any) {
+  return item?.location || item?.workLocation || item?.jobLocation || '暂无地点'
+}
+
+function workTimeText(item: any) {
+  const date = item?.shiftDate || item?.date
+  const start = normalizeTime(item?.startTime)
+  const end = normalizeTime(item?.endTime)
+  const parts = []
+  if (date) parts.push(String(date).slice(0, 10))
+  if (start && end) parts.push(`${start}-${end}`)
+  return parts.join(' ')
+}
+
+function settlementFilter(status: any) {
+  const rawStatus = String(status || '').toUpperCase()
+  if (rawStatus.includes('UNPAID') || rawStatus.includes('PENDING') || rawStatus.includes('WAIT') || rawStatus.includes('PROCESS')) return 'pending'
+  return 'settled'
+}
+
 function mapTx(item: any): Transaction {
   const rawType = String(item?.type || item?.transactionType || '').toUpperCase()
-  const rawStatus = String(item?.status || item?.settlementStatus || '').toUpperCase()
   const isWithdrawal = rawType.includes('WITHDRAW')
-  const isPending = rawStatus.includes('PENDING') || rawStatus.includes('WAIT') || rawStatus.includes('PROCESS')
-  const filterStatus = isWithdrawal ? 'withdrawn' : (isPending ? 'pending' : 'settled')
   const createdAt = item?.createdAt || item?.createTime || item?.time || new Date().toISOString().replace('T', ' ').slice(0, 19)
+  const filterStatus = isWithdrawal ? 'withdrawn' : settlementFilter(item?.settlementStatus || item?.status)
   const statusMap: Record<string, string> = { withdrawn: '已提现', pending: '待结算', settled: '已结算' }
+  const shiftDate = item?.shiftDate || item?.date || createdAt
+  const startTime = normalizeTime(item?.startTime)
+  const sortAt = isWithdrawal ? createdAt : `${normalizeDate(shiftDate)} ${startTime || normalizeTime(createdAt) || '00:00'}:00`
   return {
     id: item?.id || `${rawType || 'tx'}-${createdAt}-${item?.amount || 0}`,
     type: isWithdrawal ? 'withdrawal' : 'earning',
-    amount: Math.abs(num(item?.amount || item?.money || item?.value)),
+    amount: Math.abs(num(item?.amount || item?.payablePay || item?.scheduledPay || item?.money || item?.value)),
     status: statusMap[filterStatus],
     statusClass: filterStatus === 'pending' ? 'pending' : 'success',
     filterStatus,
     createdAt,
-    date: normalizeDate(createdAt),
+    date: normalizeDate(isWithdrawal ? createdAt : shiftDate),
     time: normalizeTime(createdAt),
-    title: item?.title || item?.description || (isWithdrawal ? '余额提现' : '工作收入')
+    title: isWithdrawal ? (item?.title || item?.description || '余额提现') : (item?.jobTitle || item?.positionName || item?.jobName || '工作收入'),
+    subtitle: isWithdrawal ? normalizeTime(createdAt) : undefined,
+    location: isWithdrawal ? undefined : workLocation(item),
+    workTime: isWithdrawal ? undefined : workTimeText(item),
+    settlementTime: !isWithdrawal && filterStatus === 'settled' ? createdAt : undefined,
+    sortAt
   }
+}
+
+function mapAttendanceTx(item: any): Transaction | null {
+  const amount = num(item?.payablePay || item?.scheduledPay || item?.earning || item?.amount || item?.salary)
+  if (amount <= 0) return null
+  const tx = mapTx({ ...item, id: `attendance-${item?.attendanceId || item?.id || item?.shiftId}`, type: 'EARNINGS', amount, settlementStatus: item?.settlementStatus || 'UNPAID' })
+  tx.filterStatus = 'pending'
+  tx.status = '待结算'
+  tx.statusClass = 'pending'
+  return tx
 }
 
 function normalizeRecords(res: any) {
@@ -201,8 +248,8 @@ async function loadTxPage(p: number, append: boolean) {
     transactions.value.push(...list)
     total.value = normalizeTotal(res, transactions.value.length)
   } else {
-    transactions.value = list
-    total.value = normalizeTotal(res, list.length)
+    transactions.value = [...list, ...pendingAttendanceTransactions.value]
+    total.value = normalizeTotal(res, list.length) + pendingAttendanceTransactions.value.length
   }
 }
 
@@ -227,19 +274,30 @@ async function loadData() {
     try {
       const attendanceRes = await getMyAttendance()
       const attrs = Array.isArray(attendanceRes) ? attendanceRes : (attendanceRes?.list || attendanceRes?.records || [])
-      if (Array.isArray(attrs) && attrs.length > 0 && summary.value.monthEarnings === 0) {
-        const month = new Date().toISOString().slice(0, 7)
-        summary.value.monthEarnings = attrs.reduce((sum: number, item: any) => {
-          const date = String(item?.date || item?.createdAt || item?.checkInTime || '')
-          return date.slice(0, 7) === month ? sum + num(item?.earning ?? item?.amount ?? item?.salary) : sum
-        }, 0)
+      if (Array.isArray(attrs) && attrs.length > 0) {
+        pendingAttendanceTransactions.value = attrs
+          .filter((item: any) => settlementFilter(item?.settlementStatus) === 'pending')
+          .map(mapAttendanceTx)
+          .filter(Boolean) as Transaction[]
+        if (summary.value.monthEarnings === 0) {
+          const month = new Date().toISOString().slice(0, 7)
+          summary.value.monthEarnings = attrs.reduce((sum: number, item: any) => {
+            const date = String(item?.shiftDate || item?.date || item?.createdAt || item?.checkInTime || '')
+            return date.slice(0, 7) === month ? sum + num(item?.payablePay ?? item?.scheduledPay ?? item?.earning ?? item?.amount ?? item?.salary) : sum
+          }, 0)
+        }
+      } else {
+        pendingAttendanceTransactions.value = []
       }
-    } catch {}
+    } catch {
+      pendingAttendanceTransactions.value = []
+    }
 
     await loadTxPage(1, false)
   } catch {
     summary.value = { totalEarnings: 0, monthEarnings: 0, pendingSettlement: 0, withdrawnAmount: 0, availableBalance: 0 }
     transactions.value = []
+    pendingAttendanceTransactions.value = []
     total.value = 0
     uni.showToast({ title: '收入明细加载失败', icon: 'none' })
   } finally {
@@ -479,9 +537,22 @@ onUnmounted(() => { uni.$off('earningsRefresh', loadData) })
   margin-bottom: 6rpx;
 }
 
-.tx-date {
+.tx-date,
+.tx-location {
   font-size: 22rpx;
-  color: #ccc;
+  color: #999;
+  line-height: 34rpx;
+}
+
+.tx-location {
+  margin-top: 4rpx;
+}
+
+.tx-settlement {
+  margin-top: 4rpx;
+  font-size: 22rpx;
+  color: #bbb;
+  line-height: 34rpx;
 }
 
 .tx-right {

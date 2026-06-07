@@ -25,4 +25,20 @@ public class AttendanceVO {
     private LocalDateTime calculatedAt;
     @Schema(description = "考勤状态")
     private String status;
+    @Schema(description = "岗位标题")
+    private String jobTitle;
+    @Schema(description = "企业名称")
+    private String companyName;
+    @Schema(description = "工作地点")
+    private String location;
+    @Schema(description = "班次日期")
+    private String shiftDate;
+    @Schema(description = "班次开始时间")
+    private String startTime;
+    @Schema(description = "班次结束时间")
+    private String endTime;
+    @Schema(description = "应付薪资")
+    private BigDecimal payablePay;
+    @Schema(description = "结算状态")
+    private String settlementStatus;
 }

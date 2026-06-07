@@ -4,7 +4,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
 public class AttendanceRecordEntity {
@@ -49,6 +51,12 @@ public class AttendanceRecordEntity {
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")
     private LocalDateTime updatedAt;
+    private String jobTitle;
+    private String companyName;
+    private String location;
+    private LocalDate shiftDate;
+    private LocalTime startTime;
+    private LocalTime endTime;
 
     public AttendanceRecordEntity() {}
 }
