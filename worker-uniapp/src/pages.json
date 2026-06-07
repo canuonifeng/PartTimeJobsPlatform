@@ -15,7 +15,8 @@
     {
       "path": "pages/jobs/jobDetail",
       "style": {
-        "navigationBarTitleText": "职位详情"
+        "navigationBarTitleText": "职位详情",
+        "navigationStyle": "custom"
       }
     },
     {
