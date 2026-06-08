@@ -60,25 +60,25 @@ class NotificationControllerTest {
 
         mockMvc.perform(get("/api/notifications/my"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.total").value(1))
-                .andExpect(jsonPath("$.records.length()").value(1))
-                .andExpect(jsonPath("$.records[0].id").value(1))
-                .andExpect(jsonPath("$.records[0].type").value("APPLICATION_RECEIVED"))
-                .andExpect(jsonPath("$.records[0].category").value("application"))
-                .andExpect(jsonPath("$.records[0].title").value("New Application"))
-                .andExpect(jsonPath("$.records[0].read").value(false))
-                .andExpect(jsonPath("$.records[0].relatedType").value("APPLICATION"))
-                .andExpect(jsonPath("$.records[0].relatedId").value(10))
-                .andExpect(jsonPath("$.records[0].status").value("SENT"));
+                .andExpect(jsonPath("$.data.total").value(1))
+                .andExpect(jsonPath("$.data.records.length()").value(1))
+                .andExpect(jsonPath("$.data.records[0].id").value(1))
+                .andExpect(jsonPath("$.data.records[0].type").value("APPLICATION_RECEIVED"))
+                .andExpect(jsonPath("$.data.records[0].category").value("application"))
+                .andExpect(jsonPath("$.data.records[0].title").value("New Application"))
+                .andExpect(jsonPath("$.data.records[0].read").value(false))
+                .andExpect(jsonPath("$.data.records[0].relatedType").value("APPLICATION"))
+                .andExpect(jsonPath("$.data.records[0].relatedId").value(10))
+                .andExpect(jsonPath("$.data.records[0].status").value("SENT"));
     }
 
     @Test
-    void markNotificationRead_withOwner_shouldReturn204() throws Exception {
+    void markNotificationRead_withOwner_shouldReturn200() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("1", null, List.of()));
 
         mockMvc.perform(put("/api/notifications/10/read"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
 
         verify(notificationService).markAsRead(1L, 10L);
     }
@@ -86,7 +86,8 @@ class NotificationControllerTest {
     @Test
     void getMyNotifications_withoutAuth_shouldReturn401() throws Exception {
         mockMvc.perform(get("/api/notifications/my"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(401));
     }
 
     @Test
@@ -98,8 +99,8 @@ class NotificationControllerTest {
 
         mockMvc.perform(get("/api/notifications/my"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.records").isArray())
-                .andExpect(jsonPath("$.records.length()").value(0))
-                .andExpect(jsonPath("$.total").value(0));
+                .andExpect(jsonPath("$.data.records").isArray())
+                .andExpect(jsonPath("$.data.records.length()").value(0))
+                .andExpect(jsonPath("$.data.total").value(0));
     }
 }

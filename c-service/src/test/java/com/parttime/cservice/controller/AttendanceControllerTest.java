@@ -57,15 +57,16 @@ class AttendanceControllerTest {
 
         mockMvc.perform(get("/api/schedule-shifts/my"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].jobTitle").value("Helper"));
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].jobTitle").value("Helper"));
     }
 
     @Test
     void getMyShifts_shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
         SecurityContextHolder.clearContext();
         mockMvc.perform(get("/api/schedule-shifts/my"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(401));
     }
 
     @Test
@@ -90,7 +91,7 @@ class AttendanceControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CHECKED_IN"));
+                .andExpect(jsonPath("$.data.status").value("CHECKED_IN"));
     }
 
     @Test
@@ -107,8 +108,8 @@ class AttendanceControllerTest {
         mockMvc.perform(post("/api/attendance/check-in")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Shift not found"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(1));
     }
 
     @Test
@@ -130,7 +131,7 @@ class AttendanceControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CHECKED_OUT"));
+                .andExpect(jsonPath("$.data.status").value("CHECKED_OUT"));
     }
 
     @Test
@@ -147,7 +148,7 @@ class AttendanceControllerTest {
 
         mockMvc.perform(get("/api/attendance/my"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].status").value("CHECKED_IN"));
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].status").value("CHECKED_IN"));
     }
 }

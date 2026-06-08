@@ -1,17 +1,15 @@
 package com.parttime.cservice.controller;
 
 import com.parttime.cservice.pojo.cmd.WorkerRealNameSubmitCmd;
+import com.parttime.cservice.pojo.vo.ApiResponse;
 import com.parttime.cservice.pojo.vo.WorkerRealNameAuthVO;
 import com.parttime.cservice.service.WorkerRealNameAuthService;
 import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.Resource;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/worker/real-name")
@@ -30,26 +28,26 @@ public class WorkerRealNameAuthController {
 
     @Operation(summary = "提交兼职实名认证")
     @PostMapping
-    public ResponseEntity<?> submit(@RequestBody WorkerRealNameSubmitCmd cmd) {
+    public ApiResponse<WorkerRealNameAuthVO> submit(@RequestBody WorkerRealNameSubmitCmd cmd) {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ApiResponse.error(401, "未登录");
         }
         try {
             WorkerRealNameAuthVO vo = workerRealNameAuthService.submit(workerId, cmd);
-            return ResponseEntity.ok(vo);
+            return ApiResponse.success(vo);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ApiResponse.error(e.getMessage());
         }
     }
 
     @Operation(summary = "获取兼职实名认证状态")
     @GetMapping
-    public ResponseEntity<?> getStatus() {
+    public ApiResponse<WorkerRealNameAuthVO> getStatus() {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ApiResponse.error(401, "未登录");
         }
-        return ResponseEntity.ok(workerRealNameAuthService.getStatus(workerId));
+        return ApiResponse.success(workerRealNameAuthService.getStatus(workerId));
     }
 }

@@ -49,9 +49,9 @@ class WorkerSettingsControllerTest {
 
         mockMvc.perform(get("/api/settings"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.pushEnabled").value(true))
-                .andExpect(jsonPath("$.locationEnabled").value(true))
-                .andExpect(jsonPath("$.quietEnabled").value(false));
+                .andExpect(jsonPath("$.data.pushEnabled").value(true))
+                .andExpect(jsonPath("$.data.locationEnabled").value(true))
+                .andExpect(jsonPath("$.data.quietEnabled").value(false));
     }
 
     @Test
@@ -72,14 +72,15 @@ class WorkerSettingsControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cmd)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.pushEnabled").value(false))
-                .andExpect(jsonPath("$.locationEnabled").value(true))
-                .andExpect(jsonPath("$.quietEnabled").value(true));
+                .andExpect(jsonPath("$.data.pushEnabled").value(false))
+                .andExpect(jsonPath("$.data.locationEnabled").value(true))
+                .andExpect(jsonPath("$.data.quietEnabled").value(true));
     }
 
     @Test
     void getSettings_withoutAuth_shouldReturn401() throws Exception {
         mockMvc.perform(get("/api/settings"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(401));
     }
 }

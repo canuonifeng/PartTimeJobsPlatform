@@ -1,5 +1,6 @@
 package com.parttime.cservice.controller;
 
+import com.parttime.cservice.pojo.vo.ApiResponse;
 import com.parttime.cservice.pojo.vo.ProfileCompletenessVO;
 import com.parttime.cservice.pojo.vo.ProfileDashboardVO;
 import com.parttime.cservice.pojo.vo.ProfileVO;
@@ -11,9 +12,6 @@ import com.parttime.cservice.service.ProfileService;
 import com.parttime.cservice.service.WithdrawalService;
 import com.parttime.cservice.service.WorkerRealNameAuthService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -44,75 +42,75 @@ public class ProfileController {
 
     @Operation(summary = "获取工人档案", description = "获取当前登录工人的详细档案信息")
     @GetMapping("/profile")
-    public ResponseEntity<?> getProfile() {
+    public ApiResponse<ProfileVO> getProfile() {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ApiResponse.error(401, "未登录");
         }
         try {
             ProfileVO response = profileService.getProfile(workerId);
-            return ResponseEntity.ok(response);
+            return ApiResponse.success(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
+            return ApiResponse.error(e.getMessage());
         }
     }
 
     @Operation(summary = "获取我的页聚合数据", description = "获取当前登录工人的档案、统计和收入汇总")
     @GetMapping("/profile/dashboard")
-    public ResponseEntity<?> getDashboard() {
+    public ApiResponse<ProfileDashboardVO> getDashboard() {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ApiResponse.error(401, "未登录");
         }
         ProfileDashboardVO response = new ProfileDashboardVO();
         response.setProfile(profileService.getProfile(workerId));
         response.setStats(homeService.getStats(workerId));
         response.setEarningsSummary(withdrawalService.getEarningsSummary(workerId));
         response.setRealNameAuth(workerRealNameAuthService.getStatus(workerId));
-        return ResponseEntity.ok(response);
+        return ApiResponse.success(response);
     }
 
     @Operation(summary = "更新工人档案", description = "更新当前登录工人的档案信息")
     @PutMapping("/profile")
-    public ResponseEntity<?> updateProfile(@RequestBody ProfileUpdateCmd request) {
+    public ApiResponse<ProfileVO> updateProfile(@RequestBody ProfileUpdateCmd request) {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ApiResponse.error(401, "未登录");
         }
         ProfileVO response = profileService.updateProfile(workerId, request);
-        return ResponseEntity.ok(response);
+        return ApiResponse.success(response);
     }
 
     @Operation(summary = "检查档案完整性", description = "返回当前工人的基本信息是否完整及缺失字段")
     @GetMapping("/profile/completeness")
-    public ResponseEntity<?> getCompleteness() {
+    public ApiResponse<ProfileCompletenessVO> getCompleteness() {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ApiResponse.error(401, "未登录");
         }
         ProfileCompletenessVO response = profileService.getCompleteness(workerId);
-        return ResponseEntity.ok(response);
+        return ApiResponse.success(response);
     }
 
     @Operation(summary = "上传简历", description = "工人上传简历文件")
     @PostMapping("/profile/resumes")
-    public ResponseEntity<?> uploadResume(@RequestBody ResumeUploadCmd request) {
+    public ApiResponse<ResumeVO> uploadResume(@RequestBody ResumeUploadCmd request) {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ApiResponse.error(401, "未登录");
         }
         ResumeVO response = profileService.uploadResume(workerId, request.getFileName(), request.getFileUrl());
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ApiResponse.success(response);
     }
 
     @Operation(summary = "获取简历列表", description = "获取当前登录工人的简历列表")
     @GetMapping("/profile/resumes")
-    public ResponseEntity<?> getResumes() {
+    public ApiResponse<List<ResumeVO>> getResumes() {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ApiResponse.error(401, "未登录");
         }
         List<ResumeVO> responses = profileService.getResumes(workerId);
-        return ResponseEntity.ok(responses);
+        return ApiResponse.success(responses);
     }
 }

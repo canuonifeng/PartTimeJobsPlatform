@@ -70,8 +70,8 @@ class WithdrawalControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("PENDING"))
-                .andExpect(jsonPath("$.amount").value(500.00));
+                .andExpect(jsonPath("$.data.status").value("PENDING"))
+                .andExpect(jsonPath("$.data.amount").value(500.00));
     }
 
     @Test
@@ -89,8 +89,8 @@ class WithdrawalControllerTest {
         mockMvc.perform(post("/api/withdrawals")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Insufficient balance"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(1));
     }
 
     @Test
@@ -103,7 +103,8 @@ class WithdrawalControllerTest {
         mockMvc.perform(post("/api/withdrawals")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(401));
     }
 
     @Test
@@ -121,8 +122,8 @@ class WithdrawalControllerTest {
 
         mockMvc.perform(get("/api/withdrawals/my"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].status").value("PENDING"));
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].status").value("PENDING"));
     }
 
     @Test
@@ -130,7 +131,8 @@ class WithdrawalControllerTest {
         SecurityContextHolder.clearContext();
 
         mockMvc.perform(get("/api/withdrawals/my"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(401));
     }
 
     @Test
@@ -157,13 +159,13 @@ class WithdrawalControllerTest {
 
         mockMvc.perform(get("/api/earnings/transactions?page=1&pageSize=20"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.records[0].jobTitle").value("仓库分拣员"))
-                .andExpect(jsonPath("$.records[0].companyName").value("绿地物流"))
-                .andExpect(jsonPath("$.records[0].location").value("绿地物流园3号仓"))
-                .andExpect(jsonPath("$.records[0].shiftDate").value("2026-06-05"))
-                .andExpect(jsonPath("$.records[0].startTime").value("09:00"))
-                .andExpect(jsonPath("$.records[0].endTime").value("18:00"))
-                .andExpect(jsonPath("$.records[0].settlementStatus").value("PAID"));
+                .andExpect(jsonPath("$.data.records[0].jobTitle").value("仓库分拣员"))
+                .andExpect(jsonPath("$.data.records[0].companyName").value("绿地物流"))
+                .andExpect(jsonPath("$.data.records[0].location").value("绿地物流园3号仓"))
+                .andExpect(jsonPath("$.data.records[0].shiftDate").value("2026-06-05"))
+                .andExpect(jsonPath("$.data.records[0].startTime").value("09:00"))
+                .andExpect(jsonPath("$.data.records[0].endTime").value("18:00"))
+                .andExpect(jsonPath("$.data.records[0].settlementStatus").value("PAID"));
     }
 
     @Test
@@ -180,9 +182,9 @@ class WithdrawalControllerTest {
 
         mockMvc.perform(get("/api/earnings/summary"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalEarned").value(1000.00))
-                .andExpect(jsonPath("$.totalWithdrawn").value(400.00))
-                .andExpect(jsonPath("$.pendingWithdrawal").value(600.00));
+                .andExpect(jsonPath("$.data.totalEarned").value(1000.00))
+                .andExpect(jsonPath("$.data.totalWithdrawn").value(400.00))
+                .andExpect(jsonPath("$.data.pendingWithdrawal").value(600.00));
     }
 
     @Test
@@ -190,7 +192,8 @@ class WithdrawalControllerTest {
         SecurityContextHolder.clearContext();
 
         mockMvc.perform(get("/api/earnings/summary"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(401));
     }
 
     @Test
@@ -206,8 +209,8 @@ class WithdrawalControllerTest {
 
         mockMvc.perform(get("/api/withdrawal-methods"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].code").value("WECHAT"));
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].code").value("WECHAT"));
     }
 
     @Test
@@ -215,7 +218,8 @@ class WithdrawalControllerTest {
         SecurityContextHolder.clearContext();
 
         mockMvc.perform(get("/api/withdrawal-methods"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(401));
     }
 
     @Test
@@ -232,8 +236,8 @@ class WithdrawalControllerTest {
 
         mockMvc.perform(get("/api/bank-cards"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].bankName").value("中国银行"));
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].bankName").value("中国银行"));
     }
 
     @Test
@@ -241,6 +245,7 @@ class WithdrawalControllerTest {
         SecurityContextHolder.clearContext();
 
         mockMvc.perform(get("/api/bank-cards"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(401));
     }
 }

@@ -69,8 +69,9 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("test.jwt.token"))
-                .andExpect(jsonPath("$.workerId").value(1));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.token").value("test.jwt.token"))
+                .andExpect(jsonPath("$.data.workerId").value(1));
     }
 
     @Test
@@ -82,8 +83,9 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"wechatCode\":\"wx_test_code\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("test.jwt.token"))
-                .andExpect(jsonPath("$.workerId").value(1));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.token").value("test.jwt.token"))
+                .andExpect(jsonPath("$.data.workerId").value(1));
     }
 
     @Test
@@ -95,9 +97,10 @@ class AuthControllerTest {
 
         mockMvc.perform(get("/api/auth/profile"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.name").value("John"))
-                .andExpect(jsonPath("$.phone").value("13800138000"));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.name").value("John"))
+                .andExpect(jsonPath("$.data.phone").value("13800138000"));
     }
 
     @Test
@@ -105,7 +108,8 @@ class AuthControllerTest {
         SecurityContextHolder.clearContext();
 
         mockMvc.perform(get("/api/auth/profile"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(401));
     }
 
     @Test
@@ -118,10 +122,11 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"code\":\"test_code\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("wechat.jwt.token"))
-                .andExpect(jsonPath("$.workerId").value(1))
-                .andExpect(jsonPath("$.openId").value("openid_123"))
-                .andExpect(jsonPath("$.nickname").value("nickname"));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.token").value("wechat.jwt.token"))
+                .andExpect(jsonPath("$.data.workerId").value(1))
+                .andExpect(jsonPath("$.data.openId").value("openid_123"))
+                .andExpect(jsonPath("$.data.nickname").value("nickname"));
     }
 
     @Test
@@ -144,8 +149,9 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("John Updated"))
-                .andExpect(jsonPath("$.phone").value("13900139000"))
-                .andExpect(jsonPath("$.avatar").value("http://new.avatar"));
+                .andExpect(jsonPath("$.code").value(200))
+                .andExpect(jsonPath("$.data.name").value("John Updated"))
+                .andExpect(jsonPath("$.data.phone").value("13900139000"))
+                .andExpect(jsonPath("$.data.avatar").value("http://new.avatar"));
     }
 }

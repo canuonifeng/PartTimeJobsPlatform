@@ -136,9 +136,9 @@ class NotificationControllerTest {
         mockMvc.perform(post("/api/notification-templates")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.type").value("JOB_POSTED"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.type").value("JOB_POSTED"));
     }
 
     @Test
@@ -158,12 +158,12 @@ class NotificationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.titleTemplate").value("Updated Title"));
+                .andExpect(jsonPath("$.data.titleTemplate").value("Updated Title"));
     }
 
     @Test
     void deleteTemplate_shouldReturnNoContent() throws Exception {
         mockMvc.perform(delete("/api/notification-templates").param("id", "1"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
     }
 }

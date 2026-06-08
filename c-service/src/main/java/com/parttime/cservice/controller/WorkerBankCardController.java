@@ -2,16 +2,13 @@ package com.parttime.cservice.controller;
 
 import com.parttime.cservice.pojo.cmd.WorkerBankCardCmd;
 import com.parttime.cservice.pojo.entity.WorkerBankCard;
+import com.parttime.cservice.pojo.vo.ApiResponse;
 import com.parttime.cservice.service.WorkerBankCardService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/worker/bank-card")
@@ -30,31 +27,31 @@ public class WorkerBankCardController {
 
     @Operation(summary = "获取银行卡")
     @GetMapping
-    public ResponseEntity<?> get() {
+    public ApiResponse<WorkerBankCard> get() {
         Long workerId = getCurrentWorkerId();
-        if (workerId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (workerId == null) return ApiResponse.error(401, "未登录");
         WorkerBankCard card = workerBankCardService.get(workerId);
-        return ResponseEntity.ok(card);
+        return ApiResponse.success(card);
     }
 
     @Operation(summary = "绑定/更新银行卡")
     @PutMapping
-    public ResponseEntity<?> upsert(@RequestBody WorkerBankCardCmd cmd) {
+    public ApiResponse<WorkerBankCard> upsert(@RequestBody WorkerBankCardCmd cmd) {
         Long workerId = getCurrentWorkerId();
-        if (workerId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (workerId == null) return ApiResponse.error(401, "未登录");
         try {
-            return ResponseEntity.ok(workerBankCardService.upsert(workerId, cmd));
+            return ApiResponse.success(workerBankCardService.upsert(workerId, cmd));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ApiResponse.error(e.getMessage());
         }
     }
 
     @Operation(summary = "解绑银行卡")
     @DeleteMapping
-    public ResponseEntity<?> delete() {
+    public ApiResponse<Void> delete() {
         Long workerId = getCurrentWorkerId();
-        if (workerId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (workerId == null) return ApiResponse.error(401, "未登录");
         workerBankCardService.delete(workerId);
-        return ResponseEntity.ok(Map.of("success", true));
+        return ApiResponse.success();
     }
 }

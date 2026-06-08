@@ -7,8 +7,7 @@ import com.parttime.enterprise.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import com.parttime.enterprise.pojo.vo.ApiResponse;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,28 +46,28 @@ public class NotificationController {
 
     @Operation(summary = "创建通知模板", description = "创建新的通知模板")
     @PostMapping("/notification-templates")
-    public ResponseEntity<NotificationTemplate> createTemplate(@RequestBody NotificationTemplateCmd request) {
+    public ApiResponse<NotificationTemplate> createTemplate(@RequestBody NotificationTemplateCmd request) {
         NotificationTemplate template = notificationService.createNotificationTemplate(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(template);
+        return ApiResponse.success(template);
     }
 
     @Operation(summary = "更新通知模板", description = "更新指定的通知模板")
     @PutMapping("/notification-templates")
-    public ResponseEntity<NotificationTemplate> updateTemplate(
+    public ApiResponse<NotificationTemplate> updateTemplate(
             @Parameter(description = "模板ID") @RequestParam Long id,
             @RequestBody NotificationTemplateCmd request) {
         try {
             NotificationTemplate template = notificationService.updateNotificationTemplate(id, request);
-            return ResponseEntity.ok(template);
+            return ApiResponse.success(template);
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return ApiResponse.error("模板不存在");
         }
     }
 
     @Operation(summary = "删除通知模板", description = "删除指定的通知模板")
     @DeleteMapping("/notification-templates")
-    public ResponseEntity<Void> deleteTemplate(@Parameter(description = "模板ID") @RequestParam Long id) {
+    public ApiResponse<Void> deleteTemplate(@Parameter(description = "模板ID") @RequestParam Long id) {
         notificationService.deleteNotificationTemplate(id);
-        return ResponseEntity.noContent().build();
+        return ApiResponse.success();
     }
 }

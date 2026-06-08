@@ -2,7 +2,7 @@ package com.parttime.enterprise.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
+import com.parttime.enterprise.pojo.vo.ApiResponse;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -23,9 +23,9 @@ public class FileController {
 
     @Operation(summary = "上传文件")
     @PostMapping("/upload")
-    public ResponseEntity<Map<String, String>> upload(@RequestParam("file") MultipartFile file) {
+    public ApiResponse<Map<String, String>> upload(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
-            return ResponseEntity.badRequest().body(Map.of("error", "文件为空"));
+            return ApiResponse.error("文件为空");
         }
         try {
             String dir = System.getProperty("user.dir") + "/uploads";
@@ -39,9 +39,9 @@ public class FileController {
             File dest = new File(dir, filename);
             file.transferTo(dest);
             String url = "http://localhost:" + port + "/uploads/" + filename;
-            return ResponseEntity.ok(Map.of("url", url));
+            return ApiResponse.success(Map.of("url", url));
         } catch (IOException e) {
-            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+            return ApiResponse.error(e.getMessage());
         }
     }
 }

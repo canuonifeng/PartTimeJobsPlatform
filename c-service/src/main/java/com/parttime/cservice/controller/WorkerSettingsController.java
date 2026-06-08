@@ -3,10 +3,9 @@ package com.parttime.cservice.controller;
 import com.parttime.cservice.mapper.WorkerSettingsMapper;
 import com.parttime.cservice.pojo.cmd.UpdateWorkerSettingsCmd;
 import com.parttime.cservice.pojo.entity.WorkerSettings;
+import com.parttime.cservice.pojo.vo.ApiResponse;
 import com.parttime.cservice.pojo.vo.WorkerSettingsVO;
 import jakarta.annotation.Resource;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,16 +21,16 @@ public class WorkerSettingsController {
     private WorkerSettingsMapper workerSettingsMapper;
 
     @GetMapping
-    public ResponseEntity<WorkerSettingsVO> getSettings() {
+    public ApiResponse<WorkerSettingsVO> getSettings() {
         Long workerId = getCurrentWorkerId();
-        if (workerId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        return ResponseEntity.ok(toVO(workerSettingsMapper.findByWorkerId(workerId)));
+        if (workerId == null) return ApiResponse.error(401, "未登录");
+        return ApiResponse.success(toVO(workerSettingsMapper.findByWorkerId(workerId)));
     }
 
     @PutMapping
-    public ResponseEntity<WorkerSettingsVO> updateSettings(@RequestBody UpdateWorkerSettingsCmd cmd) {
+    public ApiResponse<WorkerSettingsVO> updateSettings(@RequestBody UpdateWorkerSettingsCmd cmd) {
         Long workerId = getCurrentWorkerId();
-        if (workerId == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (workerId == null) return ApiResponse.error(401, "未登录");
         WorkerSettingsVO current = toVO(workerSettingsMapper.findByWorkerId(workerId));
         Boolean pushEnabled = cmd.getPushEnabled() == null ? current.getPushEnabled() : cmd.getPushEnabled();
         Boolean locationEnabled = cmd.getLocationEnabled() == null ? current.getLocationEnabled() : cmd.getLocationEnabled();
@@ -41,7 +40,7 @@ public class WorkerSettingsController {
         result.setPushEnabled(pushEnabled);
         result.setLocationEnabled(locationEnabled);
         result.setQuietEnabled(quietEnabled);
-        return ResponseEntity.ok(result);
+        return ApiResponse.success(result);
     }
 
     private Long getCurrentWorkerId() {

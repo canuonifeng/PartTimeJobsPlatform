@@ -1,9 +1,8 @@
 package com.parttime.cservice.controller;
 
+import com.parttime.cservice.pojo.vo.ApiResponse;
 import com.parttime.cservice.service.HomeService;
 import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,21 +28,21 @@ public class HomeController {
 
     @Operation(summary = "获取首页统计", description = "获取当前工人的首页统计数据")
     @GetMapping("/stats")
-    public ResponseEntity<?> getStats() {
+    public ApiResponse<?> getStats() {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ApiResponse.error(401, "未登录");
         }
-        return ResponseEntity.ok(homeService.getStats(workerId));
+        return ApiResponse.success(homeService.getStats(workerId));
     }
 
     @Operation(summary = "获取首页排班", description = "获取当前工人的今日和近期排班列表")
     @GetMapping("/schedules")
-    public ResponseEntity<?> getSchedules() {
+    public ApiResponse<?> getSchedules() {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ApiResponse.error(401, "未登录");
         }
-        return ResponseEntity.ok(homeService.getSchedules(workerId));
+        return ApiResponse.success(homeService.getSchedules(workerId));
     }
 }

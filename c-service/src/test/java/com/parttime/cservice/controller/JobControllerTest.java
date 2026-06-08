@@ -80,10 +80,10 @@ class JobControllerTest {
 
         mockMvc.perform(get("/api/jobs"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].title").value("Software Engineer"))
-                .andExpect(jsonPath("$[1].title").value("Designer"));
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data.length()").value(2))
+                .andExpect(jsonPath("$.data[0].title").value("Software Engineer"))
+                .andExpect(jsonPath("$.data[1].title").value("Designer"));
     }
 
     @Test
@@ -102,8 +102,8 @@ class JobControllerTest {
 
         mockMvc.perform(get("/api/jobs?keyword=engineer"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].title").value("Software Engineer"));
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].title").value("Software Engineer"));
     }
 
     @Test
@@ -138,13 +138,13 @@ class JobControllerTest {
 
         mockMvc.perform(get("/api/jobs/detail?id=1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.title").value("Software Engineer"))
-                .andExpect(jsonPath("$.description").value("负责后端系统开发与维护"))
-                .andExpect(jsonPath("$.location").value("Beijing"))
-                .andExpect(jsonPath("$.status").value("PUBLISHED"))
-                .andExpect(jsonPath("$.rates[0].type").value("HOURLY"))
-                .andExpect(jsonPath("$.schedules[0].date").value("2026-06-01"));
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.title").value("Software Engineer"))
+                .andExpect(jsonPath("$.data.description").value("负责后端系统开发与维护"))
+                .andExpect(jsonPath("$.data.location").value("Beijing"))
+                .andExpect(jsonPath("$.data.status").value("PUBLISHED"))
+                .andExpect(jsonPath("$.data.rates[0].type").value("HOURLY"))
+                .andExpect(jsonPath("$.data.schedules[0].date").value("2026-06-01"));
     }
 
     @Test
@@ -162,7 +162,7 @@ class JobControllerTest {
 
         mockMvc.perform(get("/api/jobs/detail?id=1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.applyStatus").value("已报名"));
+                .andExpect(jsonPath("$.data.applyStatus").value("已报名"));
     }
 
     @Test
@@ -179,7 +179,7 @@ class JobControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.success").value(true));
+                .andExpect(jsonPath("$.data.success").value(true));
     }
 
     @Test
@@ -189,7 +189,8 @@ class JobControllerTest {
         mockMvc.perform(post("/api/jobs/apply?id=1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(401));
     }
 
     @Test
@@ -216,17 +217,18 @@ class JobControllerTest {
 
         mockMvc.perform(get("/api/jobs/applications/my?page=1&pageSize=10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.total").value(1))
-                .andExpect(jsonPath("$.records.length()").value(1))
-                .andExpect(jsonPath("$.records[0].applicationId").value(10))
-                .andExpect(jsonPath("$.records[0].jobTitle").value("仓库分拣员"))
-                .andExpect(jsonPath("$.records[0].companyName").value("绿地物流"));
+                .andExpect(jsonPath("$.data.total").value(1))
+                .andExpect(jsonPath("$.data.records.length()").value(1))
+                .andExpect(jsonPath("$.data.records[0].applicationId").value(10))
+                .andExpect(jsonPath("$.data.records[0].jobTitle").value("仓库分拣员"))
+                .andExpect(jsonPath("$.data.records[0].companyName").value("绿地物流"));
     }
 
     @Test
     void getMySignups_withoutAuth_shouldReturn401() throws Exception {
         mockMvc.perform(get("/api/jobs/applications/my"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(401));
     }
 
     @Test
@@ -245,14 +247,15 @@ class JobControllerTest {
 
         mockMvc.perform(get("/api/jobs/application?id=1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].id").value(10))
-                .andExpect(jsonPath("$[0].status").value("PENDING"));
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].id").value(10))
+                .andExpect(jsonPath("$.data[0].status").value("PENDING"));
     }
 
     @Test
     void getApplicationStatus_withoutAuth_shouldReturn401() throws Exception {
         mockMvc.perform(get("/api/jobs/application?id=1"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(401));
     }
 }

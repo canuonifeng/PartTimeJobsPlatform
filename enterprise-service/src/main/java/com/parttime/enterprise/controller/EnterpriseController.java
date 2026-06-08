@@ -2,7 +2,7 @@ package com.parttime.enterprise.controller;
 
 import com.parttime.enterprise.config.SecurityUtil;
 import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.http.ResponseEntity;
+import com.parttime.enterprise.pojo.vo.ApiResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,22 +21,22 @@ public class EnterpriseController {
 
     @Operation(summary = "获取企业信息")
     @GetMapping
-    public ResponseEntity<Map<String, Object>> getInfo() {
+    public ApiResponse<Map<String, Object>> getInfo() {
         Long companyId = SecurityUtil.getCurrentCompanyId();
         String name = enterpriseMapper.findCompanyNameById(companyId);
         String logo = enterpriseMapper.findCompanyLogoById(companyId);
-        return ResponseEntity.ok(Map.of("id", companyId, "companyName", name, "companyLogo", logo));
+        return ApiResponse.success(Map.of("id", companyId, "companyName", name, "companyLogo", logo));
     }
 
     @Operation(summary = "更新企业Logo")
     @PutMapping("/logo")
-    public ResponseEntity<Void> updateLogo(@RequestBody Map<String, String> body) {
+    public ApiResponse<Void> updateLogo(@RequestBody Map<String, String> body) {
         Long companyId = SecurityUtil.getCurrentCompanyId();
         String logoUrl = body.get("companyLogo");
         if (logoUrl == null) {
-            return ResponseEntity.badRequest().build();
+            return ApiResponse.error("公司Logo不能为空");
         }
         enterpriseMapper.updateLogo(companyId, logoUrl);
-        return ResponseEntity.ok().build();
+        return ApiResponse.success();
     }
 }

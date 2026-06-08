@@ -6,7 +6,7 @@ import com.parttime.enterprise.pojo.vo.EnterpriseRealNameAuthVO;
 import com.parttime.enterprise.service.EnterpriseRealNameAuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.Resource;
-import org.springframework.http.ResponseEntity;
+import com.parttime.enterprise.pojo.vo.ApiResponse;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -20,20 +20,20 @@ public class EnterpriseRealNameAuthController {
 
     @Operation(summary = "提交企业实名认证")
     @PostMapping
-    public ResponseEntity<?> submit(@RequestBody EnterpriseRealNameSubmitCmd cmd) {
+    public ApiResponse<?> submit(@RequestBody EnterpriseRealNameSubmitCmd cmd) {
         Long enterpriseId = SecurityUtil.getCurrentCompanyId();
         try {
             EnterpriseRealNameAuthVO vo = service.submit(enterpriseId, cmd);
-            return ResponseEntity.ok(vo);
+            return ApiResponse.success(vo);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+            return ApiResponse.error(e.getMessage());
         }
     }
 
     @Operation(summary = "获取企业实名认证状态")
     @GetMapping
-    public ResponseEntity<?> getStatus() {
+    public ApiResponse<?> getStatus() {
         Long enterpriseId = SecurityUtil.getCurrentCompanyId();
-        return ResponseEntity.ok(service.getStatus(enterpriseId));
+        return ApiResponse.success(service.getStatus(enterpriseId));
     }
 }
