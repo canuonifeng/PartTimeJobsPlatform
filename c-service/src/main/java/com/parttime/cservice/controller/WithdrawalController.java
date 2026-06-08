@@ -2,7 +2,7 @@ package com.parttime.cservice.controller;
 
 import com.parttime.cservice.pojo.vo.BankCardVO;
 import com.parttime.cservice.pojo.vo.EarningsSummaryVO;
-import com.parttime.cservice.pojo.cmd.WithdrawalCmd;
+import com.parttime.cservice.pojo.vo.PageVO;
 import com.parttime.cservice.pojo.vo.TransactionVO;
 import com.parttime.cservice.pojo.vo.WithdrawalMethodVO;
 import com.parttime.cservice.pojo.vo.WithdrawalVO;
@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.annotation.Resource;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class WithdrawalController {
@@ -39,17 +40,44 @@ public class WithdrawalController {
 
     @Operation(summary = "申请提现", description = "工人申请提现账户余额")
     @PostMapping("/api/withdrawals")
-    public ResponseEntity<?> requestWithdrawal(@RequestBody WithdrawalCmd request) {
+    public ResponseEntity<?> requestWithdrawal(@RequestBody Map<String, Object> request) {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         try {
-            WithdrawalVO response = withdrawalService.requestWithdrawal(workerId, request.getAmount(), request.getWithdrawalMethod(), request.getBankAccountId());
+            java.math.BigDecimal amount = new java.math.BigDecimal(request.get("amount").toString());
+            String withdrawalMethod = (String) request.get("withdrawalMethod");
+            Long bankAccountId = request.get("bankAccountId") != null ? 
+                Long.valueOf(request.get("bankAccountId").toString()) : null;
+            
+            WithdrawalVO response = withdrawalService.requestWithdrawal(workerId, amount, withdrawalMethod, bankAccountId);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @Operation(summary = "获取可用提现方式", description = "获取当前工人可用的提现方式")
+    @GetMapping("/api/withdrawal-methods")
+    public ResponseEntity<?> getAvailableMethods() {
+        Long workerId = getCurrentWorkerId();
+        if (workerId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        List<WithdrawalMethodVO> methods = withdrawalService.getAvailableMethods(workerId);
+        return ResponseEntity.ok(methods);
+    }
+
+    @Operation(summary = "获取银行卡列表", description = "获取当前工人的银行卡列表")
+    @GetMapping("/api/bank-cards")
+    public ResponseEntity<?> getBankCards() {
+        Long workerId = getCurrentWorkerId();
+        if (workerId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        List<BankCardVO> cards = withdrawalService.getBankCards(workerId);
+        return ResponseEntity.ok(cards);
     }
 
     @Operation(summary = "获取收益汇总", description = "获取当前工人的收益汇总信息")
@@ -84,27 +112,5 @@ public class WithdrawalController {
         }
         List<WithdrawalVO> records = withdrawalService.getWithdrawalHistory(workerId);
         return ResponseEntity.ok(records);
-    }
-
-    @Operation(summary = "获取可用提现方式", description = "获取当前工人可用的提现方式列表")
-    @GetMapping("/api/withdrawals/methods")
-    public ResponseEntity<?> getAvailableMethods() {
-        Long workerId = getCurrentWorkerId();
-        if (workerId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        List<WithdrawalMethodVO> methods = withdrawalService.getAvailableMethods(workerId);
-        return ResponseEntity.ok(methods);
-    }
-
-    @Operation(summary = "获取银行卡列表", description = "获取当前工人的银行卡列表")
-    @GetMapping("/api/withdrawals/bank-cards")
-    public ResponseEntity<?> getBankCards() {
-        Long workerId = getCurrentWorkerId();
-        if (workerId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        List<BankCardVO> cards = withdrawalService.getBankCards(workerId);
-        return ResponseEntity.ok(cards);
     }
 }

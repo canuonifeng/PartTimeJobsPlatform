@@ -1,10 +1,11 @@
 package com.parttime.cservice.controller;
 
+import com.parttime.cservice.pojo.vo.BankCardVO;
 import com.parttime.cservice.pojo.vo.EarningsSummaryVO;
-import com.parttime.cservice.pojo.cmd.WithdrawalCmd;
-import com.parttime.cservice.pojo.vo.TransactionVO;
-import com.parttime.cservice.pojo.vo.WithdrawalVO;
 import com.parttime.cservice.pojo.vo.PageVO;
+import com.parttime.cservice.pojo.vo.TransactionVO;
+import com.parttime.cservice.pojo.vo.WithdrawalMethodVO;
+import com.parttime.cservice.pojo.vo.WithdrawalVO;
 import com.parttime.cservice.service.impl.WithdrawalServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -20,7 +21,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -59,9 +62,9 @@ class WithdrawalControllerTest {
 
         when(withdrawalService.requestWithdrawal(eq(1L), any(), any(), any())).thenReturn(response);
 
-        WithdrawalCmd request = new WithdrawalCmd();
-        request.setAmount(new BigDecimal("500.00"));
-        request.setWithdrawalMethod("WECHAT");
+        Map<String, Object> request = new HashMap<>();
+        request.put("amount", "500.00");
+        request.put("withdrawalMethod", "WECHAT");
 
         mockMvc.perform(post("/api/withdrawals")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -79,9 +82,9 @@ class WithdrawalControllerTest {
         when(withdrawalService.requestWithdrawal(eq(1L), any(), any(), any()))
                 .thenThrow(new RuntimeException("Insufficient balance"));
 
-        WithdrawalCmd request = new WithdrawalCmd();
-        request.setAmount(new BigDecimal("999999.00"));
-        request.setWithdrawalMethod("WECHAT");
+        Map<String, Object> request = new HashMap<>();
+        request.put("amount", "999999.00");
+        request.put("withdrawalMethod", "WECHAT");
 
         mockMvc.perform(post("/api/withdrawals")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -94,8 +97,8 @@ class WithdrawalControllerTest {
     void requestWithdrawal_shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
         SecurityContextHolder.clearContext();
 
-        WithdrawalCmd request = new WithdrawalCmd();
-        request.setAmount(new BigDecimal("100.00"));
+        Map<String, Object> request = new HashMap<>();
+        request.put("amount", "100.00");
 
         mockMvc.perform(post("/api/withdrawals")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -187,6 +190,57 @@ class WithdrawalControllerTest {
         SecurityContextHolder.clearContext();
 
         mockMvc.perform(get("/api/earnings/summary"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getAvailableMethods_shouldReturnMethods() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("1", null, List.of()));
+
+        WithdrawalMethodVO method = new WithdrawalMethodVO();
+        method.setCode("WECHAT");
+        method.setName("微信零钱");
+
+        when(withdrawalService.getAvailableMethods(1L)).thenReturn(List.of(method));
+
+        mockMvc.perform(get("/api/withdrawal-methods"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].code").value("WECHAT"));
+    }
+
+    @Test
+    void getAvailableMethods_shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
+        SecurityContextHolder.clearContext();
+
+        mockMvc.perform(get("/api/withdrawal-methods"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getBankCards_shouldReturnCards() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("1", null, List.of()));
+
+        BankCardVO card = new BankCardVO();
+        card.setId(1L);
+        card.setBankName("中国银行");
+        card.setCardNumber("1234567890123456");
+
+        when(withdrawalService.getBankCards(1L)).thenReturn(List.of(card));
+
+        mockMvc.perform(get("/api/bank-cards"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].bankName").value("中国银行"));
+    }
+
+    @Test
+    void getBankCards_shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
+        SecurityContextHolder.clearContext();
+
+        mockMvc.perform(get("/api/bank-cards"))
                 .andExpect(status().isUnauthorized());
     }
 }
