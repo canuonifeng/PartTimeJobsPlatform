@@ -37,9 +37,9 @@
         </view>
       </view>
 
-      <view v-if="withdrawalMethod === 'BANK_CARD' && bankCards.length > 0" class="form-group">
+      <view v-if="withdrawalMethod === 'BANK_CARD'" class="form-group">
         <text class="form-label">选择银行卡</text>
-        <view class="bank-list">
+        <view v-if="bankCards.length > 0" class="bank-list">
           <view
             v-for="card in bankCards"
             :key="card.id"
@@ -53,6 +53,10 @@
             </view>
             <view v-if="selectedBankId === card.id" class="bank-check">✓</view>
           </view>
+        </view>
+        <view v-else class="no-bank-card" @click="goBankCard">
+          <text class="no-bank-text">未绑定银行卡，点击前往绑定</text>
+          <text class="no-bank-arrow">›</text>
         </view>
       </view>
 
@@ -477,5 +481,25 @@ onMounted(async () => {
   background: #07c160;
   color: #fff;
   font-size: 24rpx;
+}
+
+.no-bank-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  border: 2rpx dashed #d1d5db;
+  background: #f9fafb;
+}
+
+.no-bank-text {
+  font-size: 28rpx;
+  color: #07c160;
+}
+
+.no-bank-arrow {
+  font-size: 32rpx;
+  color: #07c160;
 }
 </style>
