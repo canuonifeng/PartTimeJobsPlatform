@@ -35,6 +35,12 @@ public class WithdrawalRecord {
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")
     private LocalDateTime updatedAt;
+    @Schema(description = "提现方式: WECHAT-微信零钱, BANK_CARD-银行卡")
+    private String withdrawalMethod;
+    @Schema(description = "银行账户信息")
+    private String bankAccount;
+    @Schema(description = "微信OpenID")
+    private String openId;
 
     public WithdrawalRecord() {}
 }
