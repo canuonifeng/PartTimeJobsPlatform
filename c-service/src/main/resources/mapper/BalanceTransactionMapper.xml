@@ -78,4 +78,8 @@
           AND created_at &lt; #{endTime}
     </select>
 
+    <delete id="deleteByRelatedWithdrawalId">
+        DELETE FROM balance_transactions WHERE related_withdrawal_id = #{relatedWithdrawalId}
+    </delete>
+
 </mapper>

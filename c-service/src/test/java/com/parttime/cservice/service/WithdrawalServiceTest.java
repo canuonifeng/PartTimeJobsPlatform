@@ -1,5 +1,7 @@
 package com.parttime.cservice.service;
 
+import com.parttime.cservice.mapper.BalanceTransactionMapper;
+import com.parttime.cservice.mapper.WorkerBalanceMapper;
 import com.parttime.cservice.mapper.WorkerBankCardMapper;
 import com.parttime.cservice.mapper.WorkerRealNameAuthMapper;
 import com.parttime.cservice.service.impl.WithdrawalServiceImpl;
@@ -25,15 +27,23 @@ class WithdrawalServiceTest {
 
     private WorkerRealNameAuthMapper realNameAuthMapper;
     private WorkerBankCardMapper bankCardMapper;
+    private WorkerBalanceMapper workerBalanceMapper;
+    private BalanceTransactionMapper balanceTransactionMapper;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
         realNameAuthMapper = InMemoryMappers.createWorkerRealNameAuthMapper();
         bankCardMapper = InMemoryMappers.createWorkerBankCardMapper();
+        workerBalanceMapper = InMemoryMappers.createWorkerBalanceMapper();
+        balanceTransactionMapper = InMemoryMappers.createBalanceTransactionMapper();
         ReflectionTestUtils.setField(withdrawalService, "withdrawalRecordMapper", InMemoryMappers.createWithdrawalRecordMapper());
         ReflectionTestUtils.setField(withdrawalService, "workerRealNameAuthMapper", realNameAuthMapper);
         ReflectionTestUtils.setField(withdrawalService, "workerBankCardMapper", bankCardMapper);
+        ReflectionTestUtils.setField(withdrawalService, "workerBalanceMapper", workerBalanceMapper);
+        ReflectionTestUtils.setField(withdrawalService, "balanceTransactionMapper", balanceTransactionMapper);
+        ReflectionTestUtils.setField(withdrawalService, "notificationService", InMemoryMappers.createNotificationService());
+        ReflectionTestUtils.setField(withdrawalService, "weChatPayService", InMemoryMappers.createWeChatPayService());
     }
 
     private void setupApprovedRealName(Long workerId) {
@@ -54,7 +64,7 @@ class WithdrawalServiceTest {
 
     @Test
     void requestWithdrawal_shouldThrowWhenRealNameNotApproved() {
-        assertThatThrownBy(() -> withdrawalService.requestWithdrawal(1L, new BigDecimal("100")))
+        assertThatThrownBy(() -> withdrawalService.requestWithdrawal(1L, new BigDecimal("100"), "WECHAT", null))
                 .isInstanceOf(RuntimeException.class);
     }
 
@@ -64,26 +74,45 @@ class WithdrawalServiceTest {
         auth.setWorkerId(1L);
         auth.setStatus("PENDING");
         realNameAuthMapper.insert(auth);
-        assertThatThrownBy(() -> withdrawalService.requestWithdrawal(1L, new BigDecimal("100")))
+        assertThatThrownBy(() -> withdrawalService.requestWithdrawal(1L, new BigDecimal("100"), "WECHAT", null))
                 .isInstanceOf(RuntimeException.class);
     }
 
     @Test
     void requestWithdrawal_shouldThrowWhenNoBankCard() {
         setupApprovedRealName(1L);
-        assertThatThrownBy(() -> withdrawalService.requestWithdrawal(1L, new BigDecimal("100")))
+        assertThatThrownBy(() -> withdrawalService.requestWithdrawal(1L, new BigDecimal("100"), "BANK_CARD", null))
                 .isInstanceOf(RuntimeException.class);
     }
 
     @Test
     void requestWithdrawal_shouldThrowWhenAmountIsNull() {
-        assertThatThrownBy(() -> withdrawalService.requestWithdrawal(1L, null))
+        assertThatThrownBy(() -> withdrawalService.requestWithdrawal(1L, null, "WECHAT", null))
                 .isInstanceOf(RuntimeException.class);
     }
 
     @Test
     void requestWithdrawal_shouldThrowWhenAmountIsZero() {
-        assertThatThrownBy(() -> withdrawalService.requestWithdrawal(1L, BigDecimal.ZERO))
+        assertThatThrownBy(() -> withdrawalService.requestWithdrawal(1L, BigDecimal.ZERO, "WECHAT", null))
+                .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void requestWithdrawal_shouldThrowWhenAmountIsBelowMinimum() {
+        assertThatThrownBy(() -> withdrawalService.requestWithdrawal(1L, new BigDecimal("0.5"), "WECHAT", null))
+                .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void requestWithdrawal_shouldThrowWhenAmountExceedsMaximum() {
+        assertThatThrownBy(() -> withdrawalService.requestWithdrawal(1L, new BigDecimal("1001"), "WECHAT", null))
+                .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void requestWithdrawal_shouldThrowWhenUnsupportedMethod() {
+        setupApprovedRealName(1L);
+        assertThatThrownBy(() -> withdrawalService.requestWithdrawal(1L, new BigDecimal("100"), "UNSUPPORTED", null))
                 .isInstanceOf(RuntimeException.class);
     }
 

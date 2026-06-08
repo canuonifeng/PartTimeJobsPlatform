@@ -17,4 +17,5 @@ public interface BalanceTransactionMapper {
                                                   @Param("pageSize") int pageSize);
     long countByWorkerId(@Param("workerId") Long workerId);
     BigDecimal sumMonthlyEarnings(@Param("workerId") Long workerId, @Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
+    int deleteByRelatedWithdrawalId(@Param("relatedWithdrawalId") Long relatedWithdrawalId);
 }

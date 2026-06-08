@@ -315,6 +315,12 @@ public class InMemoryMappers {
                 }
                 return 0;
             }
+            @Override public long countTodayWithdrawals(Long workerId, LocalDate date) {
+                return store.values().stream()
+                        .filter(r -> workerId.equals(r.getWorkerId()))
+                        .filter(r -> r.getCreatedAt() != null && r.getCreatedAt().toLocalDate().equals(date))
+                        .count();
+            }
         };
     }
 
@@ -467,8 +473,104 @@ public class InMemoryMappers {
             @Override public Optional<WorkerBankCard> findByWorkerId(Long workerId) {
                 return Optional.ofNullable(store.get(workerId));
             }
+            @Override public List<WorkerBankCard> findAllByWorkerId(Long workerId) {
+                return store.values().stream().filter(c -> workerId.equals(c.getWorkerId())).collect(Collectors.toList());
+            }
             @Override public int deleteByWorkerId(Long workerId) {
                 return store.remove(workerId) != null ? 1 : 0;
+            }
+        };
+    }
+
+    public static WorkerBalanceMapper createWorkerBalanceMapper() {
+        return new WorkerBalanceMapper() {
+            private final ConcurrentHashMap<Long, com.parttime.cservice.pojo.entity.WorkerBalance> store = new ConcurrentHashMap<>();
+
+            @Override public int upsert(Long workerId, BigDecimal balance, BigDecimal totalEarned, BigDecimal totalWithdrawn) {
+                com.parttime.cservice.pojo.entity.WorkerBalance wb = new com.parttime.cservice.pojo.entity.WorkerBalance();
+                wb.setWorkerId(workerId);
+                wb.setBalance(balance);
+                wb.setTotalEarned(totalEarned);
+                wb.setTotalWithdrawn(totalWithdrawn);
+                store.put(workerId, wb);
+                return 1;
+            }
+            @Override public com.parttime.cservice.pojo.entity.WorkerBalance findByWorkerId(Long workerId) {
+                return store.get(workerId);
+            }
+        };
+    }
+
+    public static BalanceTransactionMapper createBalanceTransactionMapper() {
+        return new BalanceTransactionMapper() {
+            private final ConcurrentHashMap<Long, com.parttime.cservice.pojo.entity.BalanceTransaction> store = new ConcurrentHashMap<>();
+            private final AtomicLong idGen = new AtomicLong(1);
+
+            @Override public int insert(com.parttime.cservice.pojo.entity.BalanceTransaction transaction) {
+                if (transaction.getId() == null) transaction.setId(idGen.getAndIncrement());
+                store.put(transaction.getId(), transaction);
+                return 1;
+            }
+            @Override public List<com.parttime.cservice.pojo.entity.BalanceTransaction> findByWorkerId(Long workerId) {
+                return store.values().stream().filter(t -> workerId.equals(t.getWorkerId())).collect(Collectors.toList());
+            }
+            @Override public List<com.parttime.cservice.pojo.entity.BalanceTransaction> findByWorkerIdPage(Long workerId, int offset, int pageSize) {
+                return store.values().stream()
+                        .filter(t -> workerId.equals(t.getWorkerId()))
+                        .skip(offset)
+                        .limit(pageSize)
+                        .collect(Collectors.toList());
+            }
+            @Override public long countByWorkerId(Long workerId) {
+                return store.values().stream().filter(t -> workerId.equals(t.getWorkerId())).count();
+            }
+            @Override public BigDecimal sumMonthlyEarnings(Long workerId, LocalDateTime startTime, LocalDateTime endTime) {
+                return BigDecimal.ZERO;
+            }
+            @Override public int deleteByRelatedWithdrawalId(Long relatedWithdrawalId) {
+                return (int) store.values().stream()
+                        .filter(t -> relatedWithdrawalId.equals(t.getRelatedWithdrawalId()))
+                        .peek(store::remove)
+                        .count();
+            }
+        };
+    }
+
+    public static NotificationService createNotificationService() {
+        return new NotificationService() {
+            @Override public com.parttime.cservice.pojo.vo.NotificationVO sendNotification(Long workerId, String type, String title, String content) {
+                return null;
+            }
+            @Override public com.parttime.cservice.pojo.vo.NotificationVO createWorkerNotification(Long workerId, String type, String category, String title, String content, String relatedType, Long relatedId) {
+                return null;
+            }
+            @Override public com.parttime.cservice.pojo.vo.PageVO<com.parttime.cservice.pojo.vo.NotificationVO> getMyNotifications(Long workerId, Integer page, Integer pageSize) {
+                return null;
+            }
+            @Override public void markAsRead(Long workerId, Long notificationId) {
+                // no-op for tests
+            }
+        };
+    }
+
+    public static WeChatPayService createWeChatPayService() {
+        return new WeChatPayService() {
+            @Override public com.parttime.cservice.pojo.vo.TransferResult transferToWechat(Long workerId, BigDecimal amount, String openId, String description) {
+                com.parttime.cservice.pojo.vo.TransferResult result = new com.parttime.cservice.pojo.vo.TransferResult();
+                result.setSuccess(true);
+                result.setTransferNo("SIMULATED_" + System.currentTimeMillis());
+                return result;
+            }
+            @Override public com.parttime.cservice.pojo.vo.TransferResult transferToBankCard(Long workerId, BigDecimal amount, String bankAccount, String bankName, String description) {
+                com.parttime.cservice.pojo.vo.TransferResult result = new com.parttime.cservice.pojo.vo.TransferResult();
+                result.setSuccess(true);
+                result.setTransferNo("SIMULATED_" + System.currentTimeMillis());
+                return result;
+            }
+            @Override public com.parttime.cservice.pojo.vo.TransferResult queryTransferStatus(String transferNo) {
+                com.parttime.cservice.pojo.vo.TransferResult result = new com.parttime.cservice.pojo.vo.TransferResult();
+                result.setSuccess(true);
+                return result;
             }
         };
     }

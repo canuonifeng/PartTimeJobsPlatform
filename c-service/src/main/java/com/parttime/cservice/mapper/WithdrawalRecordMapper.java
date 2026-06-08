@@ -4,6 +4,7 @@ import com.parttime.cservice.pojo.entity.WithdrawalRecord;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -19,4 +20,5 @@ public interface WithdrawalRecordMapper {
                          @Param("thirdPartySerialNo") String thirdPartySerialNo,
                          @Param("thirdPartyPlatform") String thirdPartyPlatform,
                          @Param("completedAt") LocalDateTime completedAt);
+    long countTodayWithdrawals(@Param("workerId") Long workerId, @Param("date") LocalDate date);
 }

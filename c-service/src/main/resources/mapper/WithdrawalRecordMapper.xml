@@ -2,17 +2,36 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.parttime.cservice.mapper.WithdrawalRecordMapper">
 
+    <resultMap id="WithdrawalRecordMap" type="com.parttime.cservice.pojo.entity.WithdrawalRecord">
+        <id column="id" property="id"/>
+        <result column="worker_id" property="workerId"/>
+        <result column="amount" property="amount"/>
+        <result column="status" property="status"/>
+        <result column="bank_info" property="bankInfo"/>
+        <result column="remark" property="remark"/>
+        <result column="requested_at" property="requestedAt"/>
+        <result column="processed_at" property="processedAt"/>
+        <result column="completed_at" property="completedAt"/>
+        <result column="third_party_serial_no" property="thirdPartySerialNo"/>
+        <result column="third_party_platform" property="thirdPartyPlatform"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="withdrawal_method" property="withdrawalMethod"/>
+        <result column="bank_account" property="bankAccount"/>
+        <result column="open_id" property="openId"/>
+    </resultMap>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO c_withdrawal_record (worker_id, amount, status, bank_info, remark, processed_at, created_at, updated_at)
-        VALUES (#{workerId}, #{amount}, #{status}, #{bankInfo}, #{remark}, #{processedAt}, #{createdAt}, #{updatedAt})
+        INSERT INTO c_withdrawal_record (worker_id, amount, status, bank_info, remark, requested_at, processed_at, completed_at, third_party_serial_no, third_party_platform, created_at, updated_at, withdrawal_method, bank_account, open_id)
+        VALUES (#{workerId}, #{amount}, #{status}, #{bankInfo}, #{remark}, #{requestedAt}, #{processedAt}, #{completedAt}, #{thirdPartySerialNo}, #{thirdPartyPlatform}, #{createdAt}, #{updatedAt}, #{withdrawalMethod}, #{bankAccount}, #{openId})
     </insert>
 
-    <select id="findById" resultType="com.parttime.cservice.pojo.entity.WithdrawalRecord">
+    <select id="findById" resultMap="WithdrawalRecordMap">
         SELECT * FROM c_withdrawal_record WHERE id = #{id}
     </select>
 
-    <select id="findByWorkerId" resultType="com.parttime.cservice.pojo.entity.WithdrawalRecord">
-        SELECT * FROM c_withdrawal_record WHERE worker_id = #{workerId}
+    <select id="findByWorkerId" resultMap="WithdrawalRecordMap">
+        SELECT * FROM c_withdrawal_record WHERE worker_id = #{workerId} ORDER BY created_at DESC
     </select>
 
     <update id="updateStatus">
@@ -24,8 +43,14 @@
         SET status = #{status},
             third_party_serial_no = #{thirdPartySerialNo},
             third_party_platform = #{thirdPartyPlatform},
-            completed_at = #{completedAt}
+            completed_at = #{completedAt},
+            updated_at = NOW()
         WHERE id = #{id}
     </update>
+
+    <select id="countTodayWithdrawals" resultType="long">
+        SELECT COUNT(*) FROM c_withdrawal_record
+        WHERE worker_id = #{workerId} AND DATE(created_at) = #{date}
+    </select>
 
 </mapper>

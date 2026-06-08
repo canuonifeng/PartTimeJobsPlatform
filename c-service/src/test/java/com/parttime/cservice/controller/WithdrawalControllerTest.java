@@ -57,10 +57,11 @@ class WithdrawalControllerTest {
         response.setAmount(new BigDecimal("500.00"));
         response.setStatus("PENDING");
 
-        when(withdrawalService.requestWithdrawal(eq(1L), any())).thenReturn(response);
+        when(withdrawalService.requestWithdrawal(eq(1L), any(), any(), any())).thenReturn(response);
 
         WithdrawalCmd request = new WithdrawalCmd();
         request.setAmount(new BigDecimal("500.00"));
+        request.setWithdrawalMethod("WECHAT");
 
         mockMvc.perform(post("/api/withdrawals")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -75,11 +76,12 @@ class WithdrawalControllerTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("1", null, List.of()));
 
-        when(withdrawalService.requestWithdrawal(eq(1L), any()))
+        when(withdrawalService.requestWithdrawal(eq(1L), any(), any(), any()))
                 .thenThrow(new RuntimeException("Insufficient balance"));
 
         WithdrawalCmd request = new WithdrawalCmd();
         request.setAmount(new BigDecimal("999999.00"));
+        request.setWithdrawalMethod("WECHAT");
 
         mockMvc.perform(post("/api/withdrawals")
                         .contentType(MediaType.APPLICATION_JSON)
