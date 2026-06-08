@@ -29,3 +29,17 @@ export function getEarningsTransactions(params) {
     data: params
   })
 }
+
+export function getWithdrawalMethods() {
+  return request({
+    url: '/api/withdrawal-methods',
+    method: 'GET'
+  })
+}
+
+export function getBankCards() {
+  return request({
+    url: '/api/bank-cards',
+    method: 'GET'
+  })
+}

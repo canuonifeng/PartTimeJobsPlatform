@@ -5,7 +5,7 @@
         <text>实名认证未通过，点击前往</text>
         <text class="arrow">›</text>
       </view>
-      <view v-else-if="!bankCardOk" class="gate-row" @click="goBankCard">
+      <view v-else-if="!bankCardOk && withdrawalMethod === 'BANK_CARD'" class="gate-row" @click="goBankCard">
         <text>未绑定银行卡，点击前往</text>
         <text class="arrow">›</text>
       </view>
@@ -18,6 +18,45 @@
 
     <view class="form-card">
       <view class="form-group">
+        <text class="form-label">提现方式</text>
+        <view class="method-list">
+          <view
+            v-for="method in availableMethods"
+            :key="method.code"
+            class="method-item"
+            :class="{ selected: withdrawalMethod === method.code, disabled: !method.available }"
+            @click="selectMethod(method)"
+          >
+            <view class="method-icon">{{ method.code === 'WECHAT' ? '💚' : '💳' }}</view>
+            <view class="method-info">
+              <text class="method-name">{{ method.name }}</text>
+              <text class="method-desc">{{ method.description }}</text>
+            </view>
+            <view v-if="withdrawalMethod === method.code" class="method-check">✓</view>
+          </view>
+        </view>
+      </view>
+
+      <view v-if="withdrawalMethod === 'BANK_CARD' && bankCards.length > 0" class="form-group">
+        <text class="form-label">选择银行卡</text>
+        <view class="bank-list">
+          <view
+            v-for="card in bankCards"
+            :key="card.id"
+            class="bank-item"
+            :class="{ selected: selectedBankId === card.id }"
+            @click="selectedBankId = card.id"
+          >
+            <view class="bank-info">
+              <text class="bank-name">{{ card.bankName }}</text>
+              <text class="bank-number">****{{ card.cardNumber.slice(-4) }}</text>
+            </view>
+            <view v-if="selectedBankId === card.id" class="bank-check">✓</view>
+          </view>
+        </view>
+      </view>
+
+      <view class="form-group">
         <text class="form-label">提现金额</text>
         <view class="amount-input-wrapper">
           <text class="amount-prefix">¥</text>
@@ -29,7 +68,7 @@
             @input="validateAmount"
           />
         </view>
-        <text class="amount-tip">{{ balanceLoaded ? `最低提现10元，可提现余额${availableBalance}元` : '余额加载失败，请稍后重试' }}</text>
+        <text class="amount-tip">{{ balanceLoaded ? `最低提现1元，可提现余额${availableBalance}元` : '余额加载失败，请稍后重试' }}</text>
       </view>
 
       <view class="quick-amounts">
@@ -61,20 +100,28 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { getEarningsSummary, createWithdrawal } from '@/api/earnings'
+import { getEarningsSummary, createWithdrawal, getWithdrawalMethods, getBankCards } from '@/api/earnings'
 import { getRealNameStatus } from '@/api/realName.js'
-import { getBankCard } from '@/api/bankCard.js'
 
 const amount = ref('')
 const availableBalance = ref(0)
 const balanceLoaded = ref(false)
 const submitting = ref(false)
 const realNameOk = ref(false)
-const bankCardOk = ref(false)
+const withdrawalMethod = ref('WECHAT')
+const availableMethods = ref<any[]>([])
+const bankCards = ref<any[]>([])
+const selectedBankId = ref<number | null>(null)
 
 const baseQuickAmounts = [50, 100, 200, 500]
 
-const ready = computed(() => realNameOk.value && bankCardOk.value)
+const ready = computed(() => {
+  if (!realNameOk.value) return false
+  if (withdrawalMethod.value === 'BANK_CARD') {
+    return bankCards.value.length > 0 && selectedBankId.value !== null
+  }
+  return true
+})
 const quickAmounts = computed(() => baseQuickAmounts.filter(val => val <= availableBalance.value))
 
 const canSubmit = computed(() => ready.value && balanceLoaded.value && !submitting.value && isValidAmount(amount.value))
@@ -82,7 +129,7 @@ const canSubmit = computed(() => ready.value && balanceLoaded.value && !submitti
 function isValidAmount(value: string) {
   if (!/^\d+(\.\d{1,2})?$/.test(value)) return false
   const val = Number(value)
-  return Number.isFinite(val) && val > 0 && val >= 10 && val <= availableBalance.value
+  return Number.isFinite(val) && val > 0 && val >= 1 && val <= availableBalance.value
 }
 
 function validateAmount() {
@@ -99,6 +146,11 @@ function setQuickAmount(val: number) {
   }
 }
 
+function selectMethod(method: any) {
+  if (!method.available) return
+  withdrawalMethod.value = method.code
+}
+
 function goRealName() {
   uni.navigateTo({ url: '/pages/auth/realName' })
 }
@@ -111,13 +163,23 @@ async function handleWithdraw() {
   if (submitting.value) return
   if (!ready.value) {
     if (!realNameOk.value) goRealName()
-    else if (!bankCardOk.value) goBankCard()
+    else if (withdrawalMethod.value === 'BANK_CARD' && bankCards.value.length === 0) goBankCard()
     return
   }
   if (!canSubmit.value) return
   submitting.value = true
   try {
-    await createWithdrawal({ amount: Number(amount.value) })
+    const data: any = {
+      amount: Number(amount.value),
+      withdrawalMethod: withdrawalMethod.value
+    }
+    if (withdrawalMethod.value === 'BANK_CARD' && selectedBankId.value) {
+      const card = bankCards.value.find(c => c.id === selectedBankId.value)
+      if (card) {
+        data.bankAccountId = card.id
+      }
+    }
+    await createWithdrawal(data)
     uni.showToast({ title: '提现申请已提交', icon: 'success' })
     uni.$emit('earningsRefresh')
     uni.navigateBack()
@@ -136,10 +198,25 @@ async function loadGates() {
     realNameOk.value = false
   }
   try {
-    const card: any = await getBankCard()
-    bankCardOk.value = !!(card && card.id)
+    const methods: any = await getWithdrawalMethods()
+    availableMethods.value = Array.isArray(methods) ? methods : []
+    if (availableMethods.value.length > 0) {
+      const defaultMethod = availableMethods.value.find(m => m.available)
+      if (defaultMethod) {
+        withdrawalMethod.value = defaultMethod.code
+      }
+    }
   } catch {
-    bankCardOk.value = false
+    availableMethods.value = [{ code: 'WECHAT', name: '微信零钱', available: true, description: '实时到账' }]
+  }
+  try {
+    const cards: any = await getBankCards()
+    bankCards.value = Array.isArray(cards) ? cards : []
+    if (bankCards.value.length > 0 && !selectedBankId.value) {
+      selectedBankId.value = bankCards.value[0].id
+    }
+  } catch {
+    bankCards.value = []
   }
 }
 
@@ -292,4 +369,113 @@ onMounted(async () => {
   font-size: 28rpx;
 }
 .gate-row .arrow { color: #d48806; }
+
+.method-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.method-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  border: 2rpx solid #e5e7eb;
+  background: #f9fafb;
+  transition: all 0.2s;
+}
+
+.method-item.selected {
+  border-color: #07c160;
+  background: #f0fdf4;
+}
+
+.method-item.disabled {
+  opacity: 0.5;
+}
+
+.method-icon {
+  font-size: 48rpx;
+  margin-right: 20rpx;
+}
+
+.method-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.method-name {
+  font-size: 30rpx;
+  color: #111827;
+  font-weight: 600;
+}
+
+.method-desc {
+  font-size: 24rpx;
+  color: #6b7280;
+  margin-top: 4rpx;
+}
+
+.method-check {
+  width: 40rpx;
+  height: 40rpx;
+  line-height: 40rpx;
+  text-align: center;
+  border-radius: 20rpx;
+  background: #07c160;
+  color: #fff;
+  font-size: 24rpx;
+}
+
+.bank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+
+.bank-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  border: 2rpx solid #e5e7eb;
+  background: #f9fafb;
+  transition: all 0.2s;
+}
+
+.bank-item.selected {
+  border-color: #07c160;
+  background: #f0fdf4;
+}
+
+.bank-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.bank-name {
+  font-size: 30rpx;
+  color: #111827;
+  font-weight: 600;
+}
+
+.bank-number {
+  font-size: 24rpx;
+  color: #6b7280;
+  margin-top: 4rpx;
+}
+
+.bank-check {
+  width: 40rpx;
+  height: 40rpx;
+  line-height: 40rpx;
+  text-align: center;
+  border-radius: 20rpx;
+  background: #07c160;
+  color: #fff;
+  font-size: 24rpx;
+}
 </style>
