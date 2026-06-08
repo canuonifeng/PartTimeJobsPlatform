@@ -45,7 +45,21 @@ function request(config) {
           return
         }
         if (res.statusCode >= 200 && res.statusCode < 300) {
-          resolve(res.data)
+          const body = res.data
+          if (body && typeof body.code === 'number') {
+            if (body.code === 200) {
+              resolve(body.data)
+            } else if (body.code === 401) {
+              uni.removeStorageSync('token')
+              uni.removeStorageSync('workerInfo')
+              uni.reLaunch({ url: '/pages/login/login' })
+              reject(new Error(body.message || '登录已过期'))
+            } else {
+              reject(new Error(body.message || '请求失败'))
+            }
+          } else {
+            resolve(body)
+          }
         } else {
           reject(new Error((res.data && res.data.message) || ('请求失败(' + res.statusCode + ')')))
         }

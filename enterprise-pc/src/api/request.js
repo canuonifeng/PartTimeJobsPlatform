@@ -16,7 +16,21 @@ request.interceptors.request.use(config => {
 })
 
 request.interceptors.response.use(
-  response => response.data,
+  response => {
+    const body = response.data
+    if (body && typeof body.code === 'number') {
+      if (body.code === 200) {
+        return body.data
+      } else if (body.code === 401) {
+        localStorage.removeItem('token')
+        router.push('/login')
+        return Promise.reject(new Error(body.message || '登录已过期'))
+      } else {
+        return Promise.reject(new Error(body.message || '请求失败'))
+      }
+    }
+    return body
+  },
   error => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token')

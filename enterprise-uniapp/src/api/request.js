@@ -21,7 +21,21 @@ export function request(method, url, data = null) {
           reject(new Error('Unauthorized'))
           return
         }
-        resolve(res.data)
+        const body = res.data
+        if (body && typeof body.code === 'number') {
+          if (body.code === 200) {
+            resolve(body.data)
+          } else if (body.code === 401) {
+            uni.removeStorageSync('token')
+            uni.removeStorageSync('user')
+            uni.reLaunch({ url: '/pages/login/login' })
+            reject(new Error(body.message || 'Unauthorized'))
+          } else {
+            reject(new Error(body.message || '请求失败'))
+          }
+        } else {
+          resolve(body)
+        }
       },
       fail: (err) => {
         reject(err)
