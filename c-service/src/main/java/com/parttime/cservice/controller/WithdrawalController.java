@@ -1,8 +1,10 @@
 package com.parttime.cservice.controller;
 
+import com.parttime.cservice.pojo.vo.BankCardVO;
 import com.parttime.cservice.pojo.vo.EarningsSummaryVO;
 import com.parttime.cservice.pojo.cmd.WithdrawalCmd;
 import com.parttime.cservice.pojo.vo.TransactionVO;
+import com.parttime.cservice.pojo.vo.WithdrawalMethodVO;
 import com.parttime.cservice.pojo.vo.WithdrawalVO;
 import com.parttime.cservice.service.WithdrawalService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -43,7 +45,7 @@ public class WithdrawalController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         try {
-            WithdrawalVO response = withdrawalService.requestWithdrawal(workerId, request.getAmount());
+            WithdrawalVO response = withdrawalService.requestWithdrawal(workerId, request.getAmount(), request.getWithdrawalMethod(), request.getBankAccountId());
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
@@ -82,5 +84,27 @@ public class WithdrawalController {
         }
         List<WithdrawalVO> records = withdrawalService.getWithdrawalHistory(workerId);
         return ResponseEntity.ok(records);
+    }
+
+    @Operation(summary = "获取可用提现方式", description = "获取当前工人可用的提现方式列表")
+    @GetMapping("/api/withdrawals/methods")
+    public ResponseEntity<?> getAvailableMethods() {
+        Long workerId = getCurrentWorkerId();
+        if (workerId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        List<WithdrawalMethodVO> methods = withdrawalService.getAvailableMethods(workerId);
+        return ResponseEntity.ok(methods);
+    }
+
+    @Operation(summary = "获取银行卡列表", description = "获取当前工人的银行卡列表")
+    @GetMapping("/api/withdrawals/bank-cards")
+    public ResponseEntity<?> getBankCards() {
+        Long workerId = getCurrentWorkerId();
+        if (workerId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        List<BankCardVO> cards = withdrawalService.getBankCards(workerId);
+        return ResponseEntity.ok(cards);
     }
 }

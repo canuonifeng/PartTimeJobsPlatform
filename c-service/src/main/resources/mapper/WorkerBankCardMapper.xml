@@ -3,8 +3,8 @@
 <mapper namespace="com.parttime.cservice.mapper.WorkerBankCardMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO worker_bank_cards (worker_id, card_holder, card_number, bank_name, bank_branch)
-        VALUES (#{workerId}, #{cardHolder}, #{cardNumber}, #{bankName}, #{bankBranch})
+        INSERT INTO worker_bank_cards (worker_id, card_holder, card_number, bank_name, bank_branch, is_default)
+        VALUES (#{workerId}, #{cardHolder}, #{cardNumber}, #{bankName}, #{bankBranch}, #{isDefault})
     </insert>
 
     <update id="update">
@@ -12,13 +12,19 @@
         SET card_holder = #{cardHolder},
             card_number = #{cardNumber},
             bank_name = #{bankName},
-            bank_branch = #{bankBranch}
+            bank_branch = #{bankBranch},
+            is_default = #{isDefault}
         WHERE worker_id = #{workerId}
     </update>
 
     <select id="findByWorkerId" resultType="com.parttime.cservice.pojo.entity.WorkerBankCard">
-        SELECT id, worker_id, card_holder, card_number, bank_name, bank_branch, created_at, updated_at
+        SELECT id, worker_id, card_holder, card_number, bank_name, bank_branch, is_default, created_at, updated_at
         FROM worker_bank_cards WHERE worker_id = #{workerId}
+    </select>
+
+    <select id="findAllByWorkerId" resultType="com.parttime.cservice.pojo.entity.WorkerBankCard">
+        SELECT id, worker_id, card_holder, card_number, bank_name, bank_branch, is_default, created_at, updated_at
+        FROM worker_bank_cards WHERE worker_id = #{workerId} ORDER BY is_default DESC, id ASC
     </select>
 
     <delete id="deleteByWorkerId">

@@ -10,8 +10,10 @@ import com.parttime.cservice.pojo.entity.WithdrawalRecord;
 import com.parttime.cservice.pojo.entity.WorkerBalance;
 import com.parttime.cservice.pojo.entity.WorkerBankCard;
 import com.parttime.cservice.pojo.entity.WorkerRealNameAuth;
+import com.parttime.cservice.pojo.vo.BankCardVO;
 import com.parttime.cservice.pojo.vo.EarningsSummaryVO;
 import com.parttime.cservice.pojo.vo.TransactionVO;
+import com.parttime.cservice.pojo.vo.WithdrawalMethodVO;
 import com.parttime.cservice.pojo.vo.WithdrawalVO;
 import com.parttime.cservice.service.NotificationService;
 import com.parttime.cservice.service.WithdrawalService;
@@ -57,7 +59,7 @@ public class WithdrawalServiceImpl implements WithdrawalService {
 
     @Override
     @Transactional
-    public WithdrawalVO requestWithdrawal(Long workerId, BigDecimal amount) {
+    public WithdrawalVO requestWithdrawal(Long workerId, BigDecimal amount, String withdrawalMethod, Long bankAccountId) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
             throw new RuntimeException("Invalid withdrawal amount");
         }
@@ -120,6 +122,44 @@ public class WithdrawalServiceImpl implements WithdrawalService {
         return withdrawalRecordMapper.findByWorkerId(workerId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<WithdrawalMethodVO> getAvailableMethods(Long workerId) {
+        List<WithdrawalMethodVO> methods = new java.util.ArrayList<>();
+
+        WithdrawalMethodVO wechat = new WithdrawalMethodVO();
+        wechat.setCode("WECHAT");
+        wechat.setName("微信零钱");
+        wechat.setAvailable(true);
+        wechat.setDescription("提现到微信零钱，实时到账");
+        methods.add(wechat);
+
+        Optional<WorkerBankCard> bankCard = workerBankCardMapper.findByWorkerId(workerId);
+        WithdrawalMethodVO bankCardMethod = new WithdrawalMethodVO();
+        bankCardMethod.setCode("BANK_CARD");
+        bankCardMethod.setName("银行卡");
+        bankCardMethod.setAvailable(bankCard.isPresent());
+        bankCardMethod.setDescription(bankCard.isPresent() ? "提现到绑定的银行卡" : "请先绑定银行卡");
+        methods.add(bankCardMethod);
+
+        return methods;
+    }
+
+    @Override
+    public List<BankCardVO> getBankCards(Long workerId) {
+        List<WorkerBankCard> cards = workerBankCardMapper.findAllByWorkerId(workerId);
+        return cards.stream().map(card -> {
+            BankCardVO vo = new BankCardVO();
+            vo.setId(card.getId());
+            vo.setBankName(card.getBankName());
+            vo.setCardNumber(card.getCardNumber().length() > 4 
+                    ? card.getCardNumber().substring(card.getCardNumber().length() - 4) 
+                    : card.getCardNumber());
+            vo.setCardHolder(card.getCardHolder());
+            vo.setDefault(card.isDefault());
+            return vo;
+        }).collect(Collectors.toList());
     }
 
     @Override
