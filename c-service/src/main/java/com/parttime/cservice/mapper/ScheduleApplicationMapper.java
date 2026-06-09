@@ -3,6 +3,7 @@ package com.parttime.cservice.mapper;
 import com.parttime.cservice.pojo.entity.ScheduleApplication;
 import com.parttime.cservice.pojo.vo.WorkerSignupVO;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.MapKey;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public interface ScheduleApplicationMapper {
     long countMySignups(@Param("workerId") Long workerId);
     List<Long> findScheduleIdsByWorkerIdAndJobId(@Param("workerId") Long workerId, @Param("jobId") Long jobId);
     int countByScheduleId(Long scheduleId);
+    @MapKey("scheduleId")
     Map<Long, Integer> countByScheduleIds(@Param("scheduleIds") List<Long> scheduleIds);
     List<ScheduleApplication> findByIds(@Param("ids") List<Long> ids);
     int batchInsert(@Param("list") List<ScheduleApplication> list);
