@@ -31,6 +31,10 @@ async function saveLogo() {
     uni.showToast({ title: '保存失败', icon: 'none' })
   }
 }
+
+function goRealName() {
+  uni.navigateTo({ url: '/pages/auth/realName' })
+}
 </script>
 
 <template>
@@ -51,6 +55,10 @@ async function saveLogo() {
           <input v-model="logoUrl" class="input" placeholder="请输入Logo图片URL" />
         </view>
         <button class="save-btn" @click="saveLogo">保存</button>
+        <view class="menu-item" @click="goRealName">
+          <text class="menu-label">企业实名认证</text>
+          <text class="menu-arrow">›</text>
+        </view>
       </view>
     </view>
   </view>
@@ -71,4 +79,7 @@ async function saveLogo() {
 .input { width: 100%; height: 76rpx; padding: 0 20rpx; border: 2rpx solid #ddd; border-radius: 8rpx; box-sizing: border-box; font-size: 28rpx; }
 .save-btn { margin-top: 32rpx; height: 76rpx; line-height: 76rpx; background: #007aff; color: #fff; border-radius: 8rpx; font-size: 28rpx; }
 .save-btn::after { border: none; }
+.menu-item { display: flex; justify-content: space-between; align-items: center; padding: 28rpx 0; border-bottom: 2rpx solid #f2f2f2; margin-top: 24rpx; }
+.menu-label { font-size: 28rpx; color: #333; }
+.menu-arrow { font-size: 32rpx; color: #ccc; }
 </style>

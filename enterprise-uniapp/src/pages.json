@@ -16,7 +16,8 @@
     {"path": "pages/workers/workerList", "style": {"navigationBarTitleText": "兼职管理", "enablePullDownRefresh": true}},
     {"path": "pages/accounts/accountList", "style": {"navigationBarTitleText": "账号管理", "enablePullDownRefresh": true}},
     {"path": "pages/settings/companySettings", "style": {"navigationBarTitleText": "企业设置"}},
-    {"path": "pages/balance/balanceList", "style": {"navigationBarTitleText": "账户余额", "enablePullDownRefresh": true}}
+    {"path": "pages/balance/balanceList", "style": {"navigationBarTitleText": "账户余额", "enablePullDownRefresh": true}},
+    {"path": "pages/auth/realName", "style": {"navigationBarTitleText": "企业实名认证"}}
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",
