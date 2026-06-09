@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.ReferralConfigMapper">
+    <resultMap id="ReferralConfigResultMap" type="com.parttime.platform.pojo.entity.ReferralConfig">
+        <id property="id" column="id"/>
+        <result property="configKey" column="config_key"/>
+        <result property="configValue" column="config_value"/>
+        <result property="description" column="description"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+    <select id="findAll" resultMap="ReferralConfigResultMap">
+        SELECT * FROM referral_config
+    </select>
+    <select id="findByKey" resultMap="ReferralConfigResultMap">
+        SELECT * FROM referral_config WHERE config_key = #{configKey}
+    </select>
+    <insert id="upsert">
+        INSERT INTO referral_config (config_key, config_value, description)
+        VALUES (#{configKey}, #{configValue}, #{description})
+        ON DUPLICATE KEY UPDATE config_value = #{configValue}
+    </insert>
+</mapper>
