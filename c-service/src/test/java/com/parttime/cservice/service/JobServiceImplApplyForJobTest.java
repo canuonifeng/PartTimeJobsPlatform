@@ -55,7 +55,7 @@ class JobServiceImplApplyForJobTest {
         JobSchedule schedule = activeFutureSchedule(10L, 1L);
         when(scheduleApplicationMapper.findScheduleIdsByWorkerIdAndJobId(100L, 1L)).thenReturn(List.of());
         when(jobMapper.findByJobId(1L)).thenReturn(Optional.of(job));
-        when(jobScheduleMapper.findById(10L)).thenReturn(Optional.of(schedule));
+        when(jobScheduleMapper.findByIds(List.of(10L))).thenReturn(List.of(schedule));
 
         boolean result = jobService.applyForJob(100L, 1L, List.of(10L));
 
@@ -74,7 +74,7 @@ class JobServiceImplApplyForJobTest {
         JobSchedule schedule = activeFutureSchedule(10L, 1L);
         when(scheduleApplicationMapper.findScheduleIdsByWorkerIdAndJobId(100L, 1L)).thenReturn(List.of());
         when(jobMapper.findByJobId(1L)).thenReturn(Optional.of(job));
-        when(jobScheduleMapper.findById(10L)).thenReturn(Optional.of(schedule));
+        when(jobScheduleMapper.findByIds(List.of(10L))).thenReturn(List.of(schedule));
         doAnswer(invocation -> 1).when(scheduleApplicationMapper).insert(any(ScheduleApplication.class));
 
         boolean result = jobService.applyForJob(100L, 1L, List.of(10L));

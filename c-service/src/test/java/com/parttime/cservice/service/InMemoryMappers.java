@@ -76,6 +76,14 @@ public class InMemoryMappers {
                 store.put(job.getId(), job);
                 return 1;
             }
+            @Override public int batchCloseJobs(List<Long> ids, String closeReason) {
+                int count = 0;
+                for (Long id : ids) {
+                    Job job = store.get(id);
+                    if (job != null) { job.setStatus("CLOSED"); job.setCloseReason(closeReason); count++; }
+                }
+                return count;
+            }
         };
     }
 
@@ -124,6 +132,25 @@ public class InMemoryMappers {
             }
             @Override public int countByScheduleId(Long scheduleId) {
                 return (int) store.values().stream().filter(a -> scheduleId.equals(a.getScheduleId())).count();
+            }
+            @Override public java.util.Map<Long, Integer> countByScheduleIds(List<Long> scheduleIds) {
+                return scheduleIds.stream().collect(Collectors.toMap(
+                        id -> id,
+                        id -> (int) store.values().stream().filter(a -> id.equals(a.getScheduleId())).count()
+                ));
+            }
+            @Override public List<ScheduleApplication> findByIds(List<Long> ids) {
+                return store.values().stream().filter(a -> ids.contains(a.getId())).collect(Collectors.toList());
+            }
+            @Override public int batchInsert(List<ScheduleApplication> list) {
+                int count = 0;
+                for (ScheduleApplication app : list) {
+                    if (app.getId() == null) app.setId(idGen.getAndIncrement());
+                    if (app.getAppliedAt() == null) app.setAppliedAt(LocalDateTime.now());
+                    store.put(app.getId(), app);
+                    count++;
+                }
+                return count;
             }
         };
     }
@@ -212,6 +239,14 @@ public class InMemoryMappers {
                 store.put(shift.getId(), shift);
                 return 1;
             }
+            @Override public int batchUpdateStatus(List<Long> ids, String status) {
+                int count = 0;
+                for (Long id : ids) {
+                    ShiftEntity s = store.get(id);
+                    if (s != null) { s.setStatus(status); count++; }
+                }
+                return count;
+            }
         };
     }
 
@@ -228,6 +263,9 @@ public class InMemoryMappers {
             @Override public Optional<AttendanceRecordEntity> findById(Long id) { return Optional.ofNullable(store.get(id)); }
             @Override public Optional<AttendanceRecordEntity> findByShiftId(Long shiftId) {
                 return store.values().stream().filter(r -> shiftId.equals(r.getShiftId())).findFirst();
+            }
+            @Override public List<AttendanceRecordEntity> findByShiftIds(List<Long> shiftIds) {
+                return store.values().stream().filter(r -> shiftIds.contains(r.getShiftId())).collect(Collectors.toList());
             }
             @Override public List<AttendanceRecordEntity> findByWorkerId(Long workerId) {
                 return store.values().stream().filter(r -> workerId.equals(r.getWorkerId())).collect(Collectors.toList());
@@ -386,6 +424,20 @@ public class InMemoryMappers {
             @Override public Optional<JobSchedule> findById(Long id) {
                 return Optional.ofNullable(store.get(id));
             }
+
+            @Override public List<JobSchedule> findByIds(List<Long> ids) {
+                return ids.stream().map(store::get).filter(Objects::nonNull).collect(Collectors.toList());
+            }
+
+            @Override public int batchInsert(List<JobSchedule> list) {
+                int count = 0;
+                for (JobSchedule js : list) {
+                    if (js.getId() == null) js.setId(idGen.getAndIncrement());
+                    store.put(js.getId(), js);
+                    count++;
+                }
+                return count;
+            }
         };
     }
 
@@ -432,6 +484,9 @@ public class InMemoryMappers {
             }
             @Override public java.util.Optional<AttendanceCorrectionEntity> findByShiftId(Long shiftId) {
                 return store.values().stream().filter(c -> shiftId.equals(c.getShiftId())).findFirst();
+            }
+            @Override public List<AttendanceCorrectionEntity> findByShiftIds(List<Long> shiftIds) {
+                return store.values().stream().filter(c -> shiftIds.contains(c.getShiftId())).collect(Collectors.toList());
             }
         };
     }
@@ -625,6 +680,9 @@ public class InMemoryMappers {
 
             @Override public com.parttime.cservice.pojo.entity.ReferralReward findByReferralRecordId(Long referralRecordId) {
                 return store.values().stream().filter(r -> referralRecordId.equals(r.getReferralRecordId())).findFirst().orElse(null);
+            }
+            @Override public List<com.parttime.cservice.pojo.entity.ReferralReward> findByReferralRecordIds(List<Long> referralRecordIds) {
+                return store.values().stream().filter(r -> referralRecordIds.contains(r.getReferralRecordId())).collect(Collectors.toList());
             }
             @Override public List<com.parttime.cservice.pojo.entity.ReferralReward> findByReferrerIdPage(Long referrerId, int offset, int pageSize) {
                 return store.values().stream().filter(r -> r.getReferralRecordId() != null).collect(Collectors.toList());

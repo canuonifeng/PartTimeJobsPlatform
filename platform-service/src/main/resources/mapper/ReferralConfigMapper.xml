@@ -19,4 +19,12 @@
         VALUES (#{configKey}, #{configValue}, #{description})
         ON DUPLICATE KEY UPDATE config_value = #{configValue}
     </insert>
+
+    <insert id="batchUpsert">
+        INSERT INTO referral_config (config_key, config_value, description) VALUES
+        <foreach collection="configs" item="config" separator=",">
+            (#{config.configKey}, #{config.configValue}, #{config.description})
+        </foreach>
+        ON DUPLICATE KEY UPDATE config_value = VALUES(config_value)
+    </insert>
 </mapper>

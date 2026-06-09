@@ -2,9 +2,11 @@ package com.parttime.cservice.service.impl;
 
 import com.parttime.cservice.enums.ShiftStatus;
 import com.parttime.cservice.mapper.AttendanceCheckInMapper;
+import com.parttime.cservice.mapper.AttendanceCorrectionMapper;
 import com.parttime.cservice.mapper.AttendanceRecordMapper;
 import com.parttime.cservice.mapper.ShiftMapper;
 import com.parttime.cservice.pojo.entity.AttendanceCheckIn;
+import com.parttime.cservice.pojo.entity.AttendanceCorrectionEntity;
 import com.parttime.cservice.pojo.entity.AttendanceRecordEntity;
 import com.parttime.cservice.pojo.entity.ShiftEntity;
 import com.parttime.cservice.pojo.vo.AttendanceVO;
@@ -20,6 +22,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +32,8 @@ public class AttendanceServiceImpl implements AttendanceService {
     private ShiftMapper shiftMapper;
     @Resource
     private AttendanceRecordMapper attendanceRecordMapper;
+    @Resource
+    private AttendanceCorrectionMapper correctionMapper;
     @Resource
     private WorkerShiftVOConverter workerShiftVOConverter;
     @Resource
@@ -60,25 +65,46 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     @Override
     public List<WorkerShiftVO> getMyShifts(Long workerId, LocalDate startDate, LocalDate endDate) {
-        return shiftMapper.findByWorkerIdAndDateRange(workerId, startDate, endDate).stream()
+        List<ShiftEntity> shifts = shiftMapper.findByWorkerIdAndDateRange(workerId, startDate, endDate).stream()
                 .filter(s -> !"CANCELLED".equals(s.getStatus()))
-                .peek(this::markPastUnattendedShiftAbsent)
-                .map(workerShiftVOConverter::toWorkerShiftResponse)
                 .collect(Collectors.toList());
-    }
 
-    private void markPastUnattendedShiftAbsent(ShiftEntity shift) {
-        if (!ShiftStatus.SCHEDULED.name().equals(shift.getStatus())) {
-            return;
+        List<Long> staleIds = shifts.stream()
+                .filter(s -> ShiftStatus.SCHEDULED.name().equals(s.getStatus())
+                        && s.getShiftDate() != null && s.getEndTime() != null
+                        && LocalDateTime.now().isAfter(LocalDateTime.of(s.getShiftDate(), s.getEndTime())))
+                .map(ShiftEntity::getId)
+                .collect(Collectors.toList());
+
+        if (!staleIds.isEmpty()) {
+            shiftMapper.batchUpdateStatus(staleIds, ShiftStatus.ABSENT.name());
+            shifts.stream()
+                    .filter(s -> staleIds.contains(s.getId()))
+                    .forEach(s -> s.setStatus(ShiftStatus.ABSENT.name()));
         }
-        if (shift.getShiftDate() == null || shift.getEndTime() == null) {
-            return;
+
+        List<Long> validShiftIds = shifts.stream()
+                .filter(s -> !staleIds.contains(s.getId()))
+                .map(ShiftEntity::getId)
+                .collect(Collectors.toList());
+
+        Map<Long, AttendanceRecordEntity> recordMap = Map.of();
+        if (!validShiftIds.isEmpty()) {
+            recordMap = attendanceRecordMapper.findByShiftIds(validShiftIds).stream()
+                    .collect(Collectors.toMap(AttendanceRecordEntity::getShiftId, r -> r));
         }
-        if (LocalDateTime.now().isAfter(LocalDateTime.of(shift.getShiftDate(), shift.getEndTime()))) {
-            shift.setStatus(ShiftStatus.ABSENT.name());
-            shift.setUpdatedAt(LocalDateTime.now());
-            shiftMapper.update(shift);
+
+        Map<Long, AttendanceCorrectionEntity> correctionMap = Map.of();
+        if (!validShiftIds.isEmpty()) {
+            correctionMap = correctionMapper.findByShiftIds(validShiftIds).stream()
+                    .collect(Collectors.toMap(AttendanceCorrectionEntity::getShiftId, c -> c));
         }
+
+        Map<Long, AttendanceRecordEntity> finalRecordMap = recordMap;
+        Map<Long, AttendanceCorrectionEntity> finalCorrectionMap = correctionMap;
+        return shifts.stream()
+                .map(s -> workerShiftVOConverter.toWorkerShiftResponseBatch(s, finalRecordMap, finalCorrectionMap))
+                .collect(Collectors.toList());
     }
 
     @Override

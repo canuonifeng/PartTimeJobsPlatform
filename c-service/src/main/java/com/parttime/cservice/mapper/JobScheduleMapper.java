@@ -2,6 +2,7 @@ package com.parttime.cservice.mapper;
 
 import com.parttime.cservice.pojo.entity.JobSchedule;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,4 +17,8 @@ public interface JobScheduleMapper {
     List<JobSchedule> findActiveByJobId(Long jobId);
 
     Optional<JobSchedule> findById(Long id);
+
+    List<JobSchedule> findByIds(@Param("ids") List<Long> ids);
+
+    int batchInsert(@Param("list") List<JobSchedule> list);
 }

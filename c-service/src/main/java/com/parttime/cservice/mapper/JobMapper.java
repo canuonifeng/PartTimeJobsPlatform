@@ -16,4 +16,5 @@ public interface JobMapper {
     List<Job> search(@Param("keyword") String keyword, @Param("location") String location, @Param("categoryId") Long categoryId);
     List<Job> findByCompanyId(Long companyId);
     int update(Job job);
+    int batchCloseJobs(@Param("ids") List<Long> ids, @Param("closeReason") String closeReason);
 }

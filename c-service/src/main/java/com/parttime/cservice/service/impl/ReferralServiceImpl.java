@@ -23,6 +23,7 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -142,11 +143,17 @@ public class ReferralServiceImpl implements ReferralService {
         int totalReferees = referralRecordMapper.countByReferrerId(workerId);
         List<ReferralRecord> records = referralRecordMapper.findByReferrerId(workerId);
 
+        List<Long> recordIds = records.stream().map(ReferralRecord::getId).collect(Collectors.toList());
+        Map<Long, ReferralReward> rewardByRecordId = recordIds.isEmpty()
+                ? Map.of()
+                : referralRewardMapper.findByReferralRecordIds(recordIds).stream()
+                        .collect(Collectors.toMap(ReferralReward::getReferralRecordId, r -> r));
+
         BigDecimal totalRewardAmount = BigDecimal.ZERO;
         BigDecimal pendingRewardAmount = BigDecimal.ZERO;
 
         for (ReferralRecord record : records) {
-            ReferralReward reward = referralRewardMapper.findByReferralRecordId(record.getId());
+            ReferralReward reward = rewardByRecordId.get(record.getId());
             if (reward != null) {
                 totalRewardAmount = totalRewardAmount.add(reward.getAmount());
                 if ("PENDING".equals(reward.getStatus()) || "AUDITING".equals(reward.getStatus())) {
@@ -168,9 +175,15 @@ public class ReferralServiceImpl implements ReferralService {
         long total = records.size();
 
         int offset = (page - 1) * pageSize;
-        List<RefereeVO> list = records.stream()
-                .skip(offset)
-                .limit(pageSize)
+        List<ReferralRecord> pageRecords = records.stream().skip(offset).limit(pageSize).collect(Collectors.toList());
+
+        List<Long> recordIds = pageRecords.stream().map(ReferralRecord::getId).collect(Collectors.toList());
+        Map<Long, ReferralReward> rewardByRecordId = recordIds.isEmpty()
+                ? Map.of()
+                : referralRewardMapper.findByReferralRecordIds(recordIds).stream()
+                        .collect(Collectors.toMap(ReferralReward::getReferralRecordId, r -> r));
+
+        List<RefereeVO> list = pageRecords.stream()
                 .map(record -> {
                     RefereeVO vo = new RefereeVO();
                     vo.setId(record.getRefereeId());
@@ -179,7 +192,7 @@ public class ReferralServiceImpl implements ReferralService {
                     vo.setWorkCount(0);
                     vo.setWorkHours(BigDecimal.ZERO);
 
-                    ReferralReward reward = referralRewardMapper.findByReferralRecordId(record.getId());
+                    ReferralReward reward = rewardByRecordId.get(record.getId());
                     vo.setRewardStatus(reward != null ? reward.getStatus() : "NOT_QUALIFIED");
 
                     vo.setBoundAt(record.getBoundAt() != null ? record.getBoundAt().format(BEIJING_FMT) : "");

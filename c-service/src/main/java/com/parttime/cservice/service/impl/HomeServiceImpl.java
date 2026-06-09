@@ -1,8 +1,12 @@
 package com.parttime.cservice.service.impl;
 
+import com.parttime.cservice.mapper.AttendanceCorrectionMapper;
 import com.parttime.cservice.mapper.AttendanceRecordMapper;
 import com.parttime.cservice.mapper.BalanceTransactionMapper;
 import com.parttime.cservice.mapper.ShiftMapper;
+import com.parttime.cservice.pojo.entity.AttendanceCorrectionEntity;
+import com.parttime.cservice.pojo.entity.AttendanceRecordEntity;
+import com.parttime.cservice.pojo.entity.ShiftEntity;
 import com.parttime.cservice.pojo.vo.HomeSchedulesVO;
 import com.parttime.cservice.pojo.vo.HomeStatsVO;
 import com.parttime.cservice.pojo.vo.WorkerShiftVO;
@@ -13,7 +17,9 @@ import jakarta.annotation.Resource;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -21,6 +27,8 @@ public class HomeServiceImpl implements HomeService {
 
     @Resource
     private AttendanceRecordMapper attendanceRecordMapper;
+    @Resource
+    private AttendanceCorrectionMapper correctionMapper;
     @Resource
     private BalanceTransactionMapper balanceTransactionMapper;
     @Resource
@@ -47,11 +55,27 @@ public class HomeServiceImpl implements HomeService {
     @Override
     public HomeSchedulesVO getSchedules(Long workerId) {
         LocalDate today = LocalDate.now();
-        List<WorkerShiftVO> todayShifts = shiftMapper.findTodayByWorkerId(workerId, today).stream()
-                .map(workerShiftVOConverter::toWorkerShiftResponse)
+        List<ShiftEntity> todayRaw = shiftMapper.findTodayByWorkerId(workerId, today);
+        List<ShiftEntity> futureRaw = shiftMapper.findFutureByWorkerId(workerId, today, 5);
+
+        List<Long> allShiftIds = new ArrayList<>();
+        todayRaw.forEach(s -> allShiftIds.add(s.getId()));
+        futureRaw.forEach(s -> allShiftIds.add(s.getId()));
+
+        Map<Long, AttendanceRecordEntity> recordMap = Map.of();
+        Map<Long, AttendanceCorrectionEntity> correctionMap = Map.of();
+        if (!allShiftIds.isEmpty()) {
+            recordMap = attendanceRecordMapper.findByShiftIds(allShiftIds).stream()
+                    .collect(Collectors.toMap(AttendanceRecordEntity::getShiftId, r -> r));
+            correctionMap = correctionMapper.findByShiftIds(allShiftIds).stream()
+                    .collect(Collectors.toMap(AttendanceCorrectionEntity::getShiftId, c -> c));
+        }
+
+        List<WorkerShiftVO> todayShifts = todayRaw.stream()
+                .map(s -> workerShiftVOConverter.toWorkerShiftResponseBatch(s, recordMap, correctionMap))
                 .collect(Collectors.toList());
-        List<WorkerShiftVO> futureShifts = shiftMapper.findFutureByWorkerId(workerId, today, 5).stream()
-                .map(workerShiftVOConverter::toWorkerShiftResponse)
+        List<WorkerShiftVO> futureShifts = futureRaw.stream()
+                .map(s -> workerShiftVOConverter.toWorkerShiftResponseBatch(s, recordMap, correctionMap))
                 .collect(Collectors.toList());
 
         HomeSchedulesVO vo = new HomeSchedulesVO();

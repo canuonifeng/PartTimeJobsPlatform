@@ -85,4 +85,12 @@
         WHERE id = #{id}
     </update>
 
+    <update id="batchCloseJobs">
+        UPDATE jobs SET status = 'CLOSED', close_reason = #{closeReason}
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
 </mapper>

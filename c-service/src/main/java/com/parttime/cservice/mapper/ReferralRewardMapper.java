@@ -11,6 +11,8 @@ public interface ReferralRewardMapper {
 
     ReferralReward findByReferralRecordId(@Param("referralRecordId") Long referralRecordId);
 
+    List<ReferralReward> findByReferralRecordIds(@Param("referralRecordIds") List<Long> referralRecordIds);
+
     List<ReferralReward> findByReferrerIdPage(@Param("referrerId") Long referrerId,
                                                @Param("offset") int offset,
                                                @Param("pageSize") int pageSize);

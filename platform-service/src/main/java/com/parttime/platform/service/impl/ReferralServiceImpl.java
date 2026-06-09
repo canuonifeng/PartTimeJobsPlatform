@@ -35,9 +35,7 @@ public class ReferralServiceImpl implements ReferralService {
     @Override
     @Transactional
     public void updateConfig(List<ReferralConfig> configs) {
-        for (ReferralConfig config : configs) {
-            referralConfigMapper.upsert(config.getConfigKey(), config.getConfigValue(), config.getDescription());
-        }
+        referralConfigMapper.batchUpsert(configs);
     }
 
     @Override

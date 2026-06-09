@@ -13,4 +13,5 @@ public interface ReferralConfigMapper {
     void upsert(@Param("configKey") String configKey,
                 @Param("configValue") String configValue,
                 @Param("description") String description);
+    int batchUpsert(@Param("configs") List<ReferralConfig> configs);
 }

@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Mapper
@@ -17,4 +18,7 @@ public interface ScheduleApplicationMapper {
     long countMySignups(@Param("workerId") Long workerId);
     List<Long> findScheduleIdsByWorkerIdAndJobId(@Param("workerId") Long workerId, @Param("jobId") Long jobId);
     int countByScheduleId(Long scheduleId);
+    Map<Long, Integer> countByScheduleIds(@Param("scheduleIds") List<Long> scheduleIds);
+    List<ScheduleApplication> findByIds(@Param("ids") List<Long> ids);
+    int batchInsert(@Param("list") List<ScheduleApplication> list);
 }

@@ -36,6 +36,7 @@ class AttendanceServiceTest {
         ReflectionTestUtils.setField(converter, "correctionMapper", correctionMapper);
         ReflectionTestUtils.setField(attendanceService, "shiftMapper", InMemoryMappers.createShiftMapper());
         ReflectionTestUtils.setField(attendanceService, "attendanceRecordMapper", attendanceRecordMapper);
+        ReflectionTestUtils.setField(attendanceService, "correctionMapper", correctionMapper);
         ReflectionTestUtils.setField(attendanceService, "workerShiftVOConverter", converter);
         ReflectionTestUtils.setField(attendanceService, "attendanceCheckInMapper", InMemoryMappers.createAttendanceCheckInMapper());
     }

@@ -109,4 +109,12 @@
         WHERE id = #{id}
     </update>
 
+    <update id="batchUpdateStatus">
+        UPDATE schedule_shifts SET status = #{status}, updated_at = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
 </mapper>

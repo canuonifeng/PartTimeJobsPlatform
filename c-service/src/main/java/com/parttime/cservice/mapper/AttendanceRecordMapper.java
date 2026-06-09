@@ -14,6 +14,7 @@ public interface AttendanceRecordMapper {
     int insert(AttendanceRecordEntity record);
     Optional<AttendanceRecordEntity> findById(Long id);
     Optional<AttendanceRecordEntity> findByShiftId(Long shiftId);
+    List<AttendanceRecordEntity> findByShiftIds(@Param("shiftIds") List<Long> shiftIds);
     List<AttendanceRecordEntity> findByWorkerId(Long workerId);
     BigDecimal sumMonthlyHours(@Param("workerId") Long workerId, @Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);
     Integer countMonthlyAttendanceDays(@Param("workerId") Long workerId, @Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime);

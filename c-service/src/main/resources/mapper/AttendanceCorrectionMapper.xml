@@ -15,4 +15,11 @@
         SELECT * FROM attendance_corrections WHERE shift_id = #{shiftId}
     </select>
 
+    <select id="findByShiftIds" resultType="com.parttime.cservice.pojo.entity.AttendanceCorrectionEntity">
+        SELECT * FROM attendance_corrections WHERE shift_id IN
+        <foreach collection="shiftIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
 </mapper>

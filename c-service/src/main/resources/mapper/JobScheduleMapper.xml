@@ -36,4 +36,19 @@
         FROM job_schedules WHERE id = #{id}
     </select>
 
+    <select id="findByIds" resultMap="jobScheduleResultMap">
+        SELECT id, job_id, schedule_date, start_time, end_time, slots_available, status
+        FROM job_schedules WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <insert id="batchInsert">
+        INSERT INTO job_schedules (job_id, schedule_date, start_time, end_time, slots_available, status) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.jobId}, #{item.scheduleDate}, #{item.startTime}, #{item.endTime}, #{item.slotsAvailable}, #{item.status})
+        </foreach>
+    </insert>
+
 </mapper>

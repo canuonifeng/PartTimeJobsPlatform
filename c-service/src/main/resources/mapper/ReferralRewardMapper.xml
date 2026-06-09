@@ -16,6 +16,13 @@
         SELECT * FROM referral_reward WHERE referral_record_id = #{referralRecordId}
     </select>
 
+    <select id="findByReferralRecordIds" resultMap="ReferralRewardResultMap">
+        SELECT * FROM referral_reward WHERE referral_record_id IN
+        <foreach collection="referralRecordIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
     <select id="findByReferrerIdPage" resultMap="ReferralRewardResultMap">
         SELECT rr.* FROM referral_reward rr
         INNER JOIN referral_record r ON rr.referral_record_id = r.id

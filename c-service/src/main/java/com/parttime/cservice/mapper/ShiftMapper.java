@@ -21,5 +21,5 @@ public interface ShiftMapper {
     List<ShiftEntity> findByJobId(Long jobId);
     int updateStatus(@Param("id") Long id, @Param("status") String status);
     int update(ShiftEntity shift);
-
+    int batchUpdateStatus(@Param("ids") List<Long> ids, @Param("status") String status);
 }

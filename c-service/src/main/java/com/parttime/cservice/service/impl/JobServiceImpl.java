@@ -55,12 +55,18 @@ public class JobServiceImpl implements JobService {
         List<Job> jobs = jobMapper.search(keyword, location, categoryId);
         LocalDateTime now = LocalDateTime.now();
         // 自动关闭已过报名截止的岗位
-        for (Job job : jobs) {
-            if (job.getDeadline() != null && now.isAfter(job.getDeadline()) && !"CLOSED".equals(job.getStatus())) {
-                job.setStatus("CLOSED");
-                job.setCloseReason("报名已截止");
-                jobMapper.update(job);
-            }
+        List<Long> expiredIds = jobs.stream()
+                .filter(job -> job.getDeadline() != null && now.isAfter(job.getDeadline()) && !"CLOSED".equals(job.getStatus()))
+                .map(Job::getId)
+                .collect(Collectors.toList());
+        if (!expiredIds.isEmpty()) {
+            jobMapper.batchCloseJobs(expiredIds, "报名已截止");
+            jobs.forEach(job -> {
+                if (expiredIds.contains(job.getId())) {
+                    job.setStatus("CLOSED");
+                    job.setCloseReason("报名已截止");
+                }
+            });
         }
         jobs = jobs.stream()
                 .filter(j -> !"CLOSED".equals(j.getStatus()))
@@ -125,7 +131,7 @@ public class JobServiceImpl implements JobService {
         }
         if (schedules != null && !schedules.isEmpty()) {
             job.setSchedules(schedules);
-            for (JobScheduleInfoVO s : schedules) {
+            List<JobSchedule> scheduleEntities = schedules.stream().map(s -> {
                 JobSchedule js = new JobSchedule();
                 js.setJobId(id);
                 js.setScheduleDate(s.getDate());
@@ -133,8 +139,9 @@ public class JobServiceImpl implements JobService {
                 js.setEndTime(java.time.LocalTime.parse(s.getEndTime()));
                 js.setSlotsAvailable(s.getSlotsAvailable());
                 js.setStatus("ACTIVE");
-                jobScheduleMapper.insert(js);
-            }
+                return js;
+            }).collect(Collectors.toList());
+            jobScheduleMapper.batchInsert(scheduleEntities);
         }
         jobMapper.insert(job);
     }
@@ -214,8 +221,10 @@ public class JobServiceImpl implements JobService {
             throw new RuntimeException("所选排班已全部报名");
         }
         LocalDateTime now = LocalDateTime.now();
+        List<JobSchedule> scheds = jobScheduleMapper.findByIds(newIds);
+        Map<Long, JobSchedule> schedMap = scheds.stream().collect(Collectors.toMap(JobSchedule::getId, s -> s));
         for (Long sid : newIds) {
-            JobSchedule sched = jobScheduleMapper.findById(sid).orElse(null);
+            JobSchedule sched = schedMap.get(sid);
             if (sched == null || !"ACTIVE".equals(sched.getStatus())) {
                 throw new RuntimeException("排班已下架，无法报名");
             }
@@ -294,6 +303,8 @@ public class JobServiceImpl implements JobService {
 
     private List<JobScheduleInfoVO> toScheduleVOs(List<JobSchedule> entities) {
         if (entities == null || entities.isEmpty()) return emptyList();
+        List<Long> scheduleIds = entities.stream().map(JobSchedule::getId).collect(Collectors.toList());
+        Map<Long, Integer> countMap = scheduleApplicationMapper.countByScheduleIds(scheduleIds);
         return entities.stream().map(e -> {
             JobScheduleInfoVO vo = new JobScheduleInfoVO();
             vo.setId(e.getId());
@@ -303,7 +314,7 @@ public class JobServiceImpl implements JobService {
             vo.setSlotsAvailable(e.getSlotsAvailable());
             Integer capacity = e.getSlotsAvailable();
             if (capacity != null) {
-                vo.setRemainingSlots(Math.max(0, capacity - scheduleApplicationMapper.countByScheduleId(e.getId())));
+                vo.setRemainingSlots(Math.max(0, capacity - countMap.getOrDefault(e.getId(), 0)));
             }
             return vo;
         }).toList();
