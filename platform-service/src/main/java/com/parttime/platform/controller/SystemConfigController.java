@@ -1,6 +1,7 @@
 package com.parttime.platform.controller;
 
 import com.parttime.platform.pojo.cmd.SystemConfigUpdateCmd;
+import com.parttime.platform.pojo.vo.ApiResponse;
 import com.parttime.platform.pojo.vo.SystemConfigVO;
 import com.parttime.platform.service.SystemConfigService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,14 +25,14 @@ public class SystemConfigController {
 
     @Operation(summary = "获取系统配置列表", description = "获取平台所有系统配置项")
     @GetMapping
-    public List<SystemConfigVO> list() {
-        return systemConfigService.getAllConfigs();
+    public ApiResponse<List<SystemConfigVO>> list() {
+        return ApiResponse.success(systemConfigService.getAllConfigs());
     }
 
     @Operation(summary = "更新系统配置", description = "根据配置键更新系统配置值")
     @PutMapping
-    public SystemConfigVO update(@Parameter(description = "配置键") @RequestParam String key,
+    public ApiResponse<SystemConfigVO> update(@Parameter(description = "配置键") @RequestParam String key,
                                  @RequestBody SystemConfigUpdateCmd cmd) {
-        return systemConfigService.updateConfig(key, cmd.getValue());
+        return ApiResponse.success(systemConfigService.updateConfig(key, cmd.getValue()));
     }
 }

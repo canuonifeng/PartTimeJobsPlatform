@@ -2,6 +2,7 @@ package com.parttime.platform.controller;
 
 import com.parttime.platform.pojo.cmd.EnterpriseCreateCmd;
 import com.parttime.platform.pojo.cmd.EnterpriseUpdateCmd;
+import com.parttime.platform.pojo.vo.ApiResponse;
 import com.parttime.platform.pojo.vo.EnterpriseVO;
 import com.parttime.platform.service.EnterpriseService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,27 +24,27 @@ public class EnterpriseController {
 
     @Operation(summary = "获取企业列表")
     @PostMapping("/list")
-    public List<EnterpriseVO> list(@RequestBody(required = false) Map<String, String> body) {
+    public ApiResponse<List<EnterpriseVO>> list(@RequestBody(required = false) Map<String, String> body) {
         String status = body != null ? body.get("status") : null;
-        return enterpriseService.list(status);
+        return ApiResponse.success(enterpriseService.list(status));
     }
 
     @Operation(summary = "获取企业详情")
     @PostMapping("/detail")
-    public EnterpriseVO detail(@RequestBody Map<String, Long> body) {
-        return enterpriseService.detail(body.get("id"));
+    public ApiResponse<EnterpriseVO> detail(@RequestBody Map<String, Long> body) {
+        return ApiResponse.success(enterpriseService.detail(body.get("id")));
     }
 
     @Operation(summary = "新增企业")
     @PostMapping("/create")
-    public EnterpriseVO create(@RequestBody EnterpriseCreateCmd cmd) {
-        return enterpriseService.create(cmd);
+    public ApiResponse<EnterpriseVO> create(@RequestBody EnterpriseCreateCmd cmd) {
+        return ApiResponse.success(enterpriseService.create(cmd));
     }
 
     @Operation(summary = "更新企业信息")
     @PostMapping("/update")
-    public EnterpriseVO update(@RequestBody EnterpriseUpdateCmd cmd) {
-        return enterpriseService.update(cmd);
+    public ApiResponse<EnterpriseVO> update(@RequestBody EnterpriseUpdateCmd cmd) {
+        return ApiResponse.success(enterpriseService.update(cmd));
     }
 
     @Operation(summary = "停用企业")

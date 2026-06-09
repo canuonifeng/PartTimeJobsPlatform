@@ -76,7 +76,7 @@ class JobReportControllerTest {
 
         mockMvc.perform(get("/api/job-reports").param("id", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.reason").value("Spam"));
+                .andExpect(jsonPath("$.data.reason").value("Spam"));
 
         verify(jobReportService).getJobReport(1L);
     }
@@ -97,7 +97,7 @@ class JobReportControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("DISMISSED"));
+                .andExpect(jsonPath("$.data.status").value("DISMISSED"));
 
         verify(jobReportService).dismissReport(eq(1L), any(), any());
     }
@@ -118,7 +118,7 @@ class JobReportControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("BANNED"));
+                .andExpect(jsonPath("$.data.status").value("BANNED"));
 
         verify(jobReportService).banJobReport(eq(1L), any(), any());
     }

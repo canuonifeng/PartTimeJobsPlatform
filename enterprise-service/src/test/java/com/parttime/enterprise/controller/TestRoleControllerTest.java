@@ -22,27 +22,27 @@ class TestRoleControllerTest {
     void adminEndpoint_shouldReturnOk() throws Exception {
         mockMvc.perform(get("/api/test/admin"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("admin ok"));
+                .andExpect(content().json("{\"code\":200,\"message\":\"\",\"data\":\"admin ok\"}"));
     }
 
     @Test
     void hrEndpoint_shouldReturnOk() throws Exception {
         mockMvc.perform(get("/api/test/hr"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("hr ok"));
+                .andExpect(content().json("{\"code\":200,\"message\":\"\",\"data\":\"hr ok\"}"));
     }
 
     @Test
     void managerEndpoint_shouldReturnOk() throws Exception {
         mockMvc.perform(get("/api/test/manager"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("manager ok"));
+                .andExpect(content().json("{\"code\":200,\"message\":\"\",\"data\":\"manager ok\"}"));
     }
 
     @Test
     void financeEndpoint_shouldReturnOk() throws Exception {
         mockMvc.perform(get("/api/test/finance"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("finance ok"));
+                .andExpect(content().json("{\"code\":200,\"message\":\"\",\"data\":\"finance ok\"}"));
     }
 }

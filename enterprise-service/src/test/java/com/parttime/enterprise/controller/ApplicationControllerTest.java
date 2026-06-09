@@ -59,9 +59,9 @@ class ApplicationControllerTest {
 
         mockMvc.perform(get("/api/applications").param("jobId", "100"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.records[0].id").value(1L))
-                .andExpect(jsonPath("$.records[0].workerPhone").value("13800000000"))
-                .andExpect(jsonPath("$.records[0].status").value("PENDING"));
+                .andExpect(jsonPath("$.data.records[0].id").value(1L))
+                .andExpect(jsonPath("$.data.records[0].workerPhone").value("13800000000"))
+                .andExpect(jsonPath("$.data.records[0].status").value("PENDING"));
     }
 
     @Test
@@ -77,7 +77,7 @@ class ApplicationControllerTest {
 
         mockMvc.perform(get("/api/applications").param("jobId", "100").param("page", "2").param("pageSize", "20"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.records[0].id").value(1L));
+                .andExpect(jsonPath("$.data.records[0].id").value(1L));
     }
 
     @Test
@@ -92,7 +92,7 @@ class ApplicationControllerTest {
 
         mockMvc.perform(put("/api/applications/accept").param("applicationId", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("ACCEPTED"));
+                .andExpect(jsonPath("$.data.status").value("ACCEPTED"));
     }
 
     @Test
@@ -107,7 +107,7 @@ class ApplicationControllerTest {
 
         mockMvc.perform(put("/api/applications/reject").param("applicationId", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("REJECTED"));
+                .andExpect(jsonPath("$.data.status").value("REJECTED"));
     }
 
     @Test

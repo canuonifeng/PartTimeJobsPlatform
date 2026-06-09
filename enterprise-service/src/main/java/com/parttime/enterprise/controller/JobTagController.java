@@ -1,5 +1,6 @@
 package com.parttime.enterprise.controller;
 
+import com.parttime.enterprise.pojo.vo.ApiResponse;
 import com.parttime.enterprise.pojo.vo.JobTagGroupVO;
 import com.parttime.enterprise.service.JobTagService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,7 +21,7 @@ public class JobTagController {
 
     @Operation(summary = "获取启用岗位标签")
     @GetMapping
-    public List<JobTagGroupVO> getActiveTags() {
-        return jobTagService.getActiveGroups();
+    public ApiResponse<List<JobTagGroupVO>> getActiveTags() {
+        return ApiResponse.success(jobTagService.getActiveGroups());
     }
 }

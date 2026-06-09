@@ -1,6 +1,7 @@
 package com.parttime.enterprise.controller;
 
 import com.parttime.enterprise.config.SecurityUtil;
+import com.parttime.enterprise.pojo.vo.ApiResponse;
 import com.parttime.enterprise.pojo.vo.ScheduleApplicationVO;import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.ApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,25 +24,25 @@ public class ApplicationController {
 
     @Operation(summary = "获取排班报名列表", description = "根据企业ID获取所有排班报名记录")
     @GetMapping
-    public PageVO<ScheduleApplicationVO> getApplicationsByJob(
+    public ApiResponse<PageVO<ScheduleApplicationVO>> getApplicationsByJob(
             @Parameter(description = "岗位ID") @RequestParam(required = false) Long jobId,
             @Parameter(description = "岗位标题") @RequestParam(required = false) String jobTitle,
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "页码") @RequestParam(required = false, defaultValue = "1") Integer page,
             @Parameter(description = "每页数量") @RequestParam(required = false, defaultValue = "20") Integer pageSize) {
         Long companyId = SecurityUtil.getCurrentCompanyId();
-        return applicationService.getApplicationsByJob(companyId, jobId, jobTitle, status, page, pageSize);
+        return ApiResponse.success(applicationService.getApplicationsByJob(companyId, jobId, jobTitle, status, page, pageSize));
     }
 
     @Operation(summary = "通过申请", description = "通过工人的岗位申请")
     @PutMapping("/accept")
-    public ScheduleApplicationVO acceptApplication(@Parameter(description = "申请ID") @RequestParam Long applicationId) {
-        return applicationService.acceptApplication(applicationId);
+    public ApiResponse<ScheduleApplicationVO> acceptApplication(@Parameter(description = "申请ID") @RequestParam Long applicationId) {
+        return ApiResponse.success(applicationService.acceptApplication(applicationId));
     }
 
     @Operation(summary = "拒绝申请", description = "拒绝工人的岗位申请")
     @PutMapping("/reject")
-    public ScheduleApplicationVO rejectApplication(@Parameter(description = "申请ID") @RequestParam Long applicationId) {
-        return applicationService.rejectApplication(applicationId);
+    public ApiResponse<ScheduleApplicationVO> rejectApplication(@Parameter(description = "申请ID") @RequestParam Long applicationId) {
+        return ApiResponse.success(applicationService.rejectApplication(applicationId));
     }
 }

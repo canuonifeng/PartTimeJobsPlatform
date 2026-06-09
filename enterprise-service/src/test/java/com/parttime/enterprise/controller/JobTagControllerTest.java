@@ -53,8 +53,8 @@ class JobTagControllerTest {
 
         mockMvc.perform(get("/api/job-tags"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("结算周期"))
-                .andExpect(jsonPath("$[0].tags[0].name").value("日结"));
+                .andExpect(jsonPath("$.data[0].name").value("结算周期"))
+                .andExpect(jsonPath("$.data[0].tags[0].name").value("日结"));
 
         verify(jobTagService).getActiveGroups();
     }

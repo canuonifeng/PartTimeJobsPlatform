@@ -37,9 +37,9 @@ class JobShareControllerTest {
 
         mockMvc.perform(get("/api/jobs/share-code").param("id", "42"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.jobId").value(42))
-                .andExpect(jsonPath("$.path").value("/pages/jobs/jobDetail?scene=42"))
-                .andExpect(jsonPath("$.imageBase64").value("iVBORw0KGgoAAA"));
+                .andExpect(jsonPath("$.data.jobId").value(42))
+                .andExpect(jsonPath("$.data.path").value("/pages/jobs/jobDetail?scene=42"))
+                .andExpect(jsonPath("$.data.imageBase64").value("iVBORw0KGgoAAA"));
     }
 
     @Test
@@ -50,7 +50,7 @@ class JobShareControllerTest {
         mockMvc.perform(get("/api/jobs/share-link").param("id", "42")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.jobId").value(42))
-                .andExpect(jsonPath("$.link").value("weixin://dl/business/?appid=test_appid&path=/pages/jobs/jobDetail&query=id%3D42&env_version=release"));
+                .andExpect(jsonPath("$.data.jobId").value(42))
+                .andExpect(jsonPath("$.data.link").value("weixin://dl/business/?appid=test_appid&path=/pages/jobs/jobDetail&query=id%3D42&env_version=release"));
     }
 }

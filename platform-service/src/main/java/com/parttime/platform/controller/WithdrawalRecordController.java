@@ -1,5 +1,6 @@
 package com.parttime.platform.controller;
 
+import com.parttime.platform.pojo.vo.ApiResponse;
 import com.parttime.platform.pojo.vo.PageVO;
 import com.parttime.platform.pojo.vo.WithdrawalRecordVO;
 import com.parttime.platform.service.WithdrawalRecordService;
@@ -22,12 +23,12 @@ public class WithdrawalRecordController {
 
     @Operation(summary = "运营后台提现记录列表")
     @GetMapping
-    public PageVO<WithdrawalRecordVO> listRecords(@RequestParam(required = false) Long workerId,
-                                                  @RequestParam(required = false) String status,
-                                                  @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
-                                                  @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
-                                                  @RequestParam(defaultValue = "1") Integer page,
-                                                  @RequestParam(defaultValue = "20") Integer pageSize) {
-        return withdrawalRecordService.listRecords(workerId, status, startTime, endTime, page, pageSize);
+    public ApiResponse<PageVO<WithdrawalRecordVO>> listRecords(@RequestParam(required = false) Long workerId,
+                                                   @RequestParam(required = false) String status,
+                                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+                                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
+                                                   @RequestParam(defaultValue = "1") Integer page,
+                                                   @RequestParam(defaultValue = "20") Integer pageSize) {
+        return ApiResponse.success(withdrawalRecordService.listRecords(workerId, status, startTime, endTime, page, pageSize));
     }
 }

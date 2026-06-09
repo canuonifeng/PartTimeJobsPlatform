@@ -1,5 +1,6 @@
 package com.parttime.enterprise.controller;
 
+import com.parttime.enterprise.pojo.vo.ApiResponse;
 import com.parttime.enterprise.pojo.vo.JobShareCodeVO;
 import com.parttime.enterprise.pojo.vo.JobShareLinkVO;
 import com.parttime.enterprise.service.JobShareService;
@@ -24,13 +25,13 @@ public class JobShareController {
 
     @Operation(summary = "生成职位分享二维码", description = "生成可供工人端扫码打开的职位小程序码")
     @GetMapping("/share-code")
-    public JobShareCodeVO getShareCode(@Parameter(description = "职位ID") @RequestParam Long id) {
-        return jobShareService.getShareCode(id);
+    public ApiResponse<JobShareCodeVO> getShareCode(@Parameter(description = "职位ID") @RequestParam Long id) {
+        return ApiResponse.success(jobShareService.getShareCode(id));
     }
 
     @Operation(summary = "生成职位分享链接", description = "生成可复制到微信群的 C 端小程序 URL Scheme")
     @GetMapping("/share-link")
-    public JobShareLinkVO getShareLink(@Parameter(description = "职位ID") @RequestParam Long id) {
-        return jobShareService.getShareLink(id);
+    public ApiResponse<JobShareLinkVO> getShareLink(@Parameter(description = "职位ID") @RequestParam Long id) {
+        return ApiResponse.success(jobShareService.getShareLink(id));
     }
 }

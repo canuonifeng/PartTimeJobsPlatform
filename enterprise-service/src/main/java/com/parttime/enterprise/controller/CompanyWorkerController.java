@@ -1,5 +1,6 @@
 package com.parttime.enterprise.controller;
 
+import com.parttime.enterprise.pojo.vo.ApiResponse;
 import com.parttime.enterprise.pojo.vo.WorkerListVO;
 import com.parttime.enterprise.service.CompanyWorkerService;
 import com.parttime.enterprise.config.SecurityUtil;
@@ -19,16 +20,16 @@ public class CompanyWorkerController {
 
     @Operation(summary = "获取企业兼职列表（人才库）")
     @PostMapping("/list")
-    public List<WorkerListVO> list(@RequestBody(required = false) Map<String, String> body) {
+    public ApiResponse<List<WorkerListVO>> list(@RequestBody(required = false) Map<String, String> body) {
         Long companyId = SecurityUtil.getCurrentCompanyId();
         String keyword = body != null ? body.get("keyword") : null;
-        return companyWorkerService.list(companyId, keyword);
+        return ApiResponse.success(companyWorkerService.list(companyId, keyword));
     }
 
     @Operation(summary = "获取兼职详情")
     @PostMapping("/detail")
-    public WorkerListVO detail(@RequestBody Map<String, Long> body) {
-        return companyWorkerService.detail(body.get("id"));
+    public ApiResponse<WorkerListVO> detail(@RequestBody Map<String, Long> body) {
+        return ApiResponse.success(companyWorkerService.detail(body.get("id")));
     }
 
     @Operation(summary = "拉黑兼职")

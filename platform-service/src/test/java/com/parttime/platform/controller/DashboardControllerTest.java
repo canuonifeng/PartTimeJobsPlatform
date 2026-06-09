@@ -41,7 +41,7 @@ class DashboardControllerTest {
 
         mockMvc.perform(get("/api/admin/dashboard/stats"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalCompanies").value(150));
+                .andExpect(jsonPath("$.data.totalCompanies").value(150));
 
         verify(dashboardService).getDashboardStats();
     }

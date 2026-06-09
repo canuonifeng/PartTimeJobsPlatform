@@ -1,6 +1,7 @@
 package com.parttime.enterprise.controller;
 
 import com.parttime.enterprise.config.SecurityUtil;
+import com.parttime.enterprise.pojo.vo.ApiResponse;
 import com.parttime.enterprise.pojo.vo.EnterpriseBalanceVO;
 import com.parttime.enterprise.pojo.vo.EnterpriseTransactionVO;
 import com.parttime.enterprise.pojo.vo.PageVO;
@@ -21,9 +22,9 @@ public class EnterpriseBalanceController {
 
     @Operation(summary = "查询企业余额")
     @GetMapping("")
-    public EnterpriseBalanceVO getBalance() {
+    public ApiResponse<EnterpriseBalanceVO> getBalance() {
         Long companyId = SecurityUtil.getCurrentCompanyId();
-        return enterpriseBalanceService.getBalance(companyId);
+        return ApiResponse.success(enterpriseBalanceService.getBalance(companyId));
     }
 
     @Operation(summary = "企业充值（模拟支付）")
@@ -35,10 +36,10 @@ public class EnterpriseBalanceController {
 
     @Operation(summary = "企业流水列表")
     @GetMapping("/transactions")
-    public PageVO<EnterpriseTransactionVO> getTransactions(
+    public ApiResponse<PageVO<EnterpriseTransactionVO>> getTransactions(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int pageSize) {
         Long companyId = SecurityUtil.getCurrentCompanyId();
-        return enterpriseBalanceService.getTransactions(companyId, page, pageSize);
+        return ApiResponse.success(enterpriseBalanceService.getTransactions(companyId, page, pageSize));
     }
 }

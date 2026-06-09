@@ -73,9 +73,9 @@ class ScheduleControllerTest {
         mockMvc.perform(post("/api/schedule-shifts")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.jobId").value(10))
-                .andExpect(jsonPath("$.status").value("SCHEDULED"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.jobId").value(10))
+                .andExpect(jsonPath("$.data.status").value("SCHEDULED"));
     }
 
     @Test
@@ -90,13 +90,13 @@ class ScheduleControllerTest {
         mockMvc.perform(get("/api/schedule-shifts")
                         .param("jobId", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.records.length()").value(1));
+                .andExpect(jsonPath("$.data.records.length()").value(1));
     }
 
     @Test
     void removeShift_shouldReturnNoContent() throws Exception {
         mockMvc.perform(delete("/api/schedule-shifts").param("id", "99"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
         verify(scheduleService).removeShift(99L);
     }
 
@@ -112,7 +112,7 @@ class ScheduleControllerTest {
         mockMvc.perform(get("/api/attendance/report")
                         .param("jobId", "10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].attendanceStatus").value("CHECKED_OUT"));
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].attendanceStatus").value("CHECKED_OUT"));
     }
 }

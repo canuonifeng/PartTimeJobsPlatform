@@ -54,7 +54,7 @@ class SystemConfigControllerTest {
 
         mockMvc.perform(get("/api/admin/configs"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].configKey").value("platform_fee_rate"));
+                .andExpect(jsonPath("$.data[0].configKey").value("platform_fee_rate"));
 
         verify(systemConfigService).getAllConfigs();
     }
@@ -76,7 +76,7 @@ class SystemConfigControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.configValue").value("0.15"));
+                .andExpect(jsonPath("$.data.configValue").value("0.15"));
 
         verify(systemConfigService).updateConfig("platform_fee_rate", "0.15");
     }

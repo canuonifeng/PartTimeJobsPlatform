@@ -61,7 +61,7 @@ class JobControllerTest {
 
         mockMvc.perform(put("/api/jobs/publish").param("id", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("PUBLISHED"));
+                .andExpect(jsonPath("$.data.status").value("PUBLISHED"));
 
         verify(jobService).publishJob(1L);
     }
@@ -76,7 +76,7 @@ class JobControllerTest {
 
         mockMvc.perform(put("/api/jobs/close").param("id", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CLOSED"));
+                .andExpect(jsonPath("$.data.status").value("CLOSED"));
 
         verify(jobService).closeJob(1L);
     }
@@ -91,7 +91,7 @@ class JobControllerTest {
 
         mockMvc.perform(put("/api/jobs/reopen").param("id", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("PUBLISHED"));
+                .andExpect(jsonPath("$.data.status").value("PUBLISHED"));
 
         verify(jobService).reopenJob(1L);
     }
@@ -108,8 +108,8 @@ class JobControllerTest {
 
         mockMvc.perform(get("/api/jobs/rates").param("jobId", "100"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].type").value("HOURLY"))
-                .andExpect(jsonPath("$[0].amount").value(25.00));
+                .andExpect(jsonPath("$.data[0].type").value("HOURLY"))
+                .andExpect(jsonPath("$.data[0].amount").value(25.00));
 
         verify(jobService).getJobRates(100L);
     }
@@ -132,8 +132,8 @@ class JobControllerTest {
         mockMvc.perform(post("/api/jobs/rates").param("jobId", "100")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.type").value("HOURLY"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.type").value("HOURLY"));
 
         verify(jobService).addJobRate(eq(100L), any(JobRateCmd.class));
     }
@@ -155,13 +155,13 @@ class JobControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.type").value("DAILY"));
+                .andExpect(jsonPath("$.data.type").value("DAILY"));
     }
 
     @Test
     void removeJobRate_shouldReturnNoContent() throws Exception {
         mockMvc.perform(delete("/api/jobs/rates").param("jobId", "100").param("rateId", "1"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
 
         verify(jobService).removeJobRate(1L);
     }
@@ -180,7 +180,7 @@ class JobControllerTest {
 
         mockMvc.perform(get("/api/jobs/schedules").param("jobId", "100"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].slotsAvailable").value(5));
+                .andExpect(jsonPath("$.data[0].slotsAvailable").value(5));
 
         verify(jobService).getJobSchedules(100L);
     }
@@ -203,14 +203,14 @@ class JobControllerTest {
         mockMvc.perform(post("/api/jobs/schedules").param("jobId", "100")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.slotsAvailable").value(10));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.slotsAvailable").value(10));
     }
 
     @Test
     void removeJobSchedule_shouldReturnNoContent() throws Exception {
         mockMvc.perform(delete("/api/jobs/schedules").param("jobId", "100").param("scheduleId", "1"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
 
         verify(jobService).removeJobSchedule(1L);
     }

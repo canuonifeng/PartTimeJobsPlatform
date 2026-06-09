@@ -62,8 +62,8 @@ class JobTagControllerTest {
 
         mockMvc.perform(get("/api/admin/job-tags"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Settlement Cycle"))
-                .andExpect(jsonPath("$[0].tags[0].name").value("Daily"));
+                .andExpect(jsonPath("$.data[0].name").value("Settlement Cycle"))
+                .andExpect(jsonPath("$.data[0].tags[0].name").value("Daily"));
     }
 
     @Test
@@ -81,8 +81,8 @@ class JobTagControllerTest {
         mockMvc.perform(post("/api/admin/job-tag-groups")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cmd)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Settlement Cycle"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.name").value("Settlement Cycle"));
     }
 
     @Test
@@ -101,13 +101,13 @@ class JobTagControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cmd)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated Group"));
+                .andExpect(jsonPath("$.data.name").value("Updated Group"));
     }
 
     @Test
     void deleteGroup_shouldReturnNoContent() throws Exception {
         mockMvc.perform(delete("/api/admin/job-tag-groups").param("id", "1"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
 
         verify(jobTagService).deleteGroup(1L);
     }
@@ -128,8 +128,8 @@ class JobTagControllerTest {
         mockMvc.perform(post("/api/admin/job-tags")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cmd)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("Daily"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.name").value("Daily"));
     }
 
     @Test
@@ -148,13 +148,13 @@ class JobTagControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cmd)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated Tag"));
+                .andExpect(jsonPath("$.data.name").value("Updated Tag"));
     }
 
     @Test
     void deleteTag_shouldReturnNoContent() throws Exception {
         mockMvc.perform(delete("/api/admin/job-tags").param("id", "2"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
 
         verify(jobTagService).deleteTag(2L);
     }

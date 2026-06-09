@@ -55,7 +55,7 @@ class JobCategoryControllerTest {
 
         mockMvc.perform(get("/api/admin/job-categories"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Parent"));
+                .andExpect(jsonPath("$.data[0].name").value("Parent"));
 
         verify(jobCategoryService).getAllCategories();
     }
@@ -77,8 +77,8 @@ class JobCategoryControllerTest {
         mockMvc.perform(post("/api/admin/job-categories")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cmd)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("New Cat"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.name").value("New Cat"));
     }
 
     @Test
@@ -98,14 +98,14 @@ class JobCategoryControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cmd)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated Cat"));
+                .andExpect(jsonPath("$.data.name").value("Updated Cat"));
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     void deleteCategory_shouldReturnNoContent() throws Exception {
         mockMvc.perform(delete("/api/admin/job-categories").param("id", "1"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
 
         verify(jobCategoryService).deleteCategory(1L);
     }

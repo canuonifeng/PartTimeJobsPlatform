@@ -61,9 +61,9 @@ class WorkerProfileControllerTest {
                         .param("workerId", "10")
                         .param("companyId", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.workerId").value(10))
-                .andExpect(jsonPath("$.avgRating").value(4.5))
-                .andExpect(jsonPath("$.isBlacklisted").value(false));
+                .andExpect(jsonPath("$.data.workerId").value(10))
+                .andExpect(jsonPath("$.data.avgRating").value(4.5))
+                .andExpect(jsonPath("$.data.isBlacklisted").value(false));
     }
 
     @Test
@@ -87,9 +87,9 @@ class WorkerProfileControllerTest {
         mockMvc.perform(post("/api/workers/evaluations").param("workerId", "10")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(99))
-                .andExpect(jsonPath("$.rating").value(5));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.id").value(99))
+                .andExpect(jsonPath("$.data.rating").value(5));
     }
 
     @Test
@@ -103,8 +103,8 @@ class WorkerProfileControllerTest {
         mockMvc.perform(get("/api/workers/evaluations").param("workerId", "10")
                         .param("companyId", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].rating").value(4));
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].rating").value(4));
     }
 
     @Test
@@ -119,7 +119,7 @@ class WorkerProfileControllerTest {
         mockMvc.perform(post("/api/workers/blacklist").param("workerId", "10")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isCreated());
+                .andExpect(status().isOk());
 
         verify(workerProfileService).addToBlacklist(1L, 10L, "No-show");
     }
@@ -129,7 +129,7 @@ class WorkerProfileControllerTest {
         mockMvc.perform(delete("/api/workers/blacklist")
                         .param("workerId", "10")
                         .param("companyId", "1"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
 
         verify(workerProfileService).removeFromBlacklist(1L, 10L);
     }
@@ -149,8 +149,8 @@ class WorkerProfileControllerTest {
                         .param("workerId", "10")
                         .param("companyId", "1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].shiftId").value(100));
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0].shiftId").value(100));
     }
 
     @Test
@@ -164,7 +164,7 @@ class WorkerProfileControllerTest {
         mockMvc.perform(post("/api/workers/blacklist").param("workerId", "10")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isCreated());
+                .andExpect(status().isOk());
 
         verify(workerProfileService).addToBlacklist(1L, 10L, null);
     }
@@ -187,6 +187,6 @@ class WorkerProfileControllerTest {
         mockMvc.perform(post("/api/workers/evaluations").param("workerId", "10")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
-                .andExpect(status().isCreated());
+                .andExpect(status().isOk());
     }
 }

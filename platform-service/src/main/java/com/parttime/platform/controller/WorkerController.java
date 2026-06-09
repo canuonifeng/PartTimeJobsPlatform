@@ -1,6 +1,7 @@
 package com.parttime.platform.controller;
 
 import com.parttime.platform.pojo.cmd.WorkerUpdateCmd;
+import com.parttime.platform.pojo.vo.ApiResponse;
 import com.parttime.platform.pojo.vo.WorkerVO;
 import com.parttime.platform.service.WorkerService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,22 +23,22 @@ public class WorkerController {
 
     @Operation(summary = "获取兼职列表")
     @PostMapping("/list")
-    public List<WorkerVO> list(@RequestBody(required = false) Map<String, String> body) {
+    public ApiResponse<List<WorkerVO>> list(@RequestBody(required = false) Map<String, String> body) {
         String status = body != null ? body.get("status") : null;
         String keyword = body != null ? body.get("keyword") : null;
-        return workerService.list(status, keyword);
+        return ApiResponse.success(workerService.list(status, keyword));
     }
 
     @Operation(summary = "获取兼职详情")
     @PostMapping("/detail")
-    public WorkerVO detail(@RequestBody Map<String, Long> body) {
-        return workerService.detail(body.get("id"));
+    public ApiResponse<WorkerVO> detail(@RequestBody Map<String, Long> body) {
+        return ApiResponse.success(workerService.detail(body.get("id")));
     }
 
     @Operation(summary = "编辑兼职信息")
     @PostMapping("/update")
-    public WorkerVO update(@RequestBody WorkerUpdateCmd cmd) {
-        return workerService.update(cmd);
+    public ApiResponse<WorkerVO> update(@RequestBody WorkerUpdateCmd cmd) {
+        return ApiResponse.success(workerService.update(cmd));
     }
 
     @Operation(summary = "封禁兼职")
