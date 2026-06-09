@@ -574,4 +574,94 @@ public class InMemoryMappers {
             }
         };
     }
+
+    public static com.parttime.cservice.mapper.ReferralCodeMapper createReferralCodeMapper() {
+        return new com.parttime.cservice.mapper.ReferralCodeMapper() {
+            private final ConcurrentHashMap<Long, com.parttime.cservice.pojo.entity.ReferralCode> store = new ConcurrentHashMap<>();
+            private final ConcurrentHashMap<String, com.parttime.cservice.pojo.entity.ReferralCode> byCode = new ConcurrentHashMap<>();
+            private final AtomicLong idGen = new AtomicLong(1);
+
+            @Override public com.parttime.cservice.pojo.entity.ReferralCode findByWorkerId(Long workerId) {
+                return store.values().stream().filter(c -> workerId.equals(c.getWorkerId())).findFirst().orElse(null);
+            }
+            @Override public com.parttime.cservice.pojo.entity.ReferralCode findByCode(String code) {
+                return byCode.get(code);
+            }
+            @Override public void insert(com.parttime.cservice.pojo.entity.ReferralCode referralCode) {
+                if (referralCode.getId() == null) referralCode.setId(idGen.getAndIncrement());
+                if (referralCode.getCreatedAt() == null) referralCode.setCreatedAt(LocalDateTime.now());
+                store.put(referralCode.getId(), referralCode);
+                byCode.put(referralCode.getCode(), referralCode);
+            }
+        };
+    }
+
+    public static com.parttime.cservice.mapper.ReferralRecordMapper createReferralRecordMapper() {
+        return new com.parttime.cservice.mapper.ReferralRecordMapper() {
+            private final ConcurrentHashMap<Long, com.parttime.cservice.pojo.entity.ReferralRecord> store = new ConcurrentHashMap<>();
+            private final AtomicLong idGen = new AtomicLong(1);
+
+            @Override public com.parttime.cservice.pojo.entity.ReferralRecord findByRefereeId(Long refereeId) {
+                return store.values().stream().filter(r -> refereeId.equals(r.getRefereeId())).findFirst().orElse(null);
+            }
+            @Override public List<com.parttime.cservice.pojo.entity.ReferralRecord> findByReferrerId(Long referrerId) {
+                return store.values().stream().filter(r -> referrerId.equals(r.getReferrerId())).collect(Collectors.toList());
+            }
+            @Override public void insert(com.parttime.cservice.pojo.entity.ReferralRecord referralRecord) {
+                if (referralRecord.getId() == null) referralRecord.setId(idGen.getAndIncrement());
+                if (referralRecord.getBoundAt() == null) referralRecord.setBoundAt(LocalDateTime.now());
+                store.put(referralRecord.getId(), referralRecord);
+            }
+            @Override public int countByReferrerId(Long referrerId) {
+                return (int) store.values().stream().filter(r -> referrerId.equals(r.getReferrerId())).count();
+            }
+        };
+    }
+
+    public static com.parttime.cservice.mapper.ReferralRewardMapper createReferralRewardMapper() {
+        return new com.parttime.cservice.mapper.ReferralRewardMapper() {
+            private final ConcurrentHashMap<Long, com.parttime.cservice.pojo.entity.ReferralReward> store = new ConcurrentHashMap<>();
+            private final AtomicLong idGen = new AtomicLong(1);
+
+            @Override public com.parttime.cservice.pojo.entity.ReferralReward findByReferralRecordId(Long referralRecordId) {
+                return store.values().stream().filter(r -> referralRecordId.equals(r.getReferralRecordId())).findFirst().orElse(null);
+            }
+            @Override public List<com.parttime.cservice.pojo.entity.ReferralReward> findByReferrerIdPage(Long referrerId, int offset, int pageSize) {
+                return store.values().stream().filter(r -> r.getReferralRecordId() != null).collect(Collectors.toList());
+            }
+            @Override public long countByReferrerId(Long referrerId) {
+                return store.values().stream().count();
+            }
+            @Override public void insert(com.parttime.cservice.pojo.entity.ReferralReward referralReward) {
+                if (referralReward.getId() == null) referralReward.setId(idGen.getAndIncrement());
+                if (referralReward.getCreatedAt() == null) referralReward.setCreatedAt(LocalDateTime.now());
+                store.put(referralReward.getId(), referralReward);
+            }
+            @Override public void updateStatus(Long id, String status, String auditRemark) {
+                com.parttime.cservice.pojo.entity.ReferralReward r = store.get(id);
+                if (r != null) { r.setStatus(status); r.setAuditRemark(auditRemark); }
+            }
+        };
+    }
+
+    public static com.parttime.cservice.mapper.ReferralConfigMapper createReferralConfigMapper() {
+        return new com.parttime.cservice.mapper.ReferralConfigMapper() {
+            private final ConcurrentHashMap<String, com.parttime.cservice.pojo.entity.ReferralConfig> store = new ConcurrentHashMap<>();
+
+            @Override public List<com.parttime.cservice.pojo.entity.ReferralConfig> findAll() {
+                return new ArrayList<>(store.values());
+            }
+            @Override public com.parttime.cservice.pojo.entity.ReferralConfig findByKey(String configKey) {
+                return store.get(configKey);
+            }
+            @Override public void upsert(String configKey, String configValue, String description) {
+                com.parttime.cservice.pojo.entity.ReferralConfig config = new com.parttime.cservice.pojo.entity.ReferralConfig();
+                config.setConfigKey(configKey);
+                config.setConfigValue(configValue);
+                config.setDescription(description);
+                config.setUpdatedAt(LocalDateTime.now());
+                store.put(configKey, config);
+            }
+        };
+    }
 }
