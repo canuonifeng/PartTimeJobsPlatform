@@ -8,8 +8,7 @@ import com.parttime.cservice.pojo.vo.AttendanceVO;
 import com.parttime.cservice.pojo.vo.WorkerShiftVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
@@ -23,12 +22,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class AttendanceServiceTest {
 
-    @InjectMocks
     private AttendanceServiceImpl attendanceService;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        attendanceService = new AttendanceServiceImpl();
         AttendanceRecordMapper attendanceRecordMapper = InMemoryMappers.createAttendanceRecordMapper();
         AttendanceCorrectionMapper correctionMapper = InMemoryMappers.createAttendanceCorrectionMapper();
         WorkerShiftVOConverter converter = new WorkerShiftVOConverter();
@@ -39,6 +37,11 @@ class AttendanceServiceTest {
         ReflectionTestUtils.setField(attendanceService, "correctionMapper", correctionMapper);
         ReflectionTestUtils.setField(attendanceService, "workerShiftVOConverter", converter);
         ReflectionTestUtils.setField(attendanceService, "attendanceCheckInMapper", InMemoryMappers.createAttendanceCheckInMapper());
+        ReflectionTestUtils.setField(attendanceService, "systemConfigMapper", InMemoryMappers.createSystemConfigMapper());
+        ReflectionTestUtils.setField(attendanceService, "workerBalanceMapper", InMemoryMappers.createWorkerBalanceMapper());
+        ReflectionTestUtils.setField(attendanceService, "balanceTransactionMapper", InMemoryMappers.createBalanceTransactionMapper());
+        ReflectionTestUtils.setField(attendanceService, "notificationMapper", InMemoryMappers.createNotificationMapper());
+        ReflectionTestUtils.setField(attendanceService, "jdbcTemplate", org.mockito.Mockito.mock(JdbcTemplate.class));
     }
 
     @Test
@@ -228,5 +231,89 @@ class AttendanceServiceTest {
         List<AttendanceVO> records = attendanceService.getMyAttendance(1L);
         assertThat(records).hasSize(1);
         assertThat(records.get(0).getStatus()).isEqualTo("LATE");
+    }
+
+    @Test
+    void checkOut_autoSettleEnabled_shouldSettleAndReturnAutoSettled() {
+        com.parttime.cservice.pojo.entity.AttendanceRecordEntity record = new com.parttime.cservice.pojo.entity.AttendanceRecordEntity();
+        record.setId(1L);
+        record.setSettlementStatus("UNPAID");
+
+        com.parttime.cservice.pojo.entity.ShiftEntity shift = new com.parttime.cservice.pojo.entity.ShiftEntity();
+        shift.setId(1L);
+        shift.setWorkerId(1L);
+        shift.setCompanyId(100L);
+
+        com.parttime.cservice.pojo.entity.SystemConfig config = new com.parttime.cservice.pojo.entity.SystemConfig();
+        config.setConfigKey("auto_settle_attendance");
+        config.setConfigValue("true");
+        com.parttime.cservice.mapper.SystemConfigMapper realMapper = InMemoryMappers.createSystemConfigMapper();
+        ((InMemoryMappers.TestSystemConfigMapper) realMapper).put("auto_settle_attendance", config);
+
+        ReflectionTestUtils.setField(attendanceService, "systemConfigMapper", realMapper);
+        ReflectionTestUtils.setField(attendanceService, "workerBalanceMapper", InMemoryMappers.createWorkerBalanceMapper());
+        ReflectionTestUtils.setField(attendanceService, "balanceTransactionMapper", InMemoryMappers.createBalanceTransactionMapper());
+        ReflectionTestUtils.setField(attendanceService, "notificationMapper", InMemoryMappers.createNotificationMapper());
+
+        JdbcTemplate testJdbcTemplate = org.mockito.Mockito.mock(JdbcTemplate.class);
+        org.mockito.Mockito.lenient().when(testJdbcTemplate.queryForObject(
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.eq(BigDecimal.class),
+                org.mockito.ArgumentMatchers.any()))
+                .thenReturn(new BigDecimal("10000.00"));
+        ReflectionTestUtils.setField(attendanceService, "jdbcTemplate", testJdbcTemplate);
+
+        boolean result = ReflectionTestUtils.invokeMethod(attendanceService, "autoSettle", record, shift, new BigDecimal("100"));
+
+        assertThat(result).isTrue();
+        assertThat(record.getSettlementStatus()).isEqualTo("PAID");
+    }
+
+    @Test
+    void checkOut_autoSettleDisabled_shouldLeaveUnpaid() {
+        Long shiftId = attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
+                LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
+                null, null, null, null).getId();
+
+        com.parttime.cservice.mapper.SystemConfigMapper realMapper = InMemoryMappers.createSystemConfigMapper();
+        ReflectionTestUtils.setField(attendanceService, "systemConfigMapper", realMapper);
+
+        attendanceService.checkIn(1L, shiftId, null, null);
+        AttendanceVO response = attendanceService.checkOut(1L, shiftId, null, null);
+
+        assertThat(response.getAutoSettled()).isFalse();
+        assertThat(response.getSettlementStatus()).isEqualTo("UNPAID");
+    }
+
+    @Test
+    void checkOut_autoSettleInsufficientBalance_shouldFallbackToUnpaid() {
+        com.parttime.cservice.pojo.entity.AttendanceRecordEntity record = new com.parttime.cservice.pojo.entity.AttendanceRecordEntity();
+        record.setId(1L);
+        record.setSettlementStatus("UNPAID");
+
+        com.parttime.cservice.pojo.entity.ShiftEntity shift = new com.parttime.cservice.pojo.entity.ShiftEntity();
+        shift.setId(1L);
+        shift.setWorkerId(1L);
+        shift.setCompanyId(100L);
+
+        com.parttime.cservice.pojo.entity.SystemConfig config = new com.parttime.cservice.pojo.entity.SystemConfig();
+        config.setConfigKey("auto_settle_attendance");
+        config.setConfigValue("true");
+        com.parttime.cservice.mapper.SystemConfigMapper realMapper = InMemoryMappers.createSystemConfigMapper();
+        ((InMemoryMappers.TestSystemConfigMapper) realMapper).put("auto_settle_attendance", config);
+        ReflectionTestUtils.setField(attendanceService, "systemConfigMapper", realMapper);
+
+        JdbcTemplate testJdbcTemplate = org.mockito.Mockito.mock(JdbcTemplate.class);
+        org.mockito.Mockito.lenient().when(testJdbcTemplate.queryForObject(
+                org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.eq(BigDecimal.class),
+                org.mockito.ArgumentMatchers.any()))
+                .thenReturn(BigDecimal.ZERO);
+        ReflectionTestUtils.setField(attendanceService, "jdbcTemplate", testJdbcTemplate);
+
+        boolean result = ReflectionTestUtils.invokeMethod(attendanceService, "autoSettle", record, shift, new BigDecimal("100"));
+
+        assertThat(result).isFalse();
+        assertThat(record.getSettlementStatus()).isEqualTo("UNPAID");
     }
 }

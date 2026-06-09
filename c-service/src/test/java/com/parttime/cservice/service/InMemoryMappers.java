@@ -728,16 +728,18 @@ public class InMemoryMappers {
         };
     }
 
-    public static com.parttime.cservice.mapper.SystemConfigMapper createSystemConfigMapper() {
-        return new com.parttime.cservice.mapper.SystemConfigMapper() {
-            private final ConcurrentHashMap<String, com.parttime.cservice.pojo.entity.SystemConfig> store = new ConcurrentHashMap<>();
+    public static TestSystemConfigMapper createSystemConfigMapper() {
+        return new TestSystemConfigMapper();
+    }
 
-            @Override public Optional<com.parttime.cservice.pojo.entity.SystemConfig> findByKey(String configKey) {
-                return Optional.ofNullable(store.get(configKey));
-            }
-            public void put(String key, com.parttime.cservice.pojo.entity.SystemConfig config) {
-                store.put(key, config);
-            }
-        };
+    public static class TestSystemConfigMapper implements com.parttime.cservice.mapper.SystemConfigMapper {
+        private final ConcurrentHashMap<String, com.parttime.cservice.pojo.entity.SystemConfig> store = new ConcurrentHashMap<>();
+
+        @Override public Optional<com.parttime.cservice.pojo.entity.SystemConfig> findByKey(String configKey) {
+            return Optional.ofNullable(store.get(configKey));
+        }
+        public void put(String key, com.parttime.cservice.pojo.entity.SystemConfig config) {
+            store.put(key, config);
+        }
     }
 }

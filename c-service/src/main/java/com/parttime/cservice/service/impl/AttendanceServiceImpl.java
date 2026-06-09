@@ -4,14 +4,23 @@ import com.parttime.cservice.enums.ShiftStatus;
 import com.parttime.cservice.mapper.AttendanceCheckInMapper;
 import com.parttime.cservice.mapper.AttendanceCorrectionMapper;
 import com.parttime.cservice.mapper.AttendanceRecordMapper;
+import com.parttime.cservice.mapper.BalanceTransactionMapper;
+import com.parttime.cservice.mapper.NotificationMapper;
 import com.parttime.cservice.mapper.ShiftMapper;
+import com.parttime.cservice.mapper.SystemConfigMapper;
+import com.parttime.cservice.mapper.WorkerBalanceMapper;
 import com.parttime.cservice.pojo.entity.AttendanceCheckIn;
 import com.parttime.cservice.pojo.entity.AttendanceCorrectionEntity;
 import com.parttime.cservice.pojo.entity.AttendanceRecordEntity;
+import com.parttime.cservice.pojo.entity.BalanceTransaction;
 import com.parttime.cservice.pojo.entity.ShiftEntity;
+import com.parttime.cservice.pojo.entity.SystemConfig;
+import com.parttime.cservice.pojo.entity.WorkerBalance;
 import com.parttime.cservice.pojo.vo.AttendanceVO;
+import com.parttime.cservice.pojo.vo.NotificationVO;
 import com.parttime.cservice.pojo.vo.WorkerShiftVO;
 import com.parttime.cservice.service.AttendanceService;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
@@ -38,6 +47,16 @@ public class AttendanceServiceImpl implements AttendanceService {
     private WorkerShiftVOConverter workerShiftVOConverter;
     @Resource
     private AttendanceCheckInMapper attendanceCheckInMapper;
+    @Resource
+    private SystemConfigMapper systemConfigMapper;
+    @Resource
+    private WorkerBalanceMapper workerBalanceMapper;
+    @Resource
+    private BalanceTransactionMapper balanceTransactionMapper;
+    @Resource
+    private NotificationMapper notificationMapper;
+    @Resource
+    private JdbcTemplate jdbcTemplate;
 
     @Override
     public ShiftEntity addShift(Long jobId, String jobTitle, String jobLocation, Long workerId,
@@ -242,7 +261,16 @@ public class AttendanceServiceImpl implements AttendanceService {
         shift.setUpdatedAt(now);
         shiftMapper.update(shift);
 
-        return toAttendanceResponse(record);
+        // Auto-settle if enabled
+        boolean settled = false;
+        SystemConfig autoSettleConfig = systemConfigMapper.findByKey("auto_settle_attendance").orElse(null);
+        if (autoSettleConfig != null && "true".equalsIgnoreCase(autoSettleConfig.getConfigValue())) {
+            settled = autoSettle(record, shift, scheduledPay);
+        }
+
+        AttendanceVO response = toAttendanceResponse(record);
+        response.setAutoSettled(settled);
+        return response;
     }
 
     @Override
@@ -275,6 +303,64 @@ public class AttendanceServiceImpl implements AttendanceService {
         return R * c;
     }
 
+
+    private boolean autoSettle(AttendanceRecordEntity record, ShiftEntity shift, BigDecimal payAmount) {
+        Long workerId = shift.getWorkerId();
+        Long companyId = shift.getCompanyId();
+
+        BigDecimal enterpriseBalance = jdbcTemplate.queryForObject(
+                "SELECT balance FROM enterprise_balances WHERE company_id = ?",
+                BigDecimal.class, companyId);
+
+        if (enterpriseBalance == null || enterpriseBalance.compareTo(payAmount) < 0) {
+            return false;
+        }
+
+        WorkerBalance wb = workerBalanceMapper.findByWorkerId(workerId);
+        BigDecimal newBalance = payAmount;
+        BigDecimal newTotalEarned = payAmount;
+        if (wb != null) {
+            newBalance = wb.getBalance().add(payAmount);
+            newTotalEarned = wb.getTotalEarned().add(payAmount);
+        }
+        workerBalanceMapper.upsert(workerId, newBalance, newTotalEarned, wb != null ? wb.getTotalWithdrawn() : BigDecimal.ZERO);
+
+        BalanceTransaction bt = new BalanceTransaction();
+        bt.setWorkerId(workerId);
+        bt.setAmount(payAmount);
+        bt.setType("EARNINGS");
+        bt.setRelatedAttendanceRecordId(record.getId());
+        bt.setDescription("打卡自动结算");
+        bt.setCreatedAt(LocalDateTime.now());
+        balanceTransactionMapper.insert(bt);
+
+        record.setSettlementStatus("PAID");
+        record.setUpdatedAt(LocalDateTime.now());
+        attendanceRecordMapper.update(record);
+
+        jdbcTemplate.update(
+                "UPDATE enterprise_balances SET balance = balance - ?, total_spent = total_spent + ?, updated_at = NOW() WHERE company_id = ?",
+                payAmount, payAmount, companyId);
+
+        jdbcTemplate.update(
+                "INSERT INTO enterprise_balance_transactions (company_id, amount, type, description, created_at) VALUES (?, ?, 'SETTLEMENT', '打卡自动结算', NOW())",
+                companyId, payAmount.negate());
+
+        NotificationVO notification = new NotificationVO();
+        notification.setRecipientId(workerId);
+        notification.setRecipientType("WORKER");
+        notification.setType("EARNINGS");
+        notification.setCategory("income");
+        notification.setTitle("收入到账");
+        notification.setContent("您打卡的班次已自动结算，收入" + payAmount + "元已到账");
+        notification.setStatus("SENT");
+        notification.setRead(false);
+        notification.setRelatedType("ATTENDANCE");
+        notification.setRelatedId(record.getId());
+        notification.setSentAt(LocalDateTime.now());
+        notificationMapper.insert(notification);
+        return true;
+    }
 
     private AttendanceVO toAttendanceResponse(AttendanceRecordEntity record) {
         AttendanceVO resp = new AttendanceVO();

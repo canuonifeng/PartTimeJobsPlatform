@@ -41,4 +41,6 @@ public class AttendanceVO {
     private BigDecimal payablePay;
     @Schema(description = "结算状态")
     private String settlementStatus;
+    @Schema(description = "是否自动结算")
+    private Boolean autoSettled;
 }
