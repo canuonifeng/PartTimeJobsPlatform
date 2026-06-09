@@ -341,12 +341,25 @@ async function handleCheckOut(shift: Shift) {
   const isEarly = now < end
   checking.value = true
   try {
-    await checkOut({
+    const res: any = await checkOut({
       shiftId: shift.id,
       lat: currentLocation.value?.lat,
       lng: currentLocation.value?.lng
     })
-    if (isEarly) {
+    if (res?.autoSettled) {
+      const amount = res.payablePay || res.scheduledPay || 0
+      uni.showModal({
+        title: '薪资已到账',
+        content: `已收到 ¥${Number(amount).toFixed(2)} 薪资，去提现？`,
+        confirmText: '去提现',
+        cancelText: '不了',
+        success: (modalRes) => {
+          if (modalRes.confirm) {
+            uni.navigateTo({ url: '/pages/earnings/earnings' })
+          }
+        }
+      })
+    } else if (isEarly) {
       const earlyMins = Math.round((end.getTime() - now.getTime()) / 60000)
       uni.showModal({ title: '提示', content: `提前${earlyMins}分钟签退，确认成功`, showCancel: false })
     } else {

@@ -121,11 +121,26 @@ async function handleCheckOut(shift: Shift) {
   submittingKey.value = `${shift.id}:out`
   try {
     const location = await getLocation()
-    await checkOut({ shiftId: shift.id, lat: location.latitude, lng: location.longitude })
+    const res: any = await checkOut({ shiftId: shift.id, lat: location.latitude, lng: location.longitude })
     shift.checkedOut = true
     shift.status = 'CHECKED_OUT'
     shift.checkOutTime = normalizeTime(new Date().toTimeString())
-    uni.showToast({ title: '签退成功', icon: 'success' })
+    if (res?.autoSettled) {
+      const amount = res.payablePay || res.scheduledPay || 0
+      uni.showModal({
+        title: '薪资已到账',
+        content: `已收到 ¥${Number(amount).toFixed(2)} 薪资，去提现？`,
+        confirmText: '去提现',
+        cancelText: '不了',
+        success: (modalRes) => {
+          if (modalRes.confirm) {
+            uni.navigateTo({ url: '/pages/earnings/earnings' })
+          }
+        }
+      })
+    } else {
+      uni.showToast({ title: '签退成功', icon: 'success' })
+    }
   } catch (err: any) { showActionError(err, '签退') } finally { submittingKey.value = '' }
 }
 async function loadTodayShifts() {
