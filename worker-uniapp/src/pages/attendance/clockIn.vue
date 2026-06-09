@@ -111,7 +111,7 @@ async function handleCheckIn(shift: Shift) {
     const location = await getLocation()
     await checkIn({ shiftId: shift.id, lat: location.latitude, lng: location.longitude })
     shift.checkedIn = true
-    shift.status = 'CHECKED_IN'
+    shift.status = 'ON_DUTY'
     shift.checkInTime = normalizeTime(new Date().toTimeString())
     uni.showToast({ title: '签到成功', icon: 'success' })
   } catch (err: any) { showActionError(err, '签到') } finally { submittingKey.value = '' }
@@ -123,7 +123,7 @@ async function handleCheckOut(shift: Shift) {
     const location = await getLocation()
     const res: any = await checkOut({ shiftId: shift.id, lat: location.latitude, lng: location.longitude })
     shift.checkedOut = true
-    shift.status = 'CHECKED_OUT'
+    shift.status = 'COMPLETED'
     shift.checkOutTime = normalizeTime(new Date().toTimeString())
     if (res?.autoSettled) {
       const amount = res.payablePay || res.scheduledPay || 0
