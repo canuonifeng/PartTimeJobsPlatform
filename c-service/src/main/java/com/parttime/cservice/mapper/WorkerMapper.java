@@ -2,6 +2,7 @@ package com.parttime.cservice.mapper;
 
 import com.parttime.cservice.pojo.entity.Worker;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -15,4 +16,5 @@ public interface WorkerMapper {
     Optional<Worker> findByOpenId(String openId);
     List<Worker> findAll();
     int update(Worker worker);
+    int bindOpenId(@Param("id") Long id, @Param("openId") String openId);
 }

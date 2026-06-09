@@ -34,4 +34,8 @@
         WHERE id = #{id}
     </update>
 
+    <update id="bindOpenId">
+        UPDATE c_worker SET open_id = #{openId}, updated_at = NOW() WHERE id = #{id}
+    </update>
+
 </mapper>

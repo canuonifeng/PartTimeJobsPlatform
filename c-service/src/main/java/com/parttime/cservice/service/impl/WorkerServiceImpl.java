@@ -5,6 +5,7 @@ import com.parttime.cservice.mapper.WorkerMapper;
 import com.parttime.cservice.mapper.WorkerProfileMapper;
 import com.parttime.cservice.pojo.cmd.PhoneLoginCmd;
 import com.parttime.cservice.pojo.cmd.RegisterCmd;
+import com.parttime.cservice.pojo.cmd.WeChatPhoneLoginCmd;
 import com.parttime.cservice.pojo.entity.Worker;
 import com.parttime.cservice.pojo.entity.WorkerProfile;
 import com.parttime.cservice.pojo.vo.LoginVO;
@@ -92,6 +93,53 @@ public class WorkerServiceImpl implements WorkerService {
     }
 
     @Override
+    public LoginVO loginWithWechatPhone(WeChatPhoneLoginCmd request) {
+        if (request.code() == null || request.code().isEmpty()) {
+            throw new RuntimeException("微信登录code不能为空");
+        }
+        if (request.encryptedData() == null || request.encryptedData().isEmpty()) {
+            throw new RuntimeException("手机号加密数据不能为空");
+        }
+        if (request.iv() == null || request.iv().isEmpty()) {
+            throw new RuntimeException("加密向量不能为空");
+        }
+
+        String openId = exchangeWechatCode(request.code());
+        String phone = decryptPhone(request.encryptedData(), request.iv());
+
+        Worker worker = null;
+
+        Optional<Worker> byOpenId = workerMapper.findByOpenId(openId);
+        if (byOpenId.isPresent()) {
+            worker = byOpenId.get();
+            if (worker.getPhone() == null || worker.getPhone().isEmpty()) {
+                worker.setPhone(phone);
+                worker.setUpdatedAt(LocalDateTime.now());
+                workerMapper.update(worker);
+            }
+        } else {
+            Optional<Worker> byPhone = workerMapper.findByPhone(phone);
+            if (byPhone.isPresent()) {
+                worker = byPhone.get();
+                workerMapper.bindOpenId(worker.getId(), openId);
+                worker.setOpenId(openId);
+            } else {
+                worker = new Worker();
+                worker.setOpenId(openId);
+                worker.setPhone(phone);
+                worker.setStatus("ACTIVE");
+                worker.setCreatedAt(LocalDateTime.now());
+                worker.setUpdatedAt(LocalDateTime.now());
+                workerMapper.insert(worker);
+                createProfile(worker);
+            }
+        }
+
+        String token = jwtTokenProvider.generateToken(String.valueOf(worker.getId()), List.of("ROLE_WORKER"));
+        return new LoginVO(token, worker.getId(), phone);
+    }
+
+    @Override
     public void sendSmsCode(String phone) {
         String code = String.format("%06d", new Random().nextInt(999999));
         smsCodeStore.put(phone, code);
@@ -146,9 +194,6 @@ public class WorkerServiceImpl implements WorkerService {
         if (request.name() != null) {
             worker.setName(request.name());
         }
-        if (request.phone() != null) {
-            worker.setPhone(request.phone());
-        }
         if (request.avatar() != null) {
             worker.setAvatar(request.avatar());
             worker.setAvatarUrl(request.avatar());
@@ -167,6 +212,15 @@ public class WorkerServiceImpl implements WorkerService {
 
     private String exchangeWechatCode(String code) {
         return "openid_" + code;
+    }
+
+    private String decryptPhone(String encryptedData, String iv) {
+        // TODO: 对接真实微信API后使用 AES-128-CBC 解密
+        // 当前 mock 实现：从 encryptedData 中提取手机号（开发用）
+        if (encryptedData.startsWith("mock_phone_")) {
+            return encryptedData.substring("mock_phone_".length());
+        }
+        return "13800000000";
     }
 
     private WorkerVO toResponse(Worker worker) {

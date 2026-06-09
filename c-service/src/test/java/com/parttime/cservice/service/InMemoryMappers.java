@@ -40,6 +40,11 @@ public class InMemoryMappers {
                 store.put(worker.getId(), worker);
                 return 1;
             }
+            @Override public int bindOpenId(Long id, String openId) {
+                Worker w = store.get(id);
+                if (w != null) { w.setOpenId(openId); return 1; }
+                return 0;
+            }
         };
     }
 

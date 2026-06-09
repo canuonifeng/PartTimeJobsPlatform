@@ -14,6 +14,8 @@ public class LoginVO {
     private String openId;
     @Schema(description = "微信昵称")
     private String nickname;
+    @Schema(description = "手机号")
+    private String phone;
 
     public LoginVO(String token, Long workerId) {
         this.token = token;
@@ -25,5 +27,11 @@ public class LoginVO {
         this.workerId = workerId;
         this.openId = openId;
         this.nickname = nickname;
+    }
+
+    public LoginVO(String token, Long workerId, String phone) {
+        this.token = token;
+        this.workerId = workerId;
+        this.phone = phone;
     }
 }

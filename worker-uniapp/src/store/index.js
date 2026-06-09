@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import request from '@/api/request'
+import { wechatPhoneLogin as wechatPhoneLoginApi } from '@/api/auth'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref('')
@@ -85,6 +86,36 @@ export const useAuthStore = defineStore('auth', () => {
     })
   }
 
+  async function wechatPhoneLogin() {
+    return new Promise((resolve, reject) => {
+      uni.login({
+        provider: 'weixin',
+        success: async (loginRes) => {
+          const code = loginRes.code
+          try {
+            const phoneRes = await new Promise((res, rej) => {
+              uni.getPhoneNumber({
+                provider: 'weixin',
+                success: (r) => res(r),
+                fail: (e) => rej(e)
+              })
+            })
+            const data = await wechatPhoneLoginApi(code, phoneRes.encryptedData, phoneRes.iv)
+            token.value = data.token
+            uni.setStorageSync('token', data.token)
+            workerInfo.value = null
+            resolve(data)
+          } catch (err) {
+            reject(err)
+          }
+        },
+        fail: (err) => {
+          reject(err)
+        }
+      })
+    })
+  }
+
   async function loadWorkerInfo() {
     if (!token.value) return null
     try {
@@ -119,6 +150,7 @@ export const useAuthStore = defineStore('auth', () => {
     isLoggedIn,
     loadSession,
     wechatLogin,
+    wechatPhoneLogin,
     phoneLogin,
     sendSmsCode,
     loadWorkerInfo,

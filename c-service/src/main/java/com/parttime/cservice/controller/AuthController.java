@@ -3,6 +3,7 @@ package com.parttime.cservice.controller;
 import com.parttime.cservice.config.JwtTokenProvider;
 import com.parttime.cservice.pojo.cmd.PhoneLoginCmd;
 import com.parttime.cservice.pojo.cmd.WeChatLoginCmd;
+import com.parttime.cservice.pojo.cmd.WeChatPhoneLoginCmd;
 import com.parttime.cservice.pojo.vo.ApiResponse;
 import com.parttime.cservice.pojo.vo.LoginVO;
 import com.parttime.cservice.pojo.cmd.LoginCmd;
@@ -64,6 +65,13 @@ public class AuthController {
     @PostMapping("/wechat-login")
     public ApiResponse<LoginVO> wechatLogin(@Parameter(description = "微信登录请求") @RequestBody WeChatLoginCmd request) {
         LoginVO response = workerService.loginWithWechat(request.code());
+        return ApiResponse.success(response);
+    }
+
+    @Operation(summary = "微信手机号登录", description = "工人通过微信授权获取手机号并登录")
+    @PostMapping("/wechat-phone-login")
+    public ApiResponse<LoginVO> wechatPhoneLogin(@Parameter(description = "微信手机号登录请求") @RequestBody WeChatPhoneLoginCmd request) {
+        LoginVO response = workerService.loginWithWechatPhone(request);
         return ApiResponse.success(response);
     }
 

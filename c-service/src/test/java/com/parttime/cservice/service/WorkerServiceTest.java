@@ -90,13 +90,13 @@ class WorkerServiceTest {
 
     @Test
     void updateProfile_shouldModifyFields() {
-        WorkerVO created = workerService.register(new RegisterCmd("John", null, null, null));
+        WorkerVO created = workerService.register(new RegisterCmd("John", "13800138000", null, null));
 
         RegisterCmd update = new RegisterCmd("John Updated", "13900139000", "http://new.avatar", null);
         WorkerVO updated = workerService.updateProfile(created.getId(), update);
 
         assertThat(updated.getName()).isEqualTo("John Updated");
-        assertThat(updated.getPhone()).isEqualTo("13900139000");
+        assertThat(updated.getPhone()).isEqualTo("13800138000");
         assertThat(updated.getAvatar()).isEqualTo("http://new.avatar");
     }
 

@@ -12,29 +12,19 @@
     </view>
 
     <view class="login-card">
-      <view class="card-title-row">
-        <view>
-          <text class="card-title">手机号登录</text>
-          <text class="card-desc">验证码快捷登录，安全又方便</text>
+      <button class="wechat-phone-btn" @click="handleWechatPhoneLogin" :loading="wechatLoading" :disabled="wechatLoading">
+        <text class="wechat-phone-text">微信一键登录</text>
+      </button>
+
+      <view class="agreement-row">
+        <view class="agree-check" :class="{ checked: agreed }" @click="agreed = !agreed">
+          <text v-if="agreed" class="check-icon">✓</text>
         </view>
+        <text class="agree-text">登录即表示同意</text>
+        <text class="agree-link">《用户协议》</text>
+        <text class="agree-text">和</text>
+        <text class="agree-link">《隐私政策》</text>
       </view>
-
-      <view class="input-row">
-        <text class="input-label">手机号</text>
-        <input class="phone-input" v-model="phone" type="number" maxlength="11" placeholder="请输入手机号" placeholder-class="input-placeholder" />
-      </view>
-
-      <view class="input-row code-row">
-        <view class="code-input-wrap">
-          <text class="input-label">验证码</text>
-          <input class="code-input" v-model="code" type="number" maxlength="6" placeholder="请输入验证码" placeholder-class="input-placeholder" />
-        </view>
-        <button class="code-btn" :disabled="codeSending || countdown > 0" @click="handleSendCode">
-          {{ countdown > 0 ? countdown + 's' : '获取验证码' }}
-        </button>
-      </view>
-
-      <button class="phone-btn" @click="handlePhoneLogin" :loading="phoneLoading" :disabled="phoneLoading">立即登录</button>
 
       <view class="wechat-entry">
         <view class="entry-line"></view>
@@ -42,16 +32,24 @@
         <view class="entry-line"></view>
       </view>
 
-      <button class="wechat-btn" @click="handleWechatLogin" :loading="wechatLoading" :disabled="wechatLoading">
-        微信登录
-      </button>
-    </view>
+      <view class="phone-section">
+        <view class="input-row">
+          <text class="input-label">手机号</text>
+          <input class="phone-input" v-model="phone" type="number" maxlength="11" placeholder="请输入手机号" placeholder-class="input-placeholder" />
+        </view>
 
-    <view class="agreement">
-      <text class="agree-text">登录即表示同意</text>
-      <text class="agree-link">《用户协议》</text>
-      <text class="agree-text">和</text>
-      <text class="agree-link">《隐私政策》</text>
+        <view class="input-row code-row">
+          <view class="code-input-wrap">
+            <text class="input-label">验证码</text>
+            <input class="code-input" v-model="code" type="number" maxlength="6" placeholder="请输入验证码" placeholder-class="input-placeholder" />
+          </view>
+          <button class="code-btn" :disabled="codeSending || countdown > 0" @click="handleSendCode">
+            {{ countdown > 0 ? countdown + 's' : '获取验证码' }}
+          </button>
+        </view>
+
+        <button class="phone-btn" @click="handlePhoneLogin" :loading="phoneLoading" :disabled="phoneLoading">验证码登录</button>
+      </view>
     </view>
   </view>
 </template>
@@ -69,6 +67,7 @@ const phone = ref('')
 const code = ref('')
 const codeSending = ref(false)
 const countdown = ref(0)
+const agreed = ref(false)
 let timer: ReturnType<typeof setInterval> | null = null
 
 const REGISTERED_PAGES = new Set([
@@ -139,11 +138,15 @@ function goAfterLogin() {
   uni.redirectTo({ url: redirect.value })
 }
 
-async function handleWechatLogin() {
+async function handleWechatPhoneLogin() {
+  if (!agreed.value) {
+    uni.showToast({ title: '请先同意用户协议', icon: 'none' })
+    return
+  }
   if (wechatLoading.value) return
   wechatLoading.value = true
   try {
-    await authStore.wechatLogin()
+    await authStore.wechatPhoneLogin()
     await authStore.loadWorkerInfo()
     goAfterLogin()
   } catch {
@@ -178,6 +181,10 @@ async function handleSendCode() {
 }
 
 async function handlePhoneLogin() {
+  if (!agreed.value) {
+    uni.showToast({ title: '请先同意用户协议', icon: 'none' })
+    return
+  }
   if (phoneLoading.value) return
   if (!/^1\d{10}$/.test(phone.value)) {
     uni.showToast({ title: '请输入正确的手机号', icon: 'none' })
@@ -283,24 +290,94 @@ async function handlePhoneLogin() {
   box-sizing: border-box;
 }
 
-.card-title-row {
-  margin-bottom: 34rpx;
+.wechat-phone-btn {
+  width: 100%;
+  height: 96rpx;
+  line-height: 96rpx;
+  margin: 0 0 24rpx;
+  border-radius: 48rpx;
+  background: linear-gradient(90deg, #07c160 0%, #10ad62 100%);
+  color: #ffffff;
+  font-size: 32rpx;
+  font-weight: 600;
+  border: none;
+  box-shadow: 0 14rpx 28rpx rgba(7, 193, 96, 0.25);
 }
 
-.card-title {
-  display: block;
-  font-size: 36rpx;
-  line-height: 50rpx;
-  font-weight: 700;
-  color: #12251b;
-  margin-bottom: 8rpx;
+.wechat-phone-btn::after {
+  border: none;
 }
 
-.card-desc {
-  display: block;
+.wechat-phone-btn[disabled] {
+  background: #95d6a8;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.wechat-phone-text {
+  color: #ffffff;
+}
+
+.agreement-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30rpx;
+  font-size: 22rpx;
+  line-height: 32rpx;
+}
+
+.agree-check {
+  width: 28rpx;
+  height: 28rpx;
+  border-radius: 50%;
+  border: 2rpx solid #c8d6ce;
+  margin-right: 10rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.agree-check.checked {
+  background: #10a75b;
+  border-color: #10a75b;
+}
+
+.check-icon {
+  color: #ffffff;
+  font-size: 18rpx;
+  line-height: 1;
+}
+
+.agree-text {
+  color: #7b8b82;
+}
+
+.agree-link {
+  color: #12a960;
+}
+
+.wechat-entry {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+
+.entry-line {
+  flex: 1;
+  height: 2rpx;
+  background: #edf2ef;
+}
+
+.entry-text {
+  padding: 0 20rpx;
   font-size: 24rpx;
-  line-height: 34rpx;
-  color: #7d8b84;
+  color: #9aa8a0;
+}
+
+.phone-section {
+  opacity: 0.85;
 }
 
 .input-row {
@@ -360,8 +437,7 @@ async function handlePhoneLogin() {
 }
 
 .code-btn::after,
-.phone-btn::after,
-.wechat-btn::after {
+.phone-btn::after {
   border: none;
 }
 
@@ -374,66 +450,15 @@ async function handlePhoneLogin() {
 
 .phone-btn {
   width: 100%;
-  height: 96rpx;
-  line-height: 96rpx;
-  margin: 36rpx 0 30rpx;
-  border-radius: 48rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  margin: 12rpx 0 0;
+  border-radius: 44rpx;
   background: linear-gradient(90deg, #11bd66 0%, #37d889 100%);
   color: #ffffff;
-  font-size: 32rpx;
+  font-size: 30rpx;
   font-weight: 600;
   border: none;
   box-shadow: 0 14rpx 28rpx rgba(18, 197, 108, 0.25);
-}
-
-.wechat-entry {
-  display: flex;
-  align-items: center;
-  margin-bottom: 24rpx;
-}
-
-.entry-line {
-  flex: 1;
-  height: 2rpx;
-  background: #edf2ef;
-}
-
-.entry-text {
-  padding: 0 20rpx;
-  font-size: 24rpx;
-  color: #9aa8a0;
-}
-
-.wechat-btn {
-  width: 100%;
-  height: 88rpx;
-  line-height: 88rpx;
-  margin: 0;
-  border-radius: 44rpx;
-  background: #eefbf4;
-  color: #10a75b;
-  font-size: 30rpx;
-  border: none;
-}
-
-.agreement {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  margin-top: 34rpx;
-  font-size: 24rpx;
-  line-height: 36rpx;
-  color: #7b8b82;
-}
-
-.agree-text {
-  color: #7b8b82;
-}
-
-.agree-link {
-  color: #12a960;
 }
 </style>
