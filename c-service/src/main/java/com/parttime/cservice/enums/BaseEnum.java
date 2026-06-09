@@ -4,11 +4,11 @@ public interface BaseEnum {
 
     String getName();
 
-    int getCode();
+    String getCode();
 
-    static <E extends Enum<E> & BaseEnum> E fromCode(Class<E> enumClass, int code) {
+    static <E extends Enum<E> & BaseEnum> E fromCode(Class<E> enumClass, String code) {
         for (E constant : enumClass.getEnumConstants()) {
-            if (constant.getCode() == code) {
+            if (constant.getCode().equals(code)) {
                 return constant;
             }
         }

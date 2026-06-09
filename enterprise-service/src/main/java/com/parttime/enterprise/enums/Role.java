@@ -5,15 +5,15 @@ import lombok.Getter;
 @Getter
 public enum Role implements BaseEnum {
 
-    ADMIN("管理员", 0),
-    HR("人事", 1),
-    MANAGER("经理", 2),
-    FINANCE("财务", 3);
+    ADMIN("管理员", "ADMIN"),
+    HR("人事", "HR"),
+    MANAGER("经理", "MANAGER"),
+    FINANCE("财务", "FINANCE");
 
     private final String name;
-    private final int code;
+    private final String code;
 
-    Role(String name, int code) {
+    Role(String name, String code) {
         this.name = name;
         this.code = code;
     }

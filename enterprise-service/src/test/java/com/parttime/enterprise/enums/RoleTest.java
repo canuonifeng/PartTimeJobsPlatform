@@ -13,31 +13,31 @@ class RoleTest {
     @Test
     void adminShouldHaveCorrectNameAndCode() {
         assertThat(Role.ADMIN.getName()).isEqualTo("管理员");
-        assertThat(Role.ADMIN.getCode()).isEqualTo(0);
+        assertThat(Role.ADMIN.getCode()).isEqualTo("ADMIN");
     }
 
     @Test
     void hrShouldHaveCorrectNameAndCode() {
         assertThat(Role.HR.getName()).isEqualTo("人事");
-        assertThat(Role.HR.getCode()).isEqualTo(1);
+        assertThat(Role.HR.getCode()).isEqualTo("HR");
     }
 
     @Test
     void managerShouldHaveCorrectNameAndCode() {
         assertThat(Role.MANAGER.getName()).isEqualTo("经理");
-        assertThat(Role.MANAGER.getCode()).isEqualTo(2);
+        assertThat(Role.MANAGER.getCode()).isEqualTo("MANAGER");
     }
 
     @Test
     void financeShouldHaveCorrectNameAndCode() {
         assertThat(Role.FINANCE.getName()).isEqualTo("财务");
-        assertThat(Role.FINANCE.getCode()).isEqualTo(3);
+        assertThat(Role.FINANCE.getCode()).isEqualTo("FINANCE");
     }
 
     @Test
     void fromCodeShouldReturnCorrectEnum() {
-        assertThat(BaseEnum.fromCode(Role.class, 0)).isEqualTo(Role.ADMIN);
-        assertThat(BaseEnum.fromCode(Role.class, 3)).isEqualTo(Role.FINANCE);
+        assertThat(BaseEnum.fromCode(Role.class, "ADMIN")).isEqualTo(Role.ADMIN);
+        assertThat(BaseEnum.fromCode(Role.class, "FINANCE")).isEqualTo(Role.FINANCE);
     }
 
     @Test

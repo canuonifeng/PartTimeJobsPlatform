@@ -5,14 +5,14 @@ import lombok.Getter;
 @Getter
 public enum ApplicationStatus implements BaseEnum {
 
-    PENDING("待审核", 0),
-    ACCEPTED("已通过", 1),
-    REJECTED("已拒绝", 2);
+    PENDING("待审核", "PENDING"),
+    ACCEPTED("已通过", "ACCEPTED"),
+    REJECTED("已拒绝", "REJECTED");
 
     private final String name;
-    private final int code;
+    private final String code;
 
-    ApplicationStatus(String name, int code) {
+    ApplicationStatus(String name, String code) {
         this.name = name;
         this.code = code;
     }
