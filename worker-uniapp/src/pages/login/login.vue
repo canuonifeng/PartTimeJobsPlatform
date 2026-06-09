@@ -21,9 +21,9 @@
           <text v-if="agreed" class="check-icon">✓</text>
         </view>
         <text class="agree-text">登录即表示同意</text>
-        <text class="agree-link">《用户协议》</text>
+        <text class="agree-link" @click.stop="goProtocol('user_agreement')">《用户协议》</text>
         <text class="agree-text">和</text>
-        <text class="agree-link">《隐私政策》</text>
+        <text class="agree-link" @click.stop="goProtocol('privacy_policy')">《隐私政策》</text>
       </view>
 
       <view class="other-login-row">
@@ -33,31 +33,12 @@
       </view>
 
       <view class="other-icons">
-        <view class="icon-item" @click="showPhoneLogin = !showPhoneLogin">
+        <view class="icon-item" @click="goPhoneLogin">
           <view class="icon-circle">
             <text class="icon-phone">📱</text>
           </view>
           <text class="icon-label">手机号</text>
         </view>
-      </view>
-
-      <view class="phone-section" v-if="showPhoneLogin">
-        <view class="input-row">
-          <text class="input-label">手机号</text>
-          <input class="phone-input" v-model="phone" type="number" maxlength="11" placeholder="请输入手机号" placeholder-class="input-placeholder" />
-        </view>
-
-        <view class="input-row code-row">
-          <view class="code-input-wrap">
-            <text class="input-label">验证码</text>
-            <input class="code-input" v-model="code" type="number" maxlength="6" placeholder="请输入验证码" placeholder-class="input-placeholder" />
-          </view>
-          <button class="code-btn" :disabled="codeSending || countdown > 0" @click="handleSendCode">
-            {{ countdown > 0 ? countdown + 's' : '获取验证码' }}
-          </button>
-        </view>
-
-        <button class="phone-btn" @click="handlePhoneLogin" :loading="phoneLoading" :disabled="phoneLoading">验证码登录</button>
       </view>
     </view>
   </view>
@@ -65,20 +46,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { onLoad, onUnload } from '@dcloudio/uni-app'
+import { onLoad } from '@dcloudio/uni-app'
 import { useAuthStore } from '@/store'
 
 const authStore = useAuthStore()
 const wechatLoading = ref(false)
-const phoneLoading = ref(false)
-const redirect = ref('')
-const phone = ref('')
-const code = ref('')
-const codeSending = ref(false)
-const countdown = ref(0)
 const agreed = ref(false)
-const showPhoneLogin = ref(false)
-let timer: ReturnType<typeof setInterval> | null = null
 
 const REGISTERED_PAGES = new Set([
   '/pages/index/index',
@@ -105,47 +78,14 @@ const TAB_PAGES = new Set([
   '/pages/profile/profile'
 ])
 
-onLoad((params) => {
-  redirect.value = getSafeRedirect(params?.redirect)
-})
+onLoad(() => {})
 
-onUnload(() => {
-  clearCountdownTimer()
-})
-
-function getSafeRedirect(value: unknown) {
-  if (typeof value !== 'string') return ''
-  try {
-    const decoded = decodeURIComponent(value)
-    return isLegalPagePath(decoded) ? decoded : ''
-  } catch {
-    return ''
-  }
+function goProtocol(key: string) {
+  uni.navigateTo({ url: `/pages/common/protocol?key=${key}` })
 }
 
-function isLegalPagePath(value: string) {
-  if (value.includes('#') || value.includes('\\') || /[\u0000-\u001F\u007F]/.test(value)) return false
-  const path = value.split('?')[0]
-  return REGISTERED_PAGES.has(path)
-}
-
-function clearCountdownTimer() {
-  if (!timer) return
-  clearInterval(timer)
-  timer = null
-}
-
-function goAfterLogin() {
-  if (!redirect.value) {
-    uni.switchTab({ url: '/pages/index/index' })
-    return
-  }
-  const targetPath = redirect.value.split('?')[0]
-  if (TAB_PAGES.has(targetPath)) {
-    uni.switchTab({ url: targetPath })
-    return
-  }
-  uni.redirectTo({ url: redirect.value })
+function goPhoneLogin() {
+  uni.navigateTo({ url: '/pages/login/phoneLogin' })
 }
 
 async function handleWechatPhoneLogin() {
@@ -158,61 +98,11 @@ async function handleWechatPhoneLogin() {
   try {
     await authStore.wechatPhoneLogin()
     await authStore.loadWorkerInfo()
-    goAfterLogin()
+    uni.switchTab({ url: '/pages/index/index' })
   } catch {
     uni.showToast({ title: '登录失败，请重试', icon: 'none' })
   } finally {
     wechatLoading.value = false
-  }
-}
-
-async function handleSendCode() {
-  if (!/^1\d{10}$/.test(phone.value)) {
-    uni.showToast({ title: '请输入正确的手机号', icon: 'none' })
-    return
-  }
-  clearCountdownTimer()
-  codeSending.value = true
-  try {
-    await authStore.sendSmsCode(phone.value)
-    uni.showToast({ title: '验证码已发送（开发环境: 123456）', icon: 'none' })
-    countdown.value = 60
-    timer = setInterval(() => {
-      countdown.value--
-      if (countdown.value <= 0) {
-        clearCountdownTimer()
-      }
-    }, 1000)
-  } catch {
-    uni.showToast({ title: '发送失败', icon: 'none' })
-  } finally {
-    codeSending.value = false
-  }
-}
-
-async function handlePhoneLogin() {
-  if (!agreed.value) {
-    uni.showToast({ title: '请先同意用户协议', icon: 'none' })
-    return
-  }
-  if (phoneLoading.value) return
-  if (!/^1\d{10}$/.test(phone.value)) {
-    uni.showToast({ title: '请输入正确的手机号', icon: 'none' })
-    return
-  }
-  if (!code.value) {
-    uni.showToast({ title: '请输入验证码', icon: 'none' })
-    return
-  }
-  phoneLoading.value = true
-  try {
-    await authStore.phoneLogin(phone.value, code.value)
-    await authStore.loadWorkerInfo()
-    goAfterLogin()
-  } catch {
-    uni.showToast({ title: '登录失败，请重试', icon: 'none' })
-  } finally {
-    phoneLoading.value = false
   }
 }
 </script>
@@ -221,7 +111,7 @@ async function handlePhoneLogin() {
 .login-page {
   position: relative;
   min-height: 100vh;
-  padding: 96rpx 44rpx 48rpx;
+  padding: 0 44rpx 48rpx;
   background: linear-gradient(180deg, #18c56e 0%, #5fdc9a 42%, #f4fff8 100%);
   overflow: hidden;
   box-sizing: border-box;
@@ -254,7 +144,8 @@ async function handlePhoneLogin() {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-bottom: 56rpx;
+  padding-top: 160rpx;
+  margin-bottom: 60rpx;
 }
 
 .logo-box {
@@ -293,7 +184,7 @@ async function handlePhoneLogin() {
   position: relative;
   z-index: 1;
   width: 100%;
-  padding: 42rpx 34rpx 36rpx;
+  padding: 48rpx 36rpx 40rpx;
   border-radius: 36rpx;
   background: #ffffff;
   box-shadow: 0 24rpx 60rpx rgba(6, 101, 54, 0.15);
@@ -389,7 +280,6 @@ async function handlePhoneLogin() {
 .other-icons {
   display: flex;
   justify-content: center;
-  margin-bottom: 30rpx;
 }
 
 .icon-item {
@@ -418,91 +308,5 @@ async function handlePhoneLogin() {
 .icon-label {
   font-size: 22rpx;
   color: #7d8b84;
-}
-
-.phone-section {
-  opacity: 0.85;
-}
-
-.input-row {
-  height: 104rpx;
-  padding: 0 28rpx;
-  margin-bottom: 24rpx;
-  border-radius: 24rpx;
-  background: #f5fbf7;
-  border: 2rpx solid #e3f3e9;
-  display: flex;
-  align-items: center;
-  box-sizing: border-box;
-}
-
-.input-label {
-  width: 108rpx;
-  font-size: 28rpx;
-  color: #24382d;
-  flex-shrink: 0;
-}
-
-.phone-input,
-.code-input {
-  flex: 1;
-  height: 100%;
-  font-size: 28rpx;
-  color: #12251b;
-}
-
-.input-placeholder {
-  color: #b6c4bc;
-}
-
-.code-row {
-  padding-right: 12rpx;
-}
-
-.code-input-wrap {
-  flex: 1;
-  height: 100%;
-  display: flex;
-  align-items: center;
-}
-
-.code-btn {
-  width: 176rpx;
-  height: 68rpx;
-  line-height: 68rpx;
-  padding: 0;
-  margin: 0;
-  border-radius: 34rpx;
-  background: #20c56f;
-  color: #ffffff;
-  font-size: 24rpx;
-  border: none;
-  flex-shrink: 0;
-}
-
-.code-btn::after,
-.phone-btn::after {
-  border: none;
-}
-
-.code-btn[disabled],
-.phone-btn[disabled] {
-  background: #c8d6ce;
-  color: #ffffff;
-  box-shadow: none;
-}
-
-.phone-btn {
-  width: 100%;
-  height: 88rpx;
-  line-height: 88rpx;
-  margin: 12rpx 0 0;
-  border-radius: 44rpx;
-  background: linear-gradient(90deg, #11bd66 0%, #37d889 100%);
-  color: #ffffff;
-  font-size: 30rpx;
-  font-weight: 600;
-  border: none;
-  box-shadow: 0 14rpx 28rpx rgba(18, 197, 108, 0.25);
 }
 </style>
