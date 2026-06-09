@@ -5,6 +5,7 @@ import com.parttime.cservice.pojo.vo.ApiResponse;
 import com.parttime.cservice.pojo.vo.AttendanceVO;
 import com.parttime.cservice.pojo.vo.WorkerShiftVO;
 import com.parttime.cservice.service.AttendanceService;
+import com.parttime.cservice.service.ReferralService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -22,6 +23,9 @@ public class AttendanceController {
 
     @Resource
     private AttendanceService attendanceService;
+
+    @Resource
+    private ReferralService referralService;
 
     private Long getCurrentWorkerId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -68,6 +72,7 @@ public class AttendanceController {
         }
         try {
             AttendanceVO response = attendanceService.checkOut(workerId, request.getShiftId(), request.getLat(), request.getLng());
+            referralService.checkAndGrantReward(workerId);
             return ApiResponse.success(response);
         } catch (RuntimeException e) {
             return ApiResponse.error(e.getMessage());

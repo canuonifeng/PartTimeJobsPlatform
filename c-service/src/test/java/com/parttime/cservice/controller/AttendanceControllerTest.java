@@ -4,6 +4,7 @@ import com.parttime.cservice.pojo.vo.AttendanceVO;
 import com.parttime.cservice.pojo.cmd.CheckInCmd;
 import com.parttime.cservice.pojo.vo.WorkerShiftVO;
 import com.parttime.cservice.service.impl.AttendanceServiceImpl;
+import com.parttime.cservice.service.ReferralService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -31,6 +33,8 @@ class AttendanceControllerTest {
     private MockMvc mockMvc;
     @Mock
     private AttendanceServiceImpl attendanceService;
+    @Mock
+    private ReferralService referralService;
     @InjectMocks
     private AttendanceController controller;
     private ObjectMapper objectMapper;
@@ -132,6 +136,8 @@ class AttendanceControllerTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("CHECKED_OUT"));
+
+        verify(referralService).checkAndGrantReward(1L);
     }
 
     @Test
