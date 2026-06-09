@@ -4,15 +4,21 @@ import com.parttime.cservice.mapper.CompanyWorkerInsertMapper;
 import com.parttime.cservice.mapper.JobMapper;
 import com.parttime.cservice.mapper.JobScheduleMapper;
 import com.parttime.cservice.mapper.JobTagRelationMapper;
+import com.parttime.cservice.mapper.NotificationMapper;
 import com.parttime.cservice.mapper.ScheduleApplicationMapper;
+import com.parttime.cservice.mapper.ShiftMapper;
+import com.parttime.cservice.mapper.SystemConfigMapper;
 import com.parttime.cservice.pojo.entity.Job;
 import com.parttime.cservice.pojo.entity.JobSchedule;
 import com.parttime.cservice.pojo.entity.ScheduleApplication;
+import com.parttime.cservice.pojo.entity.ShiftEntity;
+import com.parttime.cservice.pojo.entity.SystemConfig;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
 import com.parttime.cservice.pojo.vo.JobRateInfoVO;
 import com.parttime.cservice.pojo.vo.JobScheduleInfoVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
 import com.parttime.cservice.pojo.vo.JobTagVO;
+import com.parttime.cservice.pojo.vo.NotificationVO;
 import com.parttime.cservice.pojo.vo.PageVO;
 import com.parttime.cservice.pojo.vo.WorkerSignupVO;
 import com.parttime.cservice.service.JobService;
@@ -47,6 +53,12 @@ public class JobServiceImpl implements JobService {
     private JobScheduleMapper jobScheduleMapper;
     @Resource
     private JobTagRelationMapper jobTagRelationMapper;
+    @Resource
+    private SystemConfigMapper systemConfigMapper;
+    @Resource
+    private ShiftMapper shiftMapper;
+    @Resource
+    private NotificationMapper notificationMapper;
 
     @Override
     public List<JobSummaryVO> searchJobs(String keyword, Long categoryId, String location,
@@ -233,12 +245,26 @@ public class JobServiceImpl implements JobService {
                 throw new RuntimeException("排班已开始，无法报名");
             }
         }
+        // Check auto-approve: job-level overrides platform-level
+        Boolean jobAutoApprove = job.getAutoApprove();
+        boolean autoApprove;
+        if (jobAutoApprove != null) {
+            autoApprove = jobAutoApprove;
+        } else {
+            SystemConfig config = systemConfigMapper.findByKey("auto_approve_applications").orElse(null);
+            autoApprove = config != null && "true".equalsIgnoreCase(config.getConfigValue());
+        }
         for (Long scheduleId : newIds) {
             ScheduleApplication sa = new ScheduleApplication();
             sa.setScheduleId(scheduleId);
             sa.setWorkerId(workerId);
-            sa.setStatus("PENDING");
+            sa.setStatus(autoApprove ? "ACCEPTED" : "PENDING");
             scheduleApplicationMapper.insert(sa);
+
+            if (autoApprove) {
+                createShiftForApplication(sa, job, schedMap.get(scheduleId));
+                sendAutoApproveNotification(sa, job);
+            }
         }
         if (job.getCompanyId() != null) {
             companyWorkerInsertMapper.upsert(job.getCompanyId(), workerId);
@@ -404,5 +430,43 @@ public class JobServiceImpl implements JobService {
             }
         }
         return detail;
+    }
+
+    private void createShiftForApplication(ScheduleApplication sa, Job job, JobSchedule sched) {
+        ShiftEntity shift = new ShiftEntity();
+        shift.setJobId(job.getId());
+        shift.setCompanyId(job.getCompanyId());
+        shift.setWorkerId(sa.getWorkerId());
+        shift.setShiftDate(sched.getScheduleDate());
+        shift.setStartTime(sched.getStartTime());
+        shift.setEndTime(sched.getEndTime());
+        shift.setLocationLat(job.getLatitude());
+        shift.setLocationLng(job.getLongitude());
+        shift.setLocationName(job.getAddress());
+        shift.setSalaryType(job.getRateType());
+        shift.setSalaryAmount(job.getRateAmount());
+        shift.setStatus("SCHEDULED");
+        shift.setCreatedAt(LocalDateTime.now());
+        shift.setUpdatedAt(LocalDateTime.now());
+        try {
+            shiftMapper.insert(shift);
+        } catch (org.springframework.dao.DuplicateKeyException ignored) {
+        }
+    }
+
+    private void sendAutoApproveNotification(ScheduleApplication sa, Job job) {
+        NotificationVO notification = new NotificationVO();
+        notification.setRecipientId(sa.getWorkerId());
+        notification.setRecipientType("WORKER");
+        notification.setType("APPLICATION_ACCEPTED");
+        notification.setCategory("application");
+        notification.setTitle("报名已通过");
+        notification.setContent("您报名的" + job.getTitle() + "已通过审核");
+        notification.setStatus("SENT");
+        notification.setRead(false);
+        notification.setRelatedType("APPLICATION");
+        notification.setRelatedId(sa.getId());
+        notification.setSentAt(LocalDateTime.now());
+        notificationMapper.insert(notification);
     }
 }

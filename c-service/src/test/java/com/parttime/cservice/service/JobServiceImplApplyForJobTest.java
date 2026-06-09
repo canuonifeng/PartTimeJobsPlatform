@@ -22,6 +22,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
@@ -41,6 +42,15 @@ class JobServiceImplApplyForJobTest {
 
     @Mock
     private CompanyWorkerInsertMapper companyWorkerInsertMapper;
+
+    @Mock
+    private com.parttime.cservice.mapper.SystemConfigMapper systemConfigMapper;
+
+    @Mock
+    private com.parttime.cservice.mapper.ShiftMapper shiftMapper;
+
+    @Mock
+    private com.parttime.cservice.mapper.NotificationMapper notificationMapper;
 
     @InjectMocks
     private JobServiceImpl jobService;
@@ -81,6 +91,54 @@ class JobServiceImplApplyForJobTest {
 
         assertThat(result).isTrue();
         verify(companyWorkerInsertMapper).upsert(88L, 100L);
+    }
+
+    @Test
+    void applyForJob_autoApproveEnabled_shouldCreateAcceptedApplicationAndShift() {
+        Job job = new Job();
+        job.setId(1L);
+        job.setJobId(1L);
+        job.setCompanyId(88L);
+        job.setAutoApprove(true);
+
+        JobSchedule schedule = activeFutureSchedule(10L, 1L);
+        when(scheduleApplicationMapper.findScheduleIdsByWorkerIdAndJobId(100L, 1L)).thenReturn(List.of());
+        when(jobMapper.findByJobId(1L)).thenReturn(Optional.of(job));
+        when(jobScheduleMapper.findByIds(List.of(10L))).thenReturn(List.of(schedule));
+        doAnswer(invocation -> {
+            com.parttime.cservice.pojo.entity.ScheduleApplication sa = invocation.getArgument(0);
+            sa.setId(1L);
+            return 1;
+        }).when(scheduleApplicationMapper).insert(any(com.parttime.cservice.pojo.entity.ScheduleApplication.class));
+
+        boolean result = jobService.applyForJob(100L, 1L, List.of(10L));
+
+        assertThat(result).isTrue();
+        verify(scheduleApplicationMapper).insert(argThat(sa -> "ACCEPTED".equals(sa.getStatus())));
+        verify(shiftMapper).insert(any(com.parttime.cservice.pojo.entity.ShiftEntity.class));
+    }
+
+    @Test
+    void applyForJob_autoApproveDisabled_shouldCreatePendingApplication() {
+        Job job = new Job();
+        job.setId(1L);
+        job.setJobId(1L);
+        job.setCompanyId(88L);
+        job.setAutoApprove(null);
+
+        JobSchedule schedule = activeFutureSchedule(10L, 1L);
+        when(scheduleApplicationMapper.findScheduleIdsByWorkerIdAndJobId(100L, 1L)).thenReturn(List.of());
+        when(jobMapper.findByJobId(1L)).thenReturn(Optional.of(job));
+        when(jobScheduleMapper.findByIds(List.of(10L))).thenReturn(List.of(schedule));
+        when(systemConfigMapper.findByKey("auto_approve_applications")).thenReturn(
+                Optional.of(new com.parttime.cservice.pojo.entity.SystemConfig()));
+        doAnswer(invocation -> 1).when(scheduleApplicationMapper).insert(any(com.parttime.cservice.pojo.entity.ScheduleApplication.class));
+
+        boolean result = jobService.applyForJob(100L, 1L, List.of(10L));
+
+        assertThat(result).isTrue();
+        verify(scheduleApplicationMapper).insert(argThat(sa -> "PENDING".equals(sa.getStatus())));
+        verify(shiftMapper, never()).insert(any());
     }
 
     private JobSchedule activeFutureSchedule(Long id, Long jobId) {

@@ -4,7 +4,10 @@ import com.parttime.cservice.service.impl.JobServiceImpl;
 import com.parttime.cservice.mapper.CompanyWorkerInsertMapper;
 import com.parttime.cservice.mapper.JobMapper;
 import com.parttime.cservice.mapper.JobTagRelationMapper;
+import com.parttime.cservice.mapper.NotificationMapper;
 import com.parttime.cservice.mapper.ScheduleApplicationMapper;
+import com.parttime.cservice.mapper.ShiftMapper;
+import com.parttime.cservice.mapper.SystemConfigMapper;
 import com.parttime.cservice.pojo.entity.Job;
 import com.parttime.cservice.pojo.entity.ScheduleApplication;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
@@ -43,6 +46,9 @@ class JobServiceTest {
                 return 1;
             }
         });
+        ReflectionTestUtils.setField(jobService, "systemConfigMapper", InMemoryMappers.createSystemConfigMapper());
+        ReflectionTestUtils.setField(jobService, "shiftMapper", InMemoryMappers.createShiftMapper());
+        ReflectionTestUtils.setField(jobService, "notificationMapper", InMemoryMappers.createNotificationMapper());
         TestDataFactory.addSampleJobs(jobService);
     }
 
