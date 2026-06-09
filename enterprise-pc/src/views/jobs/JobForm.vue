@@ -59,6 +59,7 @@ const form = ref({
   imageUrl: '',
   salaryRates: [{ type: '', rate: '' }],
   scheduleSlots: [{ date: '', startTime: '', endTime: '' }],
+  autoApprove: null,
   status: 'DRAFT'
 })
 
@@ -189,6 +190,7 @@ async function fetchDetail() {
       latitude: res.latitude || null,
       longitude: res.longitude || null,
       imageUrl: res.imageUrl || '',
+      autoApprove: res.autoApprove ?? null,
       salaryRates: (res.rates || []).map((r) => ({ id: r.id, type: r.type || '', rate: r.amount || '' })),
       scheduleSlots: (res.schedules || []).map((s) => ({ id: s.id, date: s.scheduleDate || '', startTime: s.startTime || '', endTime: s.endTime || '' })),
       status: res.status || 'DRAFT'
@@ -216,6 +218,7 @@ function buildPayload() {
     headcount: form.value.headcount,
     deadline: form.value.deadline ? `${form.value.deadline} 23:59:59` : null,
     imageUrl: form.value.imageUrl || null,
+    autoApprove: form.value.autoApprove,
     rates: form.value.salaryRates.filter((r) => r.type && r.rate).map((r) => ({ id: r.id, type: r.type, amount: Number(r.rate), currency: 'CNY' })),
     schedules: form.value.scheduleSlots.filter((s) => s.date && s.startTime && s.endTime).map((s) => ({ id: s.id, scheduleDate: s.date, startTime: s.startTime, endTime: s.endTime, slotsAvailable: 1 }))
   }
@@ -394,6 +397,13 @@ onMounted(async () => {
         </el-form-item>
         <el-form-item label="截止日期" prop="deadline">
           <el-date-picker v-model="form.deadline" type="date" placeholder="选择截止日期" value-format="YYYY-MM-DD" style="width: 260px" />
+        </el-form-item>
+        <el-form-item label="自动审核">
+          <el-select v-model="form.autoApprove" placeholder="跟随平台默认" clearable>
+            <el-option label="跟随平台默认" :value="null" />
+            <el-option label="开启" :value="true" />
+            <el-option label="关闭" :value="false" />
+          </el-select>
         </el-form-item>
       </el-form>
     </el-card>
