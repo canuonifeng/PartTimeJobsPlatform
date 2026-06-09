@@ -134,7 +134,7 @@ function statusLabel(s) {
 }
 
 function statusClass(s) {
-  const map = { DRAFT: 'badge-draft', PUBLISHED: 'badge-published', CLOSED: 'badge-closed' }
+  const map = { DRAFT: 'badge-gray', PUBLISHED: 'badge-green', CLOSED: 'badge-red' }
   return map[s] || ''
 }
 </script>
@@ -145,21 +145,32 @@ function statusClass(s) {
       <text class="header-title">职位管理</text>
     </view>
 
-    <scroll-view scroll-x class="tabs" scroll-with-animation>
-      <view
-        v-for="(tab, index) in tabs"
-        :key="index"
-        class="tab"
-        :class="{ active: currentTab === index }"
-        @click="switchTab(index)"
-      >
-        {{ tab.name }}
+    <scroll-view scroll-x class="tabs-wrap" scroll-with-animation>
+      <view class="tabs-inner">
+        <view
+          v-for="(tab, index) in tabs"
+          :key="index"
+          class="tab"
+          :class="{ 'tab-active': currentTab === index }"
+          @click="switchTab(index)"
+        >
+          {{ tab.name }}
+        </view>
       </view>
     </scroll-view>
 
     <view class="content">
-      <view v-if="loading" class="state-msg">加载中...</view>
-      <view v-else-if="filteredJobs.length === 0" class="state-msg">暂无职位</view>
+      <view v-if="loading" class="empty-state">
+        <text class="empty-emoji">⏳</text>
+        <text class="empty-title">加载中...</text>
+      </view>
+
+      <view v-else-if="filteredJobs.length === 0" class="empty-state">
+        <text class="empty-emoji">📋</text>
+        <text class="empty-title">暂无职位</text>
+        <text class="empty-desc">点击右下角按钮创建新职位</text>
+      </view>
+
       <view v-else class="job-list">
         <view
           v-for="job in filteredJobs"
@@ -169,47 +180,52 @@ function statusClass(s) {
         >
           <view class="card-header">
             <text class="card-title">{{ job.title }}</text>
-            <text class="badge" :class="statusClass(job.status)">{{ statusLabel(job.status) }}</text>
+            <view class="badge" :class="statusClass(job.status)">{{ statusLabel(job.status) }}</view>
           </view>
+
           <view class="card-body">
-            <text class="info">招聘人数：{{ job.headcount }}</text>
-            <text class="info">总报名数：{{ job.applicationCount ?? 0 }}</text>
-            <text class="info">待审核：{{ job.pendingApplicationCount ?? 0 }}</text>
-            <text class="info">截止日期：{{ job.deadline || '不限' }}</text>
+            <view class="info-row">
+              <text class="info-label">招聘人数</text>
+              <text class="info-value">{{ job.headcount }}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">总报名数</text>
+              <text class="info-value">{{ job.applicationCount ?? 0 }}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">待审核</text>
+              <text class="info-value">{{ job.pendingApplicationCount ?? 0 }}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">截止日期</text>
+              <text class="info-value">{{ job.deadline || '不限' }}</text>
+            </view>
           </view>
+
           <view class="card-footer" @click.stop>
-            <button
-              class="action-btn record-btn"
-              @click.stop="navigateToApplications(job)"
-            >报名记录</button>
-            <button
-              class="action-btn share-btn"
-              @click.stop="handleShare(job.id)"
-            >邀请报名</button>
-            <button
-              class="action-btn edit-btn"
-              @click="navigateToEdit(job.id)"
-            >编辑</button>
-            <button
-              v-if="job.status === 'PUBLISHED'"
-              class="action-btn close-btn"
-              @click="handleClose(job.id)"
-            >关闭</button>
-            <button
-              v-if="job.status === 'CLOSED' && (job.applicationCount ?? 0) === 0"
-              class="action-btn delete-btn"
-              @click="handleDelete(job.id)"
-            >删除</button>
-            <button
+            <view class="action-pill pill-blue" @click.stop="navigateToApplications(job)">报名记录</view>
+            <view class="action-pill pill-green" @click.stop="handleShare(job.id)">邀请报名</view>
+            <view class="action-pill pill-blue" @click="navigateToEdit(job.id)">编辑</view>
+            <view
               v-if="job.status === 'DRAFT'"
-              class="action-btn publish-btn"
+              class="action-pill pill-green"
               @click="handlePublish(job.id)"
-            >发布</button>
-            <button
+            >发布</view>
+            <view
+              v-if="job.status === 'PUBLISHED'"
+              class="action-pill pill-orange"
+              @click="handleClose(job.id)"
+            >关闭</view>
+            <view
               v-if="job.status === 'CLOSED'"
-              class="action-btn reopen-btn"
+              class="action-pill pill-blue"
               @click="handleReopen(job.id)"
-            >重新发布</button>
+            >重新发布</view>
+            <view
+              v-if="job.status === 'CLOSED' && (job.applicationCount ?? 0) === 0"
+              class="action-pill pill-red"
+              @click="handleDelete(job.id)"
+            >删除</view>
           </view>
         </view>
       </view>
@@ -221,164 +237,214 @@ function statusClass(s) {
   </view>
 </template>
 
-<style>
+<style scoped>
 .page {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: #f6f8f7;
 }
+
 .header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
   padding: 24rpx 32rpx;
   background: #fff;
   border-bottom: 2rpx solid #eee;
 }
+
 .header-title {
   font-size: 34rpx;
   font-weight: 600;
-  color: #333;
+  color: #1f2933;
 }
-.tabs {
-  display: flex;
-  white-space: nowrap;
+
+.tabs-wrap {
   background: #fff;
-  padding: 16rpx 32rpx;
   border-bottom: 2rpx solid #eee;
 }
+
+.tabs-inner {
+  display: flex;
+  white-space: nowrap;
+  padding: 20rpx 32rpx;
+  gap: 16rpx;
+}
+
 .tab {
-  display: inline-block;
-  padding: 12rpx 28rpx;
-  margin-right: 16rpx;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10rpx 28rpx;
   font-size: 26rpx;
-  color: #666;
-  border-radius: 8rpx;
-  background: #f5f5f5;
+  color: #64748b;
+  background: #f1f5f9;
+  border-radius: 999rpx;
+  flex-shrink: 0;
 }
-.tab.active {
+
+.tab-active {
   color: #fff;
-  background: #007aff;
+  background: #07c160;
 }
+
 .content {
   padding: 24rpx 32rpx;
+  padding-bottom: 140rpx;
 }
-.state-msg {
-  text-align: center;
-  padding: 80rpx 0;
-  color: #999;
-  font-size: 28rpx;
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0;
 }
-.job-card {
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 28rpx;
+
+.empty-emoji {
+  font-size: 64rpx;
   margin-bottom: 20rpx;
 }
+
+.empty-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1f2933;
+  margin-bottom: 8rpx;
+}
+
+.empty-desc {
+  font-size: 26rpx;
+  color: #98a3b3;
+}
+
+.job-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.job-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
+}
+
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16rpx;
+  margin-bottom: 20rpx;
 }
+
 .card-title {
-  font-size: 30rpx;
-  font-weight: 500;
-  color: #333;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1f2933;
   flex: 1;
   margin-right: 16rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .badge {
-  font-size: 22rpx;
-  padding: 4rpx 16rpx;
-  border-radius: 8rpx;
+  font-size: 24rpx;
+  font-weight: 700;
+  padding: 10rpx 22rpx;
+  border-radius: 999rpx;
   flex-shrink: 0;
 }
-.badge-draft {
-  background: #f0f0f0;
-  color: #999;
+
+.badge-green {
+  background: #e7f8ef;
+  color: #08a857;
 }
-.badge-published {
-  background: #e8f8e8;
-  color: #34c759;
+
+.badge-red {
+  background: #feecec;
+  color: #df3b30;
 }
-.badge-closed {
-  background: #ffe8e8;
-  color: #ff3b30;
+
+.badge-gray {
+  background: #eef1f0;
+  color: #7b8580;
 }
+
+.badge-yellow {
+  background: #fff7df;
+  color: #d28a00;
+}
+
 .card-body {
-  margin-bottom: 16rpx;
+  margin-bottom: 20rpx;
 }
-.info {
-  display: block;
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8rpx 0;
+}
+
+.info-label {
   font-size: 26rpx;
-  color: #666;
-  line-height: 1.8;
+  color: #98a3b3;
 }
+
+.info-value {
+  font-size: 26rpx;
+  color: #1f2933;
+}
+
 .card-footer {
   display: flex;
-  gap: 12rpx;
+  gap: 16rpx;
   flex-wrap: wrap;
 }
-.action-btn {
+
+.action-pill {
   font-size: 24rpx;
-  padding: 8rpx 20rpx;
-  border-radius: 8rpx;
-  border: 2rpx solid #ddd;
-  background: #fff;
-  color: #333;
-  line-height: 1.5;
-  min-width: 0;
-  height: auto;
+  font-weight: 600;
+  padding: 10rpx 24rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid;
 }
-.action-btn::after {
-  border: none;
+
+.pill-green {
+  border-color: #07c160;
+  color: #07c160;
 }
-.record-btn {
-  border-color: #007aff;
-  color: #007aff;
+
+.pill-blue {
+  border-color: #3b82f6;
+  color: #3b82f6;
 }
-.publish-btn {
-  border-color: #34c759;
-  color: #34c759;
+
+.pill-orange {
+  border-color: #f59e0b;
+  color: #f59e0b;
 }
-.share-btn {
-  border-color: #34c759;
-  color: #34c759;
+
+.pill-red {
+  border-color: #ef4444;
+  color: #ef4444;
 }
-.close-btn {
-  border-color: #ff9500;
-  color: #ff9500;
-}
-.reopen-btn {
-  border-color: #007aff;
-  color: #007aff;
-}
-.edit-btn {
-  border-color: #007aff;
-  color: #007aff;
-}
-.delete-btn {
-  border-color: #ff3b30;
-  color: #ff3b30;
-}
+
 .fab {
   position: fixed;
   right: 32rpx;
   bottom: 40rpx;
   width: 96rpx;
   height: 96rpx;
-  background: #007aff;
+  background: linear-gradient(135deg, #18c86b, #08a95a);
   color: #fff;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4rpx 16rpx rgba(0, 122, 255, 0.4);
+  box-shadow: 0 8rpx 28rpx rgba(7, 193, 96, 0.4);
   z-index: 100;
 }
+
 .fab-icon {
   font-size: 52rpx;
   line-height: 1;

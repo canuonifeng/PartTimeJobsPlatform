@@ -39,7 +39,7 @@ function goRealName() {
 
 <template>
   <view class="page">
-    <view class="header">
+    <view class="header-gradient">
       <text class="header-title">企业设置</text>
     </view>
     <view class="content">
@@ -65,21 +65,99 @@ function goRealName() {
 </template>
 
 <style>
-.page { min-height: 100vh; background: #f5f5f5; }
-.header { padding: 24rpx 32rpx; background: #fff; border-bottom: 2rpx solid #eee; }
-.header-title { font-size: 34rpx; font-weight: 600; color: #333; }
-.content { padding: 24rpx 32rpx; }
-.state-msg { text-align: center; padding: 80rpx 0; color: #999; font-size: 28rpx; }
-.card { background: #fff; border-radius: 16rpx; padding: 28rpx; }
-.form-row { display: flex; justify-content: space-between; align-items: center; padding: 20rpx 0; border-bottom: 2rpx solid #f2f2f2; }
-.column { align-items: flex-start; flex-direction: column; gap: 16rpx; }
-.label { font-size: 28rpx; color: #666; }
-.value { font-size: 28rpx; color: #333; }
-.logo { width: 120rpx; height: 120rpx; border-radius: 12rpx; background: #f2f2f2; }
-.input { width: 100%; height: 76rpx; padding: 0 20rpx; border: 2rpx solid #ddd; border-radius: 8rpx; box-sizing: border-box; font-size: 28rpx; }
-.save-btn { margin-top: 32rpx; height: 76rpx; line-height: 76rpx; background: #007aff; color: #fff; border-radius: 8rpx; font-size: 28rpx; }
-.save-btn::after { border: none; }
-.menu-item { display: flex; justify-content: space-between; align-items: center; padding: 28rpx 0; border-bottom: 2rpx solid #f2f2f2; margin-top: 24rpx; }
-.menu-label { font-size: 28rpx; color: #333; }
-.menu-arrow { font-size: 32rpx; color: #ccc; }
+.page {
+  min-height: 100vh;
+  background: #f6f8f7;
+}
+.header-gradient {
+  padding: 48rpx 32rpx 40rpx;
+  background: linear-gradient(135deg, #07c160, #08a95a);
+}
+.header-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #fff;
+}
+.content {
+  padding: 0 32rpx;
+  margin-top: -20rpx;
+}
+.state-msg {
+  text-align: center;
+  padding: 80rpx 0;
+  color: #999;
+  font-size: 28rpx;
+}
+.card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
+}
+.form-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 2rpx solid #f2f2f2;
+}
+.column {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 16rpx;
+}
+.label {
+  font-size: 28rpx;
+  color: #64748b;
+}
+.value {
+  font-size: 28rpx;
+  color: #1f2933;
+}
+.logo {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 14rpx;
+  background: #f2f2f2;
+}
+.input {
+  width: 100%;
+  height: 78rpx;
+  padding: 0 20rpx;
+  border: 2rpx solid #edf0f3;
+  border-radius: 14rpx;
+  background: #fafafa;
+  box-sizing: border-box;
+  font-size: 28rpx;
+}
+.save-btn {
+  margin-top: 32rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: linear-gradient(135deg, #18c86b, #08a95a);
+  color: #fff;
+  border-radius: 44rpx;
+  font-size: 32rpx;
+  font-weight: 700;
+  border: none;
+}
+.save-btn::after {
+  border: none;
+}
+.menu-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 28rpx 0;
+  border-bottom: 2rpx solid #f2f2f2;
+  margin-top: 24rpx;
+}
+.menu-label {
+  font-size: 28rpx;
+  color: #1f2933;
+}
+.menu-arrow {
+  font-size: 32rpx;
+  color: #ccc;
+}
 </style>

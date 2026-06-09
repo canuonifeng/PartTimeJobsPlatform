@@ -1,9 +1,11 @@
 <template>
   <view class="auth-page">
-    <view class="status-card" :class="statusClass">
+    <view class="status-card" :style="statusCardStyle">
       <view class="status-row">
         <text class="status-title">企业实名认证</text>
-        <text class="status-badge">{{ statusLabel }}</text>
+        <view class="status-badge">
+          <text class="badge-text">{{ statusLabel }}</text>
+        </view>
       </view>
       <text class="status-desc">{{ statusDesc }}</text>
       <view v-if="status === 'REJECTED' && data?.rejectReason" class="reject-reason">
@@ -96,12 +98,15 @@ const statusDescMap = {
 const statusLabel = computed(() => statusMap[status.value] || statusMap.NONE)
 const statusDesc = computed(() => statusDescMap[status.value] || statusDescMap.NONE)
 
-const statusClass = computed(() => ({
-  NONE: 'status-none',
-  PENDING: 'status-pending',
-  APPROVED: 'status-approved',
-  REJECTED: 'status-rejected'
-}[status.value] || 'status-none'))
+const statusCardStyle = computed(() => {
+  const gradientMap = {
+    NONE: 'linear-gradient(135deg, #909399, #6b7280)',
+    PENDING: 'linear-gradient(135deg, #e6a23c, #d97706)',
+    APPROVED: 'linear-gradient(135deg, #07c160, #059d50)',
+    REJECTED: 'linear-gradient(135deg, #f56c6c, #dc2626)'
+  }
+  return { background: gradientMap[status.value] || gradientMap.NONE }
+})
 
 const canSubmit = computed(() => status.value === 'NONE' || status.value === 'REJECTED')
 
@@ -174,7 +179,7 @@ onShow(loadStatus)
 .auth-page {
   min-height: 100vh;
   padding: 30rpx;
-  background: #f5f7fa;
+  background: #f6f8f7;
   box-sizing: border-box;
 }
 .status-card {
@@ -182,7 +187,7 @@ onShow(loadStatus)
   border-radius: 24rpx;
   margin-bottom: 24rpx;
   color: #fff;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.08);
+  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
 }
 .status-row {
   display: flex;
@@ -196,26 +201,17 @@ onShow(loadStatus)
 }
 .status-badge {
   padding: 8rpx 20rpx;
-  border-radius: 24rpx;
-  font-size: 24rpx;
+  border-radius: 999rpx;
   background: rgba(255, 255, 255, 0.22);
+}
+.badge-text {
+  font-size: 24rpx;
+  color: #fff;
 }
 .status-desc {
   display: block;
   font-size: 28rpx;
   opacity: 0.92;
-}
-.status-none {
-  background: linear-gradient(135deg, #909399, #6b7280);
-}
-.status-pending {
-  background: linear-gradient(135deg, #e6a23c, #d97706);
-}
-.status-approved {
-  background: linear-gradient(135deg, #07c160, #059d50);
-}
-.status-rejected {
-  background: linear-gradient(135deg, #f56c6c, #dc2626);
 }
 .reject-reason {
   margin-top: 18rpx;
@@ -235,21 +231,21 @@ onShow(loadStatus)
   background: #fff;
   border-radius: 24rpx;
   padding: 34rpx;
-  box-shadow: 0 4rpx 18rpx rgba(0, 0, 0, 0.05);
+  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
 }
 .form-title {
   display: block;
   margin-bottom: 30rpx;
   font-size: 34rpx;
   font-weight: 700;
-  color: #222;
+  color: #1f2933;
 }
 .form-group {
   margin-bottom: 26rpx;
 }
 .form-label {
   font-size: 26rpx;
-  color: #666;
+  color: #64748b;
   display: block;
   margin-bottom: 12rpx;
 }
@@ -258,7 +254,7 @@ onShow(loadStatus)
   height: 78rpx;
   padding: 0 20rpx;
   font-size: 28rpx;
-  color: #333;
+  color: #1f2933;
   border: 2rpx solid #edf0f3;
   border-radius: 14rpx;
   background: #fafafa;
@@ -269,10 +265,11 @@ onShow(loadStatus)
   height: 88rpx;
   line-height: 88rpx;
   margin-top: 12rpx;
-  background: #07c160;
+  background: linear-gradient(135deg, #18c86b, #08a95a);
   border-radius: 44rpx;
   font-size: 32rpx;
   color: #fff;
+  font-weight: 700;
   border: none;
 }
 .readonly-card {
@@ -281,7 +278,7 @@ onShow(loadStatus)
 .readonly-text {
   display: block;
   font-size: 28rpx;
-  color: #666;
+  color: #64748b;
   line-height: 44rpx;
   margin-bottom: 24rpx;
 }
@@ -308,12 +305,12 @@ onShow(loadStatus)
 }
 .detail-value {
   font-size: 26rpx;
-  color: #333;
+  color: #1f2933;
 }
 .license-img {
   width: 400rpx;
   height: 280rpx;
-  border-radius: 12rpx;
+  border-radius: 14rpx;
   background: #f5f5f5;
 }
 </style>

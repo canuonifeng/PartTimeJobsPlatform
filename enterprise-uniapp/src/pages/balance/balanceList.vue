@@ -42,7 +42,7 @@ function formatAmount(amount) {
 }
 
 function amountColor(amount) {
-  return amount > 0 ? '#67c23a' : '#f56c6c'
+  return amount > 0 ? '#07c160' : '#ff3b30'
 }
 
 function typeLabel(type) {
@@ -55,36 +55,41 @@ function typeLabel(type) {
   <view class="page">
     <view class="balance-cards">
       <view class="card-row">
-        <view class="card">
+        <view class="card balance-card">
           <text class="card-label">账户余额</text>
           <text class="card-value primary">{{ balanceInfo.balance }}</text>
         </view>
         <view class="card">
           <text class="card-label">信用额度</text>
-          <text class="card-value success">{{ balanceInfo.creditLimit }}</text>
+          <text class="card-value">{{ balanceInfo.creditLimit }}</text>
         </view>
       </view>
       <view class="card-row">
         <view class="card">
           <text class="card-label">可用额度</text>
-          <text class="card-value warning">{{ balanceInfo.usableBalance }}</text>
+          <text class="card-value">{{ balanceInfo.usableBalance }}</text>
         </view>
         <view class="card">
           <text class="card-label">累计充值</text>
-          <text class="card-value info">{{ balanceInfo.totalTopUp }}</text>
+          <text class="card-value">{{ balanceInfo.totalTopUp }}</text>
         </view>
       </view>
     </view>
 
-    <view class="section-title">账户流水</view>
+    <view class="section-title-row">
+      <view class="section-accent"></view>
+      <text class="section-title">账户流水</text>
+    </view>
 
-    <view v-for="item in transactions" :key="item.id" class="txn-item">
-      <view class="txn-left">
-        <text class="txn-type">{{ typeLabel(item.type) }}</text>
-        <text class="txn-desc">{{ item.description || '-' }}</text>
-        <text class="txn-time">{{ item.createdAt }}</text>
+    <view class="txn-list">
+      <view v-for="item in transactions" :key="item.id" class="txn-item">
+        <view class="txn-left">
+          <text class="txn-type">{{ typeLabel(item.type) }}</text>
+          <text class="txn-desc">{{ item.description || '-' }}</text>
+          <text class="txn-time">{{ item.createdAt }}</text>
+        </view>
+        <text class="txn-amount" :style="{ color: amountColor(item.amount) }">{{ formatAmount(item.amount) }}</text>
       </view>
-      <text class="txn-amount" :style="{ color: amountColor(item.amount) }">{{ formatAmount(item.amount) }}</text>
     </view>
 
     <view v-if="total > pageSize && page * pageSize < total" class="load-more" @click="page++; fetchTransactions()">
@@ -94,22 +99,102 @@ function typeLabel(type) {
 </template>
 
 <style>
-.page { min-height: 100vh; background: #f5f5f5; padding: 16rpx; }
-.balance-cards { padding: 16rpx 0; }
-.card-row { display: flex; gap: 16rpx; margin-bottom: 16rpx; }
-.card { flex: 1; background: #fff; border-radius: 16rpx; padding: 32rpx 24rpx; text-align: center; }
-.card-label { font-size: 26rpx; color: #999; display: block; }
-.card-value { font-size: 40rpx; font-weight: 600; margin-top: 8rpx; display: block; }
-.primary { color: #409eff; }
-.success { color: #67c23a; }
-.warning { color: #e6a23c; }
-.info { color: #909399; }
-.section-title { font-size: 28rpx; color: #666; padding: 16rpx 0 8rpx; }
-.txn-item { background: #fff; border-radius: 12rpx; padding: 24rpx; margin-bottom: 8rpx; display: flex; justify-content: space-between; align-items: center; }
-.txn-left { flex: 1; }
-.txn-type { font-size: 28rpx; font-weight: 500; color: #333; display: block; }
-.txn-desc { font-size: 24rpx; color: #999; margin-top: 4rpx; display: block; }
-.txn-time { font-size: 22rpx; color: #ccc; margin-top: 4rpx; display: block; }
-.txn-amount { font-size: 32rpx; font-weight: 600; }
-.load-more { text-align: center; padding: 24rpx; color: #409eff; font-size: 26rpx; }
+.page {
+  min-height: 100vh;
+  background: #f6f8f7;
+  padding: 24rpx 32rpx;
+}
+.balance-cards {
+  margin-bottom: 24rpx;
+}
+.card-row {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
+}
+.card {
+  flex: 1;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 30rpx 24rpx;
+  text-align: center;
+  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
+}
+.card-label {
+  font-size: 26rpx;
+  color: #64748b;
+  display: block;
+}
+.card-value {
+  font-size: 40rpx;
+  font-weight: 600;
+  margin-top: 8rpx;
+  display: block;
+  color: #1f2933;
+}
+.card-value.primary {
+  color: #07c160;
+}
+.section-title-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+.section-accent {
+  width: 3rpx;
+  height: 28rpx;
+  background: #07c160;
+  border-radius: 2rpx;
+  margin-right: 12rpx;
+}
+.section-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1f2933;
+}
+.txn-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+.txn-item {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 24rpx 30rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
+}
+.txn-left {
+  flex: 1;
+}
+.txn-type {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #1f2933;
+  display: block;
+}
+.txn-desc {
+  font-size: 24rpx;
+  color: #64748b;
+  margin-top: 4rpx;
+  display: block;
+}
+.txn-time {
+  font-size: 22rpx;
+  color: #ccc;
+  margin-top: 4rpx;
+  display: block;
+}
+.txn-amount {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+.load-more {
+  text-align: center;
+  padding: 24rpx;
+  color: #07c160;
+  font-size: 26rpx;
+}
 </style>

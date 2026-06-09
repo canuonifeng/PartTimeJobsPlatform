@@ -113,7 +113,9 @@ function handleDelete(account) {
   <view class="page">
     <view class="header">
       <text class="header-title">账号管理</text>
-      <text class="add-btn" @click="openAdd">+ 新增</text>
+      <view class="add-btn" @click="openAdd">
+        <text class="add-text">+ 新增</text>
+      </view>
     </view>
     <view class="content">
       <view v-if="loading" class="state-msg">加载中...</view>
@@ -122,43 +124,74 @@ function handleDelete(account) {
         <view v-for="a in accounts" :key="a.id" class="card">
           <view class="card-top">
             <text class="card-name">{{ a.username }}</text>
-            <text class="badge" :class="a.status === 'ACTIVE' ? 'badge-on' : 'badge-off'">{{ a.status === 'ACTIVE' ? '正常' : '禁用' }}</text>
+            <view class="badge" :class="a.status === 'ACTIVE' ? 'badge-on' : 'badge-off'">
+              <text class="badge-text">{{ a.status === 'ACTIVE' ? '正常' : '禁用' }}</text>
+            </view>
           </view>
           <text class="info">显示名：{{ a.displayName || '-' }}</text>
           <text class="info">角色：{{ roleLabel(a.role) }}</text>
           <text class="info">创建时间：{{ a.createdAt || '-' }}</text>
           <view class="card-actions">
-            <button class="action-btn edit" @click="openEdit(a)">编辑</button>
-            <button class="action-btn reset" @click="openReset(a)">重置密码</button>
-            <button class="action-btn delete" @click="handleDelete(a)">删除</button>
+            <view class="action-btn edit" @click="openEdit(a)">
+              <text class="action-text">编辑</text>
+            </view>
+            <view class="action-btn reset" @click="openReset(a)">
+              <text class="action-text">重置密码</text>
+            </view>
+            <view class="action-btn delete" @click="handleDelete(a)">
+              <text class="action-text">删除</text>
+            </view>
           </view>
         </view>
       </view>
     </view>
 
-    <view v-if="formVisible" class="mask">
+    <view v-if="formVisible" class="mask" @click.self="formVisible = false">
       <view class="dialog">
         <text class="dialog-title">{{ isEdit ? '编辑账号' : '新增账号' }}</text>
-        <input v-if="!isEdit" v-model="form.username" class="input" placeholder="用户名" />
-        <input v-if="!isEdit" v-model="form.password" class="input" placeholder="密码" password />
-        <input v-model="form.displayName" class="input" placeholder="显示名" />
-        <picker mode="selector" :range="roleOptions" range-key="label" @change="onRoleChange">
-          <view class="picker">角色：{{ roleLabel(form.role) }}</view>
-        </picker>
+        <view v-if="!isEdit" class="dialog-field">
+          <text class="dialog-label">用户名</text>
+          <input v-model="form.username" class="dialog-input" placeholder="请输入用户名" />
+        </view>
+        <view v-if="!isEdit" class="dialog-field">
+          <text class="dialog-label">密码</text>
+          <input v-model="form.password" class="dialog-input" placeholder="请输入密码" password />
+        </view>
+        <view class="dialog-field">
+          <text class="dialog-label">显示名</text>
+          <input v-model="form.displayName" class="dialog-input" placeholder="请输入显示名" />
+        </view>
+        <view class="dialog-field">
+          <text class="dialog-label">角色</text>
+          <picker mode="selector" :range="roleOptions" range-key="label" @change="onRoleChange">
+            <view class="dialog-picker">{{ roleLabel(form.role) }}</view>
+          </picker>
+        </view>
         <view class="dialog-actions">
-          <button class="dialog-btn cancel" @click="formVisible = false">取消</button>
-          <button class="dialog-btn primary" @click="saveAccount">保存</button>
+          <view class="dialog-btn cancel" @click="formVisible = false">
+            <text>取消</text>
+          </view>
+          <view class="dialog-btn primary" @click="saveAccount">
+            <text>保存</text>
+          </view>
         </view>
       </view>
     </view>
 
-    <view v-if="resetVisible" class="mask">
+    <view v-if="resetVisible" class="mask" @click.self="resetVisible = false">
       <view class="dialog">
         <text class="dialog-title">重置密码</text>
-        <input v-model="resetForm.newPassword" class="input" placeholder="新密码" password />
+        <view class="dialog-field">
+          <text class="dialog-label">新密码</text>
+          <input v-model="resetForm.newPassword" class="dialog-input" placeholder="请输入新密码" password />
+        </view>
         <view class="dialog-actions">
-          <button class="dialog-btn cancel" @click="resetVisible = false">取消</button>
-          <button class="dialog-btn primary" @click="confirmReset">确定</button>
+          <view class="dialog-btn cancel" @click="resetVisible = false">
+            <text>取消</text>
+          </view>
+          <view class="dialog-btn primary" @click="confirmReset">
+            <text>确定</text>
+          </view>
         </view>
       </view>
     </view>
@@ -166,32 +199,202 @@ function handleDelete(account) {
 </template>
 
 <style>
-.page { min-height: 100vh; background: #f5f5f5; }
-.header { display: flex; justify-content: space-between; align-items: center; padding: 24rpx 32rpx; background: #fff; border-bottom: 2rpx solid #eee; }
-.header-title { font-size: 34rpx; font-weight: 600; color: #333; }
-.add-btn { font-size: 28rpx; color: #007aff; }
-.content { padding: 24rpx 32rpx; }
-.state-msg { text-align: center; padding: 80rpx 0; color: #999; font-size: 28rpx; }
-.list { display: flex; flex-direction: column; gap: 20rpx; }
-.card { background: #fff; border-radius: 16rpx; padding: 24rpx; }
-.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12rpx; }
-.card-name { font-size: 30rpx; font-weight: 500; color: #333; }
-.badge { font-size: 22rpx; padding: 4rpx 16rpx; border-radius: 8rpx; }
-.badge-on { background: #e8f8e8; color: #34c759; }
-.badge-off { background: #f0f0f0; color: #999; }
-.info { display: block; font-size: 26rpx; color: #666; margin-top: 8rpx; }
-.card-actions { display: flex; gap: 12rpx; margin-top: 20rpx; }
-.action-btn { flex: 1; height: 60rpx; line-height: 60rpx; font-size: 22rpx; border-radius: 8rpx; background: #fff; }
-.action-btn::after, .dialog-btn::after { border: none; }
-.edit { border: 2rpx solid #007aff; color: #007aff; }
-.reset { border: 2rpx solid #ff9500; color: #ff9500; }
-.delete { border: 2rpx solid #ff3b30; color: #ff3b30; }
-.mask { position: fixed; left: 0; right: 0; top: 0; bottom: 0; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 32rpx; }
-.dialog { width: 100%; background: #fff; border-radius: 16rpx; padding: 32rpx; }
-.dialog-title { display: block; font-size: 32rpx; font-weight: 600; margin-bottom: 24rpx; color: #333; }
-.input, .picker { height: 76rpx; line-height: 76rpx; padding: 0 20rpx; border: 2rpx solid #ddd; border-radius: 8rpx; margin-bottom: 20rpx; font-size: 28rpx; }
-.dialog-actions { display: flex; gap: 16rpx; margin-top: 24rpx; }
-.dialog-btn { flex: 1; height: 72rpx; line-height: 72rpx; font-size: 28rpx; border-radius: 8rpx; }
-.cancel { background: #f5f5f5; color: #333; }
-.primary { background: #007aff; color: #fff; }
+.page {
+  min-height: 100vh;
+  background: #f6f8f7;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  background: #fff;
+  border-bottom: 2rpx solid #eee;
+}
+.header-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1f2933;
+}
+.add-btn {
+  background: linear-gradient(135deg, #18c86b, #08a95a);
+  border-radius: 999rpx;
+  padding: 12rpx 28rpx;
+}
+.add-text {
+  font-size: 26rpx;
+  color: #fff;
+  font-weight: 600;
+}
+.content {
+  padding: 24rpx 32rpx;
+}
+.state-msg {
+  text-align: center;
+  padding: 80rpx 0;
+  color: #999;
+  font-size: 28rpx;
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+.card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
+}
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+.card-name {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #1f2933;
+}
+.badge {
+  padding: 4rpx 16rpx;
+  border-radius: 999rpx;
+}
+.badge-text {
+  font-size: 22rpx;
+}
+.badge-on {
+  background: #eafaf1;
+}
+.badge-on .badge-text {
+  color: #07c160;
+}
+.badge-off {
+  background: #f0f0f0;
+}
+.badge-off .badge-text {
+  color: #999;
+}
+.info {
+  display: block;
+  font-size: 26rpx;
+  color: #64748b;
+  margin-top: 8rpx;
+}
+.card-actions {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 20rpx;
+}
+.action-btn {
+  flex: 1;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999rpx;
+  background: #fff;
+}
+.action-text {
+  font-size: 22rpx;
+}
+.edit {
+  border: 2rpx solid #07c160;
+}
+.edit .action-text {
+  color: #07c160;
+}
+.reset {
+  border: 2rpx solid #ff9500;
+}
+.reset .action-text {
+  color: #ff9500;
+}
+.delete {
+  border: 2rpx solid #ff3b30;
+}
+.delete .action-text {
+  color: #ff3b30;
+}
+.mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx;
+  z-index: 999;
+}
+.dialog {
+  width: 100%;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 34rpx;
+  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
+}
+.dialog-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 24rpx;
+  color: #1f2933;
+}
+.dialog-field {
+  margin-bottom: 20rpx;
+}
+.dialog-label {
+  display: block;
+  font-size: 26rpx;
+  color: #64748b;
+  margin-bottom: 8rpx;
+}
+.dialog-input {
+  width: 100%;
+  height: 78rpx;
+  line-height: 78rpx;
+  padding: 0 20rpx;
+  border: 2rpx solid #edf0f3;
+  border-radius: 14rpx;
+  background: #fafafa;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+.dialog-picker {
+  height: 78rpx;
+  line-height: 78rpx;
+  padding: 0 20rpx;
+  border: 2rpx solid #edf0f3;
+  border-radius: 14rpx;
+  background: #fafafa;
+  font-size: 28rpx;
+  color: #1f2933;
+}
+.dialog-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 24rpx;
+}
+.dialog-btn {
+  flex: 1;
+  height: 88rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  border-radius: 44rpx;
+}
+.cancel {
+  background: #f5f7f6;
+  color: #64748b;
+}
+.primary {
+  background: linear-gradient(135deg, #18c86b, #08a95a);
+  color: #fff;
+  font-weight: 700;
+}
 </style>

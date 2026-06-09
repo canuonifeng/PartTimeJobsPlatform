@@ -51,26 +51,74 @@ function toggleStatus(worker) {
     <view class="header">
       <text class="header-title">兼职管理</text>
     </view>
-    <view class="search-row">
-      <input v-model="keyword" class="search-input" placeholder="搜索姓名/电话" confirm-type="search" @confirm="handleSearch" />
-      <button class="search-btn" @click="handleSearch">搜索</button>
+
+    <view class="search-bar">
+      <input
+        v-model="keyword"
+        class="search-input"
+        placeholder="搜索姓名/电话"
+        confirm-type="search"
+        @confirm="handleSearch"
+      />
+      <view class="search-btn" @click="handleSearch">搜索</view>
     </view>
+
     <view class="content">
-      <view v-if="loading" class="state-msg">加载中...</view>
-      <view v-else-if="workers.length === 0" class="state-msg">暂无兼职</view>
-      <view v-else class="list">
-        <view v-for="w in workers" :key="w.id || w.workerId" class="card">
-          <view class="card-top">
-            <text class="card-name">{{ w.name || '未实名' }}</text>
-            <text class="badge" :class="w.status === 'ACTIVE' ? 'badge-on' : 'badge-off'">{{ w.status === 'ACTIVE' ? '正常' : '已拉黑' }}</text>
+      <view v-if="loading" class="empty-state">
+        <text class="empty-emoji">⏳</text>
+        <text class="empty-title">加载中...</text>
+      </view>
+
+      <view v-else-if="workers.length === 0" class="empty-state">
+        <text class="empty-emoji">👥</text>
+        <text class="empty-title">暂无兼职</text>
+        <text class="empty-desc">还没有工人加入平台</text>
+      </view>
+
+      <view v-else class="worker-list">
+        <view v-for="w in workers" :key="w.id || w.workerId" class="worker-card">
+          <view class="card-header">
+            <text class="worker-name">{{ w.name || '未实名' }}</text>
+            <view
+              class="badge"
+              :class="w.status === 'ACTIVE' ? 'badge-green' : 'badge-red'"
+            >{{ w.status === 'ACTIVE' ? '正常' : '已拉黑' }}</view>
           </view>
-          <text class="info">编号：{{ w.workerId || w.id }}</text>
-          <text class="info">电话：{{ w.phone || '-' }}</text>
-          <text class="info">年龄：{{ w.workerAge ?? '-' }}岁</text>
-          <text class="info">首次联系：{{ w.firstContactAt || '-' }}</text>
-          <text class="info">最近联系：{{ w.lastContactAt || '-' }}</text>
-          <view class="card-actions">
-            <button class="action-btn" :class="w.status === 'ACTIVE' ? 'warn' : 'ok'" @click="toggleStatus(w)">{{ w.status === 'ACTIVE' ? '拉黑' : '取消拉黑' }}</button>
+
+          <view class="card-body">
+            <view class="info-row">
+              <text class="info-label">编号</text>
+              <text class="info-value">{{ w.workerId || w.id }}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">电话</text>
+              <text class="info-value">{{ w.phone || '-' }}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">年龄</text>
+              <text class="info-value">{{ w.workerAge ?? '-' }}岁</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">首次联系</text>
+              <text class="info-value">{{ w.firstContactAt || '-' }}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">最近联系</text>
+              <text class="info-value">{{ w.lastContactAt || '-' }}</text>
+            </view>
+          </view>
+
+          <view class="card-footer">
+            <view
+              v-if="w.status === 'ACTIVE'"
+              class="action-pill pill-orange"
+              @click="toggleStatus(w)"
+            >拉黑</view>
+            <view
+              v-else
+              class="action-pill pill-green"
+              @click="toggleStatus(w)"
+            >取消拉黑</view>
           </view>
         </view>
       </view>
@@ -78,26 +126,184 @@ function toggleStatus(worker) {
   </view>
 </template>
 
-<style>
-.page { min-height: 100vh; background: #f5f5f5; }
-.header { padding: 24rpx 32rpx; background: #fff; border-bottom: 2rpx solid #eee; }
-.header-title { font-size: 34rpx; font-weight: 600; color: #333; }
-.search-row { display: flex; gap: 16rpx; padding: 20rpx 32rpx; background: #fff; }
-.search-input { flex: 1; height: 64rpx; padding: 0 20rpx; border: 2rpx solid #ddd; border-radius: 8rpx; font-size: 26rpx; }
-.search-btn { width: 120rpx; height: 64rpx; line-height: 64rpx; font-size: 26rpx; background: #007aff; color: #fff; border-radius: 8rpx; }
-.search-btn::after, .action-btn::after { border: none; }
-.content { padding: 24rpx 32rpx; }
-.state-msg { text-align: center; padding: 80rpx 0; color: #999; font-size: 28rpx; }
-.list { display: flex; flex-direction: column; gap: 20rpx; }
-.card { background: #fff; border-radius: 16rpx; padding: 24rpx; }
-.card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12rpx; }
-.card-name { font-size: 30rpx; font-weight: 500; color: #333; }
-.badge { font-size: 22rpx; padding: 4rpx 16rpx; border-radius: 8rpx; }
-.badge-on { background: #e8f8e8; color: #34c759; }
-.badge-off { background: #fff3e0; color: #ff9500; }
-.info { display: block; font-size: 26rpx; color: #666; margin-top: 8rpx; }
-.card-actions { display: flex; margin-top: 20rpx; }
-.action-btn { flex: 1; height: 64rpx; line-height: 64rpx; font-size: 24rpx; border-radius: 8rpx; background: #fff; }
-.warn { border: 2rpx solid #ff9500; color: #ff9500; }
-.ok { border: 2rpx solid #34c759; color: #34c759; }
+<style scoped>
+.page {
+  min-height: 100vh;
+  background: #f6f8f7;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  background: #fff;
+  border-bottom: 2rpx solid #eee;
+}
+
+.header-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1f2933;
+}
+
+.search-bar {
+  display: flex;
+  gap: 16rpx;
+  padding: 20rpx 32rpx;
+  background: #fff;
+  border-bottom: 2rpx solid #eee;
+}
+
+.search-input {
+  flex: 1;
+  height: 72rpx;
+  padding: 0 24rpx;
+  border: 2rpx solid #e2e8f0;
+  border-radius: 44rpx;
+  font-size: 26rpx;
+  background: #f8fafc;
+}
+
+.search-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 140rpx;
+  height: 72rpx;
+  background: #07c160;
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: 600;
+  border-radius: 44rpx;
+}
+
+.content {
+  padding: 24rpx 32rpx;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0;
+}
+
+.empty-emoji {
+  font-size: 64rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1f2933;
+  margin-bottom: 8rpx;
+}
+
+.empty-desc {
+  font-size: 26rpx;
+  color: #98a3b3;
+}
+
+.worker-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.worker-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.worker-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1f2933;
+  flex: 1;
+  margin-right: 16rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge {
+  font-size: 24rpx;
+  font-weight: 700;
+  padding: 10rpx 22rpx;
+  border-radius: 999rpx;
+  flex-shrink: 0;
+}
+
+.badge-green {
+  background: #e7f8ef;
+  color: #08a857;
+}
+
+.badge-yellow {
+  background: #fff7df;
+  color: #d28a00;
+}
+
+.badge-red {
+  background: #feecec;
+  color: #df3b30;
+}
+
+.badge-gray {
+  background: #eef1f0;
+  color: #7b8580;
+}
+
+.card-body {
+  margin-bottom: 20rpx;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8rpx 0;
+}
+
+.info-label {
+  font-size: 26rpx;
+  color: #98a3b3;
+}
+
+.info-value {
+  font-size: 26rpx;
+  color: #1f2933;
+}
+
+.card-footer {
+  display: flex;
+}
+
+.action-pill {
+  font-size: 24rpx;
+  font-weight: 600;
+  padding: 10rpx 24rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid;
+}
+
+.pill-green {
+  border-color: #07c160;
+  color: #07c160;
+}
+
+.pill-orange {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
 </style>

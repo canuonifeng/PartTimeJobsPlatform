@@ -44,6 +44,11 @@ function statusLabel(status) {
   return map[status] || status || '-'
 }
 
+function statusClass(status) {
+  const map = { PENDING: 'badge-yellow', ACCEPTED: 'badge-green', REJECTED: 'badge-red' }
+  return map[status] || 'badge-gray'
+}
+
 async function handleAccept(applicationId) {
   try {
     await acceptApplication(applicationId)
@@ -74,27 +79,49 @@ async function handleReject(applicationId) {
 <template>
   <view class="page">
     <view class="header">
-      <text class="title">应聘管理</text>
+      <text class="header-title">应聘管理</text>
     </view>
 
     <scroll-view class="list-scroll" scroll-y @scrolltolower="loadMore">
-      <view v-if="loading" class="state-msg">加载中...</view>
-      <view v-else-if="applications.length === 0" class="state-msg">暂无报名记录</view>
+      <view v-if="loading" class="empty-state">
+        <text class="empty-emoji">⏳</text>
+        <text class="empty-title">加载中...</text>
+      </view>
+
+      <view v-else-if="applications.length === 0" class="empty-state">
+        <text class="empty-emoji">📝</text>
+        <text class="empty-title">暂无报名记录</text>
+        <text class="empty-desc">等待工人投递简历</text>
+      </view>
+
       <view v-else class="application-list">
         <view v-for="app in applications" :key="app.applicationId" class="application-card">
-          <view class="application-top">
+          <view class="card-header">
             <view class="app-info">
-              <text class="name">{{ app.workerName || '未知姓名' }}</text>
-              <text class="job">{{ app.jobTitle || '' }}</text>
+              <text class="worker-name">{{ app.workerName || '未知姓名' }}</text>
+              <text class="job-title">{{ app.jobTitle || '' }}</text>
             </view>
-            <text class="status">{{ statusLabel(app.status) }}</text>
+            <view class="badge" :class="statusClass(app.status)">{{ statusLabel(app.status) }}</view>
           </view>
-          <text class="phone">{{ app.workerPhone || '暂无手机号' }} · {{ app.workerAge ?? '-' }}岁</text>
-          <text class="time">排班：{{ app.scheduleDate || '' }} {{ app.startTime || '' }}-{{ app.endTime || '' }}</text>
-          <text class="time">{{ app.appliedAt || '暂无申请时间' }}</text>
-          <view v-if="app.status === 'PENDING'" class="actions">
-            <button class="btn accept" @click="handleAccept(app.applicationId)">通过</button>
-            <button class="btn reject" @click="handleReject(app.applicationId)">拒绝</button>
+
+          <view class="card-body">
+            <view class="info-row">
+              <text class="info-label">联系电话</text>
+              <text class="info-value">{{ app.workerPhone || '暂无手机号' }}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">排班时间</text>
+              <text class="info-value">{{ app.scheduleDate || '' }} {{ app.startTime || '' }}-{{ app.endTime || '' }}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">申请时间</text>
+              <text class="info-value">{{ app.appliedAt || '暂无申请时间' }}</text>
+            </view>
+          </view>
+
+          <view v-if="app.status === 'PENDING'" class="card-footer">
+            <view class="action-accept" @click="handleAccept(app.applicationId)">通过</view>
+            <view class="action-reject" @click="handleReject(app.applicationId)">拒绝</view>
           </view>
         </view>
 
@@ -109,22 +136,175 @@ async function handleReject(applicationId) {
 </template>
 
 <style scoped>
-.page { min-height: 100vh; background: #f5f5f5; }
-.header { padding: 24rpx 32rpx 16rpx; background: #fff; border-bottom: 1rpx solid #eee; }
-.title { display: block; font-size: 34rpx; font-weight: 600; color: #333; }
-.list-scroll { height: calc(100vh - 110rpx); padding: 20rpx 24rpx 32rpx; }
-.state-msg { text-align: center; padding: 80rpx 0; color: #999; font-size: 28rpx; }
-.application-card { background: #fff; border-radius: 16rpx; padding: 24rpx; margin-bottom: 20rpx; }
-.application-top { display: flex; justify-content: space-between; gap: 20rpx; }
-.app-info { flex: 1; }
-.name { font-size: 30rpx; font-weight: 500; color: #333; display: block; }
-.job { font-size: 24rpx; color: #999; display: block; margin-top: 4rpx; }
-.status { font-size: 22rpx; color: #07c160; flex-shrink: 0; }
-.phone, .time { display: block; margin-top: 12rpx; font-size: 24rpx; color: #666; }
-.actions { display: flex; gap: 16rpx; margin-top: 20rpx; }
-.btn { flex: 1; height: 72rpx; line-height: 72rpx; border-radius: 12rpx; font-size: 26rpx; text-align: center; }
-.btn::after { border: none; }
-.accept { background: #07c160; color: #fff; }
-.reject { background: #f5f5f5; color: #333; }
-.load-more-wrap { padding-bottom: 24rpx; }
+.page {
+  min-height: 100vh;
+  background: #f6f8f7;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  background: #fff;
+  border-bottom: 2rpx solid #eee;
+}
+
+.header-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1f2933;
+}
+
+.list-scroll {
+  height: calc(100vh - 80rpx);
+  padding: 24rpx 32rpx;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0;
+}
+
+.empty-emoji {
+  font-size: 64rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1f2933;
+  margin-bottom: 8rpx;
+}
+
+.empty-desc {
+  font-size: 26rpx;
+  color: #98a3b3;
+}
+
+.application-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.application-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20rpx;
+}
+
+.app-info {
+  flex: 1;
+  margin-right: 16rpx;
+}
+
+.worker-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1f2933;
+  display: block;
+}
+
+.job-title {
+  font-size: 24rpx;
+  color: #98a3b3;
+  display: block;
+  margin-top: 4rpx;
+}
+
+.badge {
+  font-size: 24rpx;
+  font-weight: 700;
+  padding: 10rpx 22rpx;
+  border-radius: 999rpx;
+  flex-shrink: 0;
+}
+
+.badge-green {
+  background: #e7f8ef;
+  color: #08a857;
+}
+
+.badge-yellow {
+  background: #fff7df;
+  color: #d28a00;
+}
+
+.badge-red {
+  background: #feecec;
+  color: #df3b30;
+}
+
+.badge-gray {
+  background: #eef1f0;
+  color: #7b8580;
+}
+
+.card-body {
+  margin-bottom: 20rpx;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8rpx 0;
+}
+
+.info-label {
+  font-size: 26rpx;
+  color: #98a3b3;
+}
+
+.info-value {
+  font-size: 26rpx;
+  color: #1f2933;
+}
+
+.card-footer {
+  display: flex;
+  gap: 20rpx;
+}
+
+.action-accept {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80rpx;
+  background: #07c160;
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 600;
+  border-radius: 44rpx;
+}
+
+.action-reject {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80rpx;
+  background: #fff;
+  color: #1f2933;
+  font-size: 28rpx;
+  font-weight: 600;
+  border-radius: 44rpx;
+  border: 2rpx solid #e2e8f0;
+}
+
+.load-more-wrap {
+  padding: 24rpx 0;
+}
 </style>

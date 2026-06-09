@@ -150,30 +150,30 @@ function settlementStatusLabel(s) {
 </template>
 
 <style>
-.page { min-height: 100vh; background: #f5f5f5; }
-.header { display: flex; justify-content: space-between; align-items: center; padding: 24rpx 32rpx; background: #fff; border-bottom: 2rpx solid #eee; }
-.header-title { font-size: 34rpx; font-weight: 600; color: #333; }
-.header-actions { display: flex; gap: 12rpx; }
-.header-btn { height: 56rpx; line-height: 56rpx; font-size: 24rpx; padding: 0 20rpx; border-radius: 8rpx; color: #fff; }
+.page { min-height: 100vh; background: #f6f8f7; }
+.header { display: flex; justify-content: space-between; align-items: center; padding: 24rpx 32rpx; background: #fff; border-bottom: 2rpx solid #edf0f3; }
+.header-title { font-size: 34rpx; font-weight: 600; color: #1f2933; }
+.header-actions { display: flex; gap: 16rpx; }
+.header-btn { height: 60rpx; line-height: 60rpx; font-size: 24rpx; padding: 0 24rpx; border-radius: 999rpx; color: #fff; font-weight: 600; }
 .header-btn::after { border: none; }
 .pay-btn { background: #07c160; }
 .del-btn { background: #ff3b30; }
-.content { padding: 24rpx 32rpx; }
+.content { padding: 24rpx 28rpx; }
 .list-scroll { height: calc(100vh - 140rpx); }
-.state-msg { text-align: center; padding: 80rpx 0; color: #999; font-size: 28rpx; }
-.list { display: flex; flex-direction: column; gap: 16rpx; }
+.state-msg { text-align: center; padding: 120rpx 0; color: #98a3b3; font-size: 28rpx; }
+.list { display: flex; flex-direction: column; gap: 20rpx; }
 .select-all { display: flex; align-items: center; padding: 12rpx 0; }
-.checkbox { width: 36rpx; height: 36rpx; border: 2rpx solid #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22rpx; color: #fff; margin-right: 12rpx; flex-shrink: 0; }
-.checkbox.checked { background: #007aff; border-color: #007aff; }
-.select-all-label { font-size: 26rpx; color: #666; }
-.card { background: #fff; border-radius: 16rpx; padding: 24rpx; }
-.card-top { display: flex; align-items: center; margin-bottom: 12rpx; }
-.card-name { font-size: 30rpx; font-weight: 500; color: #333; flex: 1; margin-left: 8rpx; }
-.badge { font-size: 22rpx; padding: 4rpx 16rpx; border-radius: 8rpx; flex-shrink: 0; }
-.badge-paid { background: #e8f8e8; color: #34c759; }
-.badge-paying { background: #fff7e6; color: #ff9500; }
-.badge-unpaid { background: #f0f0f0; color: #999; }
+.checkbox { width: 40rpx; height: 40rpx; border: 2rpx solid #d1d5db; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24rpx; color: #fff; margin-right: 12rpx; flex-shrink: 0; }
+.checkbox.checked { background: #07c160; border-color: #07c160; }
+.select-all-label { font-size: 26rpx; color: #64748b; }
+.card { background: #fff; border-radius: 24rpx; padding: 28rpx; box-shadow: 0 12rpx 34rpx rgba(23,83,53,0.08); }
+.card-top { display: flex; align-items: center; margin-bottom: 16rpx; }
+.card-name { font-size: 30rpx; font-weight: 600; color: #1f2933; flex: 1; margin-left: 8rpx; }
+.badge { font-size: 22rpx; padding: 6rpx 18rpx; border-radius: 999rpx; font-weight: 700; flex-shrink: 0; }
+.badge-paid { background: #e7f8ef; color: #08a857; }
+.badge-paying { background: #fff7df; color: #d28a00; }
+.badge-unpaid { background: #eef1f0; color: #7b8580; }
 .card-body { margin-top: 8rpx; }
-.info { display: block; font-size: 26rpx; color: #666; line-height: 1.8; }
+.info { display: block; font-size: 26rpx; color: #64748b; line-height: 1.8; }
 .load-more-wrap { padding-bottom: 24rpx; }
 </style>

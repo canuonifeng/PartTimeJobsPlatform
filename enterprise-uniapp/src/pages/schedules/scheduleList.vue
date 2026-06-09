@@ -40,6 +40,28 @@ function loadMore() {
   loadShifts(true)
 }
 
+function statusLabel(status) {
+  const map = {
+    CANCELLED: '已取消',
+    COMPLETED: '已完成',
+    ON_DUTY: '工作中',
+    LATE: '迟到',
+    SCHEDULED: '待上岗'
+  }
+  return map[status] || status || '-'
+}
+
+function statusClass(status) {
+  const map = {
+    CANCELLED: 'badge-red',
+    COMPLETED: 'badge-gray',
+    ON_DUTY: 'badge-green',
+    LATE: 'badge-green',
+    SCHEDULED: 'badge-yellow'
+  }
+  return map[status] || 'badge-gray'
+}
+
 function handleDelete(id) {
   uni.showModal({
     title: '确认取消',
@@ -67,72 +89,217 @@ function handleDelete(id) {
     <view class="header">
       <text class="header-title">排班考勤</text>
     </view>
-    <view class="content">
-      <scroll-view scroll-y class="list-scroll" @scrolltolower="loadMore">
-        <view v-if="loading" class="state-msg">加载中...</view>
-        <view v-else-if="shifts.length === 0" class="state-msg">暂无排班</view>
-        <view v-else class="list">
-          <view v-for="s in shifts" :key="s.id" class="card">
-            <view class="card-row">
-              <text class="card-label">工人</text>
-              <text class="card-val">{{ s.workerName || '-' }}</text>
+
+    <scroll-view scroll-y class="list-scroll" @scrolltolower="loadMore">
+      <view v-if="loading" class="empty-state">
+        <text class="empty-emoji">⏳</text>
+        <text class="empty-title">加载中...</text>
+      </view>
+
+      <view v-else-if="shifts.length === 0" class="empty-state">
+        <text class="empty-emoji">📅</text>
+        <text class="empty-title">暂无排班</text>
+        <text class="empty-desc">还没有安排排班计划</text>
+      </view>
+
+      <view v-else class="schedule-list">
+        <view v-for="s in shifts" :key="s.id" class="schedule-card">
+          <view class="card-header">
+            <text class="worker-name">{{ s.workerName || '-' }}</text>
+            <view class="badge" :class="statusClass(s.status)">{{ statusLabel(s.status) }}</view>
+          </view>
+
+          <view class="card-body">
+            <view class="info-row">
+              <text class="info-label">岗位</text>
+              <text class="info-value">{{ s.jobTitle || '-' }}</text>
             </view>
-            <view class="card-row">
-              <text class="card-label">年龄</text>
-              <text class="card-val">{{ s.workerAge ?? '-' }}</text>
+            <view class="info-row">
+              <text class="info-label">年龄</text>
+              <text class="info-value">{{ s.workerAge ?? '-' }}岁</text>
             </view>
-            <view class="card-row">
-              <text class="card-label">岗位</text>
-              <text class="card-val">{{ s.jobTitle || '-' }}</text>
+            <view class="info-row">
+              <text class="info-label">日期</text>
+              <text class="info-value">{{ s.shiftDate || s.date || '-' }}</text>
             </view>
-            <view class="card-row">
-              <text class="card-label">日期</text>
-              <text class="card-val">{{ s.shiftDate || s.date || '-' }}</text>
-            </view>
-            <view class="card-row">
-              <text class="card-label">时间</text>
-              <text class="card-val">{{ s.startTime || '-' }} - {{ s.endTime || '-' }}</text>
-            </view>
-            <view class="card-row">
-              <text class="card-label">状态</text>
-              <text class="card-val" :class="s.status === 'CANCELLED' ? 'status-cancelled' : ''">
-                {{ s.status === 'CANCELLED' ? '已取消' : s.status === 'COMPLETED' ? '已完成' : s.status === 'ON_DUTY' || s.status === 'LATE' ? '工作中' : '待上岗' }}
-              </text>
-            </view>
-            <view class="card-actions">
-              <button v-if="s.status !== 'CANCELLED'" class="action-btn delete" @click="handleDelete(s.id)">取消排班</button>
-              <text v-else class="cancelled-text">已取消</text>
+            <view class="info-row">
+              <text class="info-label">时间</text>
+              <text class="info-value">{{ s.startTime || '-' }} - {{ s.endTime || '-' }}</text>
             </view>
           </view>
-        </view>
 
-        <view class="load-more-wrap">
-          <uni-load-more v-if="loadingMore" status="loading" />
-          <uni-load-more v-else-if="hasMore" status="more" />
-          <uni-load-more v-else status="noMore" />
+          <view class="card-footer">
+            <view
+              v-if="s.status !== 'CANCELLED'"
+              class="action-pill pill-red"
+              @click="handleDelete(s.id)"
+            >取消排班</view>
+            <view v-else class="cancelled-label">已取消</view>
+          </view>
         </view>
-      </scroll-view>
-    </view>
+      </view>
+
+      <view class="load-more-wrap">
+        <uni-load-more v-if="loadingMore" status="loading" />
+        <uni-load-more v-else-if="hasMore" status="more" />
+        <uni-load-more v-else status="noMore" />
+      </view>
+    </scroll-view>
   </view>
 </template>
 
-<style>
-.page { min-height: 100vh; background: #f5f5f5; }
-.header { padding: 24rpx 32rpx; background: #fff; border-bottom: 2rpx solid #eee; }
-.header-title { font-size: 34rpx; font-weight: 600; color: #333; }
-.content { padding: 24rpx 32rpx; }
-.list-scroll { height: calc(100vh - 120rpx); }
-.state-msg { text-align: center; padding: 80rpx 0; color: #999; font-size: 28rpx; }
-.list { display: flex; flex-direction: column; gap: 20rpx; }
-.card { background: #fff; border-radius: 16rpx; padding: 24rpx; }
-.card-row { display: flex; padding: 6rpx 0; }
-.card-label { font-size: 26rpx; color: #999; width: 100rpx; flex-shrink: 0; }
-.card-val { font-size: 26rpx; color: #333; flex: 1; }
-.card-actions { display: flex; gap: 16rpx; margin-top: 12rpx; }
-.action-btn { flex: 1; height: 64rpx; line-height: 64rpx; font-size: 24rpx; border-radius: 8rpx; border: 2rpx solid #ddd; background: #fff; text-align: center; }
-.action-btn::after { border: none; }
-.delete { border-color: #ff3b30; color: #ff3b30; }
-.status-cancelled { color: #ff3b30; }
-.cancelled-text { flex: 1; text-align: center; color: #999; font-size: 24rpx; line-height: 64rpx; }
-.load-more-wrap { padding-bottom: 24rpx; }
+<style scoped>
+.page {
+  min-height: 100vh;
+  background: #f6f8f7;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 32rpx;
+  background: #fff;
+  border-bottom: 2rpx solid #eee;
+}
+
+.header-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1f2933;
+}
+
+.list-scroll {
+  height: calc(100vh - 80rpx);
+  padding: 24rpx 32rpx;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 120rpx 0;
+}
+
+.empty-emoji {
+  font-size: 64rpx;
+  margin-bottom: 20rpx;
+}
+
+.empty-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1f2933;
+  margin-bottom: 8rpx;
+}
+
+.empty-desc {
+  font-size: 26rpx;
+  color: #98a3b3;
+}
+
+.schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.schedule-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 30rpx;
+  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.worker-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1f2933;
+  flex: 1;
+  margin-right: 16rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.badge {
+  font-size: 24rpx;
+  font-weight: 700;
+  padding: 10rpx 22rpx;
+  border-radius: 999rpx;
+  flex-shrink: 0;
+}
+
+.badge-green {
+  background: #e7f8ef;
+  color: #08a857;
+}
+
+.badge-yellow {
+  background: #fff7df;
+  color: #d28a00;
+}
+
+.badge-red {
+  background: #feecec;
+  color: #df3b30;
+}
+
+.badge-gray {
+  background: #eef1f0;
+  color: #7b8580;
+}
+
+.card-body {
+  margin-bottom: 20rpx;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8rpx 0;
+}
+
+.info-label {
+  font-size: 26rpx;
+  color: #98a3b3;
+}
+
+.info-value {
+  font-size: 26rpx;
+  color: #1f2933;
+}
+
+.card-footer {
+  display: flex;
+}
+
+.action-pill {
+  font-size: 24rpx;
+  font-weight: 600;
+  padding: 10rpx 24rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid;
+}
+
+.pill-red {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.cancelled-label {
+  font-size: 24rpx;
+  color: #98a3b3;
+}
+
+.load-more-wrap {
+  padding: 24rpx 0;
+}
 </style>

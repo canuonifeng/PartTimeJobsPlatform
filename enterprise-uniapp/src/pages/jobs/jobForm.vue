@@ -468,10 +468,21 @@ async function handleSave() {
 </script>
 
 <template>
-  <view class="page form-page">
+  <view class="page">
+    <view class="header">
+      <view class="header-left" @click="uni.navigateBack()">
+        <text class="back-arrow">‹</text>
+      </view>
+      <text class="header-title">{{ isEdit ? '编辑职位' : '发布职位' }}</text>
+      <view class="header-right"></view>
+    </view>
+
     <scroll-view scroll-y class="form-scroll">
       <view class="form-section">
-        <text class="section-title">岗位信息</text>
+        <view class="section-title-row">
+          <view class="section-accent"></view>
+          <text class="section-title">岗位信息</text>
+        </view>
 
         <view class="form-item">
           <text class="label">选择已有职位模版</text>
@@ -555,13 +566,16 @@ async function handleSave() {
 
         <view class="form-item">
           <text class="label">职位图片</text>
-          <button class="picker-btn" @click="chooseImage">选择图片</button>
+          <view class="picker-btn" @click="chooseImage">选择图片</view>
           <image v-if="formData.imageUrl" class="preview-image" :src="formData.imageUrl" mode="aspectFill" @click="previewImage" />
         </view>
       </view>
 
       <view class="form-section">
-        <text class="section-title">地址信息</text>
+        <view class="section-title-row">
+          <view class="section-accent"></view>
+          <text class="section-title">地址信息</text>
+        </view>
 
         <view class="form-item">
           <text class="label">选择已有工作地址</text>
@@ -592,13 +606,16 @@ async function handleSave() {
 
         <view class="form-item">
           <text class="label">坐标定位</text>
-          <button class="location-btn" @click="chooseLocation">选择位置</button>
+          <view class="picker-btn" @click="chooseLocation">选择位置</view>
           <text v-if="formData.latitude" class="location-coords">{{ formData.latitude }}, {{ formData.longitude }}</text>
         </view>
       </view>
 
       <view class="form-section">
-        <text class="section-title">招聘信息</text>
+        <view class="section-title-row">
+          <view class="section-accent"></view>
+          <text class="section-title">招聘信息</text>
+        </view>
 
         <view class="form-item">
           <text class="label">招聘人数</text>
@@ -622,7 +639,10 @@ async function handleSave() {
 
       <view class="form-section">
         <view class="section-header">
-          <text class="section-title">薪资标准</text>
+          <view class="section-title-row">
+            <view class="section-accent"></view>
+            <text class="section-title">薪资标准</text>
+          </view>
           <text class="add-btn" @click="addRate">+ 添加</text>
         </view>
         <view v-for="(rate, index) in rates" :key="index" class="sub-item">
@@ -649,7 +669,10 @@ async function handleSave() {
 
       <view class="form-section">
         <view class="section-header">
-          <text class="section-title">排班时段</text>
+          <view class="section-title-row">
+            <view class="section-accent"></view>
+            <text class="section-title">排班时段</text>
+          </view>
           <text class="add-btn" @click="addSchedule">+ 添加</text>
         </view>
         <view v-for="(sched, index) in schedules" :key="index" class="sub-item">
@@ -691,24 +714,60 @@ async function handleSave() {
 </template>
 
 <style>
-.form-page {
-  background: #f5f5f5;
+.page {
+  min-height: 100vh;
+  background: #f6f8f7;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 32rpx;
+  background: #fff;
+  border-bottom: 2rpx solid #eee;
+}
+.header-left {
+  width: 60rpx;
+}
+.back-arrow {
+  font-size: 40rpx;
+  color: #333;
+  font-weight: 300;
+}
+.header-title {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #1f2933;
+}
+.header-right {
+  width: 60rpx;
 }
 .form-scroll {
   padding: 24rpx 32rpx;
 }
 .form-section {
   background: #fff;
-  border-radius: 16rpx;
-  padding: 28rpx;
+  border-radius: 24rpx;
+  padding: 30rpx;
   margin-bottom: 20rpx;
+  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
+}
+.section-title-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+.section-accent {
+  width: 3rpx;
+  height: 28rpx;
+  background: #07c160;
+  border-radius: 2rpx;
+  margin-right: 12rpx;
 }
 .section-title {
   font-size: 28rpx;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 20rpx;
-  display: block;
+  font-weight: 600;
+  color: #1f2933;
 }
 .section-header {
   display: flex;
@@ -716,29 +775,29 @@ async function handleSave() {
   align-items: center;
   margin-bottom: 20rpx;
 }
-.section-header .section-title {
+.section-header .section-title-row {
   margin-bottom: 0;
 }
 .add-btn {
   font-size: 26rpx;
-  color: #007aff;
+  color: #07c160;
   padding: 8rpx 12rpx;
 }
 .picker-btn {
   width: 100%;
-  height: 72rpx;
-  line-height: 72rpx;
+  height: 78rpx;
+  line-height: 78rpx;
   background: #fff;
-  border: 2rpx solid #409eff;
-  border-radius: 8rpx;
-  color: #409eff;
+  border: 2rpx solid #07c160;
+  border-radius: 14rpx;
+  color: #07c160;
   text-align: center;
   font-size: 28rpx;
 }
 .selected-tip {
   margin-top: 12rpx;
   font-size: 24rpx;
-  color: #67c23a;
+  color: #07c160;
 }
 .form-item {
   margin-bottom: 24rpx;
@@ -746,14 +805,15 @@ async function handleSave() {
 .label {
   display: block;
   font-size: 26rpx;
-  color: #666;
+  color: #64748b;
   margin-bottom: 8rpx;
 }
 .input {
   width: 100%;
-  height: 72rpx;
-  border: 2rpx solid #e0e0e0;
-  border-radius: 8rpx;
+  height: 78rpx;
+  border: 2rpx solid #edf0f3;
+  border-radius: 14rpx;
+  background: #fafafa;
   padding: 0 20rpx;
   font-size: 28rpx;
   box-sizing: border-box;
@@ -761,11 +821,12 @@ async function handleSave() {
 .editor {
   width: 100%;
   min-height: 220rpx;
-  border: 2rpx solid #e0e0e0;
-  border-radius: 8rpx;
+  border: 2rpx solid #edf0f3;
+  border-radius: 14rpx;
   padding: 16rpx 20rpx;
   font-size: 28rpx;
   box-sizing: border-box;
+  background: #fafafa;
 }
 .tag-hint {
   padding: 18rpx 0;
@@ -781,7 +842,7 @@ async function handleSave() {
 .tag-group-title {
   display: block;
   font-size: 24rpx;
-  color: #666;
+  color: #64748b;
   margin-bottom: 12rpx;
 }
 .tag-list {
@@ -791,37 +852,37 @@ async function handleSave() {
 }
 .tag-chip {
   padding: 10rpx 20rpx;
-  border: 2rpx solid #dcdfe6;
+  border: 2rpx solid #edf0f3;
   border-radius: 999rpx;
   font-size: 24rpx;
-  color: #606266;
+  color: #64748b;
   background: #fff;
 }
 .tag-chip.active {
-  border-color: #409eff;
-  color: #409eff;
-  background: #ecf5ff;
+  border-color: #07c160;
+  color: #07c160;
+  background: #eafaf1;
 }
 .picker {
-  height: 72rpx;
-  border: 2rpx solid #e0e0e0;
-  border-radius: 8rpx;
+  height: 78rpx;
+  border: 2rpx solid #edf0f3;
+  border-radius: 14rpx;
   padding: 0 20rpx;
   display: flex;
   align-items: center;
-  background: #fff;
+  background: #fafafa;
 }
 .picker-value {
   font-size: 28rpx;
-  color: #333;
+  color: #1f2933;
 }
 .picker-placeholder {
   font-size: 28rpx;
   color: #ccc;
 }
 .sub-item {
-  background: #f9f9f9;
-  border-radius: 12rpx;
+  background: #f6f8f7;
+  border-radius: 14rpx;
   padding: 16rpx;
   margin-bottom: 12rpx;
 }
@@ -835,8 +896,8 @@ async function handleSave() {
   margin-bottom: 0;
 }
 .picker-sm {
-  height: 60rpx;
-  border-color: #ddd;
+  height: 64rpx;
+  border-color: #edf0f3;
   padding: 0 12rpx;
   min-width: 100rpx;
 }
@@ -844,7 +905,7 @@ async function handleSave() {
   font-size: 24rpx;
 }
 .input-sm {
-  height: 60rpx;
+  height: 64rpx;
   font-size: 24rpx;
   flex: 1;
   min-width: 80rpx;
@@ -878,11 +939,13 @@ async function handleSave() {
   width: 100%;
   height: 88rpx;
   line-height: 88rpx;
-  background: #007aff;
+  background: linear-gradient(135deg, #18c86b, #08a95a);
   color: #fff;
-  border-radius: 12rpx;
+  border-radius: 44rpx;
   font-size: 32rpx;
+  font-weight: 700;
   text-align: center;
+  border: none;
 }
 .save-btn[disabled] {
   opacity: 0.6;
@@ -891,12 +954,12 @@ async function handleSave() {
   border: none;
 }
 .location-btn {
-  height: 60rpx;
-  line-height: 60rpx;
+  height: 64rpx;
+  line-height: 64rpx;
   font-size: 24rpx;
-  background: #007aff;
+  background: #07c160;
   color: #fff;
-  border-radius: 8rpx;
+  border-radius: 14rpx;
   padding: 0 20rpx;
 }
 .location-coords {
@@ -907,7 +970,7 @@ async function handleSave() {
 .preview-image {
   width: 200rpx;
   height: 200rpx;
-  border-radius: 12rpx;
+  border-radius: 14rpx;
   margin-top: 20rpx;
 }
 </style>
