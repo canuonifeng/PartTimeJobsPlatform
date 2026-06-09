@@ -26,8 +26,8 @@ public class EnterpriseRealNameAuthReviewController {
     }
 
     @Operation(summary = "通过企业实名认证")
-    @PostMapping("/{id}/approve")
-    public ApiResponse<?> approve(@PathVariable Long id) {
+    @PostMapping("/approve")
+    public ApiResponse<?> approve(@RequestParam Long id) {
         try {
             service.approve(id, null);
             return ApiResponse.success(Map.of("success", true));
@@ -37,8 +37,8 @@ public class EnterpriseRealNameAuthReviewController {
     }
 
     @Operation(summary = "拒绝企业实名认证")
-    @PostMapping("/{id}/reject")
-    public ApiResponse<?> reject(@PathVariable Long id, @RequestBody Map<String, String> body) {
+    @PostMapping("/reject")
+    public ApiResponse<?> reject(@RequestParam Long id, @RequestBody Map<String, String> body) {
         try {
             service.reject(id, null, body.get("reason"));
             return ApiResponse.success(Map.of("success", true));

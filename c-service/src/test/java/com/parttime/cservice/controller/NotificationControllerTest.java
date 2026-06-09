@@ -77,7 +77,7 @@ class NotificationControllerTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("1", null, List.of()));
 
-        mockMvc.perform(put("/api/notifications/10/read"))
+        mockMvc.perform(put("/api/notifications/read").param("id", "10"))
                 .andExpect(status().isOk());
 
         verify(notificationService).markAsRead(1L, 10L);

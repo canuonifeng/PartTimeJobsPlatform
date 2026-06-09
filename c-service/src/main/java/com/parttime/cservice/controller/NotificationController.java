@@ -9,7 +9,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,8 +35,8 @@ public class NotificationController {
     }
 
     @Operation(summary = "标记通知已读", description = "将当前工人的指定通知标记为已读")
-    @PutMapping("/{id}/read")
-    public ApiResponse<Void> markAsRead(@PathVariable Long id) {
+    @PutMapping("/read")
+    public ApiResponse<Void> markAsRead(@RequestParam Long id) {
         Long workerId = currentWorkerId();
         if (workerId == null) {
             return ApiResponse.error(401, "未登录");

@@ -90,14 +90,14 @@ public class ScheduleController {
     }
 
     @Operation(summary = "通过补卡申请", description = "通过补卡申请并生成/更新考勤记录")
-    @PutMapping("/schedules/corrections/{id}/approve")
-    public void approveCorrection(@Parameter(description = "补卡申请ID") @PathVariable Long id) {
+    @PutMapping("/schedules/corrections/approve")
+    public void approveCorrection(@Parameter(description = "补卡申请ID") @RequestParam Long id) {
         correctionService.approve(id, SecurityUtil.getCurrentUserId());
     }
 
     @Operation(summary = "拒绝补卡申请", description = "拒绝补卡申请")
-    @PutMapping("/schedules/corrections/{id}/reject")
-    public void rejectCorrection(@Parameter(description = "补卡申请ID") @PathVariable Long id,
+    @PutMapping("/schedules/corrections/reject")
+    public void rejectCorrection(@Parameter(description = "补卡申请ID") @RequestParam Long id,
                                   @RequestBody CorrectionRejectCmd cmd) {
         correctionService.reject(id, SecurityUtil.getCurrentUserId(), cmd.getRejectReason());
     }

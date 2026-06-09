@@ -16,8 +16,8 @@ public class SettlementController {
     private SettlementService settlementService;
 
     @Operation(summary = "撤回结算", description = "将已结算的考勤记录撤回，扣减工人余额")
-    @PutMapping("/unsettle/{attendanceRecordId}")
-    public void unsettle(@PathVariable Long attendanceRecordId) {
+    @PutMapping("/unsettle")
+    public void unsettle(@RequestParam Long attendanceRecordId) {
         Long companyId = SecurityUtil.getCurrentCompanyId();
         settlementService.unsettle(attendanceRecordId, companyId);
     }

@@ -29,9 +29,9 @@ export function listCorrections(params) {
 }
 
 export function approveCorrection(id) {
-  return request.put(`/schedules/corrections/${id}/approve`)
+  return request.put('/schedules/corrections/approve', null, { params: { id } })
 }
 
 export function rejectCorrection(id, data) {
-  return request.put(`/schedules/corrections/${id}/reject`, data)
+  return request.put('/schedules/corrections/reject', data, { params: { id } })
 }

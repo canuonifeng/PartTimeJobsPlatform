@@ -13,9 +13,9 @@ export function getAuditList(params) {
 }
 
 export function approveReward(id, remark) {
-  return request.post(`/referral/audit/${id}/approve`, { remark })
+  return request.post('/referral/audit/approve', { remark }, { params: { id } })
 }
 
 export function rejectReward(id, remark) {
-  return request.post(`/referral/audit/${id}/reject`, { remark })
+  return request.post('/referral/audit/reject', { remark }, { params: { id } })
 }

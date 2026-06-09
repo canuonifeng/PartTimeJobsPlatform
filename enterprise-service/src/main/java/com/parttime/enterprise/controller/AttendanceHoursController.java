@@ -46,9 +46,9 @@ public class AttendanceHoursController {
     }
 
     @Operation(summary = "编辑考勤工时", description = "编辑考勤工时的工时数和应付薪资")
-    @PutMapping("/{id}")
+    @PutMapping
     @Transactional
-    public void update(@Parameter(description = "考勤记录ID") @PathVariable Long id,
+    public void update(@Parameter(description = "考勤记录ID") @RequestParam Long id,
                        @RequestBody AttendanceHoursUpdateCmd cmd) {
         AttendanceRecord record = attendanceRecordMapper.findById(id)
                 .orElseThrow(() -> new RuntimeException("Attendance record not found: " + id));

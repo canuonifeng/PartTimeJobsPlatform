@@ -12,7 +12,7 @@ export function listAttendance(params = {}) {
 }
 
 export function updateAttendance(id, data) {
-  return request('PUT', `/attendance/hours/${id}`, data)
+  return request('PUT', `/attendance/hours?id=${id}`, data)
 }
 
 export function batchPay(ids) {

@@ -41,15 +41,15 @@ public class ReferralController {
     }
 
     @Operation(summary = "审核通过")
-    @PostMapping("/audit/{id}/approve")
-    public ApiResponse<Void> approveReward(@PathVariable Long id, @RequestBody Map<String, String> body) {
+    @PostMapping("/audit/approve")
+    public ApiResponse<Void> approveReward(@RequestParam Long id, @RequestBody Map<String, String> body) {
         referralService.approveReward(id, body.get("remark"));
         return ApiResponse.success();
     }
 
     @Operation(summary = "审核拒绝")
-    @PostMapping("/audit/{id}/reject")
-    public ApiResponse<Void> rejectReward(@PathVariable Long id, @RequestBody Map<String, String> body) {
+    @PostMapping("/audit/reject")
+    public ApiResponse<Void> rejectReward(@RequestParam Long id, @RequestBody Map<String, String> body) {
         referralService.rejectReward(id, body.get("remark"));
         return ApiResponse.success();
     }
