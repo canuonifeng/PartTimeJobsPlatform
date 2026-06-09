@@ -45,8 +45,8 @@ const loading = ref(false)
 const shifts = ref<Shift[]>([])
 const submittingKey = ref('')
 const weekDayNames = ['日', '一', '二', '三', '四', '五', '六']
-const checkedInStatuses = ['CHECKED_IN', 'CHECKED_OUT', 'ON_DUTY', 'OFF_DUTY', 'COMPLETED', 'LATE']
-const checkedOutStatuses = ['CHECKED_OUT', 'OFF_DUTY', 'COMPLETED']
+const checkedInStatuses = ['ON_DUTY', 'COMPLETED', 'LATE', 'EARLY_LEAVE']
+const checkedOutStatuses = ['COMPLETED', 'EARLY_LEAVE']
 
 const todayDate = computed(() => {
   const d = new Date()
