@@ -38,12 +38,14 @@
       <uni-load-more v-if="loadingMore" status="loading" />
     </view>
   </view>
+  <InviteFloat />
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { onReachBottom } from '@dcloudio/uni-app'
 import { getMyNotifications, markNotificationRead } from '@/api/notifications'
+import InviteFloat from '@/components/InviteFloat.vue'
 import { hasUnreadCategory } from '@/utils/notificationBadges.mjs'
 import { syncMessageTabBarBadge } from '@/utils/notificationBadge'
 

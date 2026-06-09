@@ -43,3 +43,10 @@ export function getBankCards() {
     method: 'GET'
   })
 }
+
+export function getReferralRewards() {
+  return request({
+    url: '/api/referral/rewards',
+    method: 'GET'
+  })
+}

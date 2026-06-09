@@ -57,12 +57,14 @@
       <button class="logout-btn" @click="handleLogout">退出登录</button>
     </view>
   </view>
+  <InviteFloat />
 </template>
 
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useAuthStore } from '@/store'
 import { getProfileDashboard } from '@/api/profile'
+import InviteFloat from '@/components/InviteFloat.vue'
 
 const authStore = useAuthStore()
 const profile = ref<any>(null)

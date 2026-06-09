@@ -80,6 +80,7 @@
       </template>
     </view>
   </scroll-view>
+  <InviteFloat />
 </template>
 
 <script setup lang="ts">
@@ -88,6 +89,7 @@ import { onShow, onHide, onUnload } from '@dcloudio/uni-app'
 import { useAuthStore } from '@/store'
 import { getHomeStats, getHomeSchedules } from '@/api/home'
 import { checkIn, checkOut } from '@/api/attendance'
+import InviteFloat from '@/components/InviteFloat.vue'
 
 const authStore = useAuthStore()
 const stats = ref({ monthHours: 0, monthIncome: 0, attendanceDays: 0 })

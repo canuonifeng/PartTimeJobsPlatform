@@ -48,7 +48,7 @@
           <text class="date-count">{{ group.items.length }}笔</text>
         </view>
         <view v-for="item in group.items" :key="item.id" class="transaction-card">
-          <view class="tx-icon" :class="item.type"><text>{{ item.type === 'withdrawal' ? '提' : '收' }}</text></view>
+          <view class="tx-icon" :class="item.type"><text>{{ item.type === 'referral' ? '邀' : item.type === 'withdrawal' ? '提' : '收' }}</text></view>
           <view class="tx-left">
             <text class="tx-title">{{ item.title }}</text>
             <template v-if="item.type === 'earning'">
@@ -68,13 +68,15 @@
       <uni-load-more v-if="transactions.length > 0" :status="moreStatus" />
     </view>
   </view>
+  <InviteFloat />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { onReachBottom } from '@dcloudio/uni-app'
 import { getMyAttendance } from '@/api/attendance'
-import { getEarningsSummary, getEarningsTransactions } from '@/api/earnings'
+import { getEarningsSummary, getEarningsTransactions, getReferralRewards } from '@/api/earnings'
+import InviteFloat from '@/components/InviteFloat.vue'
 
 interface Summary {
   totalEarnings: number
@@ -101,6 +103,8 @@ interface Transaction {
   settlementTime?: string
   sortAt: string
 }
+
+const referralTransactions = ref<Transaction[]>([])
 
 const pageSize = 20
 const page = ref(1)
@@ -241,16 +245,46 @@ function normalizeTotal(res: any, listLength: number) {
   return num(res?.total || res?.totalCount || res?.count || listLength)
 }
 
+function mapReferralReward(item: any): Transaction {
+  const status = String(item?.status || '').toUpperCase()
+  const isGranted = status === 'GRANTED'
+  const createdAt = item?.createdAt || item?.createTime || new Date().toISOString().replace('T', ' ').slice(0, 19)
+  return {
+    id: `referral-${item?.id || createdAt}`,
+    type: 'referral',
+    amount: Math.abs(num(item?.rewardAmount || item?.amount || 0)),
+    status: isGranted ? '已发放' : (status === 'PENDING' || status === 'AUDITING') ? '待审核' : '审核中',
+    statusClass: isGranted ? 'success' : 'pending',
+    filterStatus: isGranted ? 'settled' : 'pending',
+    createdAt,
+    date: normalizeDate(createdAt),
+    time: normalizeTime(createdAt),
+    title: item?.refereeName ? `${item.refereeName} 邀请奖励` : '邀请好友奖励',
+    subtitle: item?.refereePhone || undefined,
+    sortAt: createdAt
+  }
+}
+
+async function loadReferralRewards() {
+  try {
+    const res: any = await getReferralRewards({ page: 1, pageSize: 100 })
+    const list = normalizeRecords(res).map(mapReferralReward)
+    referralTransactions.value = list
+  } catch {
+    referralTransactions.value = []
+  }
+}
+
 async function loadTxPage(p: number, append: boolean) {
   const res: any = await getEarningsTransactions({ page: p, pageSize })
   const list = normalizeRecords(res).map(mapTx)
-  if (append) {
-    transactions.value.push(...list)
-    total.value = normalizeTotal(res, transactions.value.length)
-  } else {
-    transactions.value = [...list, ...pendingAttendanceTransactions.value]
-    total.value = normalizeTotal(res, list.length) + pendingAttendanceTransactions.value.length
-  }
+    if (append) {
+      transactions.value.push(...list)
+      total.value = normalizeTotal(res, transactions.value.length)
+    } else {
+      transactions.value = [...list, ...pendingAttendanceTransactions.value, ...referralTransactions.value]
+      total.value = normalizeTotal(res, list.length) + pendingAttendanceTransactions.value.length + referralTransactions.value.length
+    }
 }
 
 async function loadData() {
@@ -294,6 +328,9 @@ async function loadData() {
     }
 
     await loadTxPage(1, false)
+    await loadReferralRewards()
+    transactions.value = [...transactions.value.filter((t: any) => t.type !== 'referral'), ...referralTransactions.value]
+    total.value = transactions.value.length
   } catch {
     summary.value = { totalEarnings: 0, monthEarnings: 0, pendingSettlement: 0, withdrawnAmount: 0, availableBalance: 0 }
     transactions.value = []
@@ -521,6 +558,11 @@ onUnmounted(() => { uni.$off('earningsRefresh', loadData) })
   background: #eaf3ff;
 }
 
+.tx-icon.referral {
+  color: #8b5cf6;
+  background: #f3e8ff;
+}
+
 .transaction-card:last-child {
   border-bottom: none;
 }
@@ -573,6 +615,10 @@ onUnmounted(() => { uni.$off('earningsRefresh', loadData) })
 
 .tx-amount.withdrawal {
   color: #2f80ed;
+}
+
+.tx-amount.referral {
+  color: #8b5cf6;
 }
 
 .tx-status {

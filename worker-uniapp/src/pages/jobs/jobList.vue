@@ -53,11 +53,13 @@
       </view>
     </scroll-view>
   </view>
+  <InviteFloat />
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { getCategories, getJobs } from '@/api/jobs'
+import InviteFloat from '@/components/InviteFloat.vue'
 
 type SearchEvent = { detail?: { value?: string }, value?: string }
 type JobCategory = { id?: number, name: string, key?: string, children?: JobCategory[] }
