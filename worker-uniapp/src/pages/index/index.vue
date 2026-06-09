@@ -759,6 +759,12 @@ onUnload(stopCountdown)
 .btn-primary {
   background: linear-gradient(135deg, #18c86b, #08a95a);
   color: #fff;
+  animation: btn-pulse 2s ease-in-out infinite;
+}
+
+@keyframes btn-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(7, 193, 96, 0.5); }
+  50% { box-shadow: 0 0 0 16rpx rgba(7, 193, 96, 0); }
 }
 
 .btn-disabled {
