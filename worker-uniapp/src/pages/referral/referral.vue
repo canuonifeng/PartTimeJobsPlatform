@@ -37,7 +37,7 @@
     <view class="section">
       <navigator url="/pages/referral/referralRecords" class="records-link">
         <text>查看邀请记录</text>
-        <text class="arrow">></text>
+        <text class="arrow">›</text>
       </navigator>
     </view>
   </view>
