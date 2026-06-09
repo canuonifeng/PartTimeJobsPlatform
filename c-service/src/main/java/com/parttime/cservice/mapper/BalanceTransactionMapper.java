@@ -11,7 +11,6 @@ import java.util.List;
 @Mapper
 public interface BalanceTransactionMapper {
     int insert(BalanceTransaction transaction);
-    List<BalanceTransaction> findByWorkerId(@Param("workerId") Long workerId);
     List<BalanceTransaction> findByWorkerIdPage(@Param("workerId") Long workerId,
                                                   @Param("offset") int offset,
                                                   @Param("pageSize") int pageSize);

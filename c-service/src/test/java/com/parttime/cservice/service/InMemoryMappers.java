@@ -581,9 +581,6 @@ public class InMemoryMappers {
                 store.put(transaction.getId(), transaction);
                 return 1;
             }
-            @Override public List<com.parttime.cservice.pojo.entity.BalanceTransaction> findByWorkerId(Long workerId) {
-                return store.values().stream().filter(t -> workerId.equals(t.getWorkerId())).collect(Collectors.toList());
-            }
             @Override public List<com.parttime.cservice.pojo.entity.BalanceTransaction> findByWorkerIdPage(Long workerId, int offset, int pageSize) {
                 return store.values().stream()
                         .filter(t -> workerId.equals(t.getWorkerId()))

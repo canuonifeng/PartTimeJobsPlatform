@@ -136,7 +136,7 @@ class WithdrawalServiceIntegrationTest {
 
         WithdrawalVO result = withdrawalService.requestWithdrawal(workerId, BigDecimal.valueOf(100), "WECHAT", null);
 
-        List<BalanceTransaction> transactions = balanceTransactionMapper.findByWorkerId(workerId);
+        List<BalanceTransaction> transactions = balanceTransactionMapper.findByWorkerIdPage(workerId, 0, 100);
         assertThat(transactions).hasSize(1);
         BalanceTransaction bt = transactions.get(0);
         assertThat(bt.getType()).isEqualTo("WITHDRAWAL");
