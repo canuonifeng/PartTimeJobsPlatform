@@ -31,7 +31,7 @@ class WorkerServiceTest {
 
     @Test
     void register_shouldCreateWorkerAndReturnResponse() {
-        RegisterCmd request = new RegisterCmd("John", "13800138000", "http://avatar.url");
+        RegisterCmd request = new RegisterCmd("John", "13800138000", "http://avatar.url", null);
         WorkerVO response = workerService.register(request);
 
         assertThat(response).isNotNull();
@@ -44,15 +44,15 @@ class WorkerServiceTest {
 
     @Test
     void register_shouldGenerateSequentialIds() {
-        WorkerVO r1 = workerService.register(new RegisterCmd("A", null, null));
-        WorkerVO r2 = workerService.register(new RegisterCmd("B", null, null));
+        WorkerVO r1 = workerService.register(new RegisterCmd("A", null, null, null));
+        WorkerVO r2 = workerService.register(new RegisterCmd("B", null, null, null));
 
         assertThat(r2.getId()).isGreaterThan(r1.getId());
     }
 
     @Test
     void getWorkerById_shouldReturnRegisteredWorker() {
-        WorkerVO created = workerService.register(new RegisterCmd("John", "13800138000", null));
+        WorkerVO created = workerService.register(new RegisterCmd("John", "13800138000", null, null));
         WorkerVO found = workerService.getWorkerById(created.getId());
 
         assertThat(found).isNotNull();
@@ -90,9 +90,9 @@ class WorkerServiceTest {
 
     @Test
     void updateProfile_shouldModifyFields() {
-        WorkerVO created = workerService.register(new RegisterCmd("John", null, null));
+        WorkerVO created = workerService.register(new RegisterCmd("John", null, null, null));
 
-        RegisterCmd update = new RegisterCmd("John Updated", "13900139000", "http://new.avatar");
+        RegisterCmd update = new RegisterCmd("John Updated", "13900139000", "http://new.avatar", null);
         WorkerVO updated = workerService.updateProfile(created.getId(), update);
 
         assertThat(updated.getName()).isEqualTo("John Updated");
@@ -102,9 +102,9 @@ class WorkerServiceTest {
 
     @Test
     void updateProfile_shouldKeepExistingFieldsWhenNull() {
-        WorkerVO created = workerService.register(new RegisterCmd("John", "13800138000", "http://avatar"));
+        WorkerVO created = workerService.register(new RegisterCmd("John", "13800138000", "http://avatar", null));
 
-        WorkerVO updated = workerService.updateProfile(created.getId(), new RegisterCmd("New Name", null, null));
+        WorkerVO updated = workerService.updateProfile(created.getId(), new RegisterCmd("New Name", null, null, null));
 
         assertThat(updated.getName()).isEqualTo("New Name");
         assertThat(updated.getPhone()).isEqualTo("13800138000");

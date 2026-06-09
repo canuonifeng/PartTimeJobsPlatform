@@ -60,7 +60,7 @@ class AuthControllerTest {
 
     @Test
     void register_shouldReturn200WithToken() throws Exception {
-        RegisterCmd request = new RegisterCmd("John", "13800138000", "http://avatar.url");
+        RegisterCmd request = new RegisterCmd("John", "13800138000", "http://avatar.url", null);
 
         when(workerService.register(any(RegisterCmd.class))).thenReturn(sampleWorker);
         when(jwtTokenProvider.generateToken(eq("1"), any())).thenReturn("test.jwt.token");
@@ -141,7 +141,7 @@ class AuthControllerTest {
         updatedWorker.setAvatar("http://new.avatar");
         updatedWorker.setCreatedAt(LocalDateTime.now());
 
-        RegisterCmd updateRequest = new RegisterCmd("John Updated", "13900139000", "http://new.avatar");
+        RegisterCmd updateRequest = new RegisterCmd("John Updated", "13900139000", "http://new.avatar", null);
 
         when(workerService.updateProfile(eq(1L), any(RegisterCmd.class))).thenReturn(updatedWorker);
 
