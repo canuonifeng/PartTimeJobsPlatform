@@ -19,12 +19,13 @@
 
 ```sql
 -- scripts/22_auto_approve_and_auto_settle.sql
--- 报名自动审核 + 打卡自动结算
+-- 报名自动审核 + 打卡自动结算 + 签到距离全局配置
 
-INSERT INTO system_configs (config_key, config_value, name, created_at, updated_at)
+INSERT IGNORE INTO system_configs (config_key, config_value, name, created_at, updated_at)
 VALUES
   ('auto_approve_applications', 'false', '报名自动通过审核', NOW(), NOW()),
-  ('auto_settle_attendance', 'false', '打卡签退后自动结算', NOW(), NOW());
+  ('auto_settle_attendance', 'false', '打卡签退后自动结算', NOW(), NOW()),
+  ('check_in_radius_meters', '100', '签到最小距离（米）', NOW(), NOW());
 
 ALTER TABLE jobs ADD COLUMN auto_approve TINYINT(1) DEFAULT NULL COMMENT '自动审核: null跟随平台默认, 1开启, 0关闭';
 ```
@@ -599,7 +600,130 @@ git commit -m "feat: show auto-settle popup on check-out with amount and withdra
 
 ---
 
-### Task 9: Final verification — all services and builds
+### Task 9: c-service — configurable check-in radius
+
+**Files:**
+- Modify: `c-service/src/main/java/com/parttime/cservice/service/impl/AttendanceServiceImpl.java`
+
+- [ ] **Step 1: Read global config as fallback for locationRadius**
+
+In `AttendanceServiceImpl`, the check-in and check-out distance checks (lines 124-131 and 188-195) currently use `shift.getLocationRadius()`. Add fallback to global config:
+
+Replace the distance check blocks in both `checkIn()` and `checkOut()`:
+
+```java
+        if (shift.getLocationLat() != null && lat != null) {
+            int radius = shift.getLocationRadius() != null ? shift.getLocationRadius() : getDefaultRadius();
+            double distance = haversine(
+                    shift.getLocationLat().doubleValue(), shift.getLocationLng().doubleValue(),
+                    lat.doubleValue(), lng.doubleValue());
+            if (distance > radius) {
+                throw new RuntimeException("Location out of range: " + (int) distance + "m (max: " + radius + "m)");
+            }
+        }
+```
+
+Add helper method:
+
+```java
+    private int getDefaultRadius() {
+        SystemConfig config = systemConfigMapper.findByKey("check_in_radius_meters").orElse(null);
+        if (config != null) {
+            try {
+                return Integer.parseInt(config.getConfigValue());
+            } catch (NumberFormatException ignored) {}
+        }
+        return 100;
+    }
+```
+
+- [ ] **Step 2: Run tests**
+
+Run: `cd c-service && JAVA_HOME=$(/usr/libexec/java_home -v 17 2>/dev/null) mvn test -q`
+Expected: All tests pass
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add c-service/src/main/java/com/parttime/cservice/service/impl/AttendanceServiceImpl.java
+git commit -m "feat: use global check_in_radius_meters config as fallback"
+```
+
+---
+
+### Task 10: worker-uniapp — read global radius config for frontend check
+
+**Files:**
+- Modify: `worker-uniapp/src/pages/index/index.vue`
+- Create: `worker-uniapp/src/api/config.js` (if not exists)
+
+- [ ] **Step 1: Create config API to read global radius**
+
+Create `worker-uniapp/src/api/config.js`:
+
+```javascript
+import request from './request'
+
+let cachedRadius = null
+
+export async function getCheckInRadius() {
+  if (cachedRadius !== null) return cachedRadius
+  try {
+    const data = await request({
+      url: '/api/auth/configs?key=check_in_radius_meters',
+      method: 'GET'
+    })
+    cachedRadius = parseInt(data?.value) || 100
+  } catch {
+    cachedRadius = 100
+  }
+  return cachedRadius
+}
+```
+
+- [ ] **Step 2: Update index.vue to use config instead of hardcoded 100**
+
+In `worker-uniapp/src/pages/index/index.vue`:
+
+Import the config function:
+```typescript
+import { getCheckInRadius } from '@/api/config'
+```
+
+Update `checkDistance()` function (lines 291-304):
+
+```typescript
+async function checkDistance(shift: Shift): Promise<boolean> {
+  const pos = await getLocation()
+  if (!pos) return false
+  const maxRadius = await getCheckInRadius()
+  const workLat = shift.lat || 0
+  const workLng = shift.lng || 0
+  if (!workLat || !workLng) return true
+  const dist = calcDistance(pos.lat, pos.lng, workLat, workLng)
+  if (dist > maxRadius) {
+    uni.showToast({ title: `超出签到距离${Math.round(dist)}米`, icon: 'none' })
+    return false
+  }
+  return true
+}
+```
+
+- [ ] **Step 3: Build to verify**
+
+Run: `cd worker-uniapp && npm run build:h5`
+Expected: Build passes
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add worker-uniapp/src/pages/index/index.vue worker-uniapp/src/api/config.js
+git commit -m "feat: read global check-in radius config instead of hardcoded 100m"
+```
+
+---
+
+### Task 11: Final verification — all services and builds
 
 - [ ] **Step 1: Run all backend tests**
 

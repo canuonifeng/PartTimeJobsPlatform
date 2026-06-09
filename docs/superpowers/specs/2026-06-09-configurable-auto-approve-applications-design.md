@@ -17,6 +17,12 @@
 - 无职位级覆盖（全平台统一）
 - 自动结算时：工人打卡签退后，系统自动完成结算（计算薪资 → 入账工人余额 → 扣减企业余额 → 发送通知），无需企业手动操作
 
+## 需求三：签到最小距离可全局配置
+
+- 复用已有 `system_configs` 配置项 `check_in_radius_meters`（当前值 100，从未被代码读取）
+- c-service：签到/签退距离校验使用 `shift.locationRadius`，若为空则读取全局配置 `check_in_radius_meters` 作为默认值
+- worker-uniapp：首页签到/签退前的距离校验，从全局配置读取半径（不再硬编码 100m）
+
 ## 数据库变更
 
 ### 1. system_configs 新增配置项
