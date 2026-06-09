@@ -101,6 +101,18 @@
       "style": {
         "navigationBarTitleText": "注册"
       }
+    },
+    {
+      "path": "pages/referral/referral",
+      "style": {
+        "navigationBarTitleText": "邀请好友"
+      }
+    },
+    {
+      "path": "pages/referral/referralRecords",
+      "style": {
+        "navigationBarTitleText": "邀请记录"
+      }
     }
   ],
   "tabBar": {

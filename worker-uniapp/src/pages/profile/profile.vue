@@ -84,7 +84,9 @@ const existingPageUrls = [
   '/pages/attendance/clockIn',
   '/pages/earnings/earnings',
   '/pages/auth/realName',
-  '/pages/settings/settings'
+  '/pages/settings/settings',
+  '/pages/referral/referral',
+  '/pages/referral/referralRecords'
 ]
 
 const monthIncome = computed(() => numberValue(dashboardStats.value?.monthIncome))
@@ -107,6 +109,7 @@ const menuGroups = [
     { title: '收入明细', url: '/pages/earnings/earnings', icon: '收', iconClass: 'icon-gold' }
   ],
   [
+    { title: '邀请好友', url: '/pages/referral/referral', icon: '邀', iconClass: 'icon-purple' },
     { title: '设置', url: '/pages/settings/settings', icon: '设', iconClass: 'icon-gray' }
   ]
 ]
