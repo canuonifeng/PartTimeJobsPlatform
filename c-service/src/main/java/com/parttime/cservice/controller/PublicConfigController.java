@@ -23,7 +23,7 @@ public class PublicConfigController {
     @Operation(summary = "获取协议内容", description = "公开接口，获取用户协议或隐私政策内容")
     @GetMapping
     public ApiResponse<Map<String, String>> getConfig(@Parameter(description = "配置key") @RequestParam String key) {
-        if (!"user_agreement".equals(key) && !"privacy_policy".equals(key)) {
+        if (!"user_agreement".equals(key) && !"privacy_policy".equals(key) && !"check_in_radius_meters".equals(key)) {
             return ApiResponse.error(400, "不支持的配置项");
         }
         SystemConfig config = systemConfigMapper.findByKey(key).orElse(null);

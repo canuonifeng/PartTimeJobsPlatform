@@ -140,12 +140,13 @@ public class AttendanceServiceImpl implements AttendanceService {
             throw new RuntimeException("Cannot check in: shift status is " + shift.getStatus());
         }
 
-        if (shift.getLocationLat() != null && shift.getLocationRadius() != null && lat != null) {
+        if (shift.getLocationLat() != null && lat != null) {
+            int radius = shift.getLocationRadius() != null ? shift.getLocationRadius() : getDefaultRadius();
             double distance = haversine(
                     shift.getLocationLat().doubleValue(), shift.getLocationLng().doubleValue(),
                     lat.doubleValue(), lng.doubleValue());
-            if (distance > shift.getLocationRadius()) {
-                throw new RuntimeException("Location out of range: " + (int) distance + "m (max: " + shift.getLocationRadius() + "m)");
+            if (distance > radius) {
+                throw new RuntimeException("Location out of range: " + (int) distance + "m (max: " + radius + "m)");
             }
         }
 
@@ -204,12 +205,13 @@ public class AttendanceServiceImpl implements AttendanceService {
         AttendanceRecordEntity record = attendanceRecordMapper.findByShiftId(shiftId)
                 .orElseThrow(() -> new RuntimeException("No check-in record found for this shift"));
 
-        if (shift.getLocationLat() != null && shift.getLocationRadius() != null && lat != null) {
+        if (shift.getLocationLat() != null && lat != null) {
+            int radius = shift.getLocationRadius() != null ? shift.getLocationRadius() : getDefaultRadius();
             double distance = haversine(
                     shift.getLocationLat().doubleValue(), shift.getLocationLng().doubleValue(),
                     lat.doubleValue(), lng.doubleValue());
-            if (distance > shift.getLocationRadius()) {
-                throw new RuntimeException("Location out of range: " + (int) distance + "m (max: " + shift.getLocationRadius() + "m)");
+            if (distance > radius) {
+                throw new RuntimeException("Location out of range: " + (int) distance + "m (max: " + radius + "m)");
             }
         }
 
@@ -301,6 +303,16 @@ public class AttendanceServiceImpl implements AttendanceService {
                 * Math.sin(dLon / 2) * Math.sin(dLon / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c;
+    }
+
+    private int getDefaultRadius() {
+        SystemConfig config = systemConfigMapper.findByKey("check_in_radius_meters").orElse(null);
+        if (config != null) {
+            try {
+                return Integer.parseInt(config.getConfigValue());
+            } catch (NumberFormatException ignored) {}
+        }
+        return 100;
     }
 
 

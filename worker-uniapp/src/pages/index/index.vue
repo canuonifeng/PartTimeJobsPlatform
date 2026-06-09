@@ -89,6 +89,7 @@ import { onShow, onHide, onUnload } from '@dcloudio/uni-app'
 import { useAuthStore } from '@/store'
 import { getHomeStats, getHomeSchedules } from '@/api/home'
 import { checkIn, checkOut } from '@/api/attendance'
+import { getCheckInRadius } from '@/api/config'
 import InviteFloat from '@/components/InviteFloat.vue'
 
 const authStore = useAuthStore()
@@ -291,12 +292,12 @@ async function getLocation(showError = true): Promise<{ lat: number; lng: number
 async function checkDistance(shift: Shift): Promise<boolean> {
   const pos = await getLocation()
   if (!pos) return false
-  const checkDistance = 100
+  const maxRadius = await getCheckInRadius()
   const workLat = shift.lat || 0
   const workLng = shift.lng || 0
   if (!workLat || !workLng) return true
   const dist = calcDistance(pos.lat, pos.lng, workLat, workLng)
-  if (dist > checkDistance) {
+  if (dist > maxRadius) {
     uni.showToast({ title: `超出签到距离${Math.round(dist)}米`, icon: 'none' })
     return false
   }
