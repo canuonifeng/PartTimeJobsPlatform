@@ -26,13 +26,22 @@
         <text class="agree-link">《隐私政策》</text>
       </view>
 
-      <view class="wechat-entry">
+      <view class="other-login-row">
         <view class="entry-line"></view>
         <text class="entry-text">其他登录方式</text>
         <view class="entry-line"></view>
       </view>
 
-      <view class="phone-section">
+      <view class="other-icons">
+        <view class="icon-item" @click="showPhoneLogin = !showPhoneLogin">
+          <view class="icon-circle">
+            <text class="icon-phone">📱</text>
+          </view>
+          <text class="icon-label">手机号</text>
+        </view>
+      </view>
+
+      <view class="phone-section" v-if="showPhoneLogin">
         <view class="input-row">
           <text class="input-label">手机号</text>
           <input class="phone-input" v-model="phone" type="number" maxlength="11" placeholder="请输入手机号" placeholder-class="input-placeholder" />
@@ -68,6 +77,7 @@ const code = ref('')
 const codeSending = ref(false)
 const countdown = ref(0)
 const agreed = ref(false)
+const showPhoneLogin = ref(false)
 let timer: ReturnType<typeof setInterval> | null = null
 
 const REGISTERED_PAGES = new Set([
@@ -358,7 +368,7 @@ async function handlePhoneLogin() {
   color: #12a960;
 }
 
-.wechat-entry {
+.other-login-row {
   display: flex;
   align-items: center;
   margin-bottom: 24rpx;
@@ -374,6 +384,40 @@ async function handlePhoneLogin() {
   padding: 0 20rpx;
   font-size: 24rpx;
   color: #9aa8a0;
+}
+
+.other-icons {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30rpx;
+}
+
+.icon-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 40rpx;
+}
+
+.icon-circle {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: #f5fbf7;
+  border: 2rpx solid #e3f3e9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12rpx;
+}
+
+.icon-phone {
+  font-size: 40rpx;
+}
+
+.icon-label {
+  font-size: 22rpx;
+  color: #7d8b84;
 }
 
 .phone-section {
