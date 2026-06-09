@@ -34,6 +34,12 @@
         <el-menu-item index="/auth/enterprises">
           <el-icon><Postcard /></el-icon><span>实名审核-企业</span>
         </el-menu-item>
+        <el-menu-item index="/referral/config">
+          <el-icon><Setting /></el-icon><span>邀请奖励配置</span>
+        </el-menu-item>
+        <el-menu-item index="/referral/audit">
+          <el-icon><Money /></el-icon><span>邀请奖励审核</span>
+        </el-menu-item>
       </el-menu>
     </el-aside>
     <el-container>
