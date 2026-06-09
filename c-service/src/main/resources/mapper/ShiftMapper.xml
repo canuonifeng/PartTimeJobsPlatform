@@ -57,6 +57,22 @@
         <if test="endDate != null">
             AND ss.shift_date &lt;= #{endDate}
         </if>
+        ORDER BY ss.shift_date DESC, ss.start_time DESC
+        <if test="pageSize != null and pageSize > 0">
+            LIMIT #{pageSize} OFFSET #{offset}
+        </if>
+    </select>
+
+    <select id="countByWorkerIdAndDateRange" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM schedule_shifts ss
+        WHERE ss.worker_id = #{workerId}
+        <if test="startDate != null">
+            AND ss.shift_date >= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND ss.shift_date &lt;= #{endDate}
+        </if>
     </select>
 
     <select id="findRecentByWorkerId" resultMap="ShiftResultMap">

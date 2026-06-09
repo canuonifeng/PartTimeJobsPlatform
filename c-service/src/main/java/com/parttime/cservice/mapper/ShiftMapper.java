@@ -14,7 +14,8 @@ public interface ShiftMapper {
     int insert(ShiftEntity shift);
     Optional<ShiftEntity> findById(Long id);
     List<ShiftEntity> findByWorkerId(Long workerId);
-    List<ShiftEntity> findByWorkerIdAndDateRange(@Param("workerId") Long workerId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    List<ShiftEntity> findByWorkerIdAndDateRange(@Param("workerId") Long workerId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate, @Param("page") Integer page, @Param("pageSize") Integer pageSize, @Param("offset") Integer offset);
+    Long countByWorkerIdAndDateRange(@Param("workerId") Long workerId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
     List<ShiftEntity> findRecentByWorkerId(@Param("workerId") Long workerId);
     List<ShiftEntity> findTodayByWorkerId(@Param("workerId") Long workerId, @Param("date") LocalDate date);
     List<ShiftEntity> findFutureByWorkerId(@Param("workerId") Long workerId, @Param("date") LocalDate date, @Param("size") int size);

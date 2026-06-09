@@ -57,12 +57,14 @@ class AttendanceControllerTest {
         shift.setJobTitle("Helper");
         shift.setStatus("SCHEDULED");
 
-        when(attendanceService.getMyShifts(eq(1L), any(), any())).thenReturn(List.of(shift));
+        when(attendanceService.getMyShifts(eq(1L), any(), any(), any(), any())).thenReturn(List.of(shift));
+        when(attendanceService.countMyShifts(eq(1L), any(), any())).thenReturn(1L);
 
         mockMvc.perform(get("/api/schedule-shifts/my"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.length()").value(1))
-                .andExpect(jsonPath("$.data[0].jobTitle").value("Helper"));
+                .andExpect(jsonPath("$.data.list.length()").value(1))
+                .andExpect(jsonPath("$.data.list[0].jobTitle").value("Helper"))
+                .andExpect(jsonPath("$.data.total").value(1));
     }
 
     @Test

@@ -50,7 +50,7 @@ class AttendanceServiceTest {
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
                 new BigDecimal("31.2304"), new BigDecimal("121.4737"), 500, "Office A");
 
-        List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
+        List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null, null, null);
         assertThat(shifts).hasSize(1);
         assertThat(shifts.get(0).getJobId()).isEqualTo(10L);
         assertThat(shifts.get(0).getJobTitle()).isEqualTo("Helper");
@@ -65,7 +65,7 @@ class AttendanceServiceTest {
                 LocalDate.of(2026, 6, 2), LocalTime.of(10, 0), LocalTime.of(17, 0),
                 null, null, null, null);
 
-        List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
+        List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null, null, null);
         assertThat(shifts).hasSize(1);
     }
 
@@ -75,7 +75,7 @@ class AttendanceServiceTest {
                 LocalDate.of(2026, 1, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
                 null, null, null, null);
 
-        List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null);
+        List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null, null, null);
 
         assertThat(shifts).hasSize(1);
         assertThat(shifts.get(0).getStatus()).isEqualTo("ABSENT");
@@ -91,7 +91,7 @@ class AttendanceServiceTest {
                 null, null, null, null);
 
         List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L,
-                LocalDate.of(2026, 5, 1), LocalDate.of(2026, 6, 30));
+                LocalDate.of(2026, 5, 1), LocalDate.of(2026, 6, 30), null, null);
         assertThat(shifts).hasSize(1);
         assertThat(shifts.get(0).getDate()).isEqualTo(LocalDate.of(2026, 6, 1));
     }
@@ -103,7 +103,7 @@ class AttendanceServiceTest {
                 null, null, null, null).getId();
 
         AttendanceVO response = attendanceService.checkIn(1L, shiftId, null, null);
-        List<WorkerShiftVO> updatedShifts = attendanceService.getMyShifts(1L, null, null);
+        List<WorkerShiftVO> updatedShifts = attendanceService.getMyShifts(1L, null, null, null, null);
 
         assertThat(response.getStatus()).isEqualTo("LATE");
         assertThat(response.getCheckInTime()).isNotNull();
@@ -199,7 +199,7 @@ class AttendanceServiceTest {
 
         attendanceService.checkIn(1L, shiftId, null, null);
         AttendanceVO response = attendanceService.checkOut(1L, shiftId, null, null);
-        List<WorkerShiftVO> updatedShifts = attendanceService.getMyShifts(1L, null, null);
+        List<WorkerShiftVO> updatedShifts = attendanceService.getMyShifts(1L, null, null, null, null);
 
         assertThat(response.getStatus()).isEqualTo("COMPLETED");
         assertThat(response.getCheckOutTime()).isNotNull();

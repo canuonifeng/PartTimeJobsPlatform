@@ -2,8 +2,8 @@
   <view class="clockin-page">
     <view class="top-panel">
       <view class="date-header">
-        <view><text class="date-title">{{ todayDate }}</text><text class="date-subtitle">{{ todayName }} · 今日打卡</text></view>
-        <view class="date-pill">{{ shifts.length }} 个班次</view>
+        <view><text class="date-title">{{ todayDate }}</text><text class="date-subtitle">{{ todayName }}</text></view>
+        <view class="date-pill">{{ stats.total }} 个班次</view>
       </view>
       <view class="stats-card">
         <view class="stat-item"><text class="stat-value">{{ stats.total }}</text><text class="stat-label">今日排班</text></view>
@@ -14,22 +14,19 @@
       </view>
       <view class="notice-card"><text class="notice-dot"></text><text class="notice-text">请在岗位地点附近完成签到签退，系统将获取当前位置用于打卡校验。</text></view>
     </view>
-    <uni-load-more v-if="loading" status="loading" />
-    <scroll-view class="shift-scroll" scroll-y>
-      <view class="section-row"><text class="section-title">打卡记录</text><text class="section-subtitle">{{ sourceTip }}</text></view>
-      <view v-if="shifts.length === 0 && !loading" class="empty-state"><text class="empty-text">今日暂无打卡记录</text></view>
-      <view v-for="shift in shifts" :key="shift.id" class="shift-card">
+    <uni-load-more v-if="loading && page === 1" status="loading" />
+    <scroll-view class="shift-scroll" scroll-y @scrolltolower="loadMore">
+      <view class="section-row"><text class="section-title">打卡记录</text><text class="section-subtitle">{{ allShifts.length }} 条记录</text></view>
+      <view v-if="allShifts.length === 0 && !loading" class="empty-state"><text class="empty-text">暂无打卡记录</text></view>
+      <view v-for="shift in allShifts" :key="shift.id" class="shift-card">
         <view class="shift-header">
           <view class="job-left"><view class="job-icon"><text>岗</text></view><view class="job-info"><text class="shift-title">{{ shift.jobTitle }}</text><text class="shift-location">{{ shift.location }}</text></view></view>
           <view class="status-badge" :class="statusClass(shift.status)">{{ statusText(shift.status) }}</view>
         </view>
         <view class="time-box"><view><text class="time-label">工作时间</text><text class="time-value">{{ shift.startTime }} - {{ shift.endTime }}</text></view><view class="date-box"><text class="date-day">{{ shift.date.slice(8) }}</text><text class="date-month">{{ shift.date.slice(5, 7) }}月</text></view></view>
         <view class="record-row"><view class="record-item"><text class="record-label">签到</text><text class="record-value">{{ shift.checkInTime || '未签到' }}</text></view><view class="record-item"><text class="record-label">签退</text><text class="record-value">{{ shift.checkOutTime || '未签退' }}</text></view></view>
-        <view class="shift-actions">
-          <button class="action-btn check-in" :class="{ disabled: isActionDisabled(shift, 'in') }" :disabled="isActionDisabled(shift, 'in')" @click="handleCheckIn(shift)">{{ submittingKey === `${shift.id}:in` ? '签到中' : (hasCheckedIn(shift) ? '已签到' : '签到') }}</button>
-          <button class="action-btn check-out" :class="{ disabled: isActionDisabled(shift, 'out') }" :disabled="isActionDisabled(shift, 'out')" @click="handleCheckOut(shift)">{{ submittingKey === `${shift.id}:out` ? '签退中' : (hasCheckedOut(shift) ? '已签退' : '签退') }}</button>
-        </view>
       </view>
+      <uni-load-more v-if="allShifts.length > 0" :status="moreStatus" />
     </scroll-view>
   </view>
 </template>
@@ -37,13 +34,15 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { getMyShifts } from '@/api/schedule'
-import { checkIn, checkOut } from '@/api/attendance'
 
 interface Shift { id: number; jobTitle: string; location: string; startTime: string; endTime: string; date: string; status: string; checkedIn: boolean; checkedOut: boolean; checkInTime?: string; checkOutTime?: string; attendanceId?: number }
 
+const PAGE_SIZE = 20
 const loading = ref(false)
-const shifts = ref<Shift[]>([])
-const submittingKey = ref('')
+const loadingMore = ref(false)
+const page = ref(1)
+const total = ref(0)
+const allShifts = ref<Shift[]>([])
 const weekDayNames = ['日', '一', '二', '三', '四', '五', '六']
 const checkedInStatuses = ['ON_DUTY', 'COMPLETED', 'LATE', 'EARLY_LEAVE']
 const checkedOutStatuses = ['COMPLETED', 'EARLY_LEAVE']
@@ -53,8 +52,17 @@ const todayDate = computed(() => {
   return `${d.getFullYear()}年${String(d.getMonth() + 1).padStart(2, '0')}月${String(d.getDate()).padStart(2, '0')}日`
 })
 const todayName = computed(() => `星期${weekDayNames[new Date().getDay()]}`)
-const sourceTip = computed(() => '实时排班')
-const stats = computed(() => ({ total: shifts.value.length, checkedIn: shifts.value.filter(hasCheckedIn).length, completed: shifts.value.filter(hasCheckedOut).length }))
+const hasMore = computed(() => allShifts.value.length < total.value)
+const moreStatus = computed(() => {
+  if (loadingMore.value) return 'loading'
+  if (!hasMore.value && allShifts.value.length > 0) return 'noMore'
+  return 'more'
+})
+const stats = computed(() => {
+  const today = formatFullDate(new Date())
+  const todayShifts = allShifts.value.filter(s => s.date === today)
+  return { total: todayShifts.length, checkedIn: todayShifts.filter(hasCheckedIn).length, completed: todayShifts.filter(hasCheckedOut).length }
+})
 
 function formatFullDate(d: Date): string { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 function normalizeTime(value: any): string {
@@ -88,75 +96,35 @@ function statusClass(status: string): string {
   if (['EARLY_LEAVE', 'ABSENT'].includes(status)) return 'warning'
   return 'pending'
 }
-function isActionDisabled(shift: Shift, type: 'in' | 'out'): boolean {
-  if (submittingKey.value) return true
-  if (type === 'in') return hasCheckedIn(shift) || hasCheckedOut(shift) || shift.status === 'ABSENT'
-  return !hasCheckedIn(shift) || hasCheckedOut(shift) || shift.status === 'ABSENT'
-}
-function getLocation(): Promise<{ latitude: number; longitude: number }> {
-  return new Promise((resolve, reject) => { uni.getLocation({ type: 'wgs84', success: (res) => resolve({ latitude: res.latitude, longitude: res.longitude }), fail: reject }) })
-}
-function isLocationError(err: any): boolean { return !!err?.errMsg || String(err?.message || '').includes('getLocation') }
-function showActionError(err: any, action: string) {
-  if (isLocationError(err)) {
-    uni.showToast({ title: '获取定位失败，请检查定位权限', icon: 'none' })
-  } else {
-    uni.showToast({ title: err?.message?.includes('距离') ? '不在打卡范围内' : (err?.message || `${action}失败`), icon: 'none' })
-  }
-}
-async function handleCheckIn(shift: Shift) {
-  if (isActionDisabled(shift, 'in')) return
-  submittingKey.value = `${shift.id}:in`
-  try {
-    const location = await getLocation()
-    await checkIn({ shiftId: shift.id, lat: location.latitude, lng: location.longitude })
-    shift.checkedIn = true
-    shift.status = 'ON_DUTY'
-    shift.checkInTime = normalizeTime(new Date().toTimeString())
-    uni.showToast({ title: '签到成功', icon: 'success' })
-  } catch (err: any) { showActionError(err, '签到') } finally { submittingKey.value = '' }
-}
-async function handleCheckOut(shift: Shift) {
-  if (isActionDisabled(shift, 'out')) return
-  submittingKey.value = `${shift.id}:out`
-  try {
-    const location = await getLocation()
-    const res: any = await checkOut({ shiftId: shift.id, lat: location.latitude, lng: location.longitude })
-    shift.checkedOut = true
-    shift.status = 'COMPLETED'
-    shift.checkOutTime = normalizeTime(new Date().toTimeString())
-    if (res?.autoSettled) {
-      const amount = res.payablePay || res.scheduledPay || 0
-      uni.showModal({
-        title: '薪资已到账',
-        content: `已收到 ¥${Number(amount).toFixed(2)} 薪资，去提现？`,
-        confirmText: '去提现',
-        cancelText: '不了',
-        success: (modalRes) => {
-          if (modalRes.confirm) {
-            uni.navigateTo({ url: '/pages/earnings/earnings' })
-          }
-        }
-      })
-    } else {
-      uni.showToast({ title: '签退成功', icon: 'success' })
-    }
-  } catch (err: any) { showActionError(err, '签退') } finally { submittingKey.value = '' }
-}
-async function loadTodayShifts() {
-  loading.value = true
+async function loadShifts(p: number) {
+  if (p === 1) loading.value = true
+  else loadingMore.value = true
   try {
     const dateStr = formatFullDate(new Date())
-    const res: any = await getMyShifts({ startDate: dateStr, endDate: dateStr })
+    const res: any = await getMyShifts({ endDate: dateStr, page: p, pageSize: PAGE_SIZE })
     const list = Array.isArray(res) ? res : (res?.list || [])
-    shifts.value = list.map(normalizeShift)
+    if (p === 1) {
+      allShifts.value = list.map(normalizeShift)
+      total.value = res?.total ?? res?.totalCount ?? list.length
+    } else {
+      allShifts.value.push(...list.map(normalizeShift))
+      total.value = res?.total ?? res?.totalCount ?? allShifts.value.length
+    }
   } catch (err: any) {
-    shifts.value = []
+    if (p === 1) allShifts.value = []
     uni.showToast({ title: err?.message || '打卡记录加载失败', icon: 'none' })
-  } finally { loading.value = false }
+  } finally {
+    loading.value = false
+    loadingMore.value = false
+  }
+}
+async function loadMore() {
+  if (loadingMore.value || !hasMore.value) return
+  page.value++
+  await loadShifts(page.value)
 }
 
-onMounted(loadTodayShifts)
+onMounted(() => loadShifts(1))
 </script>
 
 <style scoped>
@@ -201,11 +169,6 @@ onMounted(loadTodayShifts)
 .record-item:first-child { margin-right: 18rpx; }
 .record-label { display: block; font-size: 22rpx; color: #8b98a7; }
 .record-value { display: block; margin-top: 8rpx; font-size: 28rpx; font-weight: 600; color: #1f2d3d; }
-.shift-actions { display: flex; margin-top: 24rpx; }
-.action-btn { flex: 1; height: 76rpx; line-height: 76rpx; border-radius: 38rpx; font-size: 28rpx; border: none; text-align: center; }
-.action-btn.check-in { margin-right: 18rpx; background: #07c160; color: #ffffff; }
-.action-btn.check-out { background: #ffffff; color: #07c160; border: 1rpx solid #07c160; }
-.action-btn.disabled { background: #eef1f5; color: #b7c0cc; border-color: #eef1f5; }
 .empty-state { padding: 100rpx 0; text-align: center; }
 .empty-text { font-size: 28rpx; color: #98a2b3; }
 </style>

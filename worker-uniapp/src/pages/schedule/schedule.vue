@@ -193,7 +193,7 @@ function correctionTip(shift: Shift): string {
 const weekLabel = computed(() => weekDays.value.length < 7 ? '' : `${weekDays.value[0].fullDate} ~ ${weekDays.value[6].fullDate}`)
 const periodTitle = computed(() => {
   const d = currentWeekStart.value
-  return `${d.getFullYear()}年${d.getMonth() + 1}月本周`
+  return `${d.getFullYear()}年${d.getMonth() + 1}月`
 })
 const selectedDayLabel = computed(() => {
   const day = weekDays.value[selectedIndex.value]

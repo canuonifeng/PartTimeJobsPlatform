@@ -15,7 +15,8 @@ public interface AttendanceService {
                           LocalDate shiftDate, LocalTime startTime, LocalTime endTime,
                           BigDecimal locationLat, BigDecimal locationLng, Integer locationRadius,
                           String locationName);
-    List<WorkerShiftVO> getMyShifts(Long workerId, LocalDate startDate, LocalDate endDate);
+    List<WorkerShiftVO> getMyShifts(Long workerId, LocalDate startDate, LocalDate endDate, Integer page, Integer pageSize);
+    Long countMyShifts(Long workerId, LocalDate startDate, LocalDate endDate);
     AttendanceVO checkIn(Long workerId, Long shiftId, BigDecimal lat, BigDecimal lng);
     AttendanceVO checkOut(Long workerId, Long shiftId, BigDecimal lat, BigDecimal lng);
     List<AttendanceVO> getMyAttendance(Long workerId);

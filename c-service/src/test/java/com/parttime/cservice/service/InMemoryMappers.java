@@ -225,12 +225,22 @@ public class InMemoryMappers {
                         .limit(size)
                         .collect(Collectors.toList());
             }
-            @Override public List<ShiftEntity> findByWorkerIdAndDateRange(Long workerId, LocalDate startDate, LocalDate endDate) {
+            @Override public List<ShiftEntity> findByWorkerIdAndDateRange(Long workerId, LocalDate startDate, LocalDate endDate, Integer page, Integer pageSize, Integer offset) {
                 return store.values().stream()
                         .filter(s -> s.getWorkerId().equals(workerId))
                         .filter(s -> startDate == null || !s.getShiftDate().isBefore(startDate))
                         .filter(s -> endDate == null || !s.getShiftDate().isAfter(endDate))
+                        .sorted(Comparator.comparing(ShiftEntity::getShiftDate).reversed().thenComparing(ShiftEntity::getStartTime).reversed())
+                        .skip(offset != null ? offset : 0)
+                        .limit(pageSize != null && pageSize > 0 ? pageSize : Long.MAX_VALUE)
                         .collect(Collectors.toList());
+            }
+            @Override public Long countByWorkerIdAndDateRange(Long workerId, LocalDate startDate, LocalDate endDate) {
+                return store.values().stream()
+                        .filter(s -> s.getWorkerId().equals(workerId))
+                        .filter(s -> startDate == null || !s.getShiftDate().isBefore(startDate))
+                        .filter(s -> endDate == null || !s.getShiftDate().isAfter(endDate))
+                        .count();
             }
             @Override public List<ShiftEntity> findByJobId(Long jobId) {
                 return store.values().stream().filter(s -> jobId.equals(s.getJobId())).collect(Collectors.toList());

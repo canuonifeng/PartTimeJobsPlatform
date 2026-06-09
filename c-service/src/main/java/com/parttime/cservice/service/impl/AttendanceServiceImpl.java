@@ -83,8 +83,12 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
-    public List<WorkerShiftVO> getMyShifts(Long workerId, LocalDate startDate, LocalDate endDate) {
-        List<ShiftEntity> shifts = shiftMapper.findByWorkerIdAndDateRange(workerId, startDate, endDate).stream()
+    public List<WorkerShiftVO> getMyShifts(Long workerId, LocalDate startDate, LocalDate endDate, Integer page, Integer pageSize) {
+        int p = (page != null && page > 0) ? page : 1;
+        int ps = (pageSize != null && pageSize > 0) ? pageSize : 20;
+        int offset = (p - 1) * ps;
+
+        List<ShiftEntity> shifts = shiftMapper.findByWorkerIdAndDateRange(workerId, startDate, endDate, p, ps, offset).stream()
                 .filter(s -> !"CANCELLED".equals(s.getStatus()))
                 .collect(Collectors.toList());
 
@@ -124,6 +128,11 @@ public class AttendanceServiceImpl implements AttendanceService {
         return shifts.stream()
                 .map(s -> workerShiftVOConverter.toWorkerShiftResponseBatch(s, finalRecordMap, finalCorrectionMap))
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Long countMyShifts(Long workerId, LocalDate startDate, LocalDate endDate) {
+        return shiftMapper.countByWorkerIdAndDateRange(workerId, startDate, endDate);
     }
 
     @Override
