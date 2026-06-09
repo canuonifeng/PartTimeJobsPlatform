@@ -20,6 +20,7 @@
         <result property="categoryName" column="category_name"/>
         <result property="requirements" column="requirements"/>
         <result property="contactPhone" column="contact_phone"/>
+        <result property="autoApprove" column="auto_approve"/>
         <collection property="rates" ofType="com.parttime.cservice.pojo.vo.JobRateInfoVO">
             <id property="id" column="jr_id"/>
             <result property="type" column="jr_type"/>
@@ -32,6 +33,7 @@
         SELECT j.*,
                j.requirements,
                j.contact_phone,
+               j.auto_approve,
                e.company_name, e.company_logo,
                jc.name AS category_name,
                jr.id AS jr_id,

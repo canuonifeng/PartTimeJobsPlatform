@@ -76,6 +76,8 @@ public class Job {
     private LocalDateTime updatedAt;
     @Schema(description = "关闭原因")
     private String closeReason;
+    @Schema(description = "自动审核: null跟随平台默认, true开启, false关闭")
+    private Boolean autoApprove;
 
     public Job() {}
 
