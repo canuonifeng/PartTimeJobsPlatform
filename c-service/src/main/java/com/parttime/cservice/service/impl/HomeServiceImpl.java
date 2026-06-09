@@ -62,14 +62,14 @@ public class HomeServiceImpl implements HomeService {
         todayRaw.forEach(s -> allShiftIds.add(s.getId()));
         futureRaw.forEach(s -> allShiftIds.add(s.getId()));
 
-        Map<Long, AttendanceRecordEntity> recordMap = Map.of();
-        Map<Long, AttendanceCorrectionEntity> correctionMap = Map.of();
-        if (!allShiftIds.isEmpty()) {
-            recordMap = attendanceRecordMapper.findByShiftIds(allShiftIds).stream()
-                    .collect(Collectors.toMap(AttendanceRecordEntity::getShiftId, r -> r));
-            correctionMap = correctionMapper.findByShiftIds(allShiftIds).stream()
-                    .collect(Collectors.toMap(AttendanceCorrectionEntity::getShiftId, c -> c));
-        }
+        Map<Long, AttendanceRecordEntity> recordMap = allShiftIds.isEmpty()
+                ? Map.of()
+                : attendanceRecordMapper.findByShiftIds(allShiftIds).stream()
+                        .collect(Collectors.toMap(AttendanceRecordEntity::getShiftId, r -> r));
+        Map<Long, AttendanceCorrectionEntity> correctionMap = allShiftIds.isEmpty()
+                ? Map.of()
+                : correctionMapper.findByShiftIds(allShiftIds).stream()
+                        .collect(Collectors.toMap(AttendanceCorrectionEntity::getShiftId, c -> c));
 
         List<WorkerShiftVO> todayShifts = todayRaw.stream()
                 .map(s -> workerShiftVOConverter.toWorkerShiftResponseBatch(s, recordMap, correctionMap))
