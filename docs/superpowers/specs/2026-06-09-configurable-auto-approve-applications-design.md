@@ -200,7 +200,7 @@ VALUES (#{companyId}, -#{amount}, 'SETTLEMENT', '打卡自动结算', NOW())
 
 - 自动结算开启 → 签退后 settlementStatus = "PAID"，工人余额增加，企业余额扣减
 - 自动结算关闭 → 签退后 settlementStatus = "UNPAID"（现有行为）
-- 企业余额不足时自动结算的行为（抛异常，签退失败？还是降级为 UNPAID？）
+- 企业余额不足时自动结算降级为 UNPAID（签退成功但不自动结算，等企业手动处理或充值后结算）
 
 ### 验证命令
 
