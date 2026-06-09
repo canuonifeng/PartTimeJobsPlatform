@@ -172,6 +172,18 @@ VALUES (#{companyId}, -#{amount}, 'SETTLEMENT', '打卡自动结算', NOW())
 - 选项：跟随平台默认 / 开启 / 关闭
 - 对应值：null / true / false
 
+### worker-uniapp — 签退自动结算弹窗
+
+签退接口返回 `autoSettled` 字段（boolean）。前端处理：
+
+1. `index.vue`（首页签退）和 `clockIn.vue`（打卡页签退）均需处理
+2. 如果 `res.autoSettled === true`：
+   - 弹出 `uni.showModal`，标题"薪资已到账"
+   - 内容："已收到 ¥X.XX 薪资，去提现？"
+   - 确认按钮"去提现" → 跳转 `/pages/earnings/earnings`
+   - 取消按钮"不了" → 关闭弹窗
+3. 如果 `autoSettled === false`：保持现有逻辑（toast/早退提示）
+
 ## 通知模板
 
 ### 报名自动通过时

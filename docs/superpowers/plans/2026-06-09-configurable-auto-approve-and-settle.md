@@ -4,7 +4,7 @@
 
 **Goal:** Make job application approval and post-checkout settlement configurable via platform-level system configs and per-job overrides.
 
-**Architecture:** Add two system_configs keys (`auto_approve_applications`, `auto_settle_attendance`) and a nullable `auto_approve` column on `jobs`. c-service reads these at runtime: auto-approve creates ACCEPTED applications + ScheduleShifts directly in `applyForJob()`; auto-settle executes settlement logic (credit worker, deduct enterprise) in `checkOut()`.
+**Architecture:** Add two system_configs keys (`auto_approve_applications`, `auto_settle_attendance`) and a nullable `auto_approve` column on `jobs`. c-service reads these at runtime: auto-approve creates ACCEPTED applications + ScheduleShifts directly in `applyForJob()`; auto-settle executes settlement logic (credit worker, deduct enterprise) in `checkOut()` and sets `autoSettled=true` on the response VO for frontend popup.
 
 **Tech Stack:** Java 17, Spring Boot 3.x, MyBatis, MySQL
 
@@ -276,13 +276,23 @@ git commit -m "feat: auto-approve applications based on config"
 
 ---
 
-### Task 4: c-service — auto-settle in checkOut()
+### Task 4: c-service — auto-settle in checkOut() + autoSettled flag
 
 **Files:**
+- Modify: `c-service/src/main/java/com/parttime/cservice/pojo/vo/AttendanceVO.java`
 - Modify: `c-service/src/main/java/com/parttime/cservice/service/impl/AttendanceServiceImpl.java`
 - Modify: `c-service/src/test/java/com/parttime/cservice/service/AttendanceServiceTest.java`
 
-- [ ] **Step 1: Write failing tests for auto-settle**
+- [ ] **Step 1: Add autoSettled field to AttendanceVO**
+
+In `c-service/src/main/java/com/parttime/cservice/pojo/vo/AttendanceVO.java`, add after `settlementStatus` field (line 43):
+
+```java
+    @Schema(description = "是否自动结算")
+    private Boolean autoSettled;
+```
+
+- [ ] **Step 2: Write failing tests for auto-settle**
 
 Add new mocks to `AttendanceServiceTest.java`:
 
@@ -356,16 +366,23 @@ After the existing checkOut logic (after line 243 `shiftMapper.update(shift);`),
 
 ```java
         // Auto-settle if enabled
+        boolean settled = false;
         SystemConfig autoSettleConfig = systemConfigMapper.findByKey("auto_settle_attendance").orElse(null);
         if (autoSettleConfig != null && "true".equalsIgnoreCase(autoSettleConfig.getConfigValue())) {
-            autoSettle(record, shift, scheduledPay);
+            settled = autoSettle(record, shift, scheduledPay);
         }
+
+        AttendanceVO response = toAttendanceResponse(record);
+        response.setAutoSettled(settled);
+        return response;
 ```
 
-Add new private method:
+Note: Change the method return to use the response variable instead of the existing `return toAttendanceResponse(record);` at line 245.
+
+Update `autoSettle` method to return `boolean`:
 
 ```java
-    private void autoSettle(AttendanceRecordEntity record, ShiftEntity shift, BigDecimal payAmount) {
+    private boolean autoSettle(AttendanceRecordEntity record, ShiftEntity shift, BigDecimal payAmount) {
         Long workerId = shift.getWorkerId();
         Long companyId = shift.getCompanyId();
 
@@ -376,7 +393,7 @@ Add new private method:
 
         if (enterpriseBalance == null || enterpriseBalance.compareTo(payAmount) < 0) {
             // Insufficient balance — fallback to UNPAID, don't settle
-            return;
+            return false;
         }
 
         // Credit worker balance
@@ -428,6 +445,7 @@ Add new private method:
         notification.setRelatedId(record.getId());
         notification.setSentAt(LocalDateTime.now());
         notificationMapper.insert(notification);
+        return true;
     }
 ```
 
@@ -499,7 +517,89 @@ git commit -m "chore: verify new config items in platform admin"
 
 ---
 
-### Task 7: Final verification — all services and builds
+### Task 8: worker-uniapp — auto-settle success popup on check-out
+
+**Files:**
+- Modify: `worker-uniapp/src/pages/index/index.vue`
+- Modify: `worker-uniapp/src/pages/attendance/clockIn.vue`
+
+- [ ] **Step 1: Update index.vue check-out handler**
+
+In `worker-uniapp/src/pages/index/index.vue`, the `handleCheckOut` function (lines 335-362) needs to capture the API response and show a popup when auto-settled.
+
+Replace the current success handling (lines 343-356):
+
+```typescript
+    const res: any = await checkOut({
+      shiftId: shift.id,
+      lat: currentLocation.value?.lat,
+      lng: currentLocation.value?.lng
+    })
+    if (res?.autoSettled) {
+      const amount = res.payablePay || res.scheduledPay || 0
+      uni.showModal({
+        title: '薪资已到账',
+        content: `已收到 ¥${Number(amount).toFixed(2)} 薪资，去提现？`,
+        confirmText: '去提现',
+        cancelText: '不了',
+        success: (modalRes) => {
+          if (modalRes.confirm) {
+            uni.navigateTo({ url: '/pages/earnings/earnings' })
+          }
+        }
+      })
+    } else if (isEarly) {
+      const earlyMins = Math.round((end.getTime() - now.getTime()) / 60000)
+      uni.showModal({ title: '提示', content: `提前${earlyMins}分钟签退，确认成功`, showCancel: false })
+    } else {
+      uni.showToast({ title: '签退成功', icon: 'success' })
+    }
+```
+
+- [ ] **Step 2: Update clockIn.vue check-out handler**
+
+In `worker-uniapp/src/pages/attendance/clockIn.vue`, the `handleCheckOut` function (lines 119-129) needs similar update.
+
+Replace the current success handling (lines 124-128):
+
+```typescript
+    const res: any = await checkOut({ shiftId: shift.id, lat: location.latitude, lng: location.longitude })
+    shift.checkedOut = true
+    shift.status = 'CHECKED_OUT'
+    shift.checkOutTime = normalizeTime(new Date().toTimeString())
+    if (res?.autoSettled) {
+      const amount = res.payablePay || res.scheduledPay || 0
+      uni.showModal({
+        title: '薪资已到账',
+        content: `已收到 ¥${Number(amount).toFixed(2)} 薪资，去提现？`,
+        confirmText: '去提现',
+        cancelText: '不了',
+        success: (modalRes) => {
+          if (modalRes.confirm) {
+            uni.navigateTo({ url: '/pages/earnings/earnings' })
+          }
+        }
+      })
+    } else {
+      uni.showToast({ title: '签退成功', icon: 'success' })
+    }
+```
+
+- [ ] **Step 3: Build worker-uniapp to verify**
+
+Run: `cd worker-uniapp && npm run build:h5`
+Expected: Build passes
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add worker-uniapp/src/pages/index/index.vue worker-uniapp/src/pages/attendance/clockIn.vue
+git commit -m "feat: show auto-settle popup on check-out with amount and withdraw link"
+```
+
+---
+
+### Task 9: Final verification — all services and builds
 
 - [ ] **Step 1: Run all backend tests**
 
