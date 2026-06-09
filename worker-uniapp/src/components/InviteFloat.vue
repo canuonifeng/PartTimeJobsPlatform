@@ -15,7 +15,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 
-const pos = reactive({ x: 16, y: 160 })
+const pos = reactive({ x: 16, y: 30 })
 let startX = 0
 let startY = 0
 let startPosX = 0
