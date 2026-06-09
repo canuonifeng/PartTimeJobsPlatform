@@ -8,6 +8,7 @@ import com.parttime.cservice.pojo.vo.LoginVO;
 import com.parttime.cservice.pojo.cmd.LoginCmd;
 import com.parttime.cservice.pojo.cmd.RegisterCmd;
 import com.parttime.cservice.pojo.vo.WorkerVO;
+import com.parttime.cservice.service.ReferralService;
 import com.parttime.cservice.service.WorkerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,12 +31,23 @@ public class AuthController {
     @Resource
     private WorkerService workerService;
     @Resource
+    private ReferralService referralService;
+    @Resource
     private JwtTokenProvider jwtTokenProvider;
 
     @Operation(summary = "工人注册", description = "工人注册账号并返回JWT令牌")
     @PostMapping("/register")
     public ApiResponse<LoginVO> register(@Parameter(description = "注册请求") @RequestBody RegisterCmd request) {
         WorkerVO worker = workerService.register(request);
+
+        if (request.referralCode() != null && !request.referralCode().isEmpty()) {
+            try {
+                referralService.bindReferral(worker.getId(), request.referralCode());
+            } catch (Exception e) {
+                // Log error but don't fail registration
+            }
+        }
+
         String token = jwtTokenProvider.generateToken(String.valueOf(worker.getId()), List.of("ROLE_WORKER"));
         return ApiResponse.success(new LoginVO(token, worker.getId()));
     }
