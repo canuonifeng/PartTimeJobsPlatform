@@ -161,9 +161,9 @@ onMounted(() => loadShifts(1))
 .time-box { display: flex; align-items: center; justify-content: space-between; margin-top: 24rpx; padding: 22rpx 24rpx; border-radius: 18rpx; background: #f7fafc; }
 .time-label { display: block; font-size: 22rpx; color: #8b98a7; }
 .time-value { display: block; margin-top: 8rpx; font-size: 34rpx; line-height: 42rpx; font-weight: 700; color: #07c160; }
-.date-box { width: 92rpx; height: 92rpx; border-radius: 18rpx; background: #ffffff; text-align: center; }
-.date-day { display: block; margin-top: 16rpx; font-size: 32rpx; line-height: 34rpx; font-weight: 700; color: #1f2d3d; }
-.date-month { display: block; margin-top: 4rpx; font-size: 20rpx; color: #8b98a7; }
+.date-box { width: 86rpx; height: 86rpx; border-radius: 22rpx; background: #eafaf1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.date-day { font-size: 32rpx; line-height: 36rpx; color: #08a857; font-weight: 800; }
+.date-month { font-size: 22rpx; color: #58b987; }
 .record-row { display: flex; margin-top: 22rpx; }
 .record-item { flex: 1; padding: 18rpx 20rpx; border-radius: 16rpx; background: #fbfcfe; }
 .record-item:first-child { margin-right: 18rpx; }

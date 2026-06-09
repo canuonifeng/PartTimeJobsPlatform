@@ -824,27 +824,26 @@ onUnload(stopCountdown)
 }
 
 .date-box {
-  width: 92rpx;
-  height: 92rpx;
-  border-radius: 18rpx;
-  background: #ffffff;
-  text-align: center;
+  width: 86rpx;
+  height: 86rpx;
+  border-radius: 22rpx;
+  background: #eafaf1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .date-day {
-  display: block;
-  margin-top: 16rpx;
   font-size: 32rpx;
-  line-height: 34rpx;
-  font-weight: 700;
-  color: #1f2d3d;
+  line-height: 36rpx;
+  color: #08a857;
+  font-weight: 800;
 }
 
 .date-month {
-  display: block;
-  margin-top: 4rpx;
-  font-size: 20rpx;
-  color: #8b98a7;
+  font-size: 22rpx;
+  color: #58b987;
 }
 
 .record-row {
