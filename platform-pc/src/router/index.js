@@ -69,6 +69,18 @@ const routes = [
       name: 'EnterpriseRealNameList',
       component: () => import('../views/auth/EnterpriseRealNameList.vue'),
       meta: { requiresAuth: true }
+    },
+    {
+      path: '/referral/config',
+      name: 'ReferralConfig',
+      component: () => import('../views/referral/ReferralConfig.vue'),
+      meta: { requiresAuth: true, title: '奖励规则配置' }
+    },
+    {
+      path: '/referral/audit',
+      name: 'ReferralAudit',
+      component: () => import('../views/referral/ReferralAudit.vue'),
+      meta: { requiresAuth: true, title: '奖励审核' }
     }
   ]
 
