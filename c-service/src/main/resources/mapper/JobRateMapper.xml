@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.cservice.mapper.JobRateMapper">
+
+    <select id="findByJobId" resultType="com.parttime.cservice.pojo.entity.JobRate">
+        SELECT id, job_id, type, amount, currency, rules, created_at, updated_at
+        FROM job_rates WHERE job_id = #{jobId}
+    </select>
+
+    <select id="findByJobIds" resultType="com.parttime.cservice.pojo.entity.JobRate">
+        SELECT id, job_id, type, amount, currency, rules, created_at, updated_at
+        FROM job_rates WHERE job_id IN
+        <foreach collection="jobIds" item="jobId" open="(" separator="," close=")">
+            #{jobId}
+        </foreach>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO job_rates (id, job_id, type, amount, currency, rules, created_at, updated_at)
+        VALUES (#{id}, #{jobId}, #{type}, #{amount}, #{currency}, #{rules}, #{createdAt}, #{updatedAt})
+    </insert>
+
+</mapper>

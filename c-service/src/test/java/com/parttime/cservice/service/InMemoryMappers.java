@@ -55,13 +55,12 @@ public class InMemoryMappers {
 
             @Override public int insert(Job job) {
                 if (job.getId() == null) job.setId(idGen.getAndIncrement());
-                if (job.getJobId() == null) job.setJobId(job.getId());
                 store.put(job.getId(), job);
                 return 1;
             }
             @Override public Optional<Job> findById(Long id) { return Optional.ofNullable(store.get(id)); }
             @Override public Optional<Job> findByJobId(Long jobId) {
-                return store.values().stream().filter(j -> jobId.equals(j.getJobId())).findFirst();
+                return Optional.ofNullable(store.get(jobId));
             }
             @Override public List<Job> findAll() { return new ArrayList<>(store.values()); }
             @Override public List<Job> search(String keyword, String location, Long categoryId) {
@@ -737,6 +736,65 @@ public class InMemoryMappers {
 
     public static TestSystemConfigMapper createSystemConfigMapper() {
         return new TestSystemConfigMapper();
+    }
+
+    public static com.parttime.cservice.mapper.EnterpriseMapper createEnterpriseMapper() {
+        return new com.parttime.cservice.mapper.EnterpriseMapper() {
+            private final ConcurrentHashMap<Long, com.parttime.cservice.pojo.entity.Enterprise> store = new ConcurrentHashMap<>();
+
+            @Override public int insert(com.parttime.cservice.pojo.entity.Enterprise enterprise) {
+                if (enterprise.getId() == null) return 0;
+                store.put(enterprise.getId(), enterprise);
+                return 1;
+            }
+            @Override public com.parttime.cservice.pojo.entity.Enterprise findById(Long id) {
+                return store.get(id);
+            }
+            @Override public List<com.parttime.cservice.pojo.entity.Enterprise> findByIds(List<Long> ids) {
+                return ids.stream().map(store::get).filter(Objects::nonNull).collect(Collectors.toList());
+            }
+        };
+    }
+
+    public static com.parttime.cservice.mapper.JobRateMapper createJobRateMapper() {
+        return new com.parttime.cservice.mapper.JobRateMapper() {
+            private final ConcurrentHashMap<Long, com.parttime.cservice.pojo.entity.JobRate> store = new ConcurrentHashMap<>();
+            private final AtomicLong idGen = new AtomicLong(1);
+
+            @Override public int insert(com.parttime.cservice.pojo.entity.JobRate jobRate) {
+                if (jobRate.getId() == null) jobRate.setId(idGen.getAndIncrement());
+                store.put(jobRate.getId(), jobRate);
+                return 1;
+            }
+            @Override public List<com.parttime.cservice.pojo.entity.JobRate> findByJobId(Long jobId) {
+                return store.values().stream().filter(r -> jobId.equals(r.getJobId())).collect(Collectors.toList());
+            }
+            @Override public List<com.parttime.cservice.pojo.entity.JobRate> findByJobIds(List<Long> jobIds) {
+                return store.values().stream().filter(r -> jobIds.contains(r.getJobId())).collect(Collectors.toList());
+            }
+        };
+    }
+
+    public static com.parttime.cservice.mapper.JobCategoryMapper createJobCategoryMapper() {
+        return new com.parttime.cservice.mapper.JobCategoryMapper() {
+            private final ConcurrentHashMap<Long, com.parttime.cservice.pojo.entity.JobCategory> store = new ConcurrentHashMap<>();
+            private final AtomicLong idGen = new AtomicLong(1);
+
+            @Override public int insert(com.parttime.cservice.pojo.entity.JobCategory category) {
+                if (category.getId() == null) category.setId(idGen.getAndIncrement());
+                store.put(category.getId(), category);
+                return 1;
+            }
+            @Override public com.parttime.cservice.pojo.entity.JobCategory findById(Long id) {
+                return store.get(id);
+            }
+            @Override public List<com.parttime.cservice.pojo.entity.JobCategory> findActive() {
+                return new ArrayList<>(store.values());
+            }
+            @Override public List<com.parttime.cservice.pojo.entity.JobCategory> findByIds(List<Long> ids) {
+                return ids.stream().map(store::get).filter(Objects::nonNull).collect(Collectors.toList());
+            }
+        };
     }
 
     public static class TestSystemConfigMapper implements com.parttime.cservice.mapper.SystemConfigMapper {

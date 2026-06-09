@@ -59,7 +59,6 @@ class JobServiceImplApplyForJobTest {
     void applyForJob_shouldSkipCompanyWorkerLinkWhenCompanyIdMissing() {
         Job job = new Job();
         job.setId(1L);
-        job.setJobId(1L);
         job.setCompanyId(null);
 
         JobSchedule schedule = activeFutureSchedule(10L, 1L);
@@ -78,7 +77,6 @@ class JobServiceImplApplyForJobTest {
     void applyForJob_shouldPersistApplicationWithoutCompanyId() {
         Job job = new Job();
         job.setId(1L);
-        job.setJobId(1L);
         job.setCompanyId(88L);
 
         JobSchedule schedule = activeFutureSchedule(10L, 1L);
@@ -97,7 +95,6 @@ class JobServiceImplApplyForJobTest {
     void applyForJob_autoApproveEnabled_shouldCreateAcceptedApplicationAndShift() {
         Job job = new Job();
         job.setId(1L);
-        job.setJobId(1L);
         job.setCompanyId(88L);
         job.setAutoApprove(true);
 
@@ -122,7 +119,6 @@ class JobServiceImplApplyForJobTest {
     void applyForJob_autoApproveDisabled_shouldCreatePendingApplication() {
         Job job = new Job();
         job.setId(1L);
-        job.setJobId(1L);
         job.setCompanyId(88L);
         job.setAutoApprove(null);
 

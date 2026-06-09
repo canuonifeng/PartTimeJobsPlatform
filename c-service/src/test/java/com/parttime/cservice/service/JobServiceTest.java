@@ -2,13 +2,19 @@ package com.parttime.cservice.service;
 
 import com.parttime.cservice.service.impl.JobServiceImpl;
 import com.parttime.cservice.mapper.CompanyWorkerInsertMapper;
+import com.parttime.cservice.mapper.EnterpriseMapper;
+import com.parttime.cservice.mapper.JobCategoryMapper;
 import com.parttime.cservice.mapper.JobMapper;
+import com.parttime.cservice.mapper.JobRateMapper;
 import com.parttime.cservice.mapper.JobTagRelationMapper;
 import com.parttime.cservice.mapper.NotificationMapper;
 import com.parttime.cservice.mapper.ScheduleApplicationMapper;
 import com.parttime.cservice.mapper.ShiftMapper;
 import com.parttime.cservice.mapper.SystemConfigMapper;
+import com.parttime.cservice.pojo.entity.Enterprise;
 import com.parttime.cservice.pojo.entity.Job;
+import com.parttime.cservice.pojo.entity.JobCategory;
+import com.parttime.cservice.pojo.entity.JobRate;
 import com.parttime.cservice.pojo.entity.ScheduleApplication;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
@@ -49,7 +55,47 @@ class JobServiceTest {
         ReflectionTestUtils.setField(jobService, "systemConfigMapper", InMemoryMappers.createSystemConfigMapper());
         ReflectionTestUtils.setField(jobService, "shiftMapper", InMemoryMappers.createShiftMapper());
         ReflectionTestUtils.setField(jobService, "notificationMapper", InMemoryMappers.createNotificationMapper());
+        EnterpriseMapper enterpriseMapper = InMemoryMappers.createEnterpriseMapper();
+        JobRateMapper jobRateMapper = InMemoryMappers.createJobRateMapper();
+        JobCategoryMapper jobCategoryMapper = InMemoryMappers.createJobCategoryMapper();
+        ReflectionTestUtils.setField(jobService, "enterpriseMapper", enterpriseMapper);
+        ReflectionTestUtils.setField(jobService, "jobRateMapper", jobRateMapper);
+        ReflectionTestUtils.setField(jobService, "jobCategoryMapper", jobCategoryMapper);
+
+        // Pre-populate enterprises for demo jobs (companyId 1, 2, 3)
+        for (long i = 1; i <= 3; i++) {
+            Enterprise e = new Enterprise();
+            e.setId(i);
+            e.setCompanyName("Company " + i);
+            enterpriseMapper.insert(e);
+        }
+
+        // Pre-populate categories for demo jobs (categoryId 1, 2)
+        JobCategory cat1 = new JobCategory();
+        cat1.setId(1L);
+        cat1.setName("Technology");
+        jobCategoryMapper.insert(cat1);
+        JobCategory cat2 = new JobCategory();
+        cat2.setId(2L);
+        cat2.setName("Marketing");
+        jobCategoryMapper.insert(cat2);
+
         TestDataFactory.addSampleJobs(jobService);
+
+        // Pre-populate job rates for the 3 demo jobs
+        insertJobRate(jobRateMapper, 1L, "HOURLY", new BigDecimal("50.00"));
+        insertJobRate(jobRateMapper, 1L, "DAILY", new BigDecimal("400.00"));
+        insertJobRate(jobRateMapper, 2L, "HOURLY", new BigDecimal("80.00"));
+        insertJobRate(jobRateMapper, 3L, "DAILY", new BigDecimal("600.00"));
+    }
+
+    private void insertJobRate(JobRateMapper mapper, Long jobId, String type, BigDecimal amount) {
+        JobRate rate = new JobRate();
+        rate.setJobId(jobId);
+        rate.setType(type);
+        rate.setAmount(amount);
+        rate.setCurrency("CNY");
+        mapper.insert(rate);
     }
 
     @Test
@@ -129,7 +175,7 @@ class JobServiceTest {
     void getJobDetail_returnsRequirementsContactPhoneAndTags() {
         Job taggedJob = new Job();
         taggedJob.setId(20L);
-        taggedJob.setJobId(20L);
+        taggedJob.setCompanyId(1L);
         taggedJob.setTitle("Tagged Job");
         taggedJob.setDescription("负责门店运营");
         taggedJob.setRequirements("需要健康证");
