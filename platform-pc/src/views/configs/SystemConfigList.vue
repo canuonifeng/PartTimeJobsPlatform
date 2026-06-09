@@ -3,7 +3,8 @@
     <el-card>
       <template #header><span class="card-title">系统配置</span></template>
       <el-table :data="configs" v-loading="loading" stripe style="width:100%">
-        <el-table-column prop="configKey" label="配置键" min-width="200" />
+        <el-table-column prop="configKey" label="配置键" min-width="180" />
+        <el-table-column prop="name" label="名称" min-width="160" />
         <el-table-column prop="configValue" label="配置值" min-width="300">
           <template #default="{ row }">
             <span v-if="isLongText(row.configKey)" class="long-text-preview">{{ row.configValue?.substring(0, 80) }}...</span>
@@ -19,7 +20,7 @@
       </el-table>
     </el-card>
 
-    <el-dialog v-model="editVisible" :title="`编辑 ${editingConfig?.configKey}`" width="720px" destroy-on-close>
+    <el-dialog v-model="editVisible" :title="`编辑 ${editingConfig?.name || editingConfig?.configKey}`" width="720px" destroy-on-close>
       <div v-if="editingConfig">
         <el-input
           v-model="editValue"
@@ -35,7 +36,7 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="previewVisible" :title="`预览 ${previewConfig?.configKey}`" width="720px" destroy-on-close>
+    <el-dialog v-model="previewVisible" :title="`预览 ${previewConfig?.name || previewConfig?.configKey}`" width="720px" destroy-on-close>
       <div class="preview-body" v-html="previewHtml"></div>
       <template #footer>
         <el-button @click="previewVisible = false">关闭</el-button>

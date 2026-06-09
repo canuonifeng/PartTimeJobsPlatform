@@ -14,8 +14,8 @@ public class SystemConfig {
     private String configKey;
     @Schema(description = "配置值")
     private String configValue;
-    @Schema(description = "配置描述")
-    private String description;
+    @Schema(description = "配置名称")
+    private String name;
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")

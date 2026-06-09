@@ -45,7 +45,7 @@ public class SystemConfigServiceImpl implements SystemConfigService {
         vo.setId(config.getId());
         vo.setConfigKey(config.getConfigKey());
         vo.setConfigValue(config.getConfigValue());
-        vo.setDescription(config.getDescription());
+        vo.setName(config.getName());
         vo.setCreatedAt(config.getCreatedAt());
         vo.setUpdatedAt(config.getUpdatedAt());
         return vo;

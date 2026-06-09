@@ -8,7 +8,7 @@ public class SystemConfig {
     private Long id;
     private String configKey;
     private String configValue;
-    private String description;
+    private String name;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
