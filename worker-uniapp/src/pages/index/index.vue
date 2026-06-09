@@ -40,25 +40,43 @@
         </view>
 
         <view v-for="shift in todayShifts" :key="shift.id" class="card shift-card">
-          <view class="job-row">
+          <view class="shift-header">
             <view class="job-left">
               <view class="job-icon"><text>岗</text></view>
-              <view class="job-info"><text class="job-title">{{ shift.jobTitle }}</text></view>
-            </view>
-            <view class="status-tag" :class="statusClass(shift.status)"><text>{{ statusLabel(shift.status) }}</text></view>
-          </view>
-          <view class="shift-meta">
-            <view class="meta-item"><text class="meta-icon">时</text><text class="meta-text">{{ shift.date }} {{ shift.startTime }} - {{ shift.endTime }}</text></view>
-            <view class="meta-item address-action" :class="{ 'address-disabled': !shift.lat || !shift.lng }" @click="openMap(shift)">
-              <text class="meta-icon">地</text>
-              <text class="meta-text address-text">{{ formatAddress(shift.location) }}</text>
-              <text class="nav-hint">📍</text>
+          <view class="job-info">
+            <text class="job-title">{{ shift.jobTitle }}</text>
+            <view v-if="shift.location" class="location-row" @click="handleOpenLocation(shift)">
+              <text class="job-location">{{ shift.location }}</text>
+              <text class="map-link">导航</text>
             </view>
           </view>
-          <view class="tip" :class="tipClass(shift)"><text>{{ tipText(shift) }}</text></view>
-          <view v-if="canCheckIn(shift)" class="btn-primary" @click="handleCheckIn(shift)">签到</view>
-          <view v-else-if="canCheckOut(shift)" class="btn-primary" @click="handleCheckOut(shift)">签退</view>
-          <view v-else class="btn-disabled">{{ statusLabel(shift.status) }}</view>
+            </view>
+            <view class="status-badge" :class="statusClass(shift.status)">{{ statusLabel(shift.status) }}</view>
+          </view>
+          <view class="time-box">
+            <view>
+              <text class="time-label">工作时间</text>
+              <text class="time-value">{{ shift.startTime }} - {{ shift.endTime }}</text>
+            </view>
+            <view class="date-box">
+              <text class="date-day">{{ shift.date?.slice(8) }}</text>
+              <text class="date-month">{{ shift.date?.slice(5, 7) }}月</text>
+            </view>
+          </view>
+          <view class="record-row">
+            <view class="record-item">
+              <text class="record-label">签到</text>
+              <text class="record-value">{{ shift.checkInTime || '未签到' }}</text>
+            </view>
+            <view class="record-item">
+              <text class="record-label">签退</text>
+              <text class="record-value">{{ shift.checkOutTime || '未签退' }}</text>
+            </view>
+          </view>
+          <view class="shift-actions">
+            <button class="action-btn check-in" :class="{ disabled: isActionDisabled(shift, 'in') }" :disabled="isActionDisabled(shift, 'in')" @click="handleCheckIn(shift)">签到</button>
+            <button class="action-btn check-out" :class="{ disabled: isActionDisabled(shift, 'out') }" :disabled="isActionDisabled(shift, 'out')" @click="handleCheckOut(shift)">签退</button>
+          </view>
         </view>
 
         <view class="card future-card">
@@ -96,6 +114,7 @@ const authStore = useAuthStore()
 const stats = ref({ monthHours: 0, monthIncome: 0, attendanceDays: 0 })
 const shifts = ref<Shift[]>([])
 const checking = ref(false)
+const submittingKey = ref('')
 const countdown = ref('')
 let countdownTimer: any = null
 const currentLocation = ref<{ lat: number; lng: number } | null>(null)
@@ -111,6 +130,8 @@ type Shift = {
   lat?: number
   lng?: number
   distance?: string
+  checkInTime?: string
+  checkOutTime?: string
 }
 
 const greeting = computed(() => {
@@ -161,8 +182,17 @@ function normalizeShift(shift: any): Shift {
     status: shift.status || 'SCHEDULED',
     lat: normalizeCoordinate(shift.lat ?? shift.latitude ?? shift.locationLat),
     lng: normalizeCoordinate(shift.lng ?? shift.longitude ?? shift.locationLng),
-    distance: shift.distance || shift.distanceText
+    distance: shift.distance || shift.distanceText,
+    checkInTime: normalizeTime(shift.checkInTime || shift.clockInTime),
+    checkOutTime: normalizeTime(shift.checkOutTime || shift.clockOutTime)
   }
+}
+
+function normalizeTime(value: any): string {
+  const str = String(value || '')
+  if (!str) return ''
+  const timeMatch = str.match(/(\d{2}:\d{2})/)
+  return timeMatch ? timeMatch[1] : str.slice(0, 5)
 }
 
 function parseShiftDateTime(date: string, time: string) {
@@ -171,6 +201,19 @@ function parseShiftDateTime(date: string, time: string) {
   return new Date(y, m - 1, d, h, min)
 }
 
+
+function handleOpenLocation(shift: Shift) {
+  if (!shift.lat || !shift.lng) {
+    uni.showToast({ title: '暂无经纬度，无法导航', icon: 'none' })
+    return
+  }
+  uni.openLocation({
+    latitude: shift.lat,
+    longitude: shift.lng,
+    name: shift.jobTitle,
+    address: shift.location
+  })
+}
 
 function statusLabel(status?: string) {
   if (status === 'ON_DUTY') return '工作中'
@@ -210,13 +253,25 @@ function tipText(shift: Shift) {
 }
 
 function canCheckIn(shift: Shift) {
-  if (checking.value) return false
   return !['ON_DUTY', 'OFF_DUTY', 'COMPLETED', 'ABSENT', 'LATE', 'EARLY_LEAVE'].includes(shift.status)
 }
 
 function canCheckOut(shift: Shift) {
-  if (checking.value) return false
   return shift.status === 'ON_DUTY' || shift.status === 'LATE'
+}
+
+function hasCheckedIn(shift: Shift) {
+  return ['ON_DUTY', 'OFF_DUTY', 'COMPLETED', 'LATE', 'EARLY_LEAVE'].includes(shift.status)
+}
+
+function hasCheckedOut(shift: Shift) {
+  return ['COMPLETED', 'EARLY_LEAVE'].includes(shift.status)
+}
+
+function isActionDisabled(shift: Shift, type: 'in' | 'out') {
+  if (submittingKey.value) return true
+  if (type === 'in') return hasCheckedIn(shift) || hasCheckedOut(shift) || shift.status === 'ABSENT'
+  return !hasCheckedIn(shift) || shift.status === 'ABSENT' || shift.status === 'OFF_DUTY' || shift.status === 'COMPLETED'
 }
 
 const sortedShifts = computed(() => {
@@ -305,53 +360,78 @@ async function checkDistance(shift: Shift): Promise<boolean> {
 }
 
 async function handleCheckIn(shift: Shift) {
-  if (checking.value || !canCheckIn(shift)) return
+  if (isActionDisabled(shift, 'in')) return
   const ok = await checkDistance(shift)
   if (!ok) return
+  submittingKey.value = `${shift.id}:in`
   const now = new Date()
   const start = parseShiftDateTime(shift.date, shift.startTime)
   const isLate = now > start
-  checking.value = true
   try {
     await checkIn({
       shiftId: shift.id,
       lat: currentLocation.value?.lat,
       lng: currentLocation.value?.lng
     })
+    const target = shifts.value.find(s => s.id === shift.id)
+    if (target) {
+      target.status = isLate ? 'LATE' : 'ON_DUTY'
+      target.checkInTime = normalizeTime(new Date().toTimeString())
+    }
     if (isLate) {
       const lateMins = Math.round((now.getTime() - start.getTime()) / 60000)
       uni.showModal({ title: '提示', content: `已迟到${lateMins}分钟，签到成功`, showCancel: false })
     } else {
       uni.showToast({ title: '签到成功', icon: 'success' })
     }
-    const target = shifts.value.find(s => s.id === shift.id)
-    if (target) target.status = isLate ? 'LATE' : 'ON_DUTY'
   } catch (e: any) {
     uni.showToast({ title: e?.message || '签到失败', icon: 'none' })
   } finally {
-    checking.value = false
+    submittingKey.value = ''
   }
 }
 
 async function handleCheckOut(shift: Shift) {
-  if (checking.value || !canCheckOut(shift)) return
+  if (isActionDisabled(shift, 'out')) return
   const ok = await checkDistance(shift)
   if (!ok) return
+  submittingKey.value = `${shift.id}:out`
   const now = new Date()
   const end = parseShiftDateTime(shift.date, shift.endTime)
-  const isEarly = now < end
-  checking.value = true
   try {
     const res: any = await checkOut({
       shiftId: shift.id,
       lat: currentLocation.value?.lat,
       lng: currentLocation.value?.lng
     })
-    if (res?.autoSettled) {
-      const amount = res.payablePay || res.scheduledPay || 0
+    const target = shifts.value.find(s => s.id === shift.id)
+    let finalStatus = ''
+    if (target) {
+      const backendStatus = res?.status || ''
+      if (backendStatus === 'COMPLETED') {
+        target.status = 'OFF_DUTY'
+        finalStatus = 'OFF_DUTY'
+      } else if (backendStatus === 'EARLY_LEAVE') {
+        target.status = 'EARLY_LEAVE'
+        finalStatus = 'EARLY_LEAVE'
+      } else if (backendStatus === 'LATE') {
+        target.status = 'LATE'
+        finalStatus = 'LATE'
+      } else {
+        const fallback = now < end ? 'EARLY_LEAVE' : 'OFF_DUTY'
+        target.status = fallback
+        finalStatus = fallback
+      }
+      target.checkOutTime = normalizeTime(res?.checkOutTime || new Date().toISOString())
+    }
+    const amount = Number(res?.payablePay || res?.scheduledPay || 0)
+    const isAbnormal = finalStatus === 'LATE' || finalStatus === 'EARLY_LEAVE'
+    if (amount <= 0) {
+      uni.showToast({ title: '签退成功', icon: 'success' })
+    } else if (res?.autoSettled) {
       uni.showModal({
         title: '薪资已到账',
-        content: `已收到 ¥${Number(amount).toFixed(2)} 薪资，去提现？`,
+        content: `已收到 ¥${amount.toFixed(2)} 薪资，去提现？`,
         confirmText: '去提现',
         cancelText: '不了',
         success: (modalRes) => {
@@ -360,18 +440,25 @@ async function handleCheckOut(shift: Shift) {
           }
         }
       })
-    } else if (isEarly) {
-      const earlyMins = Math.round((end.getTime() - now.getTime()) / 60000)
-      uni.showModal({ title: '提示', content: `提前${earlyMins}分钟签退，确认成功`, showCancel: false })
+    } else if (isAbnormal) {
+      uni.showModal({
+        title: '结算确认',
+        content: `本次${finalStatus === 'LATE' ? '迟到' : '早退'}，预计结算 ¥${amount.toFixed(2)}，请到收入明细确认`,
+        confirmText: '去确认',
+        cancelText: '知道了',
+        success: (modalRes) => {
+          if (modalRes.confirm) {
+            uni.navigateTo({ url: '/pages/earnings/earnings' })
+          }
+        }
+      })
     } else {
       uni.showToast({ title: '签退成功', icon: 'success' })
     }
-    const target = shifts.value.find(s => s.id === shift.id)
-    if (target) target.status = isEarly ? 'EARLY_LEAVE' : 'OFF_DUTY'
   } catch (e: any) {
     uni.showToast({ title: e?.message || '签退失败', icon: 'none' })
   } finally {
-    checking.value = false
+    submittingKey.value = ''
   }
 }
 
@@ -610,166 +697,230 @@ onUnload(stopCountdown)
 }
 
 .shift-card {
-  border: 1rpx solid #edf3ef;
+  border: none;
+  padding: 28rpx;
 }
 
-.job-row {
-  margin-bottom: 28rpx;
+.shift-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.job-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
 }
 
 .job-icon {
-  width: 76rpx;
+  width: 64rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  text-align: center;
+  border-radius: 20rpx;
+  background: #07c160;
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: 700;
+  margin-right: 18rpx;
+}
+
+.job-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.shift-title {
+  display: block;
+  font-size: 32rpx;
+  line-height: 42rpx;
+  font-weight: 700;
+  color: #1f2d3d;
+}
+
+.shift-location {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  line-height: 32rpx;
+  color: #7b8794;
+}
+
+.location-row {
+  display: flex;
+  align-items: center;
+  margin-top: 8rpx;
+}
+
+.job-location {
+  font-size: 24rpx;
+  line-height: 32rpx;
+  color: #7b8794;
+}
+
+.map-link {
+  margin-left: 12rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  background: #ecfdf5;
+  color: #0f9f5f;
+  font-size: 24rpx;
+}
+
+.status-badge {
+  margin-left: 18rpx;
+  padding: 8rpx 18rpx;
+  border-radius: 24rpx;
+  font-size: 22rpx;
+  line-height: 28rpx;
+  white-space: nowrap;
+}
+
+.status-badge.status-yellow {
+  background: #fff7e6;
+  color: #fa8c16;
+}
+
+.status-badge.status-green {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+
+.status-badge.status-gray {
+  background: #f0fbf4;
+  color: #07c160;
+}
+
+.status-badge.status-red {
+  background: #fff1f0;
+  color: #f5222d;
+}
+
+.time-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24rpx;
+  padding: 22rpx 24rpx;
+  border-radius: 18rpx;
+  background: #f7fafc;
+}
+
+.time-label {
+  display: block;
+  font-size: 22rpx;
+  color: #8b98a7;
+}
+
+.time-value {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 34rpx;
+  line-height: 42rpx;
+  font-weight: 700;
+  color: #07c160;
+}
+
+.date-box {
+  width: 92rpx;
+  height: 92rpx;
+  border-radius: 18rpx;
+  background: #ffffff;
+  text-align: center;
+}
+
+.date-day {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 32rpx;
+  line-height: 34rpx;
+  font-weight: 700;
+  color: #1f2d3d;
+}
+
+.date-month {
+  display: block;
+  margin-top: 4rpx;
+  font-size: 20rpx;
+  color: #8b98a7;
+}
+
+.record-row {
+  display: flex;
+  margin-top: 22rpx;
+}
+
+.record-item {
+  flex: 1;
+  padding: 18rpx 20rpx;
+  border-radius: 16rpx;
+  background: #fbfcfe;
+}
+
+.record-item:first-child {
+  margin-right: 18rpx;
+}
+
+.record-label {
+  display: block;
+  font-size: 22rpx;
+  color: #8b98a7;
+}
+
+.record-value {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1f2d3d;
+}
+
+.shift-actions {
+  display: flex;
+  margin-top: 24rpx;
+  gap: 18rpx;
+}
+
+.action-btn {
+  flex: 1;
   height: 76rpx;
   line-height: 76rpx;
-  text-align: center;
-  border-radius: 22rpx;
-  background: #eafaf1;
-  color: #07a857;
+  border-radius: 38rpx;
   font-size: 28rpx;
-  font-weight: 700;
-  margin-right: 20rpx;
-}
-
-.job-title {
-  font-size: 34rpx;
-  color: #16251d;
-  font-weight: 800;
-  margin-bottom: 8rpx;
-}
-
-.job-desc {
-  font-size: 24rpx;
-  color: #98a39d;
-}
-
-.status-tag {
-  padding: 10rpx 22rpx;
-  border-radius: 999rpx;
-  font-size: 24rpx;
-  font-weight: 700;
-}
-
-.status-green {
-  background: #e7f8ef;
-  color: #08a857;
-}
-
-.status-yellow {
-  background: #fff7df;
-  color: #d28a00;
-}
-
-.status-red {
-  background: #feecec;
-  color: #df3b30;
-}
-
-.status-gray {
-  background: #eef1f0;
-  color: #7b8580;
-}
-
-.shift-meta {
-  background: #f8faf9;
-  border-radius: 20rpx;
-  padding: 22rpx 24rpx 6rpx;
-  margin-bottom: 22rpx;
-}
-
-.meta-item {
-  margin-bottom: 18rpx;
-}
-
-.meta-icon {
-  width: 42rpx;
-  height: 42rpx;
-  line-height: 42rpx;
+  border: none;
   text-align: center;
-  border-radius: 14rpx;
-  background: #e9f7ef;
-  color: #08a857;
-  font-size: 22rpx;
-  margin-right: 16rpx;
 }
 
-.meta-text {
-  flex: 1;
-  font-size: 27rpx;
-  color: #52605a;
+.action-btn.check-in {
+  background: #07c160;
+  color: #ffffff;
+  animation: pulse-green 2s infinite;
 }
 
-.address-text {
-  color: #078a49;
-  font-weight: 700;
+.action-btn.check-out {
+  background: #ffffff;
+  color: #07c160;
+  border: 1rpx solid #07c160;
+  animation: pulse-border 2s infinite;
 }
 
-.address-disabled .address-text {
-  color: #8c9892;
-  font-weight: 500;
+.action-btn.disabled {
+  background: #eef1f5;
+  color: #b7c0cc;
+  border-color: #eef1f5;
+  animation: none;
 }
 
-.nav-hint {
-  font-size: 24rpx;
-  color: #08a857;
-  font-weight: 700;
-  margin-left: 16rpx;
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(7, 193, 96, 0.4); }
+  50% { box-shadow: 0 0 0 12rpx rgba(7, 193, 96, 0); }
 }
 
-.address-disabled .nav-hint {
-  color: #a0aaa5;
-}
-
-.tip {
-  padding: 18rpx 22rpx;
-  border-radius: 18rpx;
-  font-size: 26rpx;
-  margin-bottom: 24rpx;
-}
-
-.tip-green {
-  background: #eafaf1;
-  color: #07984f;
-}
-
-.tip-yellow {
-  background: #fff8e8;
-  color: #bd7b00;
-}
-
-.tip-red {
-  background: #fff0f0;
-  color: #d93025;
-}
-
-.tip-gray {
-  background: #f1f4f3;
-  color: #7d8883;
-}
-
-.btn-primary,
-.btn-disabled {
-  height: 88rpx;
-  line-height: 88rpx;
-  text-align: center;
-  border-radius: 44rpx;
-  font-size: 31rpx;
-  font-weight: 800;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #18c86b, #08a95a);
-  color: #fff;
-  animation: btn-pulse 2s ease-in-out infinite;
-}
-
-@keyframes btn-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(7, 193, 96, 0.5); }
-  50% { box-shadow: 0 0 0 16rpx rgba(7, 193, 96, 0); }
-}
-
-.btn-disabled {
-  background: #eef1f0;
-  color: #9aa39f;
+@keyframes pulse-border {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(7, 193, 96, 0.3); }
+  50% { box-shadow: 0 0 0 12rpx rgba(7, 193, 96, 0); }
 }
 
 .empty-title {

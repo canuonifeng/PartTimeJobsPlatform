@@ -43,6 +43,12 @@
       }
     },
     {
+      "path": "pages/profile/changePhone",
+      "style": {
+        "navigationBarTitleText": "更换手机号"
+      }
+    },
+    {
       "path": "pages/settings/settings",
       "style": {
         "navigationBarTitleText": "设置"

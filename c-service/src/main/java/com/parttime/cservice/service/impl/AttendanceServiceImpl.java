@@ -197,8 +197,8 @@ public class AttendanceServiceImpl implements AttendanceService {
             throw new RuntimeException("Shift does not belong to this worker");
         }
 
-        // 只能从已上岗/迟到状态签退
-        if (!ShiftStatus.ON_DUTY.name().equals(shift.getStatus()) && !ShiftStatus.LATE.name().equals(shift.getStatus())) {
+        // 只能从已上岗/迟到/早退状态签退
+        if (!ShiftStatus.ON_DUTY.name().equals(shift.getStatus()) && !ShiftStatus.LATE.name().equals(shift.getStatus()) && !ShiftStatus.EARLY_LEAVE.name().equals(shift.getStatus())) {
             throw new RuntimeException("Cannot check out: shift status is " + shift.getStatus());
         }
 
@@ -263,11 +263,13 @@ public class AttendanceServiceImpl implements AttendanceService {
         shift.setUpdatedAt(now);
         shiftMapper.update(shift);
 
-        // Auto-settle if enabled
+        // Auto-settle if enabled and pay > 0
         boolean settled = false;
-        SystemConfig autoSettleConfig = systemConfigMapper.findByKey("auto_settle_attendance").orElse(null);
-        if (autoSettleConfig != null && "true".equalsIgnoreCase(autoSettleConfig.getConfigValue())) {
-            settled = autoSettle(record, shift, scheduledPay);
+        if (scheduledPay.compareTo(BigDecimal.ZERO) > 0) {
+            SystemConfig autoSettleConfig = systemConfigMapper.findByKey("auto_settle_attendance").orElse(null);
+            if (autoSettleConfig != null && "true".equalsIgnoreCase(autoSettleConfig.getConfigValue())) {
+                settled = autoSettle(record, shift, scheduledPay);
+            }
         }
 
         AttendanceVO response = toAttendanceResponse(record);

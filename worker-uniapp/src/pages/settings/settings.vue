@@ -35,14 +35,10 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useAuthStore } from '@/store'
 import { getProfile } from '@/api/profile'
-import { getBankCard } from '@/api/bankCard'
-import { getRealNameStatus } from '@/api/realName'
 import { getSettings, updateSettings } from '@/api/settings'
 
 const authStore = useAuthStore()
 const profile = ref({})
-const bankCard = ref(null)
-const realName = ref(null)
 const savingKey = ref('')
 
 const switchValues = reactive({
@@ -52,14 +48,6 @@ const switchValues = reactive({
 })
 
 const settingGroups = computed(() => [
-  {
-    title: '账号与安全',
-    items: [
-      { title: '手机号', value: profile.value?.phone || profile.value?.mobile || '未绑定', icon: '手', iconClass: 'icon-green' },
-      { title: '实名认证', value: realNameStatusText.value, url: '/pages/auth/realName', icon: '实', iconClass: 'icon-orange' },
-      { title: '银行卡管理', value: bankCard.value?.cardNumber ? '已绑定' : '未绑定', url: '/pages/bank/bankCard', icon: '卡', iconClass: 'icon-purple' }
-    ]
-  },
   {
     title: '通知与隐私',
     items: [
@@ -75,14 +63,6 @@ const settingGroups = computed(() => [
     ]
   }
 ])
-
-const realNameStatusText = computed(() => {
-  const status = String(realName.value?.status || profile.value?.realNameStatus || '').toUpperCase()
-  if (status === 'APPROVED' || status === 'VERIFIED') return '已实名'
-  if (status === 'PENDING') return '审核中'
-  if (status === 'REJECTED') return '未通过'
-  return '未实名'
-})
 
 function handleItem(item) {
   if (item.type === 'switch') return
@@ -110,11 +90,9 @@ async function toggleSwitch(key, event) {
 
 async function loadSettingsPage() {
   try {
-    const [profileRes, settingsRes, bankRes, realNameRes] = await Promise.allSettled([
+    const [profileRes, settingsRes] = await Promise.allSettled([
       getProfile(),
-      getSettings(),
-      getBankCard(),
-      getRealNameStatus()
+      getSettings()
     ])
     if (profileRes.status === 'fulfilled') profile.value = profileRes.value || {}
     if (settingsRes.status === 'fulfilled') {
@@ -122,8 +100,6 @@ async function loadSettingsPage() {
       switchValues.location = settingsRes.value?.locationEnabled !== false
       switchValues.quiet = settingsRes.value?.quietEnabled === true
     }
-    if (bankRes.status === 'fulfilled') bankCard.value = bankRes.value
-    if (realNameRes.status === 'fulfilled') realName.value = realNameRes.value
   } catch {
     uni.showToast({ title: '设置加载失败', icon: 'none' })
   }

@@ -143,16 +143,16 @@ function isShiftEnded(shift: Shift): boolean {
 function canApplyCorrection(shift: Shift): boolean {
   if (shift.id < 0) return false
   if (!isShiftEnded(shift)) return false
-  if (['CHECKED_OUT', 'COMPLETED', 'OFF_DUTY', 'ABSENT'].includes(shift.status)) return false
+  if (['COMPLETED', 'ABSENT', 'EARLY_LEAVE'].includes(shift.status)) return false
   if (shift.correctionStatus) return false
   return true
 }
 
 function statusClass(shift: Shift): string {
-  if (['CHECKED_OUT', 'COMPLETED', 'OFF_DUTY'].includes(shift.status)) return 'completed'
+  if (['COMPLETED'].includes(shift.status)) return 'completed'
   if (shift.checkInTime && !shift.checkOutTime) return 'in-progress'
-  if (['CHECKED_IN', 'ON_DUTY'].includes(shift.status)) return 'in-progress'
-  if (['ABSENT', 'LATE', 'EARLY_LEAVE'].includes(shift.status)) return 'warning'
+  if (['ON_DUTY', 'LATE'].includes(shift.status)) return 'in-progress'
+  if (['ABSENT', 'EARLY_LEAVE'].includes(shift.status)) return 'warning'
   return 'pending'
 }
 

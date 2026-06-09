@@ -42,14 +42,17 @@
     </view>
 
     <view v-for="(group, groupIndex) in menuGroups" :key="groupIndex" class="menu-group">
-      <view v-for="item in group" :key="item.title" class="menu-item" @click="navTo(item.url)">
+      <view v-for="item in group" :key="item.title" class="menu-item" @click="handleMenuClick(item)">
         <view class="menu-left">
           <view class="menu-icon" :class="item.iconClass">
             <text>{{ item.icon }}</text>
           </view>
           <text class="menu-text">{{ item.title }}</text>
         </view>
-        <text class="arrow">›</text>
+        <view class="menu-right">
+          <text v-if="item.value" class="menu-value">{{ typeof item.value === 'function' ? item.value() : item.value }}</text>
+          <text class="arrow">›</text>
+        </view>
       </view>
     </view>
 
@@ -64,6 +67,8 @@
 import { computed, ref, onMounted } from 'vue'
 import { useAuthStore } from '@/store'
 import { getProfileDashboard } from '@/api/profile'
+import { getBankCard } from '@/api/bankCard'
+import { getRealNameStatus } from '@/api/realName'
 import InviteFloat from '@/components/InviteFloat.vue'
 
 const authStore = useAuthStore()
@@ -71,6 +76,7 @@ const profile = ref<any>(null)
 const dashboardStats = ref<any>({})
 const earningsSummary = ref<any>({})
 const realNameAuth = ref<any>({})
+const bankCard = ref<any>(null)
 
 const tabBarPageUrls = [
   '/pages/index/index',
@@ -88,7 +94,9 @@ const existingPageUrls = [
   '/pages/auth/realName',
   '/pages/settings/settings',
   '/pages/referral/referral',
-  '/pages/referral/referralRecords'
+  '/pages/referral/referralRecords',
+  '/pages/bank/bankCard',
+  '/pages/profile/changePhone'
 ]
 
 const monthIncome = computed(() => numberValue(dashboardStats.value?.monthIncome))
@@ -109,6 +117,11 @@ const menuGroups = [
     { title: '我的报名', url: '/pages/signup/signup', icon: '报', iconClass: 'icon-blue' },
     { title: '打卡记录', url: '/pages/attendance/clockIn', icon: '卡', iconClass: 'icon-orange' },
     { title: '收入明细', url: '/pages/earnings/earnings', icon: '收', iconClass: 'icon-gold' }
+  ],
+  [
+    { title: '手机号', value: computed(() => profile.value?.phone || profile.value?.mobile || '未绑定'), icon: '手', iconClass: 'icon-cyan' },
+    { title: '实名认证', value: computed(() => realNameStatusText.value), url: '/pages/auth/realName', icon: '实', iconClass: 'icon-orange' },
+    { title: '银行卡管理', value: computed(() => bankCard.value?.cardNumber ? '已绑定' : '未绑定'), url: '/pages/bank/bankCard', icon: '卡', iconClass: 'icon-purple' }
   ],
   [
     { title: '邀请好友', url: '/pages/referral/referral', icon: '邀', iconClass: 'icon-purple' },
@@ -132,6 +145,14 @@ const realNameStatus = computed(() => {
   return '未实名'
 })
 
+const realNameStatusText = computed(() => {
+  const status = String(realNameAuth.value?.status || profile.value?.realNameStatus || '').toUpperCase()
+  if (status === 'APPROVED' || status === 'VERIFIED') return '已实名'
+  if (status === 'PENDING') return '审核中'
+  if (status === 'REJECTED') return '未通过'
+  return '未实名'
+})
+
 function numberValue(value: any) {
   const num = Number(value)
   return Number.isFinite(num) ? num : 0
@@ -147,6 +168,16 @@ function decimalText(value: any) {
 
 function integerText(value: any) {
   return Math.round(numberValue(value)).toLocaleString('zh-CN')
+}
+
+function handleMenuClick(item: any) {
+  if (item.title === '手机号') {
+    uni.navigateTo({ url: '/pages/profile/changePhone' })
+  } else if (item.url) {
+    navTo(item.url)
+  } else {
+    uni.showToast({ title: '功能正在建设中', icon: 'none' })
+  }
 }
 
 function navTo(url: string) {
@@ -173,12 +204,21 @@ function handleLogout() {
 
 onMounted(async () => {
   try {
-    const res: any = await getProfileDashboard()
-    profile.value = res?.profile || null
-    dashboardStats.value = res?.stats || {}
-    earningsSummary.value = res?.earningsSummary || {}
-    realNameAuth.value = res?.realNameAuth || {}
-    if (profile.value) authStore.setWorkerInfo(profile.value)
+    const [dashboardRes, bankRes, realNameRes] = await Promise.allSettled([
+      getProfileDashboard(),
+      getBankCard(),
+      getRealNameStatus()
+    ])
+    if (dashboardRes.status === 'fulfilled') {
+      const res = dashboardRes.value as any
+      profile.value = res?.profile || null
+      dashboardStats.value = res?.stats || {}
+      earningsSummary.value = res?.earningsSummary || {}
+      realNameAuth.value = res?.realNameAuth || {}
+      if (profile.value) authStore.setWorkerInfo(profile.value)
+    }
+    if (bankRes.status === 'fulfilled') bankCard.value = bankRes.value
+    if (realNameRes.status === 'fulfilled') realNameAuth.value = realNameRes.value
   } catch {
     profile.value = null
     dashboardStats.value = {}
@@ -403,6 +443,14 @@ onMounted(async () => {
   font-size: 30rpx;
   color: #1f2933;
   font-weight: 500;
+}
+.menu-right {
+  display: flex;
+  align-items: center;
+}
+.menu-value {
+  font-size: 26rpx;
+  color: #98a2b3;
 }
 .arrow {
   font-size: 44rpx;
