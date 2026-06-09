@@ -79,13 +79,13 @@ function normalizeShift(s: any, index: number): Shift {
 function hasCheckedIn(shift: Shift): boolean { return shift.checkedIn || checkedInStatuses.includes(shift.status) }
 function hasCheckedOut(shift: Shift): boolean { return shift.checkedOut || checkedOutStatuses.includes(shift.status) }
 function statusText(status: string): string {
-  const map: Record<string, string> = { SCHEDULED: '待上岗', CHECKED_IN: '已签到', CHECKED_OUT: '已签退', ON_DUTY: '工作中', OFF_DUTY: '已下岗', COMPLETED: '已完成', LATE: '迟到', ABSENT: '缺勤' }
+  const map: Record<string, string> = { SCHEDULED: '待上岗', ON_DUTY: '工作中', COMPLETED: '已完成', LATE: '迟到', EARLY_LEAVE: '早退', ABSENT: '缺勤' }
   return map[status] || status || '待上岗'
 }
 function statusClass(status: string): string {
-  if (['CHECKED_OUT', 'OFF_DUTY', 'COMPLETED'].includes(status)) return 'completed'
-  if (['CHECKED_IN', 'ON_DUTY'].includes(status)) return 'active'
-  if (['LATE', 'ABSENT'].includes(status)) return 'warning'
+  if (['COMPLETED'].includes(status)) return 'completed'
+  if (['ON_DUTY', 'LATE'].includes(status)) return 'active'
+  if (['EARLY_LEAVE', 'ABSENT'].includes(status)) return 'warning'
   return 'pending'
 }
 function isActionDisabled(shift: Shift, type: 'in' | 'out'): boolean {
