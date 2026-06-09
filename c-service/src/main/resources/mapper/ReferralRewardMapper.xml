@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.cservice.mapper.ReferralRewardMapper">
+
+    <resultMap id="ReferralRewardResultMap" type="com.parttime.cservice.pojo.entity.ReferralReward">
+        <id property="id" column="id"/>
+        <result property="referralRecordId" column="referral_record_id"/>
+        <result property="amount" column="amount"/>
+        <result property="status" column="status"/>
+        <result property="auditRemark" column="audit_remark"/>
+        <result property="grantedAt" column="granted_at"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="findByReferralRecordId" resultMap="ReferralRewardResultMap">
+        SELECT * FROM referral_reward WHERE referral_record_id = #{referralRecordId}
+    </select>
+
+    <select id="findByReferrerIdPage" resultMap="ReferralRewardResultMap">
+        SELECT rr.* FROM referral_reward rr
+        INNER JOIN referral_record r ON rr.referral_record_id = r.id
+        WHERE r.referrer_id = #{referrerId}
+        ORDER BY rr.created_at DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countByReferrerId" resultType="long">
+        SELECT COUNT(*) FROM referral_reward rr
+        INNER JOIN referral_record r ON rr.referral_record_id = r.id
+        WHERE r.referrer_id = #{referrerId}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO referral_reward (referral_record_id, amount, status) VALUES (#{referralRecordId}, #{amount}, #{status})
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE referral_reward SET status = #{status}, audit_remark = #{auditRemark} WHERE id = #{id}
+    </update>
+
+</mapper>

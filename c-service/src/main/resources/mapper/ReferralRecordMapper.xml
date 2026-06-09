@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.cservice.mapper.ReferralRecordMapper">
+
+    <resultMap id="ReferralRecordResultMap" type="com.parttime.cservice.pojo.entity.ReferralRecord">
+        <id property="id" column="id"/>
+        <result property="referrerId" column="referrer_id"/>
+        <result property="refereeId" column="referee_id"/>
+        <result property="referralCode" column="referral_code"/>
+        <result property="boundAt" column="bound_at"/>
+    </resultMap>
+
+    <select id="findByRefereeId" resultMap="ReferralRecordResultMap">
+        SELECT * FROM referral_record WHERE referee_id = #{refereeId}
+    </select>
+
+    <select id="findByReferrerId" resultMap="ReferralRecordResultMap">
+        SELECT * FROM referral_record WHERE referrer_id = #{referrerId} ORDER BY bound_at DESC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO referral_record (referrer_id, referee_id, referral_code) VALUES (#{referrerId}, #{refereeId}, #{referralCode})
+    </insert>
+
+    <select id="countByReferrerId" resultType="int">
+        SELECT COUNT(*) FROM referral_record WHERE referrer_id = #{referrerId}
+    </select>
+
+</mapper>
