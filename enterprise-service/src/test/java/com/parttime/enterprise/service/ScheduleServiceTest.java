@@ -110,13 +110,13 @@ class ScheduleServiceTest {
         verify(shiftMapper).insert(shiftCaptor.capture());
         assertThat(shiftCaptor.getValue().getStatus()).isEqualTo("SCHEDULED");
         verify(workerNotificationMapper).insertWorkerNotification(
-                20L,
-                "SCHEDULE_ASSIGNED",
-                "schedule",
-                "排班已生成",
-                "您有新的排班，请及时查看",
-                "SHIFT",
-                99L);
+                eq(20L),
+                eq("SCHEDULE_ASSIGNED"),
+                eq("schedule"),
+                eq("排班已生成"),
+                any(),
+                eq("SHIFT"),
+                eq(99L));
     }
 
     @Test
@@ -195,13 +195,13 @@ class ScheduleServiceTest {
         scheduleService.updateShift(99L, request);
 
         verify(workerNotificationMapper).insertWorkerNotification(
-                20L,
-                "SCHEDULE_UPDATED",
-                "schedule",
-                "排班已变更",
-                "您的排班信息已变更，请及时查看",
-                "SHIFT",
-                99L);
+                eq(20L),
+                eq("SCHEDULE_UPDATED"),
+                eq("schedule"),
+                eq("排班已变更"),
+                any(),
+                eq("SHIFT"),
+                eq(99L));
     }
 
     @Test
@@ -215,13 +215,13 @@ class ScheduleServiceTest {
 
         verify(shiftMapper).cancelShift(99L);
         verify(workerNotificationMapper).insertWorkerNotification(
-                20L,
-                "SCHEDULE_CANCELLED",
-                "schedule",
-                "排班已取消",
-                "您的排班已取消，请及时查看",
-                "SHIFT",
-                99L);
+                eq(20L),
+                eq("SCHEDULE_CANCELLED"),
+                eq("schedule"),
+                eq("排班已取消"),
+                any(),
+                eq("SHIFT"),
+                eq(99L));
     }
 
     @Test

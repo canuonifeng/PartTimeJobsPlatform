@@ -61,8 +61,9 @@ public class ScheduleServiceImpl implements ScheduleService {
                 .orElseThrow(() -> new RuntimeException("ScheduleShift not found: " + shiftId));
         if (shift.getWorkerId() != null) {
             companyWorkerMapper.upsert(job.getCompanyId(), shift.getWorkerId());
+            String shiftInfo = job.getTitle() + " " + shift.getShiftDate() + " " + shift.getStartTime() + "-" + shift.getEndTime();
             workerNotificationMapper.insertWorkerNotification(shift.getWorkerId(), "SCHEDULE_ASSIGNED", "schedule",
-                    "排班已生成", "您有新的排班，请及时查看", "SHIFT", shift.getId());
+                    "排班已生成", "您有新的排班：" + shiftInfo, "SHIFT", shift.getId());
         }
         return toShiftResponse(shift);
     }
@@ -141,8 +142,11 @@ public class ScheduleServiceImpl implements ScheduleService {
         shift = shiftMapper.findById(id)
                 .orElseThrow(() -> new RuntimeException("ScheduleShift not found: " + id));
         if (shift.getWorkerId() != null) {
+            Job job = jobMapper.findById(shift.getJobId()).orElse(null);
+            String jobTitle = job != null ? job.getTitle() : "岗位";
+            String shiftInfo = jobTitle + " " + shift.getShiftDate() + " " + shift.getStartTime() + "-" + shift.getEndTime();
             workerNotificationMapper.insertWorkerNotification(shift.getWorkerId(), "SCHEDULE_UPDATED", "schedule",
-                    "排班已变更", "您的排班信息已变更，请及时查看", "SHIFT", shift.getId());
+                    "排班已变更", "您的排班已变更：" + shiftInfo, "SHIFT", shift.getId());
         }
         return toShiftResponse(shift);
     }
@@ -153,8 +157,11 @@ public class ScheduleServiceImpl implements ScheduleService {
                 .orElseThrow(() -> new RuntimeException("ScheduleShift not found: " + id));
         shiftMapper.cancelShift(id);
         if (shift.getWorkerId() != null) {
+            Job job = jobMapper.findById(shift.getJobId()).orElse(null);
+            String jobTitle = job != null ? job.getTitle() : "岗位";
+            String shiftInfo = jobTitle + " " + shift.getShiftDate() + " " + shift.getStartTime() + "-" + shift.getEndTime();
             workerNotificationMapper.insertWorkerNotification(shift.getWorkerId(), "SCHEDULE_CANCELLED", "schedule",
-                    "排班已取消", "您的排班已取消，请及时查看", "SHIFT", shift.getId());
+                    "排班已取消", "您的排班已取消：" + shiftInfo, "SHIFT", shift.getId());
         }
     }
 
