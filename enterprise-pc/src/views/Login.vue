@@ -32,7 +32,7 @@ async function handleLogin() {
       <h2 class="login-title">企业管理后台</h2>
       <el-form :model="form" label-width="0" @keyup.enter="handleLogin">
         <el-form-item>
-          <el-input v-model="form.username" placeholder="前缀@后缀" size="large" />
+          <el-input v-model="form.username" placeholder="用户名" size="large" />
         </el-form-item>
         <el-form-item>
           <el-input v-model="form.password" type="password" placeholder="密码" size="large" show-password />

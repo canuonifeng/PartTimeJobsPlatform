@@ -65,7 +65,7 @@ async function handleLogin() {
             <input
               v-model="username"
               class="input"
-              placeholder="请输入 前缀@后缀"
+              placeholder="请输入用户名"
               placeholder-class="placeholder"
               @confirm="handleLogin"
             />
