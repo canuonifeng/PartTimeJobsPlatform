@@ -3,9 +3,11 @@ package com.parttime.cservice.service.impl;
 import com.parttime.cservice.mapper.AttendanceCorrectionMapper;
 import com.parttime.cservice.mapper.AttendanceRecordMapper;
 import com.parttime.cservice.mapper.BalanceTransactionMapper;
+import com.parttime.cservice.mapper.JobMapper;
 import com.parttime.cservice.mapper.ShiftMapper;
 import com.parttime.cservice.pojo.entity.AttendanceCorrectionEntity;
 import com.parttime.cservice.pojo.entity.AttendanceRecordEntity;
+import com.parttime.cservice.pojo.entity.Job;
 import com.parttime.cservice.pojo.entity.ShiftEntity;
 import com.parttime.cservice.pojo.vo.HomeSchedulesVO;
 import com.parttime.cservice.pojo.vo.HomeStatsVO;
@@ -33,6 +35,8 @@ public class HomeServiceImpl implements HomeService {
     private BalanceTransactionMapper balanceTransactionMapper;
     @Resource
     private ShiftMapper shiftMapper;
+    @Resource
+    private JobMapper jobMapper;
     @Resource
     private WorkerShiftVOConverter workerShiftVOConverter;
 
@@ -71,11 +75,19 @@ public class HomeServiceImpl implements HomeService {
                 : correctionMapper.findByShiftIds(allShiftIds).stream()
                         .collect(Collectors.toMap(AttendanceCorrectionEntity::getShiftId, c -> c));
 
+        List<Long> jobIds = new ArrayList<>();
+        todayRaw.forEach(s -> { if (s.getJobId() != null) jobIds.add(s.getJobId()); });
+        futureRaw.forEach(s -> { if (s.getJobId() != null) jobIds.add(s.getJobId()); });
+        Map<Long, Job> jobMap = jobIds.isEmpty()
+                ? Map.of()
+                : jobMapper.findByJobIds(jobIds.stream().distinct().collect(Collectors.toList())).stream()
+                        .collect(Collectors.toMap(Job::getId, j -> j, (a, b) -> a));
+
         List<WorkerShiftVO> todayShifts = todayRaw.stream()
-                .map(s -> workerShiftVOConverter.toWorkerShiftResponseBatch(s, recordMap, correctionMap))
+                .map(s -> workerShiftVOConverter.toWorkerShiftResponseBatch(s, recordMap, correctionMap, jobMap))
                 .collect(Collectors.toList());
         List<WorkerShiftVO> futureShifts = futureRaw.stream()
-                .map(s -> workerShiftVOConverter.toWorkerShiftResponseBatch(s, recordMap, correctionMap))
+                .map(s -> workerShiftVOConverter.toWorkerShiftResponseBatch(s, recordMap, correctionMap, jobMap))
                 .collect(Collectors.toList());
 
         HomeSchedulesVO vo = new HomeSchedulesVO();
