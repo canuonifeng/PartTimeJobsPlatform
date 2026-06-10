@@ -22,6 +22,11 @@ class JobCategoryServiceTest {
         jobCategoryService = new JobCategoryServiceImpl();
         ReflectionTestUtils.setField(jobCategoryService, "jobCategoryMapper", new JobCategoryMapper() {
             @Override
+            public JobCategory findById(Long id) {
+                return null;
+            }
+
+            @Override
             public List<JobCategory> findActive() {
                 return List.of(
                                 category(3L, "零售", null, 2, "ACTIVE"),
@@ -33,6 +38,16 @@ class JobCategoryServiceTest {
                         .filter(category -> "ACTIVE".equals(category.getStatus()))
                         .sorted(Comparator.comparing(JobCategory::getSortOrder).thenComparing(JobCategory::getId))
                         .toList();
+            }
+
+            @Override
+            public int insert(JobCategory category) {
+                return 0;
+            }
+
+            @Override
+            public List<JobCategory> findByIds(List<Long> ids) {
+                return List.of();
             }
         });
     }

@@ -162,41 +162,6 @@ public class InMemoryMappers {
         };
     }
 
-    public static JobApplicationMapper createJobApplicationMapper() {
-        return new JobApplicationMapper() {
-            private final ConcurrentHashMap<Long, JobApplication> store = new ConcurrentHashMap<>();
-            private final AtomicLong idGen = new AtomicLong(1);
-
-            @Override public int insert(JobApplication app) {
-                if (app.getId() == null) app.setId(idGen.getAndIncrement());
-                store.put(app.getId(), app);
-                return 1;
-            }
-            @Override public Optional<JobApplication> findById(Long id) { return Optional.ofNullable(store.get(id)); }
-            @Override public List<JobApplication> findByWorkerId(Long workerId) {
-                return store.values().stream().filter(a -> workerId.equals(a.getWorkerId())).collect(Collectors.toList());
-            }
-            @Override public List<JobApplication> findByJobId(Long jobId) {
-                return store.values().stream().filter(a -> jobId.equals(a.getJobId())).collect(Collectors.toList());
-            }
-            @Override public List<JobApplication> findByWorkerIdAndJobId(Long workerId, Long jobId) {
-                return store.values().stream()
-                        .filter(a -> workerId.equals(a.getWorkerId()) && jobId.equals(a.getJobId()))
-                        .collect(Collectors.toList());
-            }
-            @Override public int countByWorkerIdAndStatus(Long workerId, String status) {
-                return (int) store.values().stream()
-                        .filter(a -> workerId.equals(a.getWorkerId()) && status.equals(a.getStatus()))
-                        .count();
-            }
-            @Override public int updateStatus(Long id, String status) {
-                JobApplication app = store.get(id);
-                if (app != null) { app.setStatus(status); return 1; }
-                return 0;
-            }
-        };
-    }
-
     public static ShiftMapper createShiftMapper() {
         return new ShiftMapper() {
             private final ConcurrentHashMap<Long, ShiftEntity> store = new ConcurrentHashMap<>();
