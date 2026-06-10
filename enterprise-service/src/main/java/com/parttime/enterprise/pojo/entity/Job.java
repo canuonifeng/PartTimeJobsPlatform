@@ -1,6 +1,5 @@
 package com.parttime.enterprise.pojo.entity;
 
-import com.parttime.enterprise.pojo.vo.JobTagVO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.math.BigDecimal;
@@ -22,10 +21,6 @@ public class Job {
     private String requirements;
     @Schema(description = "岗位联系方式")
     private String contactPhone;
-    @Schema(description = "岗位标签ID列表")
-    private List<Long> tagIds;
-    @Schema(description = "岗位标签列表")
-    private List<JobTagVO> tags;
     @Schema(description = "工作地点")
     private String location;
     @Schema(description = "省")
