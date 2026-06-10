@@ -269,11 +269,19 @@ function handleDelete(id) {
 .info-label {
   font-size: 26rpx;
   color: #98a3b3;
+  flex-shrink: 0;
+  margin-right: 16rpx;
 }
 
 .info-value {
   font-size: 26rpx;
   color: #1f2933;
+  text-align: right;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .card-footer {
