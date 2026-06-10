@@ -21,10 +21,9 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -69,7 +68,7 @@ class JobServiceImplApplyForJobTest {
         boolean result = jobService.applyForJob(100L, 1L, List.of(10L));
 
         assertThat(result).isTrue();
-        verify(scheduleApplicationMapper).insert(any(ScheduleApplication.class));
+        verify(scheduleApplicationMapper).batchInsert(anyList());
         verify(companyWorkerInsertMapper, never()).upsert(anyLong(), anyLong());
     }
 
@@ -83,7 +82,6 @@ class JobServiceImplApplyForJobTest {
         when(scheduleApplicationMapper.findScheduleIdsByWorkerIdAndJobId(100L, 1L)).thenReturn(List.of());
         when(jobMapper.findByJobId(1L)).thenReturn(Optional.of(job));
         when(jobScheduleMapper.findByIds(List.of(10L))).thenReturn(List.of(schedule));
-        doAnswer(invocation -> 1).when(scheduleApplicationMapper).insert(any(ScheduleApplication.class));
 
         boolean result = jobService.applyForJob(100L, 1L, List.of(10L));
 
@@ -102,16 +100,11 @@ class JobServiceImplApplyForJobTest {
         when(scheduleApplicationMapper.findScheduleIdsByWorkerIdAndJobId(100L, 1L)).thenReturn(List.of());
         when(jobMapper.findByJobId(1L)).thenReturn(Optional.of(job));
         when(jobScheduleMapper.findByIds(List.of(10L))).thenReturn(List.of(schedule));
-        doAnswer(invocation -> {
-            com.parttime.cservice.pojo.entity.ScheduleApplication sa = invocation.getArgument(0);
-            sa.setId(1L);
-            return 1;
-        }).when(scheduleApplicationMapper).insert(any(com.parttime.cservice.pojo.entity.ScheduleApplication.class));
 
         boolean result = jobService.applyForJob(100L, 1L, List.of(10L));
 
         assertThat(result).isTrue();
-        verify(scheduleApplicationMapper).insert(argThat(sa -> "ACCEPTED".equals(sa.getStatus())));
+        verify(scheduleApplicationMapper).batchInsert(anyList());
         verify(shiftMapper).insert(any(com.parttime.cservice.pojo.entity.ShiftEntity.class));
     }
 
@@ -128,12 +121,11 @@ class JobServiceImplApplyForJobTest {
         when(jobScheduleMapper.findByIds(List.of(10L))).thenReturn(List.of(schedule));
         when(systemConfigMapper.findByKey("auto_approve_applications")).thenReturn(
                 Optional.of(new com.parttime.cservice.pojo.entity.SystemConfig()));
-        doAnswer(invocation -> 1).when(scheduleApplicationMapper).insert(any(com.parttime.cservice.pojo.entity.ScheduleApplication.class));
 
         boolean result = jobService.applyForJob(100L, 1L, List.of(10L));
 
         assertThat(result).isTrue();
-        verify(scheduleApplicationMapper).insert(argThat(sa -> "PENDING".equals(sa.getStatus())));
+        verify(scheduleApplicationMapper).batchInsert(anyList());
         verify(shiftMapper, never()).insert(any());
     }
 

@@ -1,14 +1,20 @@
 package com.parttime.cservice.service.impl;
 
 import com.parttime.cservice.mapper.CompanyWorkerInsertMapper;
+import com.parttime.cservice.mapper.EnterpriseMapper;
+import com.parttime.cservice.mapper.JobCategoryMapper;
 import com.parttime.cservice.mapper.JobMapper;
+import com.parttime.cservice.mapper.JobRateMapper;
 import com.parttime.cservice.mapper.JobScheduleMapper;
 import com.parttime.cservice.mapper.JobTagRelationMapper;
 import com.parttime.cservice.mapper.NotificationMapper;
 import com.parttime.cservice.mapper.ScheduleApplicationMapper;
 import com.parttime.cservice.mapper.ShiftMapper;
 import com.parttime.cservice.mapper.SystemConfigMapper;
+import com.parttime.cservice.pojo.entity.Enterprise;
 import com.parttime.cservice.pojo.entity.Job;
+import com.parttime.cservice.pojo.entity.JobCategory;
+import com.parttime.cservice.pojo.entity.JobRate;
 import com.parttime.cservice.pojo.entity.JobSchedule;
 import com.parttime.cservice.pojo.entity.ScheduleApplication;
 import com.parttime.cservice.pojo.entity.ShiftEntity;
@@ -28,12 +34,9 @@ import jakarta.annotation.Resource;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -45,6 +48,12 @@ public class JobServiceImpl implements JobService {
 
     @Resource
     private JobMapper jobMapper;
+    @Resource
+    private EnterpriseMapper enterpriseMapper;
+    @Resource
+    private JobCategoryMapper jobCategoryMapper;
+    @Resource
+    private JobRateMapper jobRateMapper;
     @Resource
     private ScheduleApplicationMapper scheduleApplicationMapper;
     @Resource
@@ -90,10 +99,16 @@ public class JobServiceImpl implements JobService {
                             distance(latitude, longitude, b.getLatitude(), b.getLongitude())))
                     .toList();
         }
+        // 批量加载关联数据
+        Map<Long, Enterprise> companyMap = loadCompanies(jobs);
+        Map<Long, JobCategory> categoryMap = loadCategories(jobs);
+        Map<Long, List<JobRate>> ratesMap = loadRates(jobs);
+        Map<Long, List<JobTagVO>> tagsByJobId = loadTagsByJobId(jobs);
+        // 薪资筛选
         jobs = jobs.stream()
                 .filter(job -> {
                     if (minRate == null) return true;
-                    List<JobRateInfoVO> rates = job.getRates();
+                    List<JobRate> rates = ratesMap.get(job.getId());
                     if (rates != null && !rates.isEmpty()) {
                         return rates.stream().anyMatch(r -> r.getAmount().compareTo(minRate) >= 0);
                     }
@@ -102,7 +117,7 @@ public class JobServiceImpl implements JobService {
                 })
                 .filter(job -> {
                     if (maxRate == null) return true;
-                    List<JobRateInfoVO> rates = job.getRates();
+                    List<JobRate> rates = ratesMap.get(job.getId());
                     if (rates != null && !rates.isEmpty()) {
                         return rates.stream().anyMatch(r -> r.getAmount().compareTo(maxRate) <= 0);
                     }
@@ -110,9 +125,10 @@ public class JobServiceImpl implements JobService {
                     return jobRate.compareTo(maxRate) <= 0;
                 })
                 .toList();
-        Map<Long, List<JobTagVO>> tagsByJobId = loadTagsByJobId(jobs);
         return jobs.stream()
-                .map(job -> toSummary(job, latitude, longitude, tagsByJobId.get(job.getId())))
+                .map(job -> toSummary(job, latitude, longitude, companyMap.get(job.getCompanyId()),
+                        categoryMap.get(job.getCategoryId()), ratesMap.get(job.getId()),
+                        tagsByJobId.get(job.getId())))
                 .toList();
     }
 
@@ -122,7 +138,6 @@ public class JobServiceImpl implements JobService {
                        Integer headcount, Integer acceptedCount, LocalDateTime deadline, String status) {
         Job job = new Job();
         job.setId(id);
-        job.setJobId(id);
         job.setCompanyId(companyIdForDemo(id));
         job.setLatitude(latitudeForDemo(id));
         job.setLongitude(longitudeForDemo(id));
@@ -130,7 +145,6 @@ public class JobServiceImpl implements JobService {
         job.setDescription(description);
         job.setLocation(location);
         job.setCategoryId(categoryId);
-        job.setCategoryName(categoryName);
         job.setHeadcount(headcount);
         job.setAcceptedCount(acceptedCount);
         job.setDeadline(deadline);
@@ -139,10 +153,9 @@ public class JobServiceImpl implements JobService {
             JobRateInfoVO first = rates.get(0);
             job.setRateType(first.getType());
             job.setRateAmount(first.getAmount());
-            job.setRates(rates);
         }
+        jobMapper.insert(job);
         if (schedules != null && !schedules.isEmpty()) {
-            job.setSchedules(schedules);
             List<JobSchedule> scheduleEntities = schedules.stream().map(s -> {
                 JobSchedule js = new JobSchedule();
                 js.setJobId(id);
@@ -155,7 +168,6 @@ public class JobServiceImpl implements JobService {
             }).collect(Collectors.toList());
             jobScheduleMapper.batchInsert(scheduleEntities);
         }
-        jobMapper.insert(job);
     }
 
     private Long companyIdForDemo(Long jobId) {
@@ -206,7 +218,11 @@ public class JobServiceImpl implements JobService {
     public JobDetailVO getJobDetail(Long jobId, Long workerId) {
         Job job = jobMapper.findByJobId(jobId)
                 .orElseThrow(() -> new RuntimeException("Job not found with id: " + jobId));
-        return toDetail(job, workerId);
+        Enterprise company = enterpriseMapper.findById(job.getCompanyId());
+        JobCategory category = job.getCategoryId() != null ? jobCategoryMapper.findById(job.getCategoryId()) : null;
+        List<JobRate> rates = jobRateMapper.findByJobId(job.getId());
+        List<JobTagVO> tags = jobTagRelationMapper.findTagsByJobId(job.getId());
+        return toDetail(job, workerId, company, category, rates, tags);
     }
 
     @Override
@@ -254,15 +270,20 @@ public class JobServiceImpl implements JobService {
             SystemConfig config = systemConfigMapper.findByKey("auto_approve_applications").orElse(null);
             autoApprove = config != null && "true".equalsIgnoreCase(config.getConfigValue());
         }
-        for (Long scheduleId : newIds) {
+        // Batch insert all applications
+        List<ScheduleApplication> applications = newIds.stream().map(scheduleId -> {
             ScheduleApplication sa = new ScheduleApplication();
             sa.setScheduleId(scheduleId);
             sa.setWorkerId(workerId);
             sa.setStatus(autoApprove ? "ACCEPTED" : "PENDING");
-            scheduleApplicationMapper.insert(sa);
+            return sa;
+        }).collect(Collectors.toList());
+        scheduleApplicationMapper.batchInsert(applications);
 
-            if (autoApprove) {
-                createShiftForApplication(sa, job, schedMap.get(scheduleId));
+        // Handle auto-approve: create shifts and send notifications
+        if (autoApprove) {
+            for (ScheduleApplication sa : applications) {
+                createShiftForApplication(sa, job, schedMap.get(sa.getScheduleId()));
                 sendAutoApproveNotification(sa, job);
             }
         }
@@ -287,15 +308,72 @@ public class JobServiceImpl implements JobService {
         return scheduleApplicationMapper.findByWorkerId(workerId);
     }
 
-    private JobSummaryVO toSummary(Job job, BigDecimal latitude, BigDecimal longitude, List<JobTagVO> tags) {
-        List<JobRateInfoVO> rates = job.getRates();
+    // ========== 批量加载关联数据 ==========
+
+    private Map<Long, Enterprise> loadCompanies(List<Job> jobs) {
+        List<Long> companyIds = jobs.stream().map(Job::getCompanyId).filter(id -> id != null).distinct().toList();
+        if (companyIds.isEmpty()) return Map.of();
+        return enterpriseMapper.findByIds(companyIds).stream()
+                .collect(Collectors.toMap(Enterprise::getId, e -> e));
+    }
+
+    private Map<Long, JobCategory> loadCategories(List<Job> jobs) {
+        List<Long> categoryIds = jobs.stream().map(Job::getCategoryId).filter(id -> id != null).distinct().toList();
+        if (categoryIds.isEmpty()) return Map.of();
+        return jobCategoryMapper.findByIds(categoryIds).stream()
+                .collect(Collectors.toMap(JobCategory::getId, c -> c));
+    }
+
+    private Map<Long, List<JobRate>> loadRates(List<Job> jobs) {
+        List<Long> jobIds = jobs.stream().map(Job::getId).filter(id -> id != null).distinct().toList();
+        if (jobIds.isEmpty()) return Map.of();
+        List<JobRate> allRates = jobRateMapper.findByJobIds(jobIds);
+        return allRates.stream().collect(Collectors.groupingBy(JobRate::getJobId));
+    }
+
+    private Map<Long, List<JobTagVO>> loadTagsByJobId(List<Job> jobs) {
+        if (jobTagRelationMapper == null || jobs == null || jobs.isEmpty()) return Map.of();
+        List<Long> jobIds = jobs.stream()
+                .map(Job::getId)
+                .filter(id -> id != null)
+                .distinct()
+                .toList();
+        if (jobIds.isEmpty()) return Map.of();
+        List<JobTagVO> tags = jobTagRelationMapper.findTagsByJobIds(jobIds);
+        if (tags == null || tags.isEmpty()) return Map.of();
+        return tags.stream()
+                .filter(tag -> tag.getJobId() != null)
+                .collect(Collectors.groupingBy(JobTagVO::getJobId));
+    }
+
+    private List<JobTagVO> resolveTags(Job job, List<JobTagVO> tags) {
+        if (tags != null) return tags;
+        if (jobTagRelationMapper == null || job.getId() == null) return emptyList();
+        List<JobTagVO> loaded = jobTagRelationMapper.findTagsByJobId(job.getId());
+        return loaded == null ? emptyList() : loaded;
+    }
+
+    // ========== VO 转换 ==========
+
+    private JobSummaryVO toSummary(Job job, BigDecimal latitude, BigDecimal longitude,
+                                   Enterprise company, JobCategory category,
+                                   List<JobRate> rates, List<JobTagVO> tags) {
+        List<JobRateInfoVO> rateVOs = rates != null ? rates.stream().map(r -> {
+            JobRateInfoVO vo = new JobRateInfoVO();
+            vo.setId(r.getId());
+            vo.setType(r.getType());
+            vo.setAmount(r.getAmount());
+            vo.setCurrency(r.getCurrency());
+            return vo;
+        }).toList() : null;
+
         BigDecimal minRate;
         BigDecimal maxRate;
         List<String> rateTypes;
-        if (rates != null && !rates.isEmpty()) {
-            minRate = rates.stream().map(JobRateInfoVO::getAmount).min(BigDecimal::compareTo).orElse(BigDecimal.ZERO);
-            maxRate = rates.stream().map(JobRateInfoVO::getAmount).max(BigDecimal::compareTo).orElse(BigDecimal.ZERO);
-            rateTypes = rates.stream().map(JobRateInfoVO::getType).toList();
+        if (rateVOs != null && !rateVOs.isEmpty()) {
+            minRate = rateVOs.stream().map(JobRateInfoVO::getAmount).min(BigDecimal::compareTo).orElse(BigDecimal.ZERO);
+            maxRate = rateVOs.stream().map(JobRateInfoVO::getAmount).max(BigDecimal::compareTo).orElse(BigDecimal.ZERO);
+            rateTypes = rateVOs.stream().map(JobRateInfoVO::getType).toList();
         } else {
             minRate = job.getRateAmount() != null ? job.getRateAmount() : BigDecimal.ZERO;
             maxRate = minRate;
@@ -315,15 +393,15 @@ public class JobServiceImpl implements JobService {
         summary.setProvince(job.getProvince());
         summary.setCity(job.getCity());
         summary.setDistrict(job.getDistrict());
-        summary.setCategoryName(job.getCategoryName());
-        summary.setCompanyName(job.getCompanyName());
-        summary.setCompanyLogo(job.getCompanyLogo());
-        summary.setImageUrl(job.getImageUrl());
+        summary.setCategoryName(category != null ? category.getName() : null);
+        summary.setCompanyName(company != null ? company.getCompanyName() : null);
+        summary.setCompanyLogo(company != null ? company.getCompanyLogo() : null);
+        summary.setImageUrl(null);
         summary.setDistanceKm(distanceKm);
         summary.setMinRate(minRate);
         summary.setMaxRate(maxRate);
         summary.setRateTypes(rateTypes);
-        summary.setRates(rates);
+        summary.setRates(rateVOs);
         return summary;
     }
 
@@ -346,36 +424,15 @@ public class JobServiceImpl implements JobService {
         }).toList();
     }
 
-    private Map<Long, List<JobTagVO>> loadTagsByJobId(List<Job> jobs) {
-        if (jobTagRelationMapper == null || jobs == null || jobs.isEmpty()) return Map.of();
-        List<Long> jobIds = jobs.stream()
-                .map(Job::getId)
-                .filter(id -> id != null)
-                .distinct()
-                .toList();
-        if (jobIds.isEmpty()) return Map.of();
-        List<JobTagVO> tags = jobTagRelationMapper.findTagsByJobIds(jobIds);
-        if (tags == null || tags.isEmpty()) return Map.of();
-        return tags.stream()
-                .filter(tag -> tag.getJobId() != null)
-                .collect(Collectors.groupingBy(JobTagVO::getJobId));
-    }
-
-    private List<JobTagVO> resolveTags(Job job) {
-        if (job.getTags() != null) return job.getTags();
-        if (jobTagRelationMapper == null || job.getId() == null) return emptyList();
-        List<JobTagVO> tags = jobTagRelationMapper.findTagsByJobId(job.getId());
-        return tags == null ? emptyList() : tags;
-    }
-
-    private JobDetailVO toDetail(Job job, Long workerId) {
+    private JobDetailVO toDetail(Job job, Long workerId, Enterprise company, JobCategory category,
+                                 List<JobRate> rates, List<JobTagVO> tags) {
         JobDetailVO detail = new JobDetailVO();
         detail.setId(job.getId());
         detail.setTitle(job.getTitle());
         detail.setDescription(job.getDescription());
         detail.setRequirements(job.getRequirements());
         detail.setContactPhone(job.getContactPhone());
-        detail.setTags(resolveTags(job));
+        detail.setTags(resolveTags(job, tags));
         detail.setLocation(job.getAddress() != null ? job.getAddress() : job.getLocation());
         detail.setProvince(job.getProvince());
         detail.setCity(job.getCity());
@@ -383,15 +440,22 @@ public class JobServiceImpl implements JobService {
         detail.setAddress(job.getAddress());
         detail.setLatitude(job.getLatitude());
         detail.setLongitude(job.getLongitude());
-        detail.setCompanyName(job.getCompanyName());
-        detail.setCompanyLogo(job.getCompanyLogo());
-        detail.setImageUrl(job.getImageUrl());
-        detail.setCategoryName(job.getCategoryName());
+        detail.setCompanyName(company != null ? company.getCompanyName() : null);
+        detail.setCompanyLogo(company != null ? company.getCompanyLogo() : null);
+        detail.setImageUrl(null);
+        detail.setCategoryName(category != null ? category.getName() : null);
         detail.setStatus(job.getStatus());
         detail.setHeadcount(job.getHeadcount());
         detail.setDeadline(job.getDeadline());
-        if (job.getRates() != null && !job.getRates().isEmpty()) {
-            detail.setRates(job.getRates());
+        if (rates != null && !rates.isEmpty()) {
+            detail.setRates(rates.stream().map(r -> {
+                JobRateInfoVO vo = new JobRateInfoVO();
+                vo.setId(r.getId());
+                vo.setType(r.getType());
+                vo.setAmount(r.getAmount());
+                vo.setCurrency(r.getCurrency());
+                return vo;
+            }).toList());
         } else if (job.getRateType() != null && job.getRateAmount() != null) {
             JobRateInfoVO rate = new JobRateInfoVO();
             rate.setType(job.getRateType());
