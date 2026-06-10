@@ -82,7 +82,7 @@ async function handleReject(applicationId) {
       <text class="header-title">应聘管理</text>
     </view>
 
-    <scroll-view class="list-scroll" scroll-y @scrolltolower="loadMore">
+    <view class="content">
       <view v-if="loading" class="empty-state">
         <text class="empty-emoji">⏳</text>
         <text class="empty-title">加载中...</text>
@@ -131,7 +131,7 @@ async function handleReject(applicationId) {
           <uni-load-more v-else status="noMore" />
         </view>
       </view>
-    </scroll-view>
+    </view>
   </view>
 </template>
 
@@ -154,10 +154,9 @@ async function handleReject(applicationId) {
   color: #fff;
 }
 
-.list-scroll {
-  height: calc(100vh - 120rpx);
+.content {
   padding: 24rpx 32rpx;
-  overflow: hidden;
+  padding-bottom: 80rpx;
 }
 
 .empty-state {
@@ -195,8 +194,6 @@ async function handleReject(applicationId) {
   border-radius: 24rpx;
   padding: 30rpx;
   box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
-  box-sizing: border-box;
-  overflow: hidden;
 }
 
 .card-header {
@@ -270,17 +267,11 @@ async function handleReject(applicationId) {
 .info-label {
   font-size: 26rpx;
   color: #98a3b3;
-  flex-shrink: 0;
 }
 
 .info-value {
   font-size: 26rpx;
   color: #1f2933;
-  text-align: right;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin-left: 16rpx;
 }
 
 .card-footer {
