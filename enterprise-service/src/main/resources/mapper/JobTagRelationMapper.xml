@@ -31,21 +31,11 @@
         </foreach>
     </insert>
 
-    <select id="findTagIdsByJobId" resultType="java.lang.Long">
-        SELECT r.tag_id
-        FROM job_tag_relations r
-        INNER JOIN job_tags t ON r.tag_id = t.id
-        INNER JOIN job_tag_groups g ON t.group_id = g.id
-        WHERE r.job_id = #{jobId} AND t.status = 'ACTIVE' AND g.status = 'ACTIVE'
-        ORDER BY r.id ASC
-    </select>
-
     <select id="findTagsByJobId" resultMap="JobTagResultMap">
-        SELECT t.*, g.name AS group_name
+        SELECT t.*
         FROM job_tag_relations r
         INNER JOIN job_tags t ON r.tag_id = t.id
-        INNER JOIN job_tag_groups g ON t.group_id = g.id
-        WHERE r.job_id = #{jobId} AND t.status = 'ACTIVE' AND g.status = 'ACTIVE'
+        WHERE r.job_id = #{jobId} AND t.status = 'ACTIVE'
         ORDER BY r.id ASC
     </select>
 

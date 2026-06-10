@@ -439,9 +439,9 @@ public class JobServiceImpl implements JobService {
         response.setDescription(job.getDescription());
         response.setRequirements(job.getRequirements());
         response.setContactPhone(job.getContactPhone());
-        List<Long> tagIds = jobTagRelationMapper.findTagIdsByJobId(job.getId());
         List<JobTag> tags = jobTagRelationMapper.findTagsByJobId(job.getId());
-        response.setTagIds(tagIds == null ? List.of() : tagIds);
+        List<Long> tagIds = tags == null ? List.of() : tags.stream().map(JobTag::getId).collect(Collectors.toList());
+        response.setTagIds(tagIds);
         response.setTags(tags == null ? List.of() : toTagResponses(tags));
         response.setLocation(job.getLocation());
         response.setProvince(job.getProvince());

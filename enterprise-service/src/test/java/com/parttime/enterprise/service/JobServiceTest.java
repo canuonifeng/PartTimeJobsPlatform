@@ -17,6 +17,7 @@ import com.parttime.enterprise.pojo.cmd.UpdateJobCmd;
 import com.parttime.enterprise.pojo.entity.Job;
 import com.parttime.enterprise.pojo.entity.JobRate;
 import com.parttime.enterprise.pojo.entity.JobSchedule;
+import com.parttime.enterprise.pojo.entity.JobTag;
 import com.parttime.enterprise.pojo.vo.JobRateVO;
 import com.parttime.enterprise.pojo.vo.JobScheduleVO;
 import com.parttime.enterprise.pojo.vo.JobVO;
@@ -111,7 +112,6 @@ class JobServiceTest {
         when(jobMapper.findById(100L)).thenReturn(Optional.of(job));
         when(jobRateMapper.findByJobId(100L)).thenReturn(List.of(rate));
         when(jobScheduleMapper.findActiveByJobId(100L)).thenReturn(List.of(schedule));
-        when(jobTagRelationMapper.findTagIdsByJobId(100L)).thenReturn(List.of());
         when(jobTagRelationMapper.findTagsByJobId(100L)).thenReturn(List.of());
 
         JobVO response = jobService.getJobById(100L);
@@ -148,8 +148,6 @@ class JobServiceTest {
         when(jobRateMapper.findByJobId(2L)).thenReturn(List.of());
         when(jobScheduleMapper.findActiveByJobId(1L)).thenReturn(List.of());
         when(jobScheduleMapper.findActiveByJobId(2L)).thenReturn(List.of());
-        when(jobTagRelationMapper.findTagIdsByJobId(1L)).thenReturn(List.of());
-        when(jobTagRelationMapper.findTagIdsByJobId(2L)).thenReturn(List.of());
         when(jobTagRelationMapper.findTagsByJobId(1L)).thenReturn(List.of());
         when(jobTagRelationMapper.findTagsByJobId(2L)).thenReturn(List.of());
         when(scheduleApplicationMapper.countByJobId(1L)).thenReturn(8);
@@ -280,8 +278,11 @@ class JobServiceTest {
             return 1;
         }).when(jobMapper).insert(any(Job.class));
         when(jobTagMapper.findActiveExistingIds(List.of(2L, 1L))).thenReturn(List.of(2L, 1L));
-        when(jobTagRelationMapper.findTagIdsByJobId(100L)).thenReturn(List.of(2L, 1L));
-        when(jobTagRelationMapper.findTagsByJobId(100L)).thenReturn(List.of());
+        JobTag tag1 = new JobTag();
+        tag1.setId(2L);
+        JobTag tag2 = new JobTag();
+        tag2.setId(1L);
+        when(jobTagRelationMapper.findTagsByJobId(100L)).thenReturn(List.of(tag1, tag2));
 
         JobVO response = jobService.createJob(request);
 
@@ -313,8 +314,11 @@ class JobServiceTest {
 
         when(jobMapper.findById(1L)).thenReturn(Optional.of(existing));
         when(jobTagMapper.findActiveExistingIds(List.of(3L, 4L))).thenReturn(List.of(3L, 4L));
-        when(jobTagRelationMapper.findTagIdsByJobId(1L)).thenReturn(List.of(3L, 4L));
-        when(jobTagRelationMapper.findTagsByJobId(1L)).thenReturn(List.of());
+        JobTag tag3 = new JobTag();
+        tag3.setId(3L);
+        JobTag tag4 = new JobTag();
+        tag4.setId(4L);
+        when(jobTagRelationMapper.findTagsByJobId(1L)).thenReturn(List.of(tag3, tag4));
 
         JobVO response = jobService.updateJob(1L, request);
 

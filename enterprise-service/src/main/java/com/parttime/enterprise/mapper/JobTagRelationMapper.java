@@ -15,7 +15,5 @@ public interface JobTagRelationMapper {
 
     int batchInsert(@Param("jobId") Long jobId, @Param("tagIds") List<Long> tagIds);
 
-    List<Long> findTagIdsByJobId(Long jobId);
-
     List<JobTag> findTagsByJobId(Long jobId);
 }
