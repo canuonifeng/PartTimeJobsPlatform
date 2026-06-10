@@ -3,13 +3,15 @@
 <mapper namespace="com.parttime.cservice.mapper.JobMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO jobs (company_id, title, description, location,
-                           province, city, district, address, latitude, longitude,
+        INSERT INTO jobs (company_id, title, description, requirements, contact_phone,
+                           location, province, city, district, address, latitude, longitude,
                            category_id, rate_type, rate_amount, status, published_at,
+                           headcount, deadline, image_url, auto_approve,
                            created_at, updated_at)
-        VALUES (#{companyId}, #{title}, #{description}, #{location},
-                #{province}, #{city}, #{district}, #{address}, #{latitude}, #{longitude},
+        VALUES (#{companyId}, #{title}, #{description}, #{requirements}, #{contactPhone},
+                #{location}, #{province}, #{city}, #{district}, #{address}, #{latitude}, #{longitude},
                 #{categoryId}, #{rateType}, #{rateAmount}, #{status}, #{publishedAt},
+                #{headcount}, #{deadline}, #{imageUrl}, #{autoApprove},
                 #{createdAt}, #{updatedAt})
     </insert>
 
@@ -67,12 +69,16 @@
 
     <update id="update">
         UPDATE jobs
-        SET title = #{title}, description = #{description}, location = #{location},
+        SET title = #{title}, description = #{description}, requirements = #{requirements},
+            contact_phone = #{contactPhone},
+            location = #{location},
             province = #{province}, city = #{city}, district = #{district}, address = #{address},
             latitude = #{latitude}, longitude = #{longitude},
             category_id = #{categoryId},
             rate_type = #{rateType}, rate_amount = #{rateAmount},
-            status = #{status}
+            status = #{status},
+            headcount = #{headcount}, deadline = #{deadline},
+            image_url = #{imageUrl}, auto_approve = #{autoApprove}
         WHERE id = #{id}
     </update>
 
