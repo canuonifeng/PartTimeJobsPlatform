@@ -53,6 +53,9 @@ function typeLabel(type) {
 
 <template>
   <view class="page">
+    <view class="header-gradient">
+      <text class="header-title">企业资金</text>
+    </view>
     <view class="balance-cards">
       <view class="card-row">
         <view class="card balance-card">
@@ -102,10 +105,20 @@ function typeLabel(type) {
 .page {
   min-height: 100vh;
   background: #f6f8f7;
-  padding: 24rpx 32rpx;
+}
+.header-gradient {
+  background: linear-gradient(135deg, #18c86b 0%, #08a95a 56%, #078a49 100%);
+  padding: 48rpx 32rpx 28rpx;
+  border-bottom-left-radius: 36rpx;
+  border-bottom-right-radius: 36rpx;
+}
+.header-title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #fff;
 }
 .balance-cards {
-  margin-bottom: 24rpx;
+  margin: 24rpx 32rpx 0;
 }
 .card-row {
   display: flex;
@@ -139,6 +152,7 @@ function typeLabel(type) {
   display: flex;
   align-items: center;
   margin-bottom: 16rpx;
+  padding: 0 32rpx;
 }
 .section-accent {
   width: 3rpx;
@@ -156,6 +170,7 @@ function typeLabel(type) {
   display: flex;
   flex-direction: column;
   gap: 12rpx;
+  padding: 0 32rpx;
 }
 .txn-item {
   background: #fff;
@@ -193,7 +208,7 @@ function typeLabel(type) {
 }
 .load-more {
   text-align: center;
-  padding: 24rpx;
+  padding: 24rpx 32rpx;
   color: #07c160;
   font-size: 26rpx;
 }

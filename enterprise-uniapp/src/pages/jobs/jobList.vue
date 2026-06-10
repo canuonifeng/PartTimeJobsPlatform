@@ -244,17 +244,16 @@ function statusClass(s) {
 }
 
 .header {
-  display: flex;
-  align-items: center;
-  padding: 24rpx 32rpx;
-  background: #fff;
-  border-bottom: 2rpx solid #eee;
+  background: linear-gradient(135deg, #18c86b 0%, #08a95a 56%, #078a49 100%);
+  padding: 48rpx 32rpx 28rpx;
+  border-bottom-left-radius: 36rpx;
+  border-bottom-right-radius: 36rpx;
 }
 
 .header-title {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #1f2933;
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #fff;
 }
 
 .tabs-wrap {

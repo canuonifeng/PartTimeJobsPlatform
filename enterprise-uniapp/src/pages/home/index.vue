@@ -1,10 +1,20 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useAuthStore } from '@/store'
 import { request } from '@/api/request'
 
 const authStore = useAuthStore()
 const companyName = ref('')
+
+const greeting = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 6) return '夜深了'
+  if (hour < 9) return '早上好'
+  if (hour < 12) return '上午好'
+  if (hour < 14) return '中午好'
+  if (hour < 18) return '下午好'
+  return '晚上好'
+})
 
 onMounted(async () => {
   try {
@@ -52,12 +62,12 @@ function handleLogout() {
 </script>
 
 <template>
-  <view class="page">
+  <scroll-view scroll-y class="page">
     <view class="header">
       <view class="header-top">
         <view class="header-info">
+          <text class="greeting">{{ greeting }}，{{ authStore.displayName }}</text>
           <text class="company-name">{{ companyName || '企业名称' }}</text>
-          <text class="user-name">{{ authStore.displayName }}</text>
         </view>
         <view class="logout-btn" @click="handleLogout">
           <text class="logout-text">退出</text>
@@ -82,7 +92,7 @@ function handleLogout() {
         </view>
       </view>
     </view>
-  </view>
+  </scroll-view>
 </template>
 
 <style>
@@ -94,7 +104,7 @@ function handleLogout() {
   background: linear-gradient(135deg, #18c86b 0%, #08a95a 56%, #078a49 100%);
   border-bottom-left-radius: 36rpx;
   border-bottom-right-radius: 36rpx;
-  padding: 56rpx 32rpx 48rpx;
+  padding: 56rpx 32rpx 140rpx;
   position: relative;
   z-index: 1;
 }
@@ -108,14 +118,15 @@ function handleLogout() {
   flex-direction: column;
   gap: 8rpx;
 }
-.company-name {
-  font-size: 34rpx;
-  font-weight: 700;
+.greeting {
+  font-size: 44rpx;
+  font-weight: 800;
   color: #fff;
 }
-.user-name {
-  font-size: 26rpx;
+.company-name {
+  font-size: 28rpx;
   color: rgba(255, 255, 255, 0.85);
+  margin-top: 8rpx;
 }
 .logout-btn {
   background: rgba(255, 255, 255, 0.2);
@@ -128,7 +139,10 @@ function handleLogout() {
   font-weight: 500;
 }
 .content {
-  padding: 24rpx 28rpx 40rpx;
+  padding: 0 28rpx 40rpx;
+  margin-top: -96rpx;
+  position: relative;
+  z-index: 2;
 }
 .section {
   margin-bottom: 28rpx;

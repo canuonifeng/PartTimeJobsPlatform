@@ -115,7 +115,7 @@ function rateTypeLabel(t) {
 <style>
 .page {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: #f6f8f7;
 }
 .detail-scroll {
   padding: 24rpx 32rpx;
@@ -128,9 +128,10 @@ function rateTypeLabel(t) {
 }
 .detail-card {
   background: #fff;
-  border-radius: 16rpx;
+  border-radius: 24rpx;
   padding: 28rpx;
   margin-bottom: 20rpx;
+  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
 }
 .detail-header {
   display: flex;

@@ -151,8 +151,8 @@ function settlementStatusLabel(s) {
 
 <style>
 .page { min-height: 100vh; background: #f6f8f7; }
-.header { display: flex; justify-content: space-between; align-items: center; padding: 24rpx 32rpx; background: #fff; border-bottom: 2rpx solid #edf0f3; }
-.header-title { font-size: 34rpx; font-weight: 600; color: #1f2933; }
+.header { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #18c86b 0%, #08a95a 56%, #078a49 100%); padding: 48rpx 32rpx 28rpx; border-bottom-left-radius: 36rpx; border-bottom-right-radius: 36rpx; }
+.header-title { font-size: 36rpx; font-weight: 700; color: #fff; }
 .header-actions { display: flex; gap: 16rpx; }
 .header-btn { height: 60rpx; line-height: 60rpx; font-size: 24rpx; padding: 0 24rpx; border-radius: 999rpx; color: #fff; font-weight: 600; }
 .header-btn::after { border: none; }

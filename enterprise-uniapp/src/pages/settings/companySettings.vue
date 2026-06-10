@@ -70,8 +70,10 @@ function goRealName() {
   background: #f6f8f7;
 }
 .header-gradient {
-  padding: 48rpx 32rpx 40rpx;
-  background: linear-gradient(135deg, #07c160, #08a95a);
+  background: linear-gradient(135deg, #18c86b 0%, #08a95a 56%, #078a49 100%);
+  padding: 48rpx 32rpx 28rpx;
+  border-bottom-left-radius: 36rpx;
+  border-bottom-right-radius: 36rpx;
 }
 .header-title {
   font-size: 36rpx;
