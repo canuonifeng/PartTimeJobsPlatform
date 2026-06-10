@@ -56,6 +56,8 @@ public class Job {
     private LocalDateTime updatedAt;
     @Schema(description = "关闭原因")
     private String closeReason;
+    @Schema(description = "岗位图片")
+    private String imageUrl;
     @Schema(description = "自动审核: null跟随平台默认, true开启, false关闭")
     private Boolean autoApprove;
 }
