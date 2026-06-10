@@ -4,6 +4,7 @@ import com.parttime.cservice.mapper.AttendanceCorrectionMapper;
 import com.parttime.cservice.mapper.AttendanceRecordMapper;
 import com.parttime.cservice.pojo.entity.AttendanceCorrectionEntity;
 import com.parttime.cservice.pojo.entity.AttendanceRecordEntity;
+import com.parttime.cservice.pojo.entity.Job;
 import com.parttime.cservice.pojo.entity.ShiftEntity;
 import com.parttime.cservice.pojo.vo.WorkerShiftVO;
 import org.springframework.stereotype.Component;
@@ -20,37 +21,31 @@ public class WorkerShiftVOConverter {
     private AttendanceRecordMapper attendanceRecordMapper;
 
     public WorkerShiftVO toWorkerShiftResponse(ShiftEntity shift) {
-        WorkerShiftVO resp = new WorkerShiftVO();
-        resp.setId(shift.getId());
-        resp.setJobId(shift.getJobId());
-        resp.setJobTitle(shift.getJobTitle());
-        resp.setLocation(shift.getJobLocation());
-        resp.setDate(shift.getShiftDate());
-        resp.setStartTime(shift.getStartTime() != null ? shift.getStartTime().toString() : null);
-        resp.setEndTime(shift.getEndTime() != null ? shift.getEndTime().toString() : null);
-        resp.setStatus(shift.getStatus());
-        resp.setLocationLat(shift.getLocationLat());
-        resp.setLocationLng(shift.getLocationLng());
-        resp.setLocationRadius(shift.getLocationRadius());
-        resp.setLocationName(shift.getLocationName());
-        attendanceRecordMapper.findByShiftId(shift.getId()).ifPresent(record -> {
-            resp.setCheckInTime(record.getCheckInTime());
-            resp.setCheckOutTime(record.getCheckOutTime());
-            resp.setWorkHours(record.getTotalHours());
-        });
-        correctionMapper.findByShiftId(shift.getId()).ifPresent(c ->
-                resp.setCorrectionStatus(c.getStatus()));
-        return resp;
+        return toWorkerShiftResponseBatch(shift, Map.of(), Map.of(), Map.of());
+    }
+
+    public WorkerShiftVO toWorkerShiftResponse(ShiftEntity shift, Map<Long, Job> jobMap) {
+        return toWorkerShiftResponseBatch(shift, Map.of(), Map.of(), jobMap);
     }
 
     public WorkerShiftVO toWorkerShiftResponseBatch(ShiftEntity shift,
                                                       Map<Long, AttendanceRecordEntity> recordMap,
                                                       Map<Long, AttendanceCorrectionEntity> correctionMap) {
+        return toWorkerShiftResponseBatch(shift, recordMap, correctionMap, Map.of());
+    }
+
+    public WorkerShiftVO toWorkerShiftResponseBatch(ShiftEntity shift,
+                                                      Map<Long, AttendanceRecordEntity> recordMap,
+                                                      Map<Long, AttendanceCorrectionEntity> correctionMap,
+                                                      Map<Long, Job> jobMap) {
         WorkerShiftVO resp = new WorkerShiftVO();
         resp.setId(shift.getId());
         resp.setJobId(shift.getJobId());
-        resp.setJobTitle(shift.getJobTitle());
-        resp.setLocation(shift.getJobLocation());
+        Job job = jobMap.get(shift.getJobId());
+        if (job != null) {
+            resp.setJobTitle(job.getTitle());
+            resp.setLocation(job.getLocation());
+        }
         resp.setDate(shift.getShiftDate());
         resp.setStartTime(shift.getStartTime() != null ? shift.getStartTime().toString() : null);
         resp.setEndTime(shift.getEndTime() != null ? shift.getEndTime().toString() : null);

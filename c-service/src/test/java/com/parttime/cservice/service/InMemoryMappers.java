@@ -76,6 +76,9 @@ public class InMemoryMappers {
             @Override public List<Job> findByCompanyId(Long companyId) {
                 return store.values().stream().filter(j -> companyId.equals(j.getCompanyId())).collect(Collectors.toList());
             }
+            @Override public List<Job> findByJobIds(List<Long> jobIds) {
+                return store.values().stream().filter(j -> jobIds.contains(j.getId())).collect(Collectors.toList());
+            }
             @Override public int update(Job job) {
                 store.put(job.getId(), job);
                 return 1;
@@ -243,6 +246,9 @@ public class InMemoryMappers {
             }
             @Override public List<ShiftEntity> findByJobId(Long jobId) {
                 return store.values().stream().filter(s -> jobId.equals(s.getJobId())).collect(Collectors.toList());
+            }
+            @Override public List<ShiftEntity> findByJobIds(List<Long> jobIds) {
+                return store.values().stream().filter(s -> jobIds.contains(s.getJobId())).collect(Collectors.toList());
             }
             @Override public int updateStatus(Long id, String status) {
                 ShiftEntity s = store.get(id);

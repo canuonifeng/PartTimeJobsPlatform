@@ -5,8 +5,6 @@
     <resultMap id="ShiftResultMap" type="com.parttime.cservice.pojo.entity.ShiftEntity">
         <id property="id" column="id"/>
         <result property="jobId" column="job_id"/>
-        <result property="jobTitle" column="job_title"/>
-        <result property="jobLocation" column="job_location"/>
         <result property="workerId" column="worker_id"/>
         <result property="companyId" column="company_id"/>
         <result property="shiftDate" column="shift_date"/>
@@ -33,23 +31,20 @@
     </insert>
 
     <select id="findById" resultMap="ShiftResultMap">
-        SELECT ss.*, j.title AS job_title, j.location AS job_location
+        SELECT ss.*
         FROM schedule_shifts ss
-        LEFT JOIN jobs j ON ss.job_id = j.id
         WHERE ss.id = #{id}
     </select>
 
     <select id="findByWorkerId" resultMap="ShiftResultMap">
-        SELECT ss.*, j.title AS job_title, j.location AS job_location
+        SELECT ss.*
         FROM schedule_shifts ss
-        LEFT JOIN jobs j ON ss.job_id = j.id
         WHERE ss.worker_id = #{workerId}
     </select>
 
     <select id="findByWorkerIdAndDateRange" resultMap="ShiftResultMap">
-        SELECT ss.*, j.title AS job_title, j.location AS job_location
+        SELECT ss.*
         FROM schedule_shifts ss
-        LEFT JOIN jobs j ON ss.job_id = j.id
         WHERE ss.worker_id = #{workerId}
         <if test="startDate != null">
             AND ss.shift_date >= #{startDate}
@@ -76,18 +71,16 @@
     </select>
 
     <select id="findRecentByWorkerId" resultMap="ShiftResultMap">
-        SELECT ss.*, j.title AS job_title, j.location AS job_location
+        SELECT ss.*
         FROM schedule_shifts ss
-        LEFT JOIN jobs j ON ss.job_id = j.id
         WHERE ss.worker_id = #{workerId}
         ORDER BY ss.shift_date ASC, ss.start_time ASC
         LIMIT 6
     </select>
 
     <select id="findTodayByWorkerId" resultMap="ShiftResultMap">
-        SELECT ss.*, j.title AS job_title, j.location AS job_location
+        SELECT ss.*
         FROM schedule_shifts ss
-        LEFT JOIN jobs j ON ss.job_id = j.id
         WHERE ss.worker_id = #{workerId}
           AND ss.shift_date = #{date}
           AND ss.status != 'CANCELLED'
@@ -95,9 +88,8 @@
     </select>
 
     <select id="findFutureByWorkerId" resultMap="ShiftResultMap">
-        SELECT ss.*, j.title AS job_title, j.location AS job_location
+        SELECT ss.*
         FROM schedule_shifts ss
-        LEFT JOIN jobs j ON ss.job_id = j.id
         WHERE ss.worker_id = #{workerId}
           AND ss.shift_date &gt; #{date}
           AND ss.status != 'CANCELLED'
@@ -106,11 +98,20 @@
     </select>
 
     <select id="findByJobId" resultMap="ShiftResultMap">
-        SELECT ss.*, j.title AS job_title, j.location AS job_location
+        SELECT ss.*
         FROM schedule_shifts ss
-        LEFT JOIN jobs j ON ss.job_id = j.id
         WHERE ss.job_id = #{jobId}
     </select>
+
+    <select id="findByJobIds" resultMap="ShiftResultMap">
+        SELECT ss.*
+        FROM schedule_shifts ss
+        WHERE ss.job_id IN
+        <foreach collection="jobIds" item="jobId" open="(" separator="," close=")">
+            #{jobId}
+        </foreach>
+    </select>
+
     <update id="updateStatus">
         UPDATE schedule_shifts SET status = #{status} WHERE id = #{id}
     </update>

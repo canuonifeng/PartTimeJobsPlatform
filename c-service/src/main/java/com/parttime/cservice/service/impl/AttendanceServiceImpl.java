@@ -5,6 +5,7 @@ import com.parttime.cservice.mapper.AttendanceCheckInMapper;
 import com.parttime.cservice.mapper.AttendanceCorrectionMapper;
 import com.parttime.cservice.mapper.AttendanceRecordMapper;
 import com.parttime.cservice.mapper.BalanceTransactionMapper;
+import com.parttime.cservice.mapper.JobMapper;
 import com.parttime.cservice.mapper.NotificationMapper;
 import com.parttime.cservice.mapper.ShiftMapper;
 import com.parttime.cservice.mapper.SystemConfigMapper;
@@ -13,6 +14,7 @@ import com.parttime.cservice.pojo.entity.AttendanceCheckIn;
 import com.parttime.cservice.pojo.entity.AttendanceCorrectionEntity;
 import com.parttime.cservice.pojo.entity.AttendanceRecordEntity;
 import com.parttime.cservice.pojo.entity.BalanceTransaction;
+import com.parttime.cservice.pojo.entity.Job;
 import com.parttime.cservice.pojo.entity.ShiftEntity;
 import com.parttime.cservice.pojo.entity.SystemConfig;
 import com.parttime.cservice.pojo.entity.WorkerBalance;
@@ -40,6 +42,8 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Resource
     private ShiftMapper shiftMapper;
     @Resource
+    private JobMapper jobMapper;
+    @Resource
     private AttendanceRecordMapper attendanceRecordMapper;
     @Resource
     private AttendanceCorrectionMapper correctionMapper;
@@ -59,14 +63,12 @@ public class AttendanceServiceImpl implements AttendanceService {
     private JdbcTemplate jdbcTemplate;
 
     @Override
-    public ShiftEntity addShift(Long jobId, String jobTitle, String jobLocation, Long workerId,
+    public ShiftEntity addShift(Long jobId, Long workerId,
                                   LocalDate shiftDate, LocalTime startTime, LocalTime endTime,
                                   BigDecimal locationLat, BigDecimal locationLng, Integer locationRadius,
                                   String locationName) {
         ShiftEntity shift = new ShiftEntity();
         shift.setJobId(jobId);
-        shift.setJobTitle(jobTitle);
-        shift.setJobLocation(jobLocation);
         shift.setWorkerId(workerId);
         shift.setShiftDate(shiftDate);
         shift.setStartTime(startTime);
@@ -125,8 +127,17 @@ public class AttendanceServiceImpl implements AttendanceService {
 
         Map<Long, AttendanceRecordEntity> finalRecordMap = recordMap;
         Map<Long, AttendanceCorrectionEntity> finalCorrectionMap = correctionMap;
+
+        Map<Long, Job> jobMap = Map.of();
+        List<Long> jobIds = shifts.stream().map(ShiftEntity::getJobId).filter(java.util.Objects::nonNull).distinct().toList();
+        if (!jobIds.isEmpty()) {
+            jobMap = jobMapper.findByJobIds(jobIds).stream()
+                    .collect(Collectors.toMap(Job::getId, j -> j));
+        }
+        Map<Long, Job> finalJobMap = jobMap;
+
         return shifts.stream()
-                .map(s -> workerShiftVOConverter.toWorkerShiftResponseBatch(s, finalRecordMap, finalCorrectionMap))
+                .map(s -> workerShiftVOConverter.toWorkerShiftResponseBatch(s, finalRecordMap, finalCorrectionMap, finalJobMap))
                 .collect(Collectors.toList());
     }
 

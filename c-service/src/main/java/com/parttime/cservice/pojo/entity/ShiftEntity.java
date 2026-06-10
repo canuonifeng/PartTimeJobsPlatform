@@ -15,10 +15,6 @@ public class ShiftEntity {
     private Long id;
     @Schema(description = "岗位ID")
     private Long jobId;
-    @Schema(description = "岗位标题")
-    private String jobTitle;
-    @Schema(description = "岗位地点")
-    private String jobLocation;
     @Schema(description = "工人ID")
     private Long workerId;
     @Schema(description = "企业ID")

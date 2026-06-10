@@ -15,65 +15,54 @@
 
     <resultMap id="jobResultMap" type="com.parttime.cservice.pojo.entity.Job" autoMapping="true">
         <id property="id" column="id"/>
-        <result property="companyName" column="company_name"/>
-        <result property="companyLogo" column="company_logo"/>
-        <result property="categoryName" column="category_name"/>
-        <result property="requirements" column="requirements"/>
         <result property="contactPhone" column="contact_phone"/>
         <result property="autoApprove" column="auto_approve"/>
-        <collection property="rates" ofType="com.parttime.cservice.pojo.vo.JobRateInfoVO">
-            <id property="id" column="jr_id"/>
-            <result property="type" column="jr_type"/>
-            <result property="amount" column="jr_amount"/>
-            <result property="currency" column="jr_currency"/>
-        </collection>
     </resultMap>
 
-    <sql id="jobSelectWithJoins">
-        SELECT j.*,
-               j.requirements,
-               j.contact_phone,
-               j.auto_approve,
-               e.company_name, e.company_logo,
-               jc.name AS category_name,
-               jr.id AS jr_id,
-               jr.type AS jr_type,
-               jr.amount AS jr_amount,
-               jr.currency AS jr_currency
-        FROM jobs j
-        LEFT JOIN enterprises e ON j.company_id = e.id
-        LEFT JOIN job_categories jc ON j.category_id = jc.id
-        LEFT JOIN job_rates jr ON j.id = jr.job_id
+    <sql id="jobSelect">
+        SELECT id, company_id, title, description, requirements, contact_phone,
+               location, province, city, district, address, latitude, longitude,
+               category_id, rate_type, rate_amount, status, published_at,
+               headcount, accepted_count, deadline, created_at, updated_at,
+               close_reason, auto_approve
+        FROM jobs
     </sql>
 
     <select id="findById" resultMap="jobResultMap">
-        <include refid="jobSelectWithJoins"/> WHERE j.id = #{id}
+        <include refid="jobSelect"/> WHERE id = #{id}
     </select>
 
     <select id="findByJobId" resultMap="jobResultMap">
-        <include refid="jobSelectWithJoins"/> WHERE j.id = #{jobId}
+        <include refid="jobSelect"/> WHERE id = #{jobId}
     </select>
 
     <select id="findAll" resultMap="jobResultMap">
-        <include refid="jobSelectWithJoins"/>
+        <include refid="jobSelect"/>
     </select>
 
     <select id="search" resultMap="jobResultMap">
-        <include refid="jobSelectWithJoins"/>
-        WHERE j.status = 'PUBLISHED'
+        <include refid="jobSelect"/>
+        WHERE status = 'PUBLISHED'
         <if test="keyword != null and keyword != ''">
-            AND (j.title LIKE CONCAT('%', #{keyword}, '%') OR j.description LIKE CONCAT('%', #{keyword}, '%'))
+            AND (title LIKE CONCAT('%', #{keyword}, '%') OR description LIKE CONCAT('%', #{keyword}, '%'))
         </if>
         <if test="location != null and location != ''">
-            AND j.location LIKE CONCAT('%', #{location}, '%')
+            AND location LIKE CONCAT('%', #{location}, '%')
         </if>
         <if test="categoryId != null">
-            AND j.category_id = #{categoryId}
+            AND category_id = #{categoryId}
         </if>
     </select>
 
     <select id="findByCompanyId" resultMap="jobResultMap">
-        <include refid="jobSelectWithJoins"/> WHERE j.company_id = #{companyId}
+        <include refid="jobSelect"/> WHERE company_id = #{companyId}
+    </select>
+
+    <select id="findByJobIds" resultMap="jobResultMap">
+        <include refid="jobSelect"/> WHERE id IN
+        <foreach collection="jobIds" item="jobId" open="(" separator="," close=")">
+            #{jobId}
+        </foreach>
     </select>
 
     <update id="update">

@@ -11,7 +11,7 @@ import java.time.LocalTime;
 import java.util.List;
 
 public interface AttendanceService {
-    ShiftEntity addShift(Long jobId, String jobTitle, String jobLocation, Long workerId,
+    ShiftEntity addShift(Long jobId, Long workerId,
                           LocalDate shiftDate, LocalTime startTime, LocalTime endTime,
                           BigDecimal locationLat, BigDecimal locationLng, Integer locationRadius,
                           String locationName);

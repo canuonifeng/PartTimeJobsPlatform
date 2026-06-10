@@ -20,6 +20,7 @@ public interface ShiftMapper {
     List<ShiftEntity> findTodayByWorkerId(@Param("workerId") Long workerId, @Param("date") LocalDate date);
     List<ShiftEntity> findFutureByWorkerId(@Param("workerId") Long workerId, @Param("date") LocalDate date, @Param("size") int size);
     List<ShiftEntity> findByJobId(Long jobId);
+    List<ShiftEntity> findByJobIds(@Param("jobIds") List<Long> jobIds);
     int updateStatus(@Param("id") Long id, @Param("status") String status);
     int update(ShiftEntity shift);
     int batchUpdateStatus(@Param("ids") List<Long> ids, @Param("status") String status);

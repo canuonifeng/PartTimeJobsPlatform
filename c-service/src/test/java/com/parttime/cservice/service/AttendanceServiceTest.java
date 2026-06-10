@@ -33,6 +33,7 @@ class AttendanceServiceTest {
         ReflectionTestUtils.setField(converter, "attendanceRecordMapper", attendanceRecordMapper);
         ReflectionTestUtils.setField(converter, "correctionMapper", correctionMapper);
         ReflectionTestUtils.setField(attendanceService, "shiftMapper", InMemoryMappers.createShiftMapper());
+        ReflectionTestUtils.setField(attendanceService, "jobMapper", InMemoryMappers.createJobMapper());
         ReflectionTestUtils.setField(attendanceService, "attendanceRecordMapper", attendanceRecordMapper);
         ReflectionTestUtils.setField(attendanceService, "correctionMapper", correctionMapper);
         ReflectionTestUtils.setField(attendanceService, "workerShiftVOConverter", converter);
@@ -46,22 +47,21 @@ class AttendanceServiceTest {
 
     @Test
     void addShift_shouldStoreShift() {
-        attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
+        attendanceService.addShift(10L, 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
                 new BigDecimal("31.2304"), new BigDecimal("121.4737"), 500, "Office A");
 
         List<WorkerShiftVO> shifts = attendanceService.getMyShifts(1L, null, null, null, null);
         assertThat(shifts).hasSize(1);
         assertThat(shifts.get(0).getJobId()).isEqualTo(10L);
-        assertThat(shifts.get(0).getJobTitle()).isEqualTo("Helper");
     }
 
     @Test
     void getMyShifts_shouldFilterByWorkerId() {
-        attendanceService.addShift(10L, "Job1", "Loc1", 1L,
+        attendanceService.addShift(10L, 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
                 null, null, null, null);
-        attendanceService.addShift(11L, "Job2", "Loc2", 2L,
+        attendanceService.addShift(11L, 2L,
                 LocalDate.of(2026, 6, 2), LocalTime.of(10, 0), LocalTime.of(17, 0),
                 null, null, null, null);
 
@@ -71,7 +71,7 @@ class AttendanceServiceTest {
 
     @Test
     void getMyShifts_shouldMarkPastUnattendedShiftsAbsent() {
-        attendanceService.addShift(10L, "Job1", "Loc1", 1L,
+        attendanceService.addShift(10L, 1L,
                 LocalDate.of(2026, 1, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
                 null, null, null, null);
 
@@ -83,10 +83,10 @@ class AttendanceServiceTest {
 
     @Test
     void getMyShifts_shouldFilterByDateRange() {
-        attendanceService.addShift(10L, "Job1", "Loc1", 1L,
+        attendanceService.addShift(10L, 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
                 null, null, null, null);
-        attendanceService.addShift(10L, "Job2", "Loc2", 1L,
+        attendanceService.addShift(10L, 1L,
                 LocalDate.of(2026, 7, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
                 null, null, null, null);
 
@@ -98,7 +98,7 @@ class AttendanceServiceTest {
 
     @Test
     void checkIn_shouldCreateAttendanceRecord() {
-        Long shiftId = attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
+        Long shiftId = attendanceService.addShift(10L, 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
                 null, null, null, null).getId();
 
@@ -121,7 +121,7 @@ class AttendanceServiceTest {
 
     @Test
     void checkIn_shouldThrowWhenNotOwnShift() {
-        Long shiftId = attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
+        Long shiftId = attendanceService.addShift(10L, 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
                 null, null, null, null).getId();
 
@@ -132,7 +132,7 @@ class AttendanceServiceTest {
 
     @Test
     void checkIn_shouldThrowWhenDuplicate() {
-        Long shiftId = attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
+        Long shiftId = attendanceService.addShift(10L, 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
                 null, null, null, null).getId();
 
@@ -145,7 +145,7 @@ class AttendanceServiceTest {
 
     @Test
     void checkIn_shouldRejectWhenLocationOutOfRange() {
-        Long shiftId = attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
+        Long shiftId = attendanceService.addShift(10L, 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
                 new BigDecimal("31.2304"), new BigDecimal("121.4737"), 10, null).getId();
 
@@ -193,7 +193,7 @@ class AttendanceServiceTest {
 
     @Test
     void checkOut_shouldUpdateRecord() {
-        Long shiftId = attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
+        Long shiftId = attendanceService.addShift(10L, 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
                 null, null, null, null).getId();
 
@@ -211,7 +211,7 @@ class AttendanceServiceTest {
 
     @Test
     void checkOut_shouldThrowWhenNotCheckedIn() {
-        Long shiftId = attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
+        Long shiftId = attendanceService.addShift(10L, 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
                 null, null, null, null).getId();
 
@@ -222,7 +222,7 @@ class AttendanceServiceTest {
 
     @Test
     void getMyAttendance_shouldReturnRecords() {
-        Long shiftId = attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
+        Long shiftId = attendanceService.addShift(10L, 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
                 null, null, null, null).getId();
 
@@ -271,7 +271,7 @@ class AttendanceServiceTest {
 
     @Test
     void checkOut_autoSettleDisabled_shouldLeaveUnpaid() {
-        Long shiftId = attendanceService.addShift(10L, "Helper", "Shanghai", 1L,
+        Long shiftId = attendanceService.addShift(10L, 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
                 null, null, null, null).getId();
 
