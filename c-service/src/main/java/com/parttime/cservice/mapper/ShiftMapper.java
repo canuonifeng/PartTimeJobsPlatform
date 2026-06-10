@@ -13,6 +13,7 @@ import java.util.Optional;
 public interface ShiftMapper {
     int insert(ShiftEntity shift);
     Optional<ShiftEntity> findById(Long id);
+    List<ShiftEntity> findByIds(@Param("ids") List<Long> ids);
     List<ShiftEntity> findByWorkerId(Long workerId);
     List<ShiftEntity> findByWorkerIdAndDateRange(@Param("workerId") Long workerId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate, @Param("page") Integer page, @Param("pageSize") Integer pageSize, @Param("offset") Integer offset);
     Long countByWorkerIdAndDateRange(@Param("workerId") Long workerId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);

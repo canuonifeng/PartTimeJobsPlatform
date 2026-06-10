@@ -31,11 +31,8 @@
     </select>
 
     <select id="findByWorkerId" resultType="com.parttime.cservice.pojo.entity.AttendanceRecordEntity">
-        SELECT ar.*, j.title AS job_title, e.company_name, COALESCE(ss.location_name, j.address, j.location) AS location, ss.shift_date, ss.start_time, ss.end_time
+        SELECT ar.*
         FROM attendance_records ar
-        LEFT JOIN schedule_shifts ss ON ar.shift_id = ss.id
-        LEFT JOIN jobs j ON ar.job_id = j.id
-        LEFT JOIN enterprises e ON ar.company_id = e.id
         WHERE ar.worker_id = #{workerId}
         ORDER BY COALESCE(ar.check_out_time, ar.check_in_time, ar.created_at) DESC
     </select>

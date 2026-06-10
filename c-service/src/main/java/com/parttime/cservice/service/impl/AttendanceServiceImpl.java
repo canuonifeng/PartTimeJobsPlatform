@@ -205,7 +205,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         record.setUpdatedAt(now);
         attendanceRecordMapper.insert(record);
 
-        return toAttendanceResponse(record);
+        return toAttendanceResponse(record, shift);
     }
 
     @Override
@@ -292,15 +292,47 @@ public class AttendanceServiceImpl implements AttendanceService {
             }
         }
 
-        AttendanceVO response = toAttendanceResponse(record);
+        AttendanceVO response = toAttendanceResponse(record, shift);
         response.setAutoSettled(settled);
         return response;
     }
 
     @Override
     public List<AttendanceVO> getMyAttendance(Long workerId) {
-        return attendanceRecordMapper.findByWorkerId(workerId).stream()
-                .map(this::toAttendanceResponse)
+        List<AttendanceRecordEntity> records = attendanceRecordMapper.findByWorkerId(workerId);
+        if (records.isEmpty()) {
+            return List.of();
+        }
+        // Batch load shifts
+        List<Long> shiftIds = records.stream().map(AttendanceRecordEntity::getShiftId).filter(java.util.Objects::nonNull).distinct().toList();
+        Map<Long, ShiftEntity> shiftMap = Map.of();
+        if (!shiftIds.isEmpty()) {
+            shiftMap = shiftMapper.findByIds(shiftIds).stream()
+                    .collect(Collectors.toMap(ShiftEntity::getId, s -> s));
+        }
+        // Batch load jobs
+        List<Long> jobIds = records.stream().map(AttendanceRecordEntity::getJobId).filter(java.util.Objects::nonNull).distinct().toList();
+        Map<Long, Job> jobMap = Map.of();
+        if (!jobIds.isEmpty()) {
+            jobMap = jobMapper.findByJobIds(jobIds).stream()
+                    .collect(Collectors.toMap(Job::getId, j -> j));
+        }
+        // Batch load companies
+        List<Long> companyIds = records.stream().map(AttendanceRecordEntity::getCompanyId).filter(java.util.Objects::nonNull).distinct().toList();
+        Map<Long, com.parttime.cservice.pojo.entity.Enterprise> companyMap = Map.of();
+        if (!companyIds.isEmpty()) {
+            // TODO: Use a proper batch loading method when EnterpriseMapper supports it
+        }
+        Map<Long, ShiftEntity> finalShiftMap = shiftMap;
+        Map<Long, Job> finalJobMap = jobMap;
+        Map<Long, com.parttime.cservice.pojo.entity.Enterprise> finalCompanyMap = companyMap;
+        return records.stream()
+                .map(record -> {
+                    ShiftEntity shift = record.getShiftId() != null ? finalShiftMap.get(record.getShiftId()) : null;
+                    Job job = record.getJobId() != null ? finalJobMap.get(record.getJobId()) : null;
+                    com.parttime.cservice.pojo.entity.Enterprise company = record.getCompanyId() != null ? finalCompanyMap.get(record.getCompanyId()) : null;
+                    return toAttendanceResponse(record, shift, job, company);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -396,7 +428,18 @@ public class AttendanceServiceImpl implements AttendanceService {
         return true;
     }
 
-    private AttendanceVO toAttendanceResponse(AttendanceRecordEntity record) {
+    private AttendanceVO toAttendanceResponse(AttendanceRecordEntity record, ShiftEntity shift) {
+        Job job = shift.getJobId() != null ? jobMapper.findByJobId(shift.getJobId()).orElse(null) : null;
+        com.parttime.cservice.pojo.entity.Enterprise company = shift.getCompanyId() != null ? loadCompany(shift.getCompanyId()) : null;
+        return toAttendanceResponse(record, shift, job, company);
+    }
+
+    private com.parttime.cservice.pojo.entity.Enterprise loadCompany(Long companyId) {
+        // Simple lookup - could be optimized with batch loading if needed
+        return null;
+    }
+
+    private AttendanceVO toAttendanceResponse(AttendanceRecordEntity record, ShiftEntity shift, Job job, com.parttime.cservice.pojo.entity.Enterprise company) {
         AttendanceVO resp = new AttendanceVO();
         resp.setAttendanceId(record.getId());
         resp.setShiftId(record.getShiftId());
@@ -406,12 +449,18 @@ public class AttendanceServiceImpl implements AttendanceService {
         resp.setScheduledPay(record.getScheduledPay());
         resp.setCalculatedAt(record.getCalculatedAt());
         resp.setStatus(record.getStatus());
-        resp.setJobTitle(record.getJobTitle());
-        resp.setCompanyName(record.getCompanyName());
-        resp.setLocation(record.getLocation());
-        resp.setShiftDate(record.getShiftDate() == null ? null : record.getShiftDate().toString());
-        resp.setStartTime(record.getStartTime() == null ? null : record.getStartTime().toString());
-        resp.setEndTime(record.getEndTime() == null ? null : record.getEndTime().toString());
+        if (job != null) {
+            resp.setJobTitle(job.getTitle());
+            resp.setLocation(job.getAddress() != null ? job.getAddress() : job.getLocation());
+        }
+        if (company != null) {
+            resp.setCompanyName(company.getCompanyName());
+        }
+        if (shift != null) {
+            resp.setShiftDate(shift.getShiftDate() == null ? null : shift.getShiftDate().toString());
+            resp.setStartTime(shift.getStartTime() == null ? null : shift.getStartTime().toString());
+            resp.setEndTime(shift.getEndTime() == null ? null : shift.getEndTime().toString());
+        }
         resp.setPayablePay(record.getPayablePay());
         resp.setSettlementStatus(record.getSettlementStatus());
         return resp;

@@ -208,6 +208,9 @@ public class InMemoryMappers {
                 return 1;
             }
             @Override public Optional<ShiftEntity> findById(Long id) { return Optional.ofNullable(store.get(id)); }
+            @Override public List<ShiftEntity> findByIds(List<Long> ids) {
+                return ids.stream().map(store::get).filter(Objects::nonNull).collect(Collectors.toList());
+            }
             @Override public List<ShiftEntity> findByWorkerId(Long workerId) {
                 return store.values().stream().filter(s -> workerId.equals(s.getWorkerId())).collect(Collectors.toList());
             }

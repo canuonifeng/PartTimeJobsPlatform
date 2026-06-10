@@ -36,6 +36,15 @@
         WHERE ss.id = #{id}
     </select>
 
+    <select id="findByIds" resultMap="ShiftResultMap">
+        SELECT ss.*
+        FROM schedule_shifts ss
+        WHERE ss.id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
     <select id="findByWorkerId" resultMap="ShiftResultMap">
         SELECT ss.*
         FROM schedule_shifts ss
