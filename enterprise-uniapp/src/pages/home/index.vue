@@ -140,7 +140,7 @@ function handleLogout() {
 }
 .content {
   padding: 0 28rpx 40rpx;
-  margin-top: -96rpx;
+  margin-top: -60rpx;
   position: relative;
   z-index: 2;
 }
@@ -151,6 +151,7 @@ function handleLogout() {
   display: flex;
   align-items: center;
   margin-bottom: 20rpx;
+  padding-top: 8rpx;
 }
 .section-dot {
   width: 8rpx;
@@ -173,10 +174,10 @@ function handleLogout() {
 .grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 28rpx;
+  gap: 20rpx 0;
 }
 .grid-item {
-  width: calc(25% - 21rpx);
+  width: 25%;
   display: flex;
   flex-direction: column;
   align-items: center;

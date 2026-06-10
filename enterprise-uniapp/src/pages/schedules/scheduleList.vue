@@ -168,7 +168,7 @@ function handleDelete(id) {
 }
 
 .list-scroll {
-  height: calc(100vh - 80rpx);
+  height: calc(100vh - 120rpx);
   padding: 24rpx 32rpx;
 }
 

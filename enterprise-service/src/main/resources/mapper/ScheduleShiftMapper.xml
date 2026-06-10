@@ -40,6 +40,10 @@
         SELECT * FROM schedule_shifts ORDER BY shift_date DESC, start_time
     </select>
 
+    <select id="findByCompanyId" resultMap="ShiftResultMap">
+        SELECT * FROM schedule_shifts WHERE company_id = #{companyId} ORDER BY shift_date DESC, start_time
+    </select>
+
     <select id="findByJobId" resultMap="ShiftResultMap">
         SELECT * FROM schedule_shifts WHERE job_id = #{jobId} ORDER BY shift_date, start_time
     </select>

@@ -17,6 +17,8 @@ public interface ScheduleShiftMapper {
 
     List<ScheduleShift> findAll();
 
+    List<ScheduleShift> findByCompanyId(@Param("companyId") Long companyId);
+
     List<ScheduleShift> findByJobId(Long jobId);
 
     List<ScheduleShift> findByWorkerId(Long workerId);

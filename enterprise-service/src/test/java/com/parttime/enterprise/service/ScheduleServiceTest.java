@@ -141,7 +141,7 @@ class ScheduleServiceTest {
         when(jobMapper.findById(10L)).thenReturn(Optional.empty());
         when(workerSyncMapper.findWorkerNameById(20L)).thenReturn("TestWorker");
 
-        var result = scheduleService.getShifts(10L, null, LocalDate.of(2026, 6, 1), 1, 20);
+        var result = scheduleService.getShifts(null, 10L, null, LocalDate.of(2026, 6, 1), 1, 20);
 
         assertThat(result.getTotal()).isEqualTo(1);
         assertThat(result.getRecords()).hasSize(1);
@@ -157,7 +157,7 @@ class ScheduleServiceTest {
         when(shiftMapper.findByWorkerId(20L)).thenReturn(List.of(shift));
         when(workerSyncMapper.findWorkerNameById(20L)).thenReturn("TestWorker");
 
-        var result = scheduleService.getShifts(null, 20L, null, 1, 20);
+        var result = scheduleService.getShifts(null, null, 20L, null, 1, 20);
 
         assertThat(result.getTotal()).isEqualTo(1);
         assertThat(result.getRecords()).hasSize(1);
@@ -168,7 +168,7 @@ class ScheduleServiceTest {
     void getShifts_shouldReturnEmptyWithoutFilters() {
         when(shiftMapper.findAll()).thenReturn(List.of());
 
-        var result = scheduleService.getShifts(null, null, null, 1, 20);
+        var result = scheduleService.getShifts(null, null, null, null, 1, 20);
 
         assertThat(result.getTotal()).isEqualTo(0);
         assertThat(result.getRecords()).isEmpty();

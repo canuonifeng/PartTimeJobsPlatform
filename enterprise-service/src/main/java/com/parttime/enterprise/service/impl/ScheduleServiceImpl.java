@@ -69,7 +69,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
-    public PageVO<ScheduleShiftVO> getShifts(Long jobId, Long workerId, LocalDate shiftDate, Integer page, Integer pageSize) {
+    public PageVO<ScheduleShiftVO> getShifts(Long companyId, Long jobId, Long workerId, LocalDate shiftDate, Integer page, Integer pageSize) {
         List<ScheduleShift> shifts;
         if (jobId != null && shiftDate != null) {
             shifts = shiftMapper.findByJobIdAndDate(jobId, shiftDate);
@@ -77,6 +77,8 @@ public class ScheduleServiceImpl implements ScheduleService {
             shifts = shiftMapper.findByJobId(jobId);
         } else if (workerId != null) {
             shifts = shiftMapper.findByWorkerId(workerId);
+        } else if (companyId != null) {
+            shifts = shiftMapper.findByCompanyId(companyId);
         } else {
             shifts = shiftMapper.findAll();
         }

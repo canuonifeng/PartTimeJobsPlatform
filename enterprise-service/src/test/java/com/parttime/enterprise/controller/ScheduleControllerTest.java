@@ -85,7 +85,7 @@ class ScheduleControllerTest {
         shift.setJobId(10L);
 
         PageVO<ScheduleShiftVO> result = new PageVO<>(List.of(shift), 1);
-        when(scheduleService.getShifts(10L, null, null, 1, 20)).thenReturn(result);
+        when(scheduleService.getShifts(1L, 10L, null, null, 1, 20)).thenReturn(result);
 
         mockMvc.perform(get("/api/schedule-shifts")
                         .param("jobId", "10"))
