@@ -27,6 +27,9 @@ async function handleLogin() {
     authStore.setToken(res.token || res.accessToken)
     authStore.setUser(res.user)
     authStore.setDisplayName(username.value)
+    if (username.value.includes('@')) {
+      authStore.setEmailSuffix(username.value.substring(username.value.indexOf('@') + 1))
+    }
     uni.reLaunch({ url: '/pages/home/index' })
   } catch (e) {
     uni.showToast({ title: '登录失败，请检查账号密码', icon: 'none' })

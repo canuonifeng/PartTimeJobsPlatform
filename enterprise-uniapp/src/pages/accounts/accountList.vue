@@ -2,7 +2,10 @@
 import { ref } from 'vue'
 import { onShow, onPullDownRefresh } from '@dcloudio/uni-app'
 import { listAccounts, createAccount, updateAccount, resetPassword, deleteAccount } from '@/api/account'
+import { useAuthStore } from '@/store'
 
+const authStore = useAuthStore()
+const emailSuffix = authStore.emailSuffix
 const accounts = ref([])
 const loading = ref(false)
 const formVisible = ref(false)
@@ -94,7 +97,7 @@ async function confirmReset() {
 function handleDelete(account) {
   uni.showModal({
     title: '确认删除',
-    content: `确定删除账号 ${account.username} 吗？`,
+    content: `确定删除账号 ${a.username}@${emailSuffix} 吗？`,
     success: async (res) => {
       if (!res.confirm) return
       try {
@@ -123,7 +126,7 @@ function handleDelete(account) {
       <view v-else class="list">
         <view v-for="a in accounts" :key="a.id" class="card">
           <view class="card-top">
-            <text class="card-name">{{ a.username }}</text>
+            <text class="card-name">{{ a.username }}@{{ emailSuffix }}</text>
             <view class="badge" :class="a.status === 'ACTIVE' ? 'badge-on' : 'badge-off'">
               <text class="badge-text">{{ a.status === 'ACTIVE' ? '正常' : '禁用' }}</text>
             </view>
