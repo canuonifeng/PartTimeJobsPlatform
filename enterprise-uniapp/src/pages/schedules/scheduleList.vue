@@ -170,6 +170,7 @@ function handleDelete(id) {
 .list-scroll {
   height: calc(100vh - 120rpx);
   padding: 24rpx 32rpx;
+  overflow: hidden;
 }
 
 .empty-state {
@@ -207,6 +208,8 @@ function handleDelete(id) {
   border-radius: 24rpx;
   padding: 30rpx;
   box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .card-header {
@@ -269,11 +272,17 @@ function handleDelete(id) {
 .info-label {
   font-size: 26rpx;
   color: #98a3b3;
+  flex-shrink: 0;
 }
 
 .info-value {
   font-size: 26rpx;
   color: #1f2933;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-left: 16rpx;
 }
 
 .card-footer {
