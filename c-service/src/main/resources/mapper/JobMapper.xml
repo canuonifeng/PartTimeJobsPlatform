@@ -24,7 +24,7 @@
                location, province, city, district, address, latitude, longitude,
                category_id, rate_type, rate_amount, status, published_at,
                headcount, accepted_count, deadline, created_at, updated_at,
-               close_reason, auto_approve
+               close_reason, auto_approve, image_url
         FROM jobs
     </sql>
 
