@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.enterprise.mapper.WorkerSyncMapper">
+
+    <select id="findWorkerNamesByIds" resultType="java.util.Map">
+        SELECT id, name FROM c_worker WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="findWorkerBirthdaysByIds" resultType="java.util.Map">
+        SELECT worker_id, birthday FROM worker_profiles WHERE worker_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+</mapper>

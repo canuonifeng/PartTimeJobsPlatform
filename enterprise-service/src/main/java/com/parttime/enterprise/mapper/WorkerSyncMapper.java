@@ -19,9 +19,7 @@ public interface WorkerSyncMapper {
     @Select("SELECT birthday FROM worker_profiles WHERE worker_id = #{id}")
     java.time.LocalDate findWorkerBirthdayById(Long id);
 
-    @Select("SELECT id, name FROM c_worker WHERE id IN (${ids})")
     List<Map<String, Object>> findWorkerNamesByIds(@Param("ids") List<Long> ids);
 
-    @Select("SELECT worker_id, birthday FROM worker_profiles WHERE worker_id IN (${ids})")
     List<Map<String, Object>> findWorkerBirthdaysByIds(@Param("ids") List<Long> ids);
 }
