@@ -55,6 +55,7 @@ class JobServiceTest {
         ReflectionTestUtils.setField(jobService, "systemConfigMapper", InMemoryMappers.createSystemConfigMapper());
         ReflectionTestUtils.setField(jobService, "shiftMapper", InMemoryMappers.createShiftMapper());
         ReflectionTestUtils.setField(jobService, "notificationMapper", InMemoryMappers.createNotificationMapper());
+        ReflectionTestUtils.setField(jobService, "jobTagGroupMapper", InMemoryMappers.createJobTagGroupMapper());
         EnterpriseMapper enterpriseMapper = InMemoryMappers.createEnterpriseMapper();
         JobRateMapper jobRateMapper = InMemoryMappers.createJobRateMapper();
         JobCategoryMapper jobCategoryMapper = InMemoryMappers.createJobCategoryMapper();

@@ -33,6 +33,14 @@
         FROM c_worker WHERE id = #{id}
     </select>
 
+    <select id="findByIds" resultMap="WorkerResultMap">
+        SELECT id, name, phone, wechat_code, open_id, avatar_url, status, created_at, updated_at
+        FROM c_worker WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
     <update id="update">
         UPDATE c_worker SET name = #{name}, phone = #{phone} WHERE id = #{id}
     </update>

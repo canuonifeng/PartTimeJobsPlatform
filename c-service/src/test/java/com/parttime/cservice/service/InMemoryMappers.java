@@ -771,6 +771,15 @@ public class InMemoryMappers {
         };
     }
 
+    public static com.parttime.cservice.mapper.JobTagGroupMapper createJobTagGroupMapper() {
+        return new com.parttime.cservice.mapper.JobTagGroupMapper() {
+            @Override
+            public List<com.parttime.cservice.pojo.entity.JobTagGroup> findActiveGroups() {
+                return List.of();
+            }
+        };
+    }
+
     public static class TestSystemConfigMapper implements com.parttime.cservice.mapper.SystemConfigMapper {
         private final ConcurrentHashMap<String, com.parttime.cservice.pojo.entity.SystemConfig> store = new ConcurrentHashMap<>();
 

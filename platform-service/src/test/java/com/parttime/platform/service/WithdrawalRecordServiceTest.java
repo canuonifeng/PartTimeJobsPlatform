@@ -1,7 +1,9 @@
 package com.parttime.platform.service;
 
 import com.parttime.platform.mapper.WithdrawalRecordMapper;
+import com.parttime.platform.mapper.WorkerMapper;
 import com.parttime.platform.pojo.entity.WithdrawalRecord;
+import com.parttime.platform.pojo.entity.Worker;
 import com.parttime.platform.pojo.vo.PageVO;
 import com.parttime.platform.pojo.vo.WithdrawalRecordVO;
 import com.parttime.platform.service.impl.WithdrawalRecordServiceImpl;
@@ -16,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -24,6 +27,9 @@ class WithdrawalRecordServiceTest {
 
     @Mock
     private WithdrawalRecordMapper withdrawalRecordMapper;
+
+    @Mock
+    private WorkerMapper workerMapper;
 
     @InjectMocks
     private WithdrawalRecordServiceImpl withdrawalRecordService;
@@ -41,8 +47,14 @@ class WithdrawalRecordServiceTest {
         record.setThirdPartySerialNo("WTHD123");
         record.setThirdPartyPlatform("SIMULATED_PAY");
 
+        Worker worker = new Worker();
+        worker.setId(2L);
+        worker.setName("张三");
+        worker.setPhone("13800138000");
+
         when(withdrawalRecordMapper.findPage(2L, "COMPLETED", start, end, 20, 20)).thenReturn(List.of(record));
         when(withdrawalRecordMapper.countPage(2L, "COMPLETED", start, end)).thenReturn(1L);
+        when(workerMapper.findByIds(anyList())).thenReturn(List.of(worker));
 
         PageVO<WithdrawalRecordVO> result = withdrawalRecordService.listRecords(2L, "COMPLETED", start, end, 2, 20);
 

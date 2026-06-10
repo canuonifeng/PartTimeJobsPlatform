@@ -1,7 +1,9 @@
 package com.parttime.platform.service.impl;
 
+import com.parttime.platform.mapper.WorkerMapper;
 import com.parttime.platform.mapper.WorkerNotificationMapper;
 import com.parttime.platform.mapper.WorkerRealNameAuthMapper;
+import com.parttime.platform.pojo.entity.Worker;
 import com.parttime.platform.pojo.entity.WorkerRealNameAuth;
 import com.parttime.platform.pojo.vo.PageVO;
 import com.parttime.platform.pojo.vo.WorkerRealNameAuthVO;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,14 +26,27 @@ public class WorkerRealNameAuthReviewServiceImpl implements WorkerRealNameAuthRe
     @Resource
     private WorkerNotificationMapper workerNotificationMapper;
 
+    @Resource
+    private WorkerMapper workerMapper;
+
     @Override
     public PageVO<WorkerRealNameAuthVO> list(String status, int page, int pageSize) {
         int offset = Math.max(page - 1, 0) * pageSize;
-        List<WorkerRealNameAuthVO> records = mapper.findPage(status, offset, pageSize).stream()
-                .map(this::toVO)
+        List<WorkerRealNameAuth> records = mapper.findPage(status, offset, pageSize);
+        Map<Long, Worker> workerMap = loadWorkerMap(records);
+        List<WorkerRealNameAuthVO> vos = records.stream()
+                .map(r -> {
+                    WorkerRealNameAuthVO vo = toVO(r);
+                    Worker worker = workerMap.get(r.getWorkerId());
+                    if (worker != null) {
+                        vo.setWorkerName(worker.getName());
+                        vo.setWorkerPhone(worker.getPhone());
+                    }
+                    return vo;
+                })
                 .collect(Collectors.toList());
         long total = mapper.countPage(status);
-        return new PageVO<>(records, total);
+        return new PageVO<>(vos, total);
     }
 
     @Override
@@ -70,6 +86,17 @@ public class WorkerRealNameAuthReviewServiceImpl implements WorkerRealNameAuthRe
                 "您的实名认证未通过审核，原因：" + reason,
                 "REAL_NAME_AUTH",
                 id);
+    }
+
+    private Map<Long, Worker> loadWorkerMap(List<WorkerRealNameAuth> records) {
+        List<Long> workerIds = records.stream()
+                .map(WorkerRealNameAuth::getWorkerId)
+                .filter(id -> id != null)
+                .distinct()
+                .toList();
+        if (workerIds.isEmpty()) return Map.of();
+        return workerMapper.findByIds(workerIds).stream()
+                .collect(Collectors.toMap(Worker::getId, w -> w, (a, b) -> a));
     }
 
     private WorkerRealNameAuthVO toVO(WorkerRealNameAuth entity) {

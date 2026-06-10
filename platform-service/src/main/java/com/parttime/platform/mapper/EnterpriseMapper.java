@@ -16,6 +16,8 @@ public interface EnterpriseMapper {
 
     Optional<Enterprise> findById(@Param("id") Long id);
 
+    List<Enterprise> findByIds(@Param("ids") List<Long> ids);
+
     int insert(Enterprise enterprise);
 
     int update(Enterprise enterprise);

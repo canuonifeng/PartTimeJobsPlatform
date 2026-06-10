@@ -1,6 +1,8 @@
 package com.parttime.platform.service.impl;
 
+import com.parttime.platform.mapper.EnterpriseMapper;
 import com.parttime.platform.mapper.EnterpriseRealNameAuthMapper;
+import com.parttime.platform.pojo.entity.Enterprise;
 import com.parttime.platform.pojo.entity.EnterpriseRealNameAuth;
 import com.parttime.platform.pojo.vo.EnterpriseRealNameAuthVO;
 import com.parttime.platform.pojo.vo.PageVO;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,14 +22,23 @@ public class EnterpriseRealNameAuthReviewServiceImpl implements EnterpriseRealNa
     @Resource
     private EnterpriseRealNameAuthMapper mapper;
 
+    @Resource
+    private EnterpriseMapper enterpriseMapper;
+
     @Override
     public PageVO<EnterpriseRealNameAuthVO> list(String status, int page, int pageSize) {
         int offset = Math.max(page - 1, 0) * pageSize;
-        List<EnterpriseRealNameAuthVO> records = mapper.findPage(status, offset, pageSize).stream()
-                .map(this::toVO)
+        List<EnterpriseRealNameAuth> records = mapper.findPage(status, offset, pageSize);
+        Map<Long, String> companyNameMap = loadCompanyNameMap(records);
+        List<EnterpriseRealNameAuthVO> vos = records.stream()
+                .map(r -> {
+                    EnterpriseRealNameAuthVO vo = toVO(r);
+                    vo.setCompanyName(companyNameMap.getOrDefault(r.getEnterpriseId(), ""));
+                    return vo;
+                })
                 .collect(Collectors.toList());
         long total = mapper.countPage(status);
-        return new PageVO<>(records, total);
+        return new PageVO<>(vos, total);
     }
 
     @Override
@@ -50,6 +62,17 @@ public class EnterpriseRealNameAuthReviewServiceImpl implements EnterpriseRealNa
             throw new RuntimeException("状态不允许操作");
         }
         mapper.updateReview(id, "REJECTED", reason, reviewerId, LocalDateTime.now());
+    }
+
+    private Map<Long, String> loadCompanyNameMap(List<EnterpriseRealNameAuth> records) {
+        List<Long> enterpriseIds = records.stream()
+                .map(EnterpriseRealNameAuth::getEnterpriseId)
+                .filter(id -> id != null)
+                .distinct()
+                .toList();
+        if (enterpriseIds.isEmpty()) return Map.of();
+        return enterpriseMapper.findByIds(enterpriseIds).stream()
+                .collect(Collectors.toMap(Enterprise::getId, Enterprise::getCompanyName, (a, b) -> a));
     }
 
     private EnterpriseRealNameAuthVO toVO(EnterpriseRealNameAuth entity) {

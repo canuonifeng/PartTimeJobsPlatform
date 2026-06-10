@@ -6,6 +6,7 @@ import com.parttime.cservice.mapper.JobCategoryMapper;
 import com.parttime.cservice.mapper.JobMapper;
 import com.parttime.cservice.mapper.JobRateMapper;
 import com.parttime.cservice.mapper.JobScheduleMapper;
+import com.parttime.cservice.mapper.JobTagGroupMapper;
 import com.parttime.cservice.mapper.JobTagRelationMapper;
 import com.parttime.cservice.mapper.NotificationMapper;
 import com.parttime.cservice.mapper.ScheduleApplicationMapper;
@@ -16,6 +17,7 @@ import com.parttime.cservice.pojo.entity.Job;
 import com.parttime.cservice.pojo.entity.JobCategory;
 import com.parttime.cservice.pojo.entity.JobRate;
 import com.parttime.cservice.pojo.entity.JobSchedule;
+import com.parttime.cservice.pojo.entity.JobTagGroup;
 import com.parttime.cservice.pojo.entity.ScheduleApplication;
 import com.parttime.cservice.pojo.entity.ShiftEntity;
 import com.parttime.cservice.pojo.entity.SystemConfig;
@@ -62,6 +64,8 @@ public class JobServiceImpl implements JobService {
     private JobScheduleMapper jobScheduleMapper;
     @Resource
     private JobTagRelationMapper jobTagRelationMapper;
+    @Resource
+    private JobTagGroupMapper jobTagGroupMapper;
     @Resource
     private SystemConfigMapper systemConfigMapper;
     @Resource
@@ -341,6 +345,8 @@ public class JobServiceImpl implements JobService {
         if (jobIds.isEmpty()) return Map.of();
         List<JobTagVO> tags = jobTagRelationMapper.findTagsByJobIds(jobIds);
         if (tags == null || tags.isEmpty()) return Map.of();
+        Map<Long, String> groupNameMap = loadGroupNameMap();
+        tags.forEach(tag -> tag.setGroupName(groupNameMap.getOrDefault(tag.getGroupId(), "")));
         return tags.stream()
                 .filter(tag -> tag.getJobId() != null)
                 .collect(Collectors.groupingBy(JobTagVO::getJobId));
@@ -350,7 +356,15 @@ public class JobServiceImpl implements JobService {
         if (tags != null) return tags;
         if (jobTagRelationMapper == null || job.getId() == null) return emptyList();
         List<JobTagVO> loaded = jobTagRelationMapper.findTagsByJobId(job.getId());
-        return loaded == null ? emptyList() : loaded;
+        if (loaded == null || loaded.isEmpty()) return emptyList();
+        Map<Long, String> groupNameMap = loadGroupNameMap();
+        loaded.forEach(tag -> tag.setGroupName(groupNameMap.getOrDefault(tag.getGroupId(), "")));
+        return loaded;
+    }
+
+    private Map<Long, String> loadGroupNameMap() {
+        return jobTagGroupMapper.findActiveGroups().stream()
+                .collect(Collectors.toMap(JobTagGroup::getId, JobTagGroup::getName, (a, b) -> a));
     }
 
     // ========== VO 转换 ==========

@@ -21,9 +21,8 @@
     </resultMap>
 
     <select id="findPage" resultMap="WithdrawalRecordResultMap">
-        SELECT r.*, w.name AS worker_name, w.phone AS worker_phone
+        SELECT r.*
         FROM c_withdrawal_record r
-        LEFT JOIN c_worker w ON r.worker_id = w.id
         <where>
             <if test="workerId != null">
                 AND r.worker_id = #{workerId}

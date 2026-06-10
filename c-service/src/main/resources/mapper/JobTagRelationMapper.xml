@@ -16,24 +16,22 @@
     </resultMap>
 
     <select id="findTagsByJobId" resultMap="JobTagResultMap">
-        SELECT t.*, r.job_id, g.name AS group_name
+        SELECT t.*, r.job_id
         FROM job_tag_relations r
         INNER JOIN job_tags t ON r.tag_id = t.id
-        INNER JOIN job_tag_groups g ON t.group_id = g.id
-        WHERE r.job_id = #{jobId} AND t.status = 'ACTIVE' AND g.status = 'ACTIVE'
+        WHERE r.job_id = #{jobId} AND t.status = 'ACTIVE'
         ORDER BY r.id ASC
     </select>
 
     <select id="findTagsByJobIds" resultMap="JobTagResultMap">
-        SELECT t.*, r.job_id, g.name AS group_name
+        SELECT t.*, r.job_id
         FROM job_tag_relations r
         INNER JOIN job_tags t ON r.tag_id = t.id
-        INNER JOIN job_tag_groups g ON t.group_id = g.id
         WHERE r.job_id IN
         <foreach collection="list" item="jobId" open="(" separator="," close=")">
             #{jobId}
         </foreach>
-        AND t.status = 'ACTIVE' AND g.status = 'ACTIVE'
+        AND t.status = 'ACTIVE'
         ORDER BY r.job_id ASC, r.id ASC
     </select>
 
