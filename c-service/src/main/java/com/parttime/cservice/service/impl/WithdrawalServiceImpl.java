@@ -272,14 +272,6 @@ public class WithdrawalServiceImpl implements WithdrawalService {
                     vo.setAmount(t.getAmount());
                     vo.setType(t.getType());
                     vo.setDescription(t.getDescription());
-                    vo.setJobTitle(t.getJobTitle());
-                    vo.setCompanyName(t.getCompanyName());
-                    vo.setLocation(t.getLocation());
-                    vo.setShiftDate(t.getShiftDate() == null ? null : t.getShiftDate().toString());
-                    vo.setStartTime(t.getStartTime());
-                    vo.setEndTime(t.getEndTime());
-                    vo.setTotalHours(t.getTotalHours());
-                    vo.setSettlementStatus(t.getSettlementStatus());
                     if (t.getCreatedAt() != null) {
                         vo.setCreatedAt(t.getCreatedAt().atZone(ZoneId.systemDefault())
                                 .withZoneSameInstant(CST).format(FMT));

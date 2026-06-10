@@ -146,26 +146,14 @@ class WithdrawalControllerTest {
         transaction.setType("EARNINGS");
         transaction.setDescription("结算收入：张三 2026-06-06 10:00:00");
         transaction.setCreatedAt("2026-06-06 10:00:00");
-        transaction.setJobTitle("仓库分拣员");
-        transaction.setCompanyName("绿地物流");
-        transaction.setLocation("绿地物流园3号仓");
-        transaction.setShiftDate("2026-06-05");
-        transaction.setStartTime("09:00");
-        transaction.setEndTime("18:00");
-        transaction.setTotalHours(new BigDecimal("8.00"));
-        transaction.setSettlementStatus("PAID");
 
         when(withdrawalService.getTransactions(1L, 1, 20)).thenReturn(new PageVO<>(List.of(transaction), 1));
 
         mockMvc.perform(get("/api/earnings/transactions?page=1&pageSize=20"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.records[0].jobTitle").value("仓库分拣员"))
-                .andExpect(jsonPath("$.data.records[0].companyName").value("绿地物流"))
-                .andExpect(jsonPath("$.data.records[0].location").value("绿地物流园3号仓"))
-                .andExpect(jsonPath("$.data.records[0].shiftDate").value("2026-06-05"))
-                .andExpect(jsonPath("$.data.records[0].startTime").value("09:00"))
-                .andExpect(jsonPath("$.data.records[0].endTime").value("18:00"))
-                .andExpect(jsonPath("$.data.records[0].settlementStatus").value("PAID"));
+                .andExpect(jsonPath("$.data.records[0].amount").value(120.00))
+                .andExpect(jsonPath("$.data.records[0].type").value("EARNINGS"))
+                .andExpect(jsonPath("$.data.records[0].description").value("结算收入：张三 2026-06-06 10:00:00"));
     }
 
     @Test

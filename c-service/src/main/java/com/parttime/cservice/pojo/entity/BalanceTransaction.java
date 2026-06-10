@@ -3,7 +3,6 @@ package com.parttime.cservice.pojo.entity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
@@ -25,12 +24,4 @@ public class BalanceTransaction {
     @Schema(description = "描述")
     private String description;
     private LocalDateTime createdAt;
-    private String jobTitle;
-    private String companyName;
-    private String location;
-    private LocalDate shiftDate;
-    private String startTime;
-    private String endTime;
-    private BigDecimal totalHours;
-    private String settlementStatus;
 }

@@ -8,31 +8,10 @@
     </insert>
 
     <select id="findByWorkerIdPage" resultType="com.parttime.cservice.pojo.entity.BalanceTransaction">
-        SELECT bt.*, COALESCE(linked_j.title, legacy_j.title) AS job_title,
-               COALESCE(linked_e.company_name, legacy_e.company_name) AS company_name,
-               COALESCE(ss.location_name, linked_j.address, linked_j.location, legacy_j.address, legacy_j.location) AS location,
-               ss.shift_date, ss.start_time, ss.end_time,
-               COALESCE(ar.total_hours, legacy_ar.total_hours) AS total_hours,
-               COALESCE(ar.settlement_status, legacy_ar.settlement_status) AS settlement_status
+        SELECT bt.*
         FROM balance_transactions bt
-        LEFT JOIN attendance_records ar ON bt.related_attendance_record_id = ar.id
-        LEFT JOIN attendance_records legacy_ar ON bt.related_attendance_record_id IS NULL
-            AND legacy_ar.id = (
-                SELECT ar2.id
-                FROM attendance_records ar2
-                LEFT JOIN schedule_shifts ss2 ON ar2.shift_id = ss2.id
-                WHERE COALESCE(ar2.worker_id, ss2.worker_id) = bt.worker_id
-                  AND ss2.shift_date = REGEXP_SUBSTR(bt.description, '[0-9]{4}-[0-9]{2}-[0-9]{2}')
-                ORDER BY ar2.settlement_status = 'PAID' DESC, ar2.id DESC
-                LIMIT 1
-            )
-        LEFT JOIN schedule_shifts ss ON COALESCE(ar.shift_id, legacy_ar.shift_id) = ss.id
-        LEFT JOIN jobs linked_j ON ar.job_id = linked_j.id
-        LEFT JOIN jobs legacy_j ON legacy_ar.job_id = legacy_j.id
-        LEFT JOIN enterprises linked_e ON ar.company_id = linked_e.id
-        LEFT JOIN enterprises legacy_e ON legacy_ar.company_id = legacy_e.id
         WHERE bt.worker_id = #{workerId}
-        ORDER BY COALESCE(ss.shift_date, bt.created_at) DESC, COALESCE(ss.start_time, TIME(bt.created_at)) DESC, bt.created_at DESC
+        ORDER BY bt.created_at DESC
         LIMIT #{pageSize} OFFSET #{offset}
     </select>
 
