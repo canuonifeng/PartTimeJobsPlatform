@@ -4,7 +4,6 @@ import com.parttime.enterprise.mapper.AttendanceRecordMapper;
 import com.parttime.enterprise.mapper.BalanceTransactionMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
 import com.parttime.enterprise.mapper.WorkerBalanceMapper;
-import com.parttime.enterprise.mapper.WorkerBatchMapper;
 import com.parttime.enterprise.mapper.WorkerNotificationMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
@@ -37,8 +36,7 @@ class SettlementServiceTest {
     private ScheduleShiftMapper scheduleShiftMapper;
     @Mock
     private WorkerSyncMapper workerSyncMapper;
-    @Mock
-    private WorkerBatchMapper workerBatchMapper;
+
     @Mock
     private WorkerBalanceMapper workerBalanceMapper;
     @Mock
@@ -72,7 +70,7 @@ class SettlementServiceTest {
 
         when(attendanceRecordMapper.findByIds(List.of(1L))).thenReturn(List.of(record));
         when(scheduleShiftMapper.findByIds(List.of(2L))).thenReturn(List.of(shift));
-        when(workerBatchMapper.findWorkerNamesByIds(List.of(3L))).thenReturn(List.of(Map.of("id", 3L, "name", "张三")));
+        when(workerSyncMapper.findWorkerNamesByIds(List.of(3L))).thenReturn(List.of(Map.of("id", 3L, "name", "张三")));
         when(workerBalanceMapper.findByWorkerIds(List.of(3L))).thenReturn(List.of(balance));
 
         settlementService.payFromAttendanceRecords(List.of(1L), 9L);

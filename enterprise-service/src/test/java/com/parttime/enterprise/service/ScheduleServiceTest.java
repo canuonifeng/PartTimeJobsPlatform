@@ -4,7 +4,6 @@ import com.parttime.enterprise.mapper.AttendanceRecordMapper;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
-import com.parttime.enterprise.mapper.WorkerBatchMapper;
 import com.parttime.enterprise.mapper.WorkerNotificationMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
@@ -52,9 +51,6 @@ class ScheduleServiceTest {
 
     @Mock
     private WorkerSyncMapper workerSyncMapper;
-
-    @Mock
-    private WorkerBatchMapper workerBatchMapper;
 
     @Mock
     private WorkerNotificationMapper workerNotificationMapper;

@@ -1,9 +1,9 @@
 package com.parttime.cservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.parttime.cservice.mapper.WorkerSettingsMapper;
 import com.parttime.cservice.pojo.cmd.UpdateWorkerSettingsCmd;
-import com.parttime.cservice.pojo.entity.WorkerSettings;
+import com.parttime.cservice.pojo.vo.WorkerSettingsVO;
+import com.parttime.cservice.service.WorkerSettingsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -29,7 +30,7 @@ class WorkerSettingsControllerTest {
     private ObjectMapper objectMapper;
 
     @Mock
-    private WorkerSettingsMapper workerSettingsMapper;
+    private WorkerSettingsService workerSettingsService;
 
     @InjectMocks
     private WorkerSettingsController controller;
@@ -45,7 +46,8 @@ class WorkerSettingsControllerTest {
     @Test
     void getSettings_withoutExistingRow_shouldReturnDefaults() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("1", null, List.of()));
-        when(workerSettingsMapper.findByWorkerId(1L)).thenReturn(null);
+        WorkerSettingsVO defaultVo = WorkerSettingsVO.defaults();
+        when(workerSettingsService.getSettings(1L)).thenReturn(defaultVo);
 
         mockMvc.perform(get("/api/settings"))
                 .andExpect(status().isOk())
@@ -57,12 +59,11 @@ class WorkerSettingsControllerTest {
     @Test
     void updateSettings_shouldPersistMergedValues() throws Exception {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken("1", null, List.of()));
-        WorkerSettings existing = new WorkerSettings();
-        existing.setPushEnabled(true);
-        existing.setLocationEnabled(true);
-        existing.setQuietEnabled(false);
-        when(workerSettingsMapper.findByWorkerId(1L)).thenReturn(existing);
-        when(workerSettingsMapper.upsert(eq(1L), eq(false), eq(true), eq(true))).thenReturn(1);
+        WorkerSettingsVO resultVo = new WorkerSettingsVO();
+        resultVo.setPushEnabled(false);
+        resultVo.setLocationEnabled(true);
+        resultVo.setQuietEnabled(true);
+        when(workerSettingsService.updateSettings(eq(1L), any(UpdateWorkerSettingsCmd.class))).thenReturn(resultVo);
 
         UpdateWorkerSettingsCmd cmd = new UpdateWorkerSettingsCmd();
         cmd.setPushEnabled(false);

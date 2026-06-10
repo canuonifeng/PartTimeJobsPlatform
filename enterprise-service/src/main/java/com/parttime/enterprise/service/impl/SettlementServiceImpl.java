@@ -4,7 +4,6 @@ import com.parttime.enterprise.mapper.AttendanceRecordMapper;
 import com.parttime.enterprise.mapper.BalanceTransactionMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
 import com.parttime.enterprise.mapper.WorkerBalanceMapper;
-import com.parttime.enterprise.mapper.WorkerBatchMapper;
 import com.parttime.enterprise.mapper.WorkerNotificationMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
@@ -31,9 +30,6 @@ public class SettlementServiceImpl implements SettlementService {
 
     @Resource
     private WorkerSyncMapper workerSyncMapper;
-
-    @Resource
-    private WorkerBatchMapper workerBatchMapper;
 
     @Resource
     private WorkerBalanceMapper workerBalanceMapper;
@@ -65,7 +61,7 @@ public class SettlementServiceImpl implements SettlementService {
                 .map(ar -> ar.getWorkerId() != null ? ar.getWorkerId() : shiftMap.get(ar.getShiftId()).getWorkerId())
                 .distinct().toList();
         if (!workerIds.isEmpty()) {
-            workerBatchMapper.findWorkerNamesByIds(workerIds).forEach(m -> workerNames.put((Long) m.get("id"), (String) m.get("name")));
+            workerSyncMapper.findWorkerNamesByIds(workerIds).forEach(m -> workerNames.put((Long) m.get("id"), (String) m.get("name")));
             workerBalanceMapper.findByWorkerIds(workerIds).forEach(wb -> workerBalances.put(wb.getWorkerId(), wb));
         }
 

@@ -1,8 +1,8 @@
 package com.parttime.cservice.controller;
 
 import com.parttime.cservice.pojo.vo.ApiResponse;
-import com.parttime.cservice.mapper.SystemConfigMapper;
 import com.parttime.cservice.pojo.entity.SystemConfig;
+import com.parttime.cservice.service.SystemConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,7 +18,7 @@ import java.util.Map;
 public class PublicConfigController {
 
     @Resource
-    private SystemConfigMapper systemConfigMapper;
+    private SystemConfigService systemConfigService;
 
     @Operation(summary = "获取协议内容", description = "公开接口，获取用户协议或隐私政策内容")
     @GetMapping
@@ -26,7 +26,7 @@ public class PublicConfigController {
         if (!"user_agreement".equals(key) && !"privacy_policy".equals(key) && !"check_in_radius_meters".equals(key)) {
             return ApiResponse.error(400, "不支持的配置项");
         }
-        SystemConfig config = systemConfigMapper.findByKey(key).orElse(null);
+        SystemConfig config = systemConfigService.findByKey(key).orElse(null);
         if (config == null) {
             return ApiResponse.error(404, "内容不存在");
         }

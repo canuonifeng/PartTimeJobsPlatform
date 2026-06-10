@@ -5,7 +5,6 @@ import com.parttime.enterprise.mapper.AttendanceRecordMapper;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.JobMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
-import com.parttime.enterprise.mapper.WorkerBatchMapper;
 import com.parttime.enterprise.mapper.WorkerNotificationMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
@@ -37,8 +36,6 @@ public class ScheduleServiceImpl implements ScheduleService {
     private CompanyWorkerMapper companyWorkerMapper;
     @Resource
     private WorkerSyncMapper workerSyncMapper;
-    @Resource
-    private WorkerBatchMapper workerBatchMapper;
     @Resource
     private WorkerNotificationMapper workerNotificationMapper;
 
@@ -110,8 +107,8 @@ public class ScheduleServiceImpl implements ScheduleService {
             jobMapper.findByIds(jobIds).forEach(j -> jobMap.put(j.getId(), j));
         }
         if (!workerIds.isEmpty()) {
-            workerBatchMapper.findWorkerNamesByIds(workerIds).forEach(m -> workerNameMap.put((Long) m.get("id"), (String) m.get("name")));
-            workerBatchMapper.findWorkerBirthdaysByIds(workerIds).forEach(m -> {
+            workerSyncMapper.findWorkerNamesByIds(workerIds).forEach(m -> workerNameMap.put((Long) m.get("id"), (String) m.get("name")));
+            workerSyncMapper.findWorkerBirthdaysByIds(workerIds).forEach(m -> {
                 Long wid = (Long) m.get("worker_id");
                 java.time.LocalDate bd = (java.time.LocalDate) m.get("birthday");
                 if (bd != null) workerAgeMap.put(wid, java.time.LocalDate.now().getYear() - bd.getYear());
@@ -189,8 +186,8 @@ public class ScheduleServiceImpl implements ScheduleService {
         Map<Long, String> workerNameMap = new HashMap<>();
         Map<Long, Integer> workerAgeMap = new HashMap<>();
         if (!workerIds.isEmpty()) {
-            workerBatchMapper.findWorkerNamesByIds(workerIds).forEach(m -> workerNameMap.put((Long) m.get("id"), (String) m.get("name")));
-            workerBatchMapper.findWorkerBirthdaysByIds(workerIds).forEach(m -> {
+            workerSyncMapper.findWorkerNamesByIds(workerIds).forEach(m -> workerNameMap.put((Long) m.get("id"), (String) m.get("name")));
+            workerSyncMapper.findWorkerBirthdaysByIds(workerIds).forEach(m -> {
                 Long wid = (Long) m.get("worker_id");
                 java.time.LocalDate bd = (java.time.LocalDate) m.get("birthday");
                 if (bd != null) workerAgeMap.put(wid, java.time.LocalDate.now().getYear() - bd.getYear());

@@ -2,7 +2,7 @@ package com.parttime.enterprise.controller;
 
 import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
-import com.parttime.enterprise.pojo.dto.CorrectionRejectCmd;
+import com.parttime.enterprise.pojo.cmd.CorrectionRejectCmd;
 import com.parttime.enterprise.pojo.vo.ApiResponse;
 import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
 import com.parttime.enterprise.pojo.vo.CorrectionVO;

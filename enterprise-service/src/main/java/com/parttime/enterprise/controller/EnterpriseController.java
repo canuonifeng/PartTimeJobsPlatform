@@ -1,8 +1,9 @@
 package com.parttime.enterprise.controller;
 
 import com.parttime.enterprise.config.SecurityUtil;
-import io.swagger.v3.oas.annotations.Operation;
 import com.parttime.enterprise.pojo.vo.ApiResponse;
+import com.parttime.enterprise.service.EnterpriseService;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -17,15 +18,13 @@ import java.util.Map;
 public class EnterpriseController {
 
     @Resource
-    private com.parttime.enterprise.mapper.EnterpriseMapper enterpriseMapper;
+    private EnterpriseService enterpriseService;
 
     @Operation(summary = "获取企业信息")
     @GetMapping
     public ApiResponse<Map<String, Object>> getInfo() {
         Long companyId = SecurityUtil.getCurrentCompanyId();
-        String name = enterpriseMapper.findCompanyNameById(companyId);
-        String logo = enterpriseMapper.findCompanyLogoById(companyId);
-        return ApiResponse.success(Map.of("id", companyId, "companyName", name, "companyLogo", logo));
+        return ApiResponse.success(enterpriseService.getEnterpriseInfo(companyId));
     }
 
     @Operation(summary = "更新企业Logo")
@@ -36,7 +35,7 @@ public class EnterpriseController {
         if (logoUrl == null) {
             return ApiResponse.error("公司Logo不能为空");
         }
-        enterpriseMapper.updateLogo(companyId, logoUrl);
+        enterpriseService.updateLogo(companyId, logoUrl);
         return ApiResponse.success();
     }
 }
