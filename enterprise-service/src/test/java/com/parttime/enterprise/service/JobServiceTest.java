@@ -291,8 +291,7 @@ class JobServiceTest {
         assertThat(savedJob.getRequirements()).isEqualTo("<p>任职要求</p>");
         assertThat(savedJob.getContactPhone()).isEqualTo("13800138000");
         verify(jobTagRelationMapper).deleteByJobId(100L);
-        verify(jobTagRelationMapper).insert(100L, 2L);
-        verify(jobTagRelationMapper).insert(100L, 1L);
+        verify(jobTagRelationMapper).batchInsert(100L, List.of(2L, 1L));
         assertThat(response.getRequirements()).isEqualTo("<p>任职要求</p>");
         assertThat(response.getContactPhone()).isEqualTo("13800138000");
         assertThat(response.getTagIds()).containsExactly(2L, 1L);
@@ -323,8 +322,7 @@ class JobServiceTest {
         assertThat(existing.getRequirements()).isEqualTo("<p>新要求</p>");
         assertThat(existing.getContactPhone()).isEqualTo("13900139000");
         verify(jobTagRelationMapper).deleteByJobId(1L);
-        verify(jobTagRelationMapper).insert(1L, 3L);
-        verify(jobTagRelationMapper).insert(1L, 4L);
+        verify(jobTagRelationMapper).batchInsert(1L, List.of(3L, 4L));
         assertThat(response.getRequirements()).isEqualTo("<p>新要求</p>");
         assertThat(response.getContactPhone()).isEqualTo("13900139000");
         assertThat(response.getTagIds()).containsExactly(3L, 4L);

@@ -37,4 +37,6 @@ public interface AttendanceRecordMapper {
                     @Param("settlementStatus") String settlementStatus);
 
     void deleteByIds(@Param("ids") List<Long> ids);
+
+    List<AttendanceRecord> findByIds(@Param("ids") List<Long> ids);
 }

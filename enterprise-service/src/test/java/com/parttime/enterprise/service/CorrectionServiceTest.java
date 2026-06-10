@@ -170,6 +170,14 @@ public class CorrectionServiceTest {
         @Override public List<AttendanceHoursVO> findHours(Long companyId, String workerName, LocalDate dateFrom, LocalDate dateTo, String settlementStatus, int offset, int pageSize) { return List.of(); }
         @Override public long countHours(Long companyId, String workerName, LocalDate dateFrom, LocalDate dateTo, String settlementStatus) { return 0; }
         @Override public void deleteByIds(List<Long> ids) {}
+        @Override public List<AttendanceRecord> findByIds(List<Long> ids) {
+            List<AttendanceRecord> result = new ArrayList<>();
+            for (Long id : ids) {
+                AttendanceRecord r = store.get(id);
+                if (r != null) result.add(r);
+            }
+            return result;
+        }
     }
 
     static class InMemoryScheduleShiftMapper implements ScheduleShiftMapper {
@@ -215,5 +223,13 @@ public class CorrectionServiceTest {
         @Override public List<Job> findByCompanyIdAndStatus(Long companyId, String status) { return List.of(); }
         @Override public List<Job> findByCategoryId(Long categoryId) { return List.of(); }
         @Override public int updateStatus(Long id, String status) { return 0; }
+        @Override public List<Job> findByIds(List<Long> ids) {
+            List<Job> result = new ArrayList<>();
+            for (Long id : ids) {
+                Job j = store.get(id);
+                if (j != null) result.add(j);
+            }
+            return result;
+        }
     }
 }

@@ -68,4 +68,11 @@
         DELETE FROM jobs WHERE id = #{id}
     </delete>
 
+    <select id="findByIds" resultMap="JobResultMap">
+        SELECT * FROM jobs WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
 </mapper>

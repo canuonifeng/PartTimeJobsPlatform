@@ -23,6 +23,14 @@
         VALUES (#{jobId}, #{tagId})
     </insert>
 
+    <insert id="batchInsert">
+        INSERT INTO job_tag_relations (job_id, tag_id)
+        VALUES
+        <foreach collection="tagIds" item="tagId" separator=",">
+            (#{jobId}, #{tagId})
+        </foreach>
+    </insert>
+
     <select id="findTagIdsByJobId" resultType="java.lang.Long">
         SELECT r.tag_id
         FROM job_tag_relations r

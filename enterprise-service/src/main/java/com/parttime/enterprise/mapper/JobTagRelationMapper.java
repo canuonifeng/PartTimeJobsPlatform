@@ -13,6 +13,8 @@ public interface JobTagRelationMapper {
 
     int insert(@Param("jobId") Long jobId, @Param("tagId") Long tagId);
 
+    int batchInsert(@Param("jobId") Long jobId, @Param("tagIds") List<Long> tagIds);
+
     List<Long> findTagIdsByJobId(Long jobId);
 
     List<JobTag> findTagsByJobId(Long jobId);

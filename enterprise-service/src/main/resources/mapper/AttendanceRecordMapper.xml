@@ -133,4 +133,11 @@
         </foreach>
     </delete>
 
+    <select id="findByIds" resultMap="RecordResultMap">
+        SELECT * FROM attendance_records WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
 </mapper>

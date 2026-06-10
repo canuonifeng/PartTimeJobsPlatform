@@ -375,9 +375,7 @@ public class JobServiceImpl implements JobService {
         if (activeTagIds.size() != distinctTagIds.size() || !activeTagIds.containsAll(distinctTagIds)) {
             throw new RuntimeException("存在无效或已停用的岗位标签");
         }
-        for (Long tagId : distinctTagIds) {
-            jobTagRelationMapper.insert(jobId, tagId);
-        }
+        jobTagRelationMapper.batchInsert(jobId, distinctTagIds);
     }
 
     private List<JobTagVO> toTagResponses(List<JobTag> tags) {

@@ -27,4 +27,6 @@ public interface JobMapper {
     int update(Job job);
 
     int delete(Long id);
+
+    List<Job> findByIds(@Param("ids") List<Long> ids);
 }

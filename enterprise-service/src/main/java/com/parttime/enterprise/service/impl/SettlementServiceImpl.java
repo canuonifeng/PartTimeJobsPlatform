@@ -4,6 +4,7 @@ import com.parttime.enterprise.mapper.AttendanceRecordMapper;
 import com.parttime.enterprise.mapper.BalanceTransactionMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
 import com.parttime.enterprise.mapper.WorkerBalanceMapper;
+import com.parttime.enterprise.mapper.WorkerBatchMapper;
 import com.parttime.enterprise.mapper.WorkerNotificationMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
@@ -32,6 +33,9 @@ public class SettlementServiceImpl implements SettlementService {
     private WorkerSyncMapper workerSyncMapper;
 
     @Resource
+    private WorkerBatchMapper workerBatchMapper;
+
+    @Resource
     private WorkerBalanceMapper workerBalanceMapper;
 
     @Resource
@@ -45,20 +49,38 @@ public class SettlementServiceImpl implements SettlementService {
     @Override
     @Transactional
     public void payFromAttendanceRecords(List<Long> attendanceRecordIds, Long companyId) {
+        if (attendanceRecordIds == null || attendanceRecordIds.isEmpty()) return;
+
+        List<AttendanceRecord> allRecords = attendanceRecordMapper.findByIds(attendanceRecordIds);
+        if (allRecords.isEmpty()) return;
+
+        List<Long> shiftIds = allRecords.stream().map(AttendanceRecord::getShiftId).distinct().toList();
+        List<ScheduleShift> shifts = scheduleShiftMapper.findByIds(shiftIds);
+        java.util.Map<Long, ScheduleShift> shiftMap = shifts.stream()
+                .collect(java.util.stream.Collectors.toMap(ScheduleShift::getId, s -> s));
+
+        java.util.Map<Long, String> workerNames = new java.util.HashMap<>();
+        java.util.Map<Long, WorkerBalance> workerBalances = new java.util.HashMap<>();
+        List<Long> workerIds = allRecords.stream()
+                .map(ar -> ar.getWorkerId() != null ? ar.getWorkerId() : shiftMap.get(ar.getShiftId()).getWorkerId())
+                .distinct().toList();
+        if (!workerIds.isEmpty()) {
+            workerBatchMapper.findWorkerNamesByIds(workerIds).forEach(m -> workerNames.put((Long) m.get("id"), (String) m.get("name")));
+            workerBalanceMapper.findByWorkerIds(workerIds).forEach(wb -> workerBalances.put(wb.getWorkerId(), wb));
+        }
+
         BigDecimal totalPay = BigDecimal.ZERO;
-        for (Long arId : attendanceRecordIds) {
-            AttendanceRecord ar = attendanceRecordMapper.findById(arId)
-                    .orElseThrow(() -> new RuntimeException("Attendance record not found: " + arId));
+        for (AttendanceRecord ar : allRecords) {
             if ("PAID".equals(ar.getSettlementStatus())) continue;
 
-            ScheduleShift shift = scheduleShiftMapper.findById(ar.getShiftId())
-                    .orElseThrow(() -> new RuntimeException("Schedule shift not found: " + ar.getShiftId()));
+            ScheduleShift shift = shiftMap.get(ar.getShiftId());
+            if (shift == null) throw new RuntimeException("Schedule shift not found: " + ar.getShiftId());
 
             Long workerId = ar.getWorkerId() != null ? ar.getWorkerId() : shift.getWorkerId();
-            String workerName = workerSyncMapper.findWorkerNameById(workerId);
+            String workerName = workerNames.getOrDefault(workerId, "未知工人");
             BigDecimal actualPay = ar.getPayablePay() != null ? ar.getPayablePay() : ar.getScheduledPay();
 
-            WorkerBalance wb = workerBalanceMapper.findByWorkerId(workerId);
+            WorkerBalance wb = workerBalances.get(workerId);
             if (wb == null) {
                 workerBalanceMapper.upsert(workerId, actualPay, actualPay, BigDecimal.ZERO);
             } else {

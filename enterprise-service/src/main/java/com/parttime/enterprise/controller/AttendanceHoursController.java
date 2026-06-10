@@ -75,11 +75,10 @@ public class AttendanceHoursController {
     @Transactional
     public void batchDelete(@RequestBody List<Long> ids) {
         if (ids == null || ids.isEmpty()) return;
-        for (Long id : ids) {
-            AttendanceRecord record = attendanceRecordMapper.findById(id)
-                    .orElseThrow(() -> new RuntimeException("Attendance record not found: " + id));
+        List<AttendanceRecord> records = attendanceRecordMapper.findByIds(ids);
+        for (AttendanceRecord record : records) {
             if ("PAID".equals(record.getSettlementStatus())) {
-                throw new RuntimeException("Cannot delete paid record: " + id);
+                throw new RuntimeException("Cannot delete paid record: " + record.getId());
             }
         }
         attendanceRecordMapper.deleteByIds(ids);

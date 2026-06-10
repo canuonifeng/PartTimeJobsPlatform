@@ -24,4 +24,11 @@
             total_withdrawn = #{totalWithdrawn}
     </insert>
 
+    <select id="findByWorkerIds" resultMap="WorkerBalanceResultMap">
+        SELECT * FROM worker_balances WHERE worker_id IN
+        <foreach collection="workerIds" item="workerId" open="(" separator="," close=")">
+            #{workerId}
+        </foreach>
+    </select>
+
 </mapper>
