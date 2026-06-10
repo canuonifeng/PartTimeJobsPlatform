@@ -41,7 +41,7 @@ public class JobReportController {
     public ApiResponse<JobReportVO> dismiss(@Parameter(description = "举报ID") @RequestParam Long id,
                                       @RequestBody ReviewJobReportCmd cmd,
                                       Authentication authentication) {
-        return ApiResponse.success(jobReportService.dismissReport(id, authentication.getName(), cmd));
+        return ApiResponse.success(jobReportService.dismissReport(id, Long.valueOf(authentication.getName()), cmd));
     }
 
     @Operation(summary = "封禁岗位", description = "因举报封禁岗位")
@@ -49,6 +49,6 @@ public class JobReportController {
     public ApiResponse<JobReportVO> ban(@Parameter(description = "举报ID") @RequestParam Long id,
                                   @RequestBody ReviewJobReportCmd cmd,
                                   Authentication authentication) {
-        return ApiResponse.success(jobReportService.banJobReport(id, authentication.getName(), cmd));
+        return ApiResponse.success(jobReportService.banJobReport(id, Long.valueOf(authentication.getName()), cmd));
     }
 }

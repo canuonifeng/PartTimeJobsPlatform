@@ -3,8 +3,8 @@
 <mapper namespace="com.parttime.platform.mapper.EnterpriseBalanceTransactionMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO enterprise_balance_transactions (company_id, amount, type, description, created_at)
-        VALUES (#{companyId}, #{amount}, #{type}, #{description}, #{createdAt})
+        INSERT INTO enterprise_balance_transactions (company_id, amount, type, related_bill_id, related_top_up_id, description, created_at)
+        VALUES (#{companyId}, #{amount}, #{type}, #{relatedBillId}, #{relatedTopUpId}, #{description}, #{createdAt})
     </insert>
 
 </mapper>

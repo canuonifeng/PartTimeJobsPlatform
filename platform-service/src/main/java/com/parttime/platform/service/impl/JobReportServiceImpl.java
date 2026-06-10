@@ -40,7 +40,7 @@ public class JobReportServiceImpl implements JobReportService {
     }
 
     @Override
-    public JobReportVO dismissReport(Long id, String reviewerId, ReviewJobReportCmd cmd) {
+    public JobReportVO dismissReport(Long id, Long reviewerId, ReviewJobReportCmd cmd) {
         JobReport report = jobReportMapper.findById(id)
                 .orElseThrow(() -> new BusinessException("JobReport not found: " + id));
         if (!"PENDING".equals(report.getStatus())) {
@@ -55,7 +55,7 @@ public class JobReportServiceImpl implements JobReportService {
     }
 
     @Override
-    public JobReportVO banJobReport(Long id, String reviewerId, ReviewJobReportCmd cmd) {
+    public JobReportVO banJobReport(Long id, Long reviewerId, ReviewJobReportCmd cmd) {
         JobReport report = jobReportMapper.findById(id)
                 .orElseThrow(() -> new BusinessException("JobReport not found: " + id));
         if (!"PENDING".equals(report.getStatus())) {

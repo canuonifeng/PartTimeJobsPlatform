@@ -15,7 +15,6 @@
     <resultMap id="JobTagResultMap" type="com.parttime.enterprise.pojo.entity.JobTag">
         <id property="id" column="id"/>
         <result property="groupId" column="group_id"/>
-        <result property="groupName" column="group_name"/>
         <result property="name" column="name"/>
         <result property="code" column="code"/>
         <result property="sortOrder" column="sort_order"/>

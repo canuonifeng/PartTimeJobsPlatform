@@ -21,7 +21,7 @@ public class JobReport {
     @Schema(description = "处理状态: PENDING-待处理, DISMISSED-已驳回, BANNED-已封禁")
     private String status;
     @Schema(description = "审核人ID")
-    private String reviewerId;
+    private Long reviewerId;
     @Schema(description = "审核备注")
     private String reviewRemark;
     @Schema(description = "审核时间")

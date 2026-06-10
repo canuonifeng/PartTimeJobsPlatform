@@ -19,7 +19,7 @@ public class WorkerBankCard {
     @Schema(description = "开户支行")
     private String bankBranch;
     @Schema(description = "是否默认卡")
-    private boolean isDefault;
+    private Boolean isDefault;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

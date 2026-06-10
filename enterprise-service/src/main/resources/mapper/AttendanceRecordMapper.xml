@@ -19,6 +19,10 @@
         <result property="payablePay" column="payable_pay"/>
         <result property="settlementStatus" column="settlement_status"/>
         <result property="calculatedAt" column="calculated_at"/>
+        <result property="status" column="status"/>
+        <result property="remark" column="remark"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">

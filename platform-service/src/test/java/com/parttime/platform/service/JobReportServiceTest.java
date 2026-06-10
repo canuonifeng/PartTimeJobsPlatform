@@ -79,7 +79,7 @@ class JobReportServiceTest {
         ReviewJobReportCmd cmd = new ReviewJobReportCmd();
         cmd.setRemark("No violation");
 
-        JobReportVO response = jobReportService.dismissReport(1L, "admin", cmd);
+        JobReportVO response = jobReportService.dismissReport(1L, 1L, cmd);
 
         assertThat(response.getStatus()).isEqualTo("DISMISSED");
         assertThat(response.getReviewRemark()).isEqualTo("No violation");
@@ -93,7 +93,7 @@ class JobReportServiceTest {
 
         ReviewJobReportCmd cmd = new ReviewJobReportCmd();
 
-        assertThatThrownBy(() -> jobReportService.dismissReport(1L, "admin", cmd))
+        assertThatThrownBy(() -> jobReportService.dismissReport(1L, 1L, cmd))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("not in PENDING");
     }
@@ -106,7 +106,7 @@ class JobReportServiceTest {
         ReviewJobReportCmd cmd = new ReviewJobReportCmd();
         cmd.setRemark("Violates terms");
 
-        JobReportVO response = jobReportService.banJobReport(1L, "admin", cmd);
+        JobReportVO response = jobReportService.banJobReport(1L, 1L, cmd);
 
         assertThat(response.getStatus()).isEqualTo("BANNED");
         assertThat(response.getReviewRemark()).isEqualTo("Violates terms");

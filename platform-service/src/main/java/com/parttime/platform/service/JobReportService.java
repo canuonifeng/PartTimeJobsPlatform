@@ -11,7 +11,7 @@ public interface JobReportService {
 
     JobReportVO getJobReport(Long id);
 
-    JobReportVO dismissReport(Long id, String reviewerId, ReviewJobReportCmd cmd);
+    JobReportVO dismissReport(Long id, Long reviewerId, ReviewJobReportCmd cmd);
 
-    JobReportVO banJobReport(Long id, String reviewerId, ReviewJobReportCmd cmd);
+    JobReportVO banJobReport(Long id, Long reviewerId, ReviewJobReportCmd cmd);
 }

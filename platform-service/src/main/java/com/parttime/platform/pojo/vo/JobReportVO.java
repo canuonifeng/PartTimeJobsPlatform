@@ -21,7 +21,7 @@ public class JobReportVO {
     @Schema(description = "处理状态")
     private String status;
     @Schema(description = "审核人ID")
-    private String reviewerId;
+    private Long reviewerId;
     @Schema(description = "审核备注")
     private String reviewRemark;
     @Schema(description = "审核时间")

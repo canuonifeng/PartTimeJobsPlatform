@@ -82,7 +82,7 @@ class JobReportControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(username = "1", roles = "ADMIN")
     void dismissReport_shouldReturnOk() throws Exception {
         JobReportVO response = new JobReportVO();
         response.setId(1L);
@@ -103,7 +103,7 @@ class JobReportControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(username = "1", roles = "ADMIN")
     void banReport_shouldReturnOk() throws Exception {
         JobReportVO response = new JobReportVO();
         response.setId(1L);
