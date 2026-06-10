@@ -60,7 +60,6 @@
         <result property="workerId" column="worker_id"/>
         <result property="workerName" column="worker_name"/>
         <result property="jobId" column="job_id"/>
-        <result property="companyId" column="company_id"/>
         <result property="jobTitle" column="job_title"/>
         <result property="shiftDate" column="shift_date"/>
         <result property="startTime" column="start_time"/>
