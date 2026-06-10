@@ -16,4 +16,15 @@
         SELECT * FROM job_categories WHERE status = 'ACTIVE' ORDER BY sort_order ASC, id ASC
     </select>
 
+    <select id="findById" resultMap="JobCategoryResultMap">
+        SELECT * FROM job_categories WHERE id = #{id}
+    </select>
+
+    <select id="findByIds" resultMap="JobCategoryResultMap">
+        SELECT * FROM job_categories WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
 </mapper>
