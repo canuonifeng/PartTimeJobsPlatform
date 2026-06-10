@@ -29,11 +29,7 @@
     </select>
 
     <select id="findActiveTags" resultMap="JobTagResultMap">
-        SELECT t.*, g.name AS group_name
-        FROM job_tags t
-        INNER JOIN job_tag_groups g ON t.group_id = g.id
-        WHERE t.status = 'ACTIVE' AND g.status = 'ACTIVE'
-        ORDER BY t.sort_order ASC, t.id ASC
+        SELECT * FROM job_tags WHERE status = 'ACTIVE' ORDER BY sort_order ASC, id ASC
     </select>
 
     <select id="findActiveExistingIds" resultType="java.lang.Long">

@@ -22,9 +22,10 @@ public class JobTagServiceImpl implements JobTagService {
 
     @Override
     public List<JobTagGroupVO> getActiveGroups() {
+        List<JobTagGroup> groups = jobTagMapper.findActiveGroups();
         List<JobTag> tags = jobTagMapper.findActiveTags();
         Map<Long, List<JobTag>> byGroup = tags.stream().collect(Collectors.groupingBy(JobTag::getGroupId));
-        return jobTagMapper.findActiveGroups().stream().map(group -> {
+        return groups.stream().map(group -> {
             JobTagGroupVO response = toGroupResponse(group);
             response.setTags(byGroup.getOrDefault(group.getId(), List.of()).stream()
                     .map(this::toTagResponse)
