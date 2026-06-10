@@ -113,7 +113,9 @@ public class ScheduleServiceImpl implements ScheduleService {
             workerSyncMapper.findWorkerNamesByIds(workerIds).forEach(m -> workerNameMap.put((Long) m.get("id"), (String) m.get("name")));
             workerSyncMapper.findWorkerBirthdaysByIds(workerIds).forEach(m -> {
                 Long wid = (Long) m.get("worker_id");
-                java.time.LocalDate bd = (java.time.LocalDate) m.get("birthday");
+                Object bdRaw = m.get("birthday");
+                java.time.LocalDate bd = bdRaw instanceof java.sql.Date sd ? sd.toLocalDate()
+                        : bdRaw instanceof java.time.LocalDate ld ? ld : null;
                 if (bd != null) workerAgeMap.put(wid, java.time.LocalDate.now().getYear() - bd.getYear());
             });
         }
@@ -198,7 +200,9 @@ public class ScheduleServiceImpl implements ScheduleService {
             workerSyncMapper.findWorkerNamesByIds(workerIds).forEach(m -> workerNameMap.put((Long) m.get("id"), (String) m.get("name")));
             workerSyncMapper.findWorkerBirthdaysByIds(workerIds).forEach(m -> {
                 Long wid = (Long) m.get("worker_id");
-                java.time.LocalDate bd = (java.time.LocalDate) m.get("birthday");
+                Object bdRaw = m.get("birthday");
+                java.time.LocalDate bd = bdRaw instanceof java.sql.Date sd ? sd.toLocalDate()
+                        : bdRaw instanceof java.time.LocalDate ld ? ld : null;
                 if (bd != null) workerAgeMap.put(wid, java.time.LocalDate.now().getYear() - bd.getYear());
             });
         }
