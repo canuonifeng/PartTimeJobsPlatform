@@ -12,12 +12,8 @@ public class WorkerVO {
     private String name;
     @Schema(description = "手机号")
     private String phone;
-    @Schema(description = "头像")
-    private String avatar;
     @Schema(description = "微信OpenID")
     private String openId;
-    @Schema(description = "微信昵称")
-    private String nickname;
     @Schema(description = "头像URL")
     private String avatarUrl;
     @Schema(description = "创建时间")

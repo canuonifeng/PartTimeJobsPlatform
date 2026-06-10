@@ -38,7 +38,7 @@ class WorkerServiceTest {
         assertThat(response.getId()).isNotNull();
         assertThat(response.getName()).isEqualTo("John");
         assertThat(response.getPhone()).isEqualTo("13800138000");
-        assertThat(response.getAvatar()).isEqualTo("http://avatar.url");
+        assertThat(response.getAvatarUrl()).isEqualTo("http://avatar.url");
         assertThat(response.getCreatedAt()).isNotNull();
     }
 
@@ -97,7 +97,7 @@ class WorkerServiceTest {
 
         assertThat(updated.getName()).isEqualTo("John Updated");
         assertThat(updated.getPhone()).isEqualTo("13800138000");
-        assertThat(updated.getAvatar()).isEqualTo("http://new.avatar");
+        assertThat(updated.getAvatarUrl()).isEqualTo("http://new.avatar");
     }
 
     @Test
@@ -108,7 +108,7 @@ class WorkerServiceTest {
 
         assertThat(updated.getName()).isEqualTo("New Name");
         assertThat(updated.getPhone()).isEqualTo("13800138000");
-        assertThat(updated.getAvatar()).isEqualTo("http://avatar");
+        assertThat(updated.getAvatarUrl()).isEqualTo("http://avatar");
     }
 
     @Test

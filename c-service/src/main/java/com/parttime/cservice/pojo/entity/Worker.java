@@ -20,10 +20,6 @@ public class Worker {
     private String avatarUrl;
     @Schema(description = "状态: ACTIVE-正常, DISABLED-禁用")
     private String status;
-    @Schema(description = "昵称")
-    private String nickname;
-    @Schema(description = "头像")
-    private String avatar;
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")

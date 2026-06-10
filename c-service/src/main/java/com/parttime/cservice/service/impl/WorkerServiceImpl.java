@@ -39,7 +39,6 @@ public class WorkerServiceImpl implements WorkerService {
         Worker worker = new Worker();
         worker.setName(request.name());
         worker.setPhone(request.phone());
-        worker.setAvatar(request.avatar());
         worker.setAvatarUrl(request.avatar());
         worker.setWechatCode("wx_" + System.currentTimeMillis());
         worker.setStatus("ACTIVE");
@@ -195,7 +194,6 @@ public class WorkerServiceImpl implements WorkerService {
             worker.setName(request.name());
         }
         if (request.avatar() != null) {
-            worker.setAvatar(request.avatar());
             worker.setAvatarUrl(request.avatar());
         }
         worker.setUpdatedAt(LocalDateTime.now());
@@ -228,10 +226,8 @@ public class WorkerServiceImpl implements WorkerService {
         response.setId(worker.getId());
         response.setName(worker.getName());
         response.setPhone(worker.getPhone());
-        response.setAvatar(worker.getAvatar());
-        response.setOpenId(worker.getOpenId());
-        response.setNickname(worker.getNickname());
         response.setAvatarUrl(worker.getAvatarUrl());
+        response.setOpenId(worker.getOpenId());
         response.setCreatedAt(worker.getCreatedAt());
         return response;
     }

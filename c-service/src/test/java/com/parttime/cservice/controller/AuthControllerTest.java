@@ -52,7 +52,7 @@ class AuthControllerTest {
         sampleWorker.setId(1L);
         sampleWorker.setName("John");
         sampleWorker.setPhone("13800138000");
-        sampleWorker.setAvatar("http://avatar.url");
+        sampleWorker.setAvatarUrl("http://avatar.url");
         sampleWorker.setCreatedAt(LocalDateTime.now());
 
         SecurityContextHolder.clearContext();
@@ -138,7 +138,7 @@ class AuthControllerTest {
         updatedWorker.setId(1L);
         updatedWorker.setName("John Updated");
         updatedWorker.setPhone("13900139000");
-        updatedWorker.setAvatar("http://new.avatar");
+        updatedWorker.setAvatarUrl("http://new.avatar");
         updatedWorker.setCreatedAt(LocalDateTime.now());
 
         RegisterCmd updateRequest = new RegisterCmd("John Updated", "13900139000", "http://new.avatar", null);
@@ -152,6 +152,6 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.name").value("John Updated"))
                 .andExpect(jsonPath("$.data.phone").value("13900139000"))
-                .andExpect(jsonPath("$.data.avatar").value("http://new.avatar"));
+                .andExpect(jsonPath("$.data.avatarUrl").value("http://new.avatar"));
     }
 }
