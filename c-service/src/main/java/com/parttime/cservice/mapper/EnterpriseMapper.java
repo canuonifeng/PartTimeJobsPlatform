@@ -10,5 +10,6 @@ import java.util.List;
 public interface EnterpriseMapper {
     Enterprise findById(Long id);
     List<Enterprise> findByIds(@Param("ids") List<Long> ids);
+    Enterprise findByEmailSuffix(@Param("emailSuffix") String emailSuffix);
     int insert(Enterprise enterprise);
 }

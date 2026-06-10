@@ -6,7 +6,11 @@
     </template>
     <el-table :data="accounts" v-loading="loading" stripe style="width:100%">
       <el-table-column prop="id" label="编号" width="60" />
-      <el-table-column prop="username" label="用户名" width="120" />
+      <el-table-column label="用户名" width="160">
+        <template #default="{ row }">
+          {{ row.username }}@{{ emailSuffix }}
+        </template>
+      </el-table-column>
       <el-table-column prop="displayName" label="显示名" width="120" />
       <el-table-column prop="role" label="角色" width="100">
         <template #default="{ row }">
@@ -74,7 +78,10 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { listAccounts, createAccount, updateAccount, resetPassword, deleteAccount } from '../../api/account'
+import { useAuthStore } from '../../stores/auth'
 
+const authStore = useAuthStore()
+const emailSuffix = authStore.emailSuffix
 const roleMap = { ADMIN: '管理员', HR: '人力资源', MANAGER: '运营经理', FINANCE: '财务' }
 
 const loading = ref(false)

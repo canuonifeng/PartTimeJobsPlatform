@@ -23,4 +23,6 @@ public interface EnterpriseMapper {
     int update(Enterprise enterprise);
 
     int updateStatus(@Param("id") Long id, @Param("status") String status);
+
+    int updateEmailSuffix(@Param("id") Long id, @Param("emailSuffix") String emailSuffix);
 }

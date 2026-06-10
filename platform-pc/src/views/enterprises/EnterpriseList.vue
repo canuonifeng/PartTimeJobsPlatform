@@ -19,6 +19,11 @@
         </template>
       </el-table-column>
       <el-table-column prop="companyName" label="企业名称" min-width="160" />
+      <el-table-column prop="emailSuffix" label="账号后缀" width="120">
+        <template #default="{ row }">
+          {{ row.emailSuffix || '-' }}
+        </template>
+      </el-table-column>
       <el-table-column prop="contactName" label="联系人" width="120" />
       <el-table-column prop="contactPhone" label="联系电话" width="140" />
       <el-table-column prop="status" label="状态" width="100">
@@ -48,6 +53,10 @@
       <el-form-item label="企业名称">
         <el-input v-model="createDialog.form.companyName" />
       </el-form-item>
+      <el-form-item label="账号后缀">
+        <el-input v-model="createDialog.form.emailSuffix" placeholder="如 acme" />
+        <div style="color:#909399;font-size:12px">企业登录账号格式：前缀@后缀</div>
+      </el-form-item>
       <el-form-item label="联系人">
         <el-input v-model="createDialog.form.contactName" />
       </el-form-item>
@@ -73,6 +82,10 @@
       <el-form-item label="企业名称">
         <el-input v-model="editDialog.form.companyName" />
       </el-form-item>
+      <el-form-item label="账号后缀">
+        <el-input v-model="editDialog.form.emailSuffix" placeholder="如 acme" />
+        <div style="color:#909399;font-size:12px">企业登录账号格式：前缀@后缀</div>
+      </el-form-item>
       <el-form-item label="联系人">
         <el-input v-model="editDialog.form.contactName" />
       </el-form-item>
@@ -96,7 +109,11 @@
   <el-dialog v-model="accountDialog.visible" :title="`账号管理 - ${accountDialog.companyName}`" width="700px">
     <el-button type="primary" size="small" style="margin-bottom:12px" @click="handleAddAccount">添加账号</el-button>
     <el-table :data="accountDialog.accounts" stripe style="width:100%">
-      <el-table-column prop="username" label="用户名" width="120" />
+      <el-table-column label="用户名" width="160">
+        <template #default="{ row }">
+          {{ row.username }}@{{ accountDialog.emailSuffix }}
+        </template>
+      </el-table-column>
       <el-table-column prop="displayName" label="显示名" width="120" />
       <el-table-column prop="role" label="角色" width="100">
         <template #default="{ row }">
@@ -233,7 +250,7 @@ const loading = ref(false)
 const enterprises = ref([])
 const statusFilter = ref('')
 
-const createDialog = ref({ visible: false, form: { companyName: '', companyLogo: '', contactName: '', contactPhone: '', companyAddress: '' } })
+const createDialog = ref({ visible: false, form: { companyName: '', emailSuffix: '', companyLogo: '', contactName: '', contactPhone: '', companyAddress: '' } })
 const editDialog = ref({ visible: false, form: {} })
 const accountDialog = ref({ visible: false, companyName: '', enterpriseId: null, accounts: [] })
 const accountFormDialog = ref({ visible: false, isEdit: false, form: { username: '', password: '', displayName: '', role: 'ADMIN' } })
@@ -250,7 +267,7 @@ async function fetchData() {
 }
 
 function handleAdd() {
-  createDialog.value = { visible: true, form: { companyName: '', companyLogo: '', contactName: '', contactPhone: '', companyAddress: '' } }
+  createDialog.value = { visible: true, form: { companyName: '', emailSuffix: '', companyLogo: '', contactName: '', contactPhone: '', companyAddress: '' } }
 }
 
 async function confirmCreate() {
@@ -286,7 +303,7 @@ async function handleToggleStatus(row) {
 }
 
 async function handleAccounts(row) {
-  accountDialog.value = { visible: true, companyName: row.companyName, enterpriseId: row.id, accounts: [] }
+  accountDialog.value = { visible: true, companyName: row.companyName, enterpriseId: row.id, emailSuffix: row.emailSuffix || '', accounts: [] }
   const data = await listAccounts(row.id)
   accountDialog.value.accounts = Array.isArray(data) ? data : []
 }

@@ -18,4 +18,6 @@ public class EnterpriseUpdateCmd {
     private String companyAddress;
     @Schema(description = "营业执照")
     private String businessLicense;
+    @Schema(description = "企业邮箱后缀")
+    private String emailSuffix;
 }

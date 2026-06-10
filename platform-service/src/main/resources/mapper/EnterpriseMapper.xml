@@ -11,6 +11,7 @@
         <result property="companyAddress" column="company_address"/>
         <result property="businessLicense" column="business_license"/>
         <result property="status" column="status"/>
+        <result property="emailSuffix" column="email_suffix"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
@@ -46,8 +47,13 @@
             contact_name = #{contactName},
             contact_phone = #{contactPhone},
             company_address = #{companyAddress},
-            business_license = #{businessLicense}
+            business_license = #{businessLicense},
+            email_suffix = #{emailSuffix}
         WHERE id = #{id}
+    </update>
+
+    <update id="updateEmailSuffix">
+        UPDATE enterprises SET email_suffix = #{emailSuffix} WHERE id = #{id}
     </update>
 
     <update id="updateStatus">

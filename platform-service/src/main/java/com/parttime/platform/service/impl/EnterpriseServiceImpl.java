@@ -59,6 +59,7 @@ public class EnterpriseServiceImpl implements EnterpriseService {
         if (cmd.getContactPhone() != null) e.setContactPhone(cmd.getContactPhone());
         if (cmd.getCompanyAddress() != null) e.setCompanyAddress(cmd.getCompanyAddress());
         if (cmd.getBusinessLicense() != null) e.setBusinessLicense(cmd.getBusinessLicense());
+        if (cmd.getEmailSuffix() != null) e.setEmailSuffix(cmd.getEmailSuffix());
         enterpriseMapper.update(e);
         return toVO(e);
     }
@@ -93,6 +94,7 @@ public class EnterpriseServiceImpl implements EnterpriseService {
         vo.setCompanyAddress(e.getCompanyAddress());
         vo.setBusinessLicense(e.getBusinessLicense());
         vo.setStatus(e.getStatus());
+        vo.setEmailSuffix(e.getEmailSuffix());
         vo.setCreatedAt(e.getCreatedAt());
         vo.setUpdatedAt(e.getUpdatedAt());
         return vo;
