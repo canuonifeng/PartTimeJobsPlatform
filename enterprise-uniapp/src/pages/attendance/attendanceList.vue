@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { onPullDownRefresh } from '@dcloudio/uni-app'
+import { ref } from 'vue'
+import { onShow, onPullDownRefresh } from '@dcloudio/uni-app'
 import { listAttendance, batchPay, batchDeleteAttendance } from '@/api/attendance'
 
 const records = ref([])
@@ -8,30 +8,42 @@ const loading = ref(false)
 const page = ref(1)
 const hasMore = ref(true)
 const loadingMore = ref(false)
+const requestSeq = ref(0)
 const pageSize = 20
 const selectedIds = ref([])
 
-onMounted(loadRecords)
+onShow(refreshRecords)
 onPullDownRefresh(() => {
+  refreshRecords().finally(() => uni.stopPullDownRefresh())
+})
+
+function refreshRecords() {
   page.value = 1
   records.value = []
   hasMore.value = true
-  loadRecords().finally(() => uni.stopPullDownRefresh())
-})
+  selectedIds.value = []
+  return loadRecords()
+}
 
 async function loadRecords(append = false) {
+  const seq = ++requestSeq.value
   if (!append) loading.value = true
   else loadingMore.value = true
   try {
     const res = await listAttendance({ page: page.value, pageSize })
+    if (seq !== requestSeq.value) return
     const list = Array.isArray(res) ? res : (res.records || res.data || [])
     records.value = append ? records.value.concat(list) : list
     hasMore.value = list.length >= pageSize
   } catch {
-    uni.showToast({ title: '加载失败', icon: 'none' })
+    if (seq === requestSeq.value) {
+      uni.showToast({ title: '加载失败', icon: 'none' })
+    }
   } finally {
-    loading.value = false
-    loadingMore.value = false
+    if (seq === requestSeq.value) {
+      loading.value = false
+      loadingMore.value = false
+    }
   }
 }
 
@@ -64,11 +76,7 @@ async function handleBatchPay() {
   try {
     await batchPay(selectedIds.value)
     uni.showToast({ title: '结算成功', icon: 'success' })
-    selectedIds.value = []
-    page.value = 1
-    records.value = []
-    hasMore.value = true
-    loadRecords()
+    refreshRecords()
   } catch {
     uni.showToast({ title: '结算失败', icon: 'none' })
   }
@@ -87,11 +95,7 @@ async function handleBatchDelete() {
         try {
           await batchDeleteAttendance(selectedIds.value)
           uni.showToast({ title: '已删除', icon: 'success' })
-          selectedIds.value = []
-          page.value = 1
-          records.value = []
-          hasMore.value = true
-          loadRecords()
+          await refreshRecords()
         } catch {
           uni.showToast({ title: '删除失败', icon: 'none' })
         }

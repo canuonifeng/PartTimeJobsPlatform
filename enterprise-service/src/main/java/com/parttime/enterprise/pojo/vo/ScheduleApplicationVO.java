@@ -26,6 +26,8 @@ public class ScheduleApplicationVO {
     private String workerName;
     @Schema(description = "工人手机号")
     private String workerPhone;
+    @Schema(description = "工人性别")
+    private String workerGender;
     @Schema(description = "年龄")
     private Integer workerAge;
     @Schema(description = "申请状态")

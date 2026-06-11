@@ -26,6 +26,10 @@ public class ScheduleShiftVO {
     private String jobTitle;
     @Schema(description = "工人名称")
     private String workerName;
+    @Schema(description = "工人手机号")
+    private String workerPhone;
+    @Schema(description = "工人性别")
+    private String workerGender;
     @Schema(description = "年龄")
     private Integer workerAge;
     @Schema(description = "工人ID")

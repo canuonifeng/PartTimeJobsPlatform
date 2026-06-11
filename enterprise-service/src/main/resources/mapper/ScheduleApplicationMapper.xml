@@ -94,6 +94,7 @@
         <result property="workerId" column="worker_id"/>
         <result property="workerName" column="worker_name"/>
         <result property="workerPhone" column="worker_phone"/>
+        <result property="workerGender" column="worker_gender"/>
         <result property="scheduleDate" column="schedule_date"/>
         <result property="startTime" column="start_time"/>
         <result property="endTime" column="end_time"/>
@@ -104,7 +105,7 @@
 
     <select id="findVOByCompanyId" resultMap="ScheduleApplicationVOResultMap">
         SELECT sa.id as application_id, sa.schedule_id, j.id as job_id, j.title as job_title,
-               sa.worker_id, w.name as worker_name, w.phone as worker_phone,
+               sa.worker_id, w.name as worker_name, w.phone as worker_phone, wp.gender AS worker_gender,
                js.schedule_date, js.start_time, js.end_time,
                sa.status, sa.applied_at,
                TIMESTAMPDIFF(YEAR, wp.birthday, CURDATE()) AS worker_age
@@ -119,7 +120,7 @@
 
     <select id="findVOByJobId" resultMap="ScheduleApplicationVOResultMap">
         SELECT sa.id as application_id, sa.schedule_id, j.id as job_id, j.title as job_title,
-               sa.worker_id, w.name as worker_name, w.phone as worker_phone,
+               sa.worker_id, w.name as worker_name, w.phone as worker_phone, wp.gender AS worker_gender,
                js.schedule_date, js.start_time, js.end_time,
                sa.status, sa.applied_at,
                TIMESTAMPDIFF(YEAR, wp.birthday, CURDATE()) AS worker_age
@@ -134,7 +135,7 @@
 
     <select id="findVOByJobIdAndStatus" resultMap="ScheduleApplicationVOResultMap">
         SELECT sa.id as application_id, sa.schedule_id, j.id as job_id, j.title as job_title,
-               sa.worker_id, w.name as worker_name, w.phone as worker_phone,
+               sa.worker_id, w.name as worker_name, w.phone as worker_phone, wp.gender AS worker_gender,
                js.schedule_date, js.start_time, js.end_time,
                sa.status, sa.applied_at,
                TIMESTAMPDIFF(YEAR, wp.birthday, CURDATE()) AS worker_age

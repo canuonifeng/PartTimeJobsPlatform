@@ -105,12 +105,16 @@ public class ScheduleServiceImpl implements ScheduleService {
         List<Long> workerIds = shifts.stream().map(ScheduleShift::getWorkerId).filter(Objects::nonNull).distinct().toList();
         Map<Long, Job> jobMap = new HashMap<>();
         Map<Long, String> workerNameMap = new HashMap<>();
+        Map<Long, String> workerPhoneMap = new HashMap<>();
+        Map<Long, String> workerGenderMap = new HashMap<>();
         Map<Long, Integer> workerAgeMap = new HashMap<>();
         if (!jobIds.isEmpty()) {
             jobMapper.findByIds(jobIds).forEach(j -> jobMap.put(j.getId(), j));
         }
         if (!workerIds.isEmpty()) {
             workerSyncMapper.findWorkerNamesByIds(workerIds).forEach(m -> workerNameMap.put((Long) m.get("id"), (String) m.get("name")));
+            workerSyncMapper.findWorkerPhonesByIds(workerIds).forEach(m -> workerPhoneMap.put((Long) m.get("id"), (String) m.get("phone")));
+            workerSyncMapper.findWorkerGendersByIds(workerIds).forEach(m -> workerGenderMap.put((Long) m.get("worker_id"), (String) m.get("gender")));
             workerSyncMapper.findWorkerBirthdaysByIds(workerIds).forEach(m -> {
                 Long wid = (Long) m.get("worker_id");
                 Object bdRaw = m.get("birthday");
@@ -122,9 +126,11 @@ public class ScheduleServiceImpl implements ScheduleService {
 
         Map<Long, Job> finalJobMap = jobMap;
         Map<Long, String> finalWorkerNameMap = workerNameMap;
+        Map<Long, String> finalWorkerPhoneMap = workerPhoneMap;
+        Map<Long, String> finalWorkerGenderMap = workerGenderMap;
         Map<Long, Integer> finalWorkerAgeMap = workerAgeMap;
         List<ScheduleShiftVO> voList = shifts.stream()
-                .map(s -> toShiftResponse(s, recordMap.get(s.getId()), finalJobMap, finalWorkerNameMap, finalWorkerAgeMap))
+                .map(s -> toShiftResponse(s, recordMap.get(s.getId()), finalJobMap, finalWorkerNameMap, finalWorkerPhoneMap, finalWorkerGenderMap, finalWorkerAgeMap, false))
                 .collect(Collectors.toList());
         return new PageVO<>(voList, total);
     }
@@ -243,26 +249,30 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     private ScheduleShiftVO toShiftResponse(ScheduleShift shift) {
-        return toShiftResponse(shift, null, new HashMap<>(), new HashMap<>(), new HashMap<>());
+        return toShiftResponse(shift, null, new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), true);
     }
 
     private ScheduleShiftVO toShiftResponse(ScheduleShift shift, AttendanceRecord record) {
-        return toShiftResponse(shift, record, new HashMap<>(), new HashMap<>(), new HashMap<>());
+        return toShiftResponse(shift, record, new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), true);
     }
 
     private ScheduleShiftVO toShiftResponse(ScheduleShift shift, AttendanceRecord record,
-                                             Map<Long, Job> jobMap, Map<Long, String> workerNameMap, Map<Long, Integer> workerAgeMap) {
+                                             Map<Long, Job> jobMap, Map<Long, String> workerNameMap,
+                                             Map<Long, String> workerPhoneMap, Map<Long, String> workerGenderMap,
+                                             Map<Long, Integer> workerAgeMap, boolean allowFallback) {
         ScheduleShiftVO response = new ScheduleShiftVO();
         response.setId(shift.getId());
         response.setJobId(shift.getJobId());
         Job job = jobMap.get(shift.getJobId());
-        response.setJobTitle(job != null ? job.getTitle() : jobMapper.findById(shift.getJobId()).map(Job::getTitle).orElse(null));
+        response.setJobTitle(job != null ? job.getTitle() : allowFallback ? jobMapper.findById(shift.getJobId()).map(Job::getTitle).orElse(null) : null);
         String workerName = workerNameMap.get(shift.getWorkerId());
-        response.setWorkerName(workerName != null ? workerName : workerSyncMapper.findWorkerNameById(shift.getWorkerId()));
+        response.setWorkerName(workerName != null ? workerName : allowFallback ? workerSyncMapper.findWorkerNameById(shift.getWorkerId()) : null);
+        response.setWorkerPhone(workerPhoneMap.get(shift.getWorkerId()));
+        response.setWorkerGender(workerGenderMap.get(shift.getWorkerId()));
         Integer workerAge = workerAgeMap.get(shift.getWorkerId());
         if (workerAge != null) {
             response.setWorkerAge(workerAge);
-        } else {
+        } else if (allowFallback) {
             java.time.LocalDate birthday = workerSyncMapper.findWorkerBirthdayById(shift.getWorkerId());
             if (birthday != null) {
                 response.setWorkerAge(java.time.LocalDate.now().getYear() - birthday.getYear());

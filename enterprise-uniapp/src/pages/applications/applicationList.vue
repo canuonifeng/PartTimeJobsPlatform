@@ -49,6 +49,19 @@ function statusClass(status) {
   return map[status] || 'default'
 }
 
+function genderLabel(gender) {
+  const map = { MALE: '男', FEMALE: '女', OTHER: '其他' }
+  return map[gender] || gender || '未知'
+}
+
+function ageLabel(age) {
+  return age == null ? '年龄未知' : `${age}岁`
+}
+
+function phoneLabel(phone) {
+  return phone || '暂无手机号'
+}
+
 async function handleAccept(applicationId) {
   try {
     await acceptApplication(applicationId)
@@ -106,7 +119,7 @@ function formatTimeRange(startTime, endTime) {
               <view class="worker-avatar">{{ (app.workerName || '工').slice(0, 1) }}</view>
               <view class="worker-detail">
                 <text class="worker-name">{{ app.workerName || '未知姓名' }}</text>
-                <text class="job-title">{{ app.jobTitle || '' }}</text>
+                <text class="worker-meta">{{ genderLabel(app.workerGender) }} · {{ ageLabel(app.workerAge) }} · {{ phoneLabel(app.workerPhone) }}</text>
               </view>
             </view>
             <view class="status-badge" :class="statusClass(app.status)">{{ statusLabel(app.status) }}</view>
@@ -114,10 +127,10 @@ function formatTimeRange(startTime, endTime) {
 
           <view class="info-grid">
             <view class="info-item">
-              <text class="info-icon">📞</text>
+              <text class="info-icon">💼</text>
               <view class="info-text">
-                <text class="info-label">联系电话</text>
-                <text class="info-value">{{ app.workerPhone || '暂无手机号' }}</text>
+                <text class="info-label">报名岗位</text>
+                <text class="info-value">{{ app.jobTitle || '-' }}</text>
               </view>
             </view>
             <view class="info-item">
@@ -258,7 +271,7 @@ function formatTimeRange(startTime, endTime) {
   white-space: nowrap;
 }
 
-.job-title {
+.worker-meta {
   font-size: 24rpx;
   color: #98a3b3;
   display: block;

@@ -27,6 +27,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -138,14 +139,21 @@ class ScheduleServiceTest {
 
         when(shiftMapper.findByJobIdAndDate(10L, LocalDate.of(2026, 6, 1)))
                 .thenReturn(List.of(shift));
-        when(jobMapper.findById(10L)).thenReturn(Optional.empty());
-        when(workerSyncMapper.findWorkerNameById(20L)).thenReturn("TestWorker");
+        when(attendanceRecordMapper.findByShiftIds(List.of(1L))).thenReturn(List.of());
+        when(jobMapper.findByIds(List.of(10L))).thenReturn(List.of());
+        when(workerSyncMapper.findWorkerNamesByIds(List.of(20L))).thenReturn(List.of());
+        when(workerSyncMapper.findWorkerPhonesByIds(List.of(20L))).thenReturn(List.of());
+        when(workerSyncMapper.findWorkerGendersByIds(List.of(20L))).thenReturn(List.of());
+        when(workerSyncMapper.findWorkerBirthdaysByIds(List.of(20L))).thenReturn(List.of());
 
         var result = scheduleService.getShifts(null, 10L, null, LocalDate.of(2026, 6, 1), 1, 20);
 
         assertThat(result.getTotal()).isEqualTo(1);
         assertThat(result.getRecords()).hasSize(1);
         assertThat(result.getRecords().get(0).getJobId()).isEqualTo(10L);
+        verify(jobMapper, never()).findById(10L);
+        verify(workerSyncMapper, never()).findWorkerNameById(20L);
+        verify(workerSyncMapper, never()).findWorkerBirthdayById(20L);
     }
 
     @Test
@@ -155,13 +163,18 @@ class ScheduleServiceTest {
         shift.setWorkerId(20L);
 
         when(shiftMapper.findByWorkerId(20L)).thenReturn(List.of(shift));
-        when(workerSyncMapper.findWorkerNameById(20L)).thenReturn("TestWorker");
+        when(workerSyncMapper.findWorkerNamesByIds(List.of(20L))).thenReturn(List.of(Map.of("id", 20L, "name", "TestWorker")));
+        when(workerSyncMapper.findWorkerPhonesByIds(List.of(20L))).thenReturn(List.of(Map.of("id", 20L, "phone", "13800000000")));
+        when(workerSyncMapper.findWorkerGendersByIds(List.of(20L))).thenReturn(List.of(Map.of("worker_id", 20L, "gender", "MALE")));
+        when(workerSyncMapper.findWorkerBirthdaysByIds(List.of(20L))).thenReturn(List.of());
 
         var result = scheduleService.getShifts(null, null, 20L, null, 1, 20);
 
         assertThat(result.getTotal()).isEqualTo(1);
         assertThat(result.getRecords()).hasSize(1);
         assertThat(result.getRecords().get(0).getWorkerId()).isEqualTo(20L);
+        assertThat(result.getRecords().get(0).getWorkerPhone()).isEqualTo("13800000000");
+        assertThat(result.getRecords().get(0).getWorkerGender()).isEqualTo("MALE");
     }
 
     @Test

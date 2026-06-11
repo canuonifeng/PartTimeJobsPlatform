@@ -185,6 +185,7 @@ public class CorrectionServiceTest {
         @Override public int insert(ScheduleShift s) { store.put(s.getId(), s); return 1; }
         @Override public Optional<ScheduleShift> findById(Long id) { return Optional.ofNullable(store.get(id)); }
         @Override public List<ScheduleShift> findAll() { return new ArrayList<>(store.values()); }
+        @Override public List<ScheduleShift> findByCompanyId(Long companyId) { return List.of(); }
         @Override public List<ScheduleShift> findByJobId(Long jobId) { return List.of(); }
         @Override public List<ScheduleShift> findByWorkerId(Long workerId) { return List.of(); }
         @Override public List<ScheduleShift> findByJobIdAndDate(Long jobId, LocalDate date) { return List.of(); }
@@ -211,6 +212,8 @@ public class CorrectionServiceTest {
         @Override public String findWorkerPhoneById(Long workerId) { return "13800138000"; }
         @Override public LocalDate findWorkerBirthdayById(Long workerId) { return null; }
         @Override public List<Map<String, Object>> findWorkerNamesByIds(List<Long> ids) { return List.of(); }
+        @Override public List<Map<String, Object>> findWorkerPhonesByIds(List<Long> ids) { return List.of(); }
+        @Override public List<Map<String, Object>> findWorkerGendersByIds(List<Long> ids) { return List.of(); }
         @Override public List<Map<String, Object>> findWorkerBirthdaysByIds(List<Long> ids) { return List.of(); }
     }
 

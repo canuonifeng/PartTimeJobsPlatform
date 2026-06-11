@@ -21,5 +21,9 @@ public interface WorkerSyncMapper {
 
     List<Map<String, Object>> findWorkerNamesByIds(@Param("ids") List<Long> ids);
 
+    List<Map<String, Object>> findWorkerPhonesByIds(@Param("ids") List<Long> ids);
+
+    List<Map<String, Object>> findWorkerGendersByIds(@Param("ids") List<Long> ids);
+
     List<Map<String, Object>> findWorkerBirthdaysByIds(@Param("ids") List<Long> ids);
 }

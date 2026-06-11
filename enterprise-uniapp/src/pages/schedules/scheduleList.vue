@@ -62,6 +62,19 @@ function statusClass(status) {
   return map[status] || 'default'
 }
 
+function genderLabel(gender) {
+  const map = { MALE: '男', FEMALE: '女', OTHER: '其他' }
+  return map[gender] || gender || '未知'
+}
+
+function ageLabel(age) {
+  return age == null ? '年龄未知' : `${age}岁`
+}
+
+function phoneLabel(phone) {
+  return phone || '暂无手机号'
+}
+
 function handleDelete(id) {
   uni.showModal({
     title: '确认取消',
@@ -118,7 +131,7 @@ function initials(name) {
               <view class="worker-avatar">{{ initials(s.workerName) }}</view>
               <view class="worker-detail">
                 <text class="worker-name">{{ s.workerName || '-' }}</text>
-                <text class="job-title">{{ s.jobTitle || '-' }}</text>
+                <text class="worker-meta">{{ genderLabel(s.workerGender) }} · {{ ageLabel(s.workerAge) }} · {{ phoneLabel(s.workerPhone) }}</text>
               </view>
             </view>
             <view class="status-badge" :class="statusClass(s.status)">{{ statusLabel(s.status) }}</view>
@@ -135,14 +148,11 @@ function initials(name) {
             </view>
           </view>
 
-          <view class="meta-row">
-            <view class="meta-item">
-              <text class="meta-icon">🎂</text>
-              <text class="meta-text">{{ s.workerAge ?? '-' }}岁</text>
-            </view>
-            <view class="meta-item">
-              <text class="meta-icon">📋</text>
-              <text class="meta-text">{{ s.jobTitle || '-' }}</text>
+          <view class="info-block">
+            <text class="info-icon">💼</text>
+            <view class="info-text">
+              <text class="info-label">岗位</text>
+              <text class="info-value">{{ s.jobTitle || '-' }}</text>
             </view>
           </view>
 
@@ -272,7 +282,7 @@ function initials(name) {
   white-space: nowrap;
 }
 
-.job-title {
+.worker-meta {
   font-size: 24rpx;
   color: #98a3b3;
   display: block;
@@ -368,28 +378,40 @@ function initials(name) {
   display: block;
 }
 
-.meta-row {
+.info-block {
   display: flex;
-  gap: 12rpx;
+  align-items: center;
+  gap: 16rpx;
+  padding: 14rpx 16rpx;
+  background: #f8faf9;
+  border-radius: 16rpx;
   margin-bottom: 20rpx;
 }
 
-.meta-item {
+.info-icon {
+  font-size: 26rpx;
+  flex-shrink: 0;
+}
+
+.info-text {
+  flex: 1;
+  min-width: 0;
   display: flex;
-  align-items: center;
-  gap: 8rpx;
-  padding: 10rpx 16rpx;
-  background: #f8faf9;
-  border-radius: 999rpx;
+  flex-direction: column;
+  gap: 4rpx;
 }
 
-.meta-icon {
+.info-label {
   font-size: 22rpx;
+  color: #98a3b3;
 }
 
-.meta-text {
-  font-size: 24rpx;
-  color: #64748b;
+.info-value {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #1f2933;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
