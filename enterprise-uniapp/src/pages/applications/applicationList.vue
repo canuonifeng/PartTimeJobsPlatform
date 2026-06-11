@@ -45,8 +45,8 @@ function statusLabel(status) {
 }
 
 function statusClass(status) {
-  const map = { PENDING: 'badge-yellow', ACCEPTED: 'badge-green', REJECTED: 'badge-red' }
-  return map[status] || 'badge-gray'
+  const map = { PENDING: 'pending', ACCEPTED: 'accepted', REJECTED: 'rejected' }
+  return map[status] || 'default'
 }
 
 async function handleAccept(applicationId) {
@@ -74,6 +74,11 @@ async function handleReject(applicationId) {
     uni.showToast({ title: '操作失败', icon: 'none' })
   }
 }
+
+function formatTimeRange(startTime, endTime) {
+  if (!startTime || !endTime) return ''
+  return `${startTime.slice(0, 5)}-${endTime.slice(0, 5)}`
+}
 </script>
 
 <template>
@@ -97,25 +102,37 @@ async function handleReject(applicationId) {
       <view v-else class="application-list">
         <view v-for="app in applications" :key="app.applicationId" class="application-card">
           <view class="card-header">
-            <view class="app-info">
-              <text class="worker-name">{{ app.workerName || '未知姓名' }}</text>
-              <text class="job-title">{{ app.jobTitle || '' }}</text>
+            <view class="worker-info">
+              <view class="worker-avatar">{{ (app.workerName || '工').slice(0, 1) }}</view>
+              <view class="worker-detail">
+                <text class="worker-name">{{ app.workerName || '未知姓名' }}</text>
+                <text class="job-title">{{ app.jobTitle || '' }}</text>
+              </view>
             </view>
-            <view class="badge" :class="statusClass(app.status)">{{ statusLabel(app.status) }}</view>
+            <view class="status-badge" :class="statusClass(app.status)">{{ statusLabel(app.status) }}</view>
           </view>
 
-          <view class="card-body">
-            <view class="info-row">
-              <text class="info-label">联系电话</text>
-              <text class="info-value">{{ app.workerPhone || '暂无手机号' }}</text>
+          <view class="info-grid">
+            <view class="info-item">
+              <text class="info-icon">📞</text>
+              <view class="info-text">
+                <text class="info-label">联系电话</text>
+                <text class="info-value">{{ app.workerPhone || '暂无手机号' }}</text>
+              </view>
             </view>
-            <view class="info-row">
-              <text class="info-label">排班时间</text>
-              <text class="info-value">{{ app.scheduleDate || '' }} {{ app.startTime || '' }}-{{ app.endTime || '' }}</text>
+            <view class="info-item">
+              <text class="info-icon">🕐</text>
+              <view class="info-text">
+                <text class="info-label">排班时间</text>
+                <text class="info-value">{{ app.scheduleDate || '' }} {{ formatTimeRange(app.startTime, app.endTime) }}</text>
+              </view>
             </view>
-            <view class="info-row">
-              <text class="info-label">申请时间</text>
-              <text class="info-value">{{ app.appliedAt || '暂无申请时间' }}</text>
+            <view class="info-item">
+              <text class="info-icon">📅</text>
+              <view class="info-text">
+                <text class="info-label">申请时间</text>
+                <text class="info-value">{{ app.appliedAt || '暂无申请时间' }}</text>
+              </view>
             </view>
           </view>
 
@@ -186,30 +203,53 @@ async function handleReject(applicationId) {
 .application-list {
   display: flex;
   flex-direction: column;
-  gap: 24rpx;
+  gap: 20rpx;
 }
 
 .application-card {
   background: #fff;
   border-radius: 24rpx;
-  padding: 30rpx;
+  padding: 24rpx;
   box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 20rpx;
 }
 
-.app-info {
+.worker-info {
+  display: flex;
+  align-items: center;
   flex: 1;
+  min-width: 0;
   margin-right: 16rpx;
 }
 
+.worker-avatar {
+  flex-shrink: 0;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #18c86b, #08a95a);
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16rpx;
+}
+
+.worker-detail {
+  flex: 1;
+  min-width: 0;
+}
+
 .worker-name {
-  font-size: 32rpx;
+  font-size: 30rpx;
   font-weight: 600;
   color: #1f2933;
   display: block;
@@ -223,60 +263,77 @@ async function handleReject(applicationId) {
   color: #98a3b3;
   display: block;
   margin-top: 4rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.badge {
-  font-size: 24rpx;
+.status-badge {
+  font-size: 22rpx;
   font-weight: 700;
-  padding: 10rpx 22rpx;
+  padding: 8rpx 18rpx;
   border-radius: 999rpx;
   flex-shrink: 0;
 }
 
-.badge-green {
-  background: #e7f8ef;
-  color: #08a857;
-}
-
-.badge-yellow {
+.status-badge.pending {
   background: #fff7df;
   color: #d28a00;
 }
 
-.badge-red {
+.status-badge.accepted {
+  background: #e7f8ef;
+  color: #08a857;
+}
+
+.status-badge.rejected {
   background: #feecec;
   color: #df3b30;
 }
 
-.badge-gray {
+.status-badge.default {
   background: #eef1f0;
   color: #7b8580;
 }
 
-.card-body {
+.info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
   margin-bottom: 20rpx;
 }
 
-.info-row {
+.info-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 8rpx 0;
+  gap: 16rpx;
+  padding: 14rpx 16rpx;
+  background: #f8faf9;
+  border-radius: 16rpx;
+}
+
+.info-icon {
+  font-size: 26rpx;
+  flex-shrink: 0;
+}
+
+.info-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
 }
 
 .info-label {
-  font-size: 26rpx;
+  font-size: 22rpx;
   color: #98a3b3;
-  flex-shrink: 0;
-  margin-right: 16rpx;
 }
 
 .info-value {
   font-size: 26rpx;
+  font-weight: 500;
   color: #1f2933;
-  text-align: right;
-  flex: 1;
-  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -284,7 +341,7 @@ async function handleReject(applicationId) {
 
 .card-footer {
   display: flex;
-  gap: 20rpx;
+  gap: 16rpx;
 }
 
 .action-accept {
@@ -292,12 +349,12 @@ async function handleReject(applicationId) {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 80rpx;
+  height: 76rpx;
   background: #07c160;
   color: #fff;
-  font-size: 28rpx;
+  font-size: 26rpx;
   font-weight: 600;
-  border-radius: 44rpx;
+  border-radius: 38rpx;
 }
 
 .action-reject {
@@ -305,12 +362,12 @@ async function handleReject(applicationId) {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 80rpx;
+  height: 76rpx;
   background: #fff;
   color: #1f2933;
-  font-size: 28rpx;
+  font-size: 26rpx;
   font-weight: 600;
-  border-radius: 44rpx;
+  border-radius: 38rpx;
   border: 2rpx solid #e2e8f0;
 }
 

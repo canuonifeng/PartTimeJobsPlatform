@@ -53,13 +53,13 @@ function statusLabel(status) {
 
 function statusClass(status) {
   const map = {
-    CANCELLED: 'badge-red',
-    COMPLETED: 'badge-gray',
-    ON_DUTY: 'badge-green',
-    LATE: 'badge-green',
-    SCHEDULED: 'badge-yellow'
+    CANCELLED: 'cancelled',
+    COMPLETED: 'completed',
+    ON_DUTY: 'on-duty',
+    LATE: 'on-duty',
+    SCHEDULED: 'pending'
   }
-  return map[status] || 'badge-gray'
+  return map[status] || 'default'
 }
 
 function handleDelete(id) {
@@ -81,6 +81,15 @@ function handleDelete(id) {
       }
     }
   })
+}
+
+function formatTime(t) {
+  if (!t) return '-'
+  return String(t).slice(0, 5)
+}
+
+function initials(name) {
+  return (name || '工').slice(0, 1)
 }
 </script>
 
@@ -105,33 +114,42 @@ function handleDelete(id) {
       <view v-else class="schedule-list">
         <view v-for="s in shifts" :key="s.id" class="schedule-card">
           <view class="card-header">
-            <text class="worker-name">{{ s.workerName || '-' }}</text>
-            <view class="badge" :class="statusClass(s.status)">{{ statusLabel(s.status) }}</view>
+            <view class="worker-info">
+              <view class="worker-avatar">{{ initials(s.workerName) }}</view>
+              <view class="worker-detail">
+                <text class="worker-name">{{ s.workerName || '-' }}</text>
+                <text class="job-title">{{ s.jobTitle || '-' }}</text>
+              </view>
+            </view>
+            <view class="status-badge" :class="statusClass(s.status)">{{ statusLabel(s.status) }}</view>
           </view>
 
-          <view class="card-body">
-            <view class="info-row">
-              <text class="info-label">岗位</text>
-              <text class="info-value">{{ s.jobTitle || '-' }}</text>
+          <view class="time-block">
+            <view class="date-box">
+              <text class="date-day">{{ (s.shiftDate || s.date || '').slice(-2) || '-' }}</text>
+              <text class="date-month">{{ (s.shiftDate || s.date || '').slice(5, 7) || '' }}月</text>
             </view>
-            <view class="info-row">
-              <text class="info-label">年龄</text>
-              <text class="info-value">{{ s.workerAge ?? '-' }}岁</text>
+            <view class="time-info">
+              <text class="time-label">工作时间</text>
+              <text class="time-value">{{ formatTime(s.startTime) }} - {{ formatTime(s.endTime) }}</text>
             </view>
-            <view class="info-row">
-              <text class="info-label">日期</text>
-              <text class="info-value">{{ s.shiftDate || s.date || '-' }}</text>
+          </view>
+
+          <view class="meta-row">
+            <view class="meta-item">
+              <text class="meta-icon">🎂</text>
+              <text class="meta-text">{{ s.workerAge ?? '-' }}岁</text>
             </view>
-            <view class="info-row">
-              <text class="info-label">时间</text>
-              <text class="info-value">{{ s.startTime || '-' }} - {{ s.endTime || '-' }}</text>
+            <view class="meta-item">
+              <text class="meta-icon">📋</text>
+              <text class="meta-text">{{ s.jobTitle || '-' }}</text>
             </view>
           </view>
 
           <view class="card-footer">
             <view
               v-if="s.status !== 'CANCELLED'"
-              class="action-pill pill-red"
+              class="action-btn"
               @click="handleDelete(s.id)"
             >取消排班</view>
             <view v-else class="cancelled-label">已取消</view>
@@ -199,13 +217,13 @@ function handleDelete(id) {
 .schedule-list {
   display: flex;
   flex-direction: column;
-  gap: 24rpx;
+  gap: 20rpx;
 }
 
 .schedule-card {
   background: #fff;
   border-radius: 24rpx;
-  padding: 30rpx;
+  padding: 24rpx;
   box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
 }
 
@@ -216,71 +234,162 @@ function handleDelete(id) {
   margin-bottom: 20rpx;
 }
 
+.worker-info {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  margin-right: 16rpx;
+}
+
+.worker-avatar {
+  flex-shrink: 0;
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16rpx;
+}
+
+.worker-detail {
+  flex: 1;
+  min-width: 0;
+}
+
 .worker-name {
-  font-size: 32rpx;
+  font-size: 30rpx;
   font-weight: 600;
   color: #1f2933;
-  flex: 1;
-  margin-right: 16rpx;
+  display: block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.badge {
+.job-title {
   font-size: 24rpx;
+  color: #98a3b3;
+  display: block;
+  margin-top: 4rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-badge {
+  font-size: 22rpx;
   font-weight: 700;
-  padding: 10rpx 22rpx;
+  padding: 8rpx 18rpx;
   border-radius: 999rpx;
   flex-shrink: 0;
 }
 
-.badge-green {
-  background: #e7f8ef;
-  color: #08a857;
-}
-
-.badge-yellow {
+.status-badge.pending {
   background: #fff7df;
   color: #d28a00;
 }
 
-.badge-red {
-  background: #feecec;
-  color: #df3b30;
-}
-
-.badge-gray {
+.status-badge.completed {
   background: #eef1f0;
   color: #7b8580;
 }
 
-.card-body {
+.status-badge.on-duty {
+  background: #e7f8ef;
+  color: #08a857;
+}
+
+.status-badge.cancelled {
+  background: #feecec;
+  color: #df3b30;
+}
+
+.status-badge.default {
+  background: #eef1f0;
+  color: #7b8580;
+}
+
+.time-block {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  background: #f8faf9;
+  border-radius: 16rpx;
+  padding: 18rpx 20rpx;
+  margin-bottom: 16rpx;
+}
+
+.date-box {
+  flex-shrink: 0;
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 18rpx;
+  background: #eafaf1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.date-day {
+  font-size: 30rpx;
+  line-height: 34rpx;
+  color: #08a857;
+  font-weight: 800;
+}
+
+.date-month {
+  font-size: 20rpx;
+  color: #58b987;
+}
+
+.time-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.time-label {
+  font-size: 22rpx;
+  color: #98a3b3;
+  display: block;
+  margin-bottom: 6rpx;
+}
+
+.time-value {
+  font-size: 32rpx;
+  color: #1f2933;
+  font-weight: 700;
+  display: block;
+}
+
+.meta-row {
+  display: flex;
+  gap: 12rpx;
   margin-bottom: 20rpx;
 }
 
-.info-row {
+.meta-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 8rpx 0;
+  gap: 8rpx;
+  padding: 10rpx 16rpx;
+  background: #f8faf9;
+  border-radius: 999rpx;
 }
 
-.info-label {
-  font-size: 26rpx;
-  color: #98a3b3;
-  flex-shrink: 0;
-  margin-right: 16rpx;
+.meta-icon {
+  font-size: 22rpx;
 }
 
-.info-value {
-  font-size: 26rpx;
-  color: #1f2933;
-  text-align: right;
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.meta-text {
+  font-size: 24rpx;
+  color: #64748b;
   white-space: nowrap;
 }
 
@@ -288,22 +397,25 @@ function handleDelete(id) {
   display: flex;
 }
 
-.action-pill {
-  font-size: 24rpx;
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 76rpx;
+  border: 2rpx solid #ef4444;
+  border-radius: 38rpx;
+  font-size: 26rpx;
   font-weight: 600;
-  padding: 10rpx 24rpx;
-  border-radius: 999rpx;
-  border: 2rpx solid;
-}
-
-.pill-red {
-  border-color: #ef4444;
   color: #ef4444;
 }
 
 .cancelled-label {
+  flex: 1;
+  text-align: center;
   font-size: 24rpx;
   color: #98a3b3;
+  line-height: 76rpx;
 }
 
 .load-more-wrap {
