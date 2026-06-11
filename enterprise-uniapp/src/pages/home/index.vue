@@ -98,7 +98,9 @@ function handleLogout() {
 <style>
 .page {
   min-height: 100vh;
+  height: 100vh;
   background: #f6f8f7;
+  box-sizing: border-box;
 }
 .header {
   background: linear-gradient(135deg, #18c86b 0%, #08a95a 56%, #078a49 100%);
@@ -116,7 +118,6 @@ function handleLogout() {
 .header-info {
   display: flex;
   flex-direction: column;
-  gap: 8rpx;
 }
 .greeting {
   font-size: 44rpx;
@@ -144,7 +145,7 @@ function handleLogout() {
   z-index: 2;
 }
 .section {
-  margin-bottom: 28rpx;
+  margin-bottom: 24rpx;
 }
 .section-header {
   display: flex;
@@ -168,23 +169,26 @@ function handleLogout() {
   background: #fff;
   border-radius: 24rpx;
   box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
-  padding: 30rpx;
+  padding: 24rpx;
+  box-sizing: border-box;
 }
 .grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 20rpx 0;
+  margin-bottom: -24rpx;
 }
 .grid-item {
   width: 25%;
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-bottom: 24rpx;
+  box-sizing: border-box;
 }
 .icon-box {
   width: 80rpx;
   height: 80rpx;
-  border-radius: 22rpx;
+  border-radius: 24rpx;
   display: flex;
   align-items: center;
   justify-content: center;

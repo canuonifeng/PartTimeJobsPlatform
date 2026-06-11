@@ -120,6 +120,17 @@ function settlementStatusLabel(s) {
       </view>
     </view>
     <view class="content">
+      <view class="summary-card">
+        <view class="summary-item">
+          <text class="summary-label">记录数</text>
+          <text class="summary-value">{{ records.length }}</text>
+        </view>
+        <view class="summary-divider"></view>
+        <view class="summary-item">
+          <text class="summary-label">已选</text>
+          <text class="summary-value">{{ selectedIds.length }}</text>
+        </view>
+      </view>
       <scroll-view scroll-y class="list-scroll" @scrolltolower="loadMore">
         <view v-if="loading" class="state-msg">加载中...</view>
         <view v-else-if="records.length === 0" class="state-msg">暂无考勤记录</view>
@@ -157,15 +168,22 @@ function settlementStatusLabel(s) {
 .page { min-height: 100vh; background: #f6f8f7; }
 .header { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #18c86b 0%, #08a95a 56%, #078a49 100%); padding: 48rpx 32rpx 28rpx; border-bottom-left-radius: 36rpx; border-bottom-right-radius: 36rpx; }
 .header-title { font-size: 36rpx; font-weight: 700; color: #fff; }
-.header-actions { display: flex; gap: 16rpx; }
+.header-actions { display: flex; }
+.header-actions .header-btn + .header-btn { margin-left: 16rpx; }
 .header-btn { height: 60rpx; line-height: 60rpx; font-size: 24rpx; padding: 0 24rpx; border-radius: 999rpx; color: #fff; font-weight: 600; }
 .header-btn::after { border: none; }
 .pay-btn { background: #07c160; }
 .del-btn { background: #ff3b30; }
 .content { padding: 24rpx 28rpx; }
-.list-scroll { height: calc(100vh - 140rpx); }
+.summary-card { display: flex; align-items: center; margin-bottom: 24rpx; padding: 28rpx; background: #fff; border-radius: 24rpx; box-shadow: 0 12rpx 34rpx rgba(23,83,53,0.08); box-sizing: border-box; }
+.summary-item { flex: 1; text-align: center; }
+.summary-label { display: block; font-size: 24rpx; color: #64748b; }
+.summary-value { display: block; margin-top: 8rpx; font-size: 38rpx; font-weight: 800; color: #08a95a; }
+.summary-divider { width: 2rpx; height: 56rpx; background: #edf0f3; }
+.list-scroll { height: calc(100vh - 274rpx); }
 .state-msg { text-align: center; padding: 120rpx 0; color: #98a3b3; font-size: 28rpx; }
-.list { display: flex; flex-direction: column; gap: 20rpx; }
+.list { display: flex; flex-direction: column; }
+.list .card + .card { margin-top: 20rpx; }
 .select-all { display: flex; align-items: center; padding: 12rpx 0; }
 .checkbox { width: 40rpx; height: 40rpx; border: 2rpx solid #d1d5db; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24rpx; color: #fff; margin-right: 12rpx; flex-shrink: 0; }
 .checkbox.checked { background: #07c160; border-color: #07c160; }

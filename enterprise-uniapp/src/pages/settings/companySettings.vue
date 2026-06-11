@@ -4,6 +4,7 @@ import { onShow } from '@dcloudio/uni-app'
 import { getEnterpriseInfo, updateCompanyLogo } from '@/api/enterprise'
 
 const loading = ref(false)
+const saving = ref(false)
 const info = ref({ companyName: '', companyLogo: '' })
 const logoUrl = ref('')
 
@@ -23,12 +24,16 @@ async function loadInfo() {
 }
 
 async function saveLogo() {
+  if (saving.value) return
+  saving.value = true
   try {
     await updateCompanyLogo(logoUrl.value)
     uni.showToast({ title: '保存成功', icon: 'success' })
     info.value.companyLogo = logoUrl.value
   } catch {
     uni.showToast({ title: '保存失败', icon: 'none' })
+  } finally {
+    saving.value = false
   }
 }
 
@@ -44,20 +49,26 @@ function goRealName() {
     </view>
     <view class="content">
       <view v-if="loading" class="state-msg">加载中...</view>
-      <view v-else class="card">
-        <view class="form-row">
-          <text class="label">企业名称</text>
-          <text class="value">{{ info.companyName || '-' }}</text>
+      <view v-else>
+        <view class="e-form-section">
+          <text class="e-section-title">公司信息</text>
+          <view class="e-form-row">
+            <text class="e-form-label">企业名称</text>
+            <text class="value">{{ info.companyName || '-' }}</text>
+          </view>
         </view>
-        <view class="form-row column">
-          <text class="label">企业Logo</text>
+        <view class="e-form-section">
+          <text class="e-section-title">企业Logo</text>
           <image v-if="logoUrl" class="logo" :src="logoUrl" mode="aspectFill" />
-          <input v-model="logoUrl" class="input" placeholder="请输入Logo图片URL" />
+          <input v-model="logoUrl" class="e-input" placeholder="请输入Logo图片URL" />
+          <button class="btn-primary save-btn" :loading="saving" :disabled="saving" @click="saveLogo">{{ saving ? '保存中' : '保存' }}</button>
         </view>
-        <button class="save-btn" @click="saveLogo">保存</button>
-        <view class="menu-item" @click="goRealName">
-          <text class="menu-label">企业实名认证</text>
-          <text class="menu-arrow">›</text>
+        <view class="e-form-section">
+          <text class="e-section-title">认证信息</text>
+          <view class="menu-item" @click="goRealName">
+            <text class="menu-label">企业实名认证</text>
+            <text class="menu-arrow">›</text>
+          </view>
         </view>
       </view>
     </view>
@@ -81,8 +92,8 @@ function goRealName() {
   color: #fff;
 }
 .content {
-  padding: 0 32rpx;
-  margin-top: -20rpx;
+  padding: 24rpx 32rpx 40rpx;
+  box-sizing: border-box;
 }
 .state-msg {
   text-align: center;
@@ -90,69 +101,26 @@ function goRealName() {
   color: #999;
   font-size: 28rpx;
 }
-.card {
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 30rpx;
-  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
-}
-.form-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20rpx 0;
-  border-bottom: 2rpx solid #f2f2f2;
-}
-.column {
-  align-items: flex-start;
-  flex-direction: column;
-  gap: 16rpx;
-}
-.label {
-  font-size: 28rpx;
-  color: #64748b;
-}
 .value {
   font-size: 28rpx;
   color: #1f2933;
 }
 .logo {
+  display: block;
   width: 120rpx;
   height: 120rpx;
+  margin-bottom: 20rpx;
   border-radius: 14rpx;
   background: #f2f2f2;
 }
-.input {
-  width: 100%;
-  height: 78rpx;
-  padding: 0 20rpx;
-  border: 2rpx solid #edf0f3;
-  border-radius: 14rpx;
-  background: #fafafa;
-  box-sizing: border-box;
-  font-size: 28rpx;
-}
 .save-btn {
   margin-top: 32rpx;
-  height: 88rpx;
-  line-height: 88rpx;
-  background: linear-gradient(135deg, #18c86b, #08a95a);
-  color: #fff;
-  border-radius: 44rpx;
-  font-size: 32rpx;
-  font-weight: 700;
-  border: none;
-}
-.save-btn::after {
-  border: none;
 }
 .menu-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 28rpx 0;
-  border-bottom: 2rpx solid #f2f2f2;
-  margin-top: 24rpx;
+  padding: 4rpx 0;
 }
 .menu-label {
   font-size: 28rpx;

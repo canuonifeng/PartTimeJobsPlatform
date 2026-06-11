@@ -166,68 +166,68 @@ async function handleSave() {
 </script>
 
 <template>
-  <view class="page">
-    <scroll-view scroll-y class="form-scroll">
-      <view class="form-section">
+  <view class="page e-page">
+    <scroll-view scroll-y class="form-scroll e-content">
+      <view class="form-section e-form-section">
         <text class="section-title">基本信息</text>
 
-        <view class="form-item">
-          <text class="label">职位名称 *</text>
-          <input v-model="form.title" class="input" placeholder="请输入职位名称" />
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">职位名称 *</text>
+          <input v-model="form.title" class="input e-input" placeholder="请输入职位名称" />
         </view>
 
-        <view class="form-item">
-          <text class="label">职位描述</text>
-          <textarea v-model="form.description" class="textarea" placeholder="请输入职位描述" />
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">职位描述</text>
+          <textarea v-model="form.description" class="textarea e-textarea" placeholder="请输入职位描述" />
         </view>
 
-        <view class="form-item">
-          <text class="label">职位类别</text>
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">职位类别</text>
           <picker
             mode="selector"
             :range="categoryNames"
             :value="getCategoryIndex()"
             @change="onCategoryChange"
           >
-            <view class="picker">
+            <view class="picker e-picker-value">
               <text v-if="getSelectedCategoryName()" class="picker-value">{{ getSelectedCategoryName() }}</text>
               <text v-else class="picker-placeholder">请选择类别</text>
             </view>
           </picker>
         </view>
 
-        <view class="form-item">
-          <text class="label">岗位图片</text>
-          <input v-model="form.imageUrl" class="input" placeholder="图片URL" />
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">岗位图片</text>
+          <input v-model="form.imageUrl" class="input e-input" placeholder="图片URL" />
         </view>
       </view>
 
-      <view class="form-section">
+      <view class="form-section e-form-section">
         <text class="section-title">工作地点</text>
 
-        <view class="form-item">
-          <text class="label">省/市/区</text>
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">省/市/区</text>
           <view class="region-row">
-            <input v-model="form.province" class="input region-input" placeholder="省" />
-            <input v-model="form.city" class="input region-input" placeholder="市" />
-            <input v-model="form.district" class="input region-input" placeholder="区" />
+            <input v-model="form.province" class="input e-input region-input" placeholder="省" />
+            <input v-model="form.city" class="input e-input region-input" placeholder="市" />
+            <input v-model="form.district" class="input e-input region-input" placeholder="区" />
           </view>
         </view>
 
-        <view class="form-item">
-          <text class="label">详细地址</text>
-          <input v-model="form.address" class="input" placeholder="街道、门牌号" />
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">详细地址</text>
+          <input v-model="form.address" class="input e-input" placeholder="街道、门牌号" />
         </view>
 
-        <view class="form-item">
-          <text class="label">坐标定位</text>
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">坐标定位</text>
           <button class="location-btn" @click="chooseLocation">从地图选择</button>
           <text v-if="form.latitude" class="coords">已选坐标：{{ form.latitude }}, {{ form.longitude }}</text>
         </view>
       </view>
 
-      <view class="form-actions">
-        <button class="save-btn" :disabled="saving" @click="handleSave">
+      <view class="form-actions e-bottom-safe">
+        <button class="save-btn btn-primary submit-btn" :disabled="saving" @click="handleSave">
           {{ saving ? '保存中...' : '保存' }}
         </button>
       </view>
@@ -244,8 +244,8 @@ async function handleSave() {
 .label { display: block; font-size: 26rpx; color: #666; margin-bottom: 8rpx; }
 .input { width: 100%; height: 72rpx; border: 2rpx solid #e0e0e0; border-radius: 8rpx; padding: 0 20rpx; font-size: 28rpx; box-sizing: border-box; }
 .textarea { width: 100%; height: 160rpx; border: 2rpx solid #e0e0e0; border-radius: 8rpx; padding: 16rpx 20rpx; font-size: 28rpx; box-sizing: border-box; }
-.region-row { display: flex; gap: 12rpx; }
-.region-input { flex: 1; }
+.region-row { display: flex; margin: 0 -6rpx; }
+.region-input { flex: 1; margin: 0 6rpx; }
 .picker { height: 72rpx; border: 2rpx solid #e0e0e0; border-radius: 8rpx; padding: 0 20rpx; display: flex; align-items: center; background: #fff; }
 .picker-value { font-size: 28rpx; color: #333; }
 .location-btn { height: 60rpx; line-height: 60rpx; font-size: 24rpx; background: #007aff; color: #fff; border-radius: 8rpx; padding: 0 20rpx; }

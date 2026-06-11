@@ -17,31 +17,31 @@
       </view>
     </view>
 
-    <view v-if="canSubmit" class="form-card">
-      <text class="form-title">{{ status === 'REJECTED' ? '重新提交认证' : '提交认证资料' }}</text>
-      <view class="form-group">
-        <text class="form-label">法人姓名</text>
-        <input class="form-input" v-model="form.legalPersonName" placeholder="请输入法人姓名" />
+    <view v-if="canSubmit" class="e-form-section">
+      <text class="e-section-title">{{ status === 'REJECTED' ? '重新提交认证' : '提交认证资料' }}</text>
+      <view class="e-form-row">
+        <text class="e-form-label">法人姓名</text>
+        <input class="e-input" v-model="form.legalPersonName" placeholder="请输入法人姓名" />
       </view>
-      <view class="form-group">
-        <text class="form-label">法人身份证号</text>
-        <input class="form-input" v-model="form.legalPersonIdCard" placeholder="请输入身份证号" maxlength="18" />
+      <view class="e-form-row">
+        <text class="e-form-label">法人身份证号</text>
+        <input class="e-input" v-model="form.legalPersonIdCard" placeholder="请输入身份证号" maxlength="18" />
       </view>
-      <view class="form-group">
-        <text class="form-label">统一社会信用代码</text>
-        <input class="form-input" v-model="form.unifiedSocialCreditCode" placeholder="请输入统一社会信用代码" />
+      <view class="e-form-row">
+        <text class="e-form-label">统一社会信用代码</text>
+        <input class="e-input" v-model="form.unifiedSocialCreditCode" placeholder="请输入统一社会信用代码" />
       </view>
-      <view class="form-group">
-        <text class="form-label">营业执照图片 URL</text>
-        <input class="form-input" v-model="form.businessLicenseUrl" placeholder="请粘贴营业执照图片 URL" />
+      <view class="e-form-row">
+        <text class="e-form-label">营业执照图片 URL</text>
+        <input class="e-input" v-model="form.businessLicenseUrl" placeholder="请粘贴营业执照图片 URL" />
       </view>
-      <button class="submit-btn" type="primary" :loading="submitting" :disabled="submitting" @click="handleSubmit">
+      <button class="btn-primary submit-btn" :loading="submitting" :disabled="submitting" @click="handleSubmit">
         {{ submitting ? '提交中' : (status === 'REJECTED' ? '重新提交' : '提交认证') }}
       </button>
     </view>
 
-    <view v-else class="form-card readonly-card">
-      <text class="form-title">认证资料</text>
+    <view v-else class="e-form-section readonly-card">
+      <text class="e-section-title">认证资料</text>
       <text class="readonly-text">{{ status === 'PENDING' ? '认证资料已提交，请等待平台审核。' : '企业已通过实名认证。' }}</text>
       <view v-if="status === 'APPROVED'" class="detail-list">
         <view class="detail-row">
@@ -227,50 +227,9 @@ onShow(loadStatus)
   justify-content: space-between;
   font-size: 26rpx;
 }
-.form-card {
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 34rpx;
-  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
-}
-.form-title {
-  display: block;
-  margin-bottom: 30rpx;
-  font-size: 34rpx;
-  font-weight: 700;
-  color: #1f2933;
-}
-.form-group {
-  margin-bottom: 26rpx;
-}
-.form-label {
-  font-size: 26rpx;
-  color: #64748b;
-  display: block;
-  margin-bottom: 12rpx;
-}
-.form-input {
-  width: 100%;
-  height: 78rpx;
-  padding: 0 20rpx;
-  font-size: 28rpx;
-  color: #1f2933;
-  border: 2rpx solid #edf0f3;
-  border-radius: 14rpx;
-  background: #fafafa;
-  box-sizing: border-box;
-}
 .submit-btn {
   width: 100%;
-  height: 88rpx;
-  line-height: 88rpx;
   margin-top: 12rpx;
-  background: linear-gradient(135deg, #18c86b, #08a95a);
-  border-radius: 44rpx;
-  font-size: 32rpx;
-  color: #fff;
-  font-weight: 700;
-  border: none;
 }
 .readonly-card {
   text-align: center;
@@ -297,7 +256,9 @@ onShow(loadStatus)
 .detail-row.column {
   flex-direction: column;
   align-items: flex-start;
-  gap: 16rpx;
+}
+.detail-row.column .license-img {
+  margin-top: 16rpx;
 }
 .detail-label {
   font-size: 26rpx;

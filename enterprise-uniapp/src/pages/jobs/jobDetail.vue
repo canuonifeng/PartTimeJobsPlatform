@@ -48,206 +48,159 @@ function rateTypeLabel(t) {
 </script>
 
 <template>
-  <view class="page">
-    <scroll-view scroll-y class="detail-scroll">
-      <view v-if="loading" class="state-msg">加载中...</view>
-
-      <view v-else-if="job" class="detail-content">
-        <view class="detail-card">
-          <view class="detail-header">
-            <text class="detail-title">{{ job.title }}</text>
-            <text class="badge" :class="'badge-' + (job.status || '').toLowerCase()">
-              {{ statusLabel(job.status) }}
-            </text>
-          </view>
-        </view>
-
-        <view class="detail-card">
-          <text class="section-title">基本信息</text>
-          <view class="info-row">
-            <text class="info-label">职位描述</text>
-            <text class="info-value">{{ job.description || '暂无' }}</text>
-          </view>
-          <view class="info-row">
-            <text class="info-label">工作地点</text>
-            <text class="info-value">{{ job.location || '暂无' }}</text>
-          </view>
-          <view class="info-row">
-            <text class="info-label">招聘人数</text>
-            <text class="info-value">{{ job.headcount }}</text>
-          </view>
-          <view class="info-row">
-            <text class="info-label">截止日期</text>
-            <text class="info-value">{{ job.deadline || '不限' }}</text>
-          </view>
-          <view class="info-row">
-            <text class="info-label">创建时间</text>
-            <text class="info-value">{{ job.createdAt || job.createTime || '暂无' }}</text>
-          </view>
-        </view>
-
-        <view v-if="rates.length > 0" class="detail-card">
-          <text class="section-title">薪资标准</text>
-          <view v-for="(rate, i) in rates" :key="i" class="info-row">
-            <text class="info-label">{{ rateTypeLabel(rate.type) }}</text>
-            <text class="info-value">{{ rate.amount }} {{ rate.currency || 'CNY' }}</text>
-          </view>
-        </view>
-
-        <view v-if="schedules.length > 0" class="detail-card">
-          <text class="section-title">排班时段</text>
-          <view v-for="(sched, i) in schedules" :key="i" class="info-row">
-            <text class="info-label">{{ sched.date }}</text>
-            <text class="info-value">
-              {{ sched.startTime }} - {{ sched.endTime }}
-            </text>
-          </view>
-        </view>
-
+  <view class="page e-page">
+    <view class="header e-header">
+      <view class="e-card-title-row">
+        <text class="detail-title e-header-title">{{ job?.title || '职位详情' }}</text>
+        <text v-if="job" class="e-badge" :class="'e-badge-' + (job.status === 'PUBLISHED' ? 'green' : job.status === 'CLOSED' ? 'red' : 'gray')">
+          {{ statusLabel(job.status) }}
+        </text>
       </view>
+      <text class="e-header-desc">查看职位信息、薪资、时间与地点</text>
+    </view>
 
-      <view v-else class="state-msg">暂无数据</view>
+    <scroll-view scroll-y class="detail-scroll">
+      <view class="content e-content">
+        <view v-if="loading" class="e-empty">
+          <text class="e-empty-title">加载中...</text>
+        </view>
+
+        <view v-else-if="job" class="detail-content">
+          <view class="e-card">
+            <text class="e-section-title">基本信息</text>
+            <view class="info-row">
+              <text class="info-label">职位名称</text>
+              <text class="info-value">{{ job.title || '暂无' }}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">职位描述</text>
+              <text class="info-value">{{ job.description || '暂无' }}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">截止日期</text>
+              <text class="info-value">{{ job.deadline || '不限' }}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">创建时间</text>
+              <text class="info-value">{{ job.createdAt || job.createTime || '暂无' }}</text>
+            </view>
+          </view>
+
+          <view class="e-card">
+            <text class="e-section-title">薪资与人数</text>
+            <view class="info-row">
+              <text class="info-label">招聘人数</text>
+              <text class="info-value">{{ job.headcount }}</text>
+            </view>
+            <view v-if="rates.length === 0" class="info-row">
+              <text class="info-label">薪资标准</text>
+              <text class="info-value">暂无</text>
+            </view>
+            <view v-for="(rate, i) in rates" :key="i" class="info-row">
+              <text class="info-label">{{ rateTypeLabel(rate.type) }}</text>
+              <text class="info-value">{{ rate.amount }} {{ rate.currency || 'CNY' }}</text>
+            </view>
+          </view>
+
+          <view class="e-card">
+            <text class="e-section-title">工作时间</text>
+            <view v-if="schedules.length === 0" class="info-row">
+              <text class="info-label">排班时段</text>
+              <text class="info-value">暂无</text>
+            </view>
+            <view v-for="(sched, i) in schedules" :key="i" class="info-row">
+              <text class="info-label">{{ sched.date || '日期' }}</text>
+              <text class="info-value">
+                {{ sched.startTime || '开始时间' }} - {{ sched.endTime || '结束时间' }}
+              </text>
+            </view>
+          </view>
+
+          <view class="e-card">
+            <text class="e-section-title">工作地点</text>
+            <view class="info-row">
+              <text class="info-label">地点名称</text>
+              <text class="info-value">{{ job.location || '暂无' }}</text>
+            </view>
+            <view class="info-row">
+              <text class="info-label">详细地址</text>
+              <text class="info-value">{{ job.address || '暂无' }}</text>
+            </view>
+          </view>
+
+          <view class="e-card">
+            <text class="e-section-title">岗位要求</text>
+            <view class="info-row">
+              <text class="info-label">要求说明</text>
+              <text class="info-value">{{ job.requirements || '暂无' }}</text>
+            </view>
+          </view>
+        </view>
+
+        <view v-else class="e-empty">
+          <text class="e-empty-title">暂无数据</text>
+        </view>
+      </view>
     </scroll-view>
-
   </view>
 </template>
 
-<style>
+<style scoped>
 .page {
-  min-height: 100vh;
-  background: #f6f8f7;
+  box-sizing: border-box;
 }
-.detail-scroll {
-  padding: 24rpx 32rpx;
+
+.header {
+  box-sizing: border-box;
 }
-.state-msg {
-  text-align: center;
-  padding: 80rpx 0;
-  color: #999;
-  font-size: 28rpx;
-}
-.detail-card {
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 28rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
-}
-.detail-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+
 .detail-title {
-  font-size: 34rpx;
-  font-weight: 600;
-  color: #333;
   flex: 1;
-  margin-right: 16rpx;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.badge {
-  font-size: 22rpx;
-  padding: 4rpx 16rpx;
-  border-radius: 8rpx;
-  flex-shrink: 0;
+
+.detail-scroll {
+  height: calc(100vh - 178rpx);
+  box-sizing: border-box;
 }
-.badge-draft {
-  background: #f0f0f0;
-  color: #999;
+
+.content {
+  padding-bottom: 56rpx;
 }
-.badge-published {
-  background: #e8f8e8;
-  color: #34c759;
+
+.detail-content {
+  box-sizing: border-box;
 }
-.badge-closed {
-  background: #ffe8e8;
-  color: #ff3b30;
-}
-.section-title {
-  font-size: 28rpx;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 20rpx;
-  display: block;
-}
+
 .info-row {
   display: flex;
-  padding: 14rpx 0;
-  border-bottom: 2rpx solid #f5f5f5;
+  padding: 16rpx 0;
+  border-bottom: 2rpx solid #f1f5f3;
+  box-sizing: border-box;
 }
+
 .info-row:last-child {
   border-bottom: none;
+  padding-bottom: 0;
 }
+
 .info-label {
-  font-size: 26rpx;
-  color: #999;
-  width: 140rpx;
+  width: 150rpx;
   flex-shrink: 0;
-}
-.info-value {
   font-size: 26rpx;
-  color: #333;
+  line-height: 1.5;
+  color: #98a3b3;
+}
+
+.info-value {
   flex: 1;
-}
-.application-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
-}
-.application-item {
-  border: 1rpx solid #eee;
-  border-radius: 12rpx;
-  padding: 20rpx;
-  background: #fafafa;
-}
-.application-main {
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-}
-.application-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.application-name {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #333;
-}
-.application-status {
-  font-size: 22rpx;
-  padding: 4rpx 12rpx;
-  border-radius: 999rpx;
-  background: #eef6ff;
-  color: #007aff;
-}
-.application-phone,
-.application-time {
-  font-size: 24rpx;
-  color: #666;
-}
-.application-actions {
-  display: flex;
-  gap: 12rpx;
-  margin-top: 16rpx;
-}
-.application-actions .action-btn {
-  flex: 1;
-  height: 64rpx;
-  line-height: 64rpx;
-  font-size: 24rpx;
-  border-radius: 8rpx;
-  border: 2rpx solid #ddd;
-  background: #fff;
-  color: #333;
-}
-.accept-btn {
-  border-color: #34c759;
-  color: #34c759;
-}
-.reject-btn {
-  border-color: #ff3b30;
-  color: #ff3b30;
+  min-width: 0;
+  font-size: 26rpx;
+  line-height: 1.5;
+  color: #1f2933;
+  word-break: break-all;
 }
 </style>

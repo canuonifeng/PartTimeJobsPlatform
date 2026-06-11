@@ -173,9 +173,10 @@ page {
 }
 .form-card {
   background: #fff;
-  border-radius: 36rpx;
+  border-radius: 24rpx;
   box-shadow: 0 16rpx 48rpx rgba(23, 83, 53, 0.12);
   padding: 48rpx 36rpx;
+  box-sizing: border-box;
 }
 .form-title-wrap {
   margin-bottom: 40rpx;
@@ -202,19 +203,20 @@ page {
   margin-bottom: 12rpx;
 }
 .input-wrap {
-  background: #f5fbf7;
-  border: 2rpx solid #e3f3e9;
-  border-radius: 24rpx;
-  height: 104rpx;
+  background: #f8faf9;
+  border: 2rpx solid #edf0f3;
+  border-radius: 18rpx;
+  min-height: 84rpx;
   display: flex;
   align-items: center;
-  padding: 0 28rpx;
+  padding: 0 22rpx;
+  box-sizing: border-box;
 }
 .input {
   width: 100%;
-  height: 100%;
+  min-height: 84rpx;
   font-size: 28rpx;
-  color: #1f2937;
+  color: #1f2933;
 }
 .placeholder {
   color: #9ca3af;

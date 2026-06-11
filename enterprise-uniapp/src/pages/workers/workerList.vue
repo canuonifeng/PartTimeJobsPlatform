@@ -47,9 +47,10 @@ function toggleStatus(worker) {
 </script>
 
 <template>
-  <view class="page">
-    <view class="header">
-      <text class="header-title">兼职管理</text>
+  <view class="page e-page">
+    <view class="header e-header">
+      <text class="e-header-title">兼职管理</text>
+      <text class="e-header-desc">查看已联系兼职，维护黑名单状态</text>
     </view>
 
     <view class="search-bar">
@@ -63,62 +64,57 @@ function toggleStatus(worker) {
       <view class="search-btn" @click="handleSearch">搜索</view>
     </view>
 
-    <view class="content">
-      <view v-if="loading" class="empty-state">
-        <text class="empty-emoji">⏳</text>
-        <text class="empty-title">加载中...</text>
+    <view class="content e-content">
+      <view v-if="loading" class="e-empty">
+        <text class="e-empty-title">加载中...</text>
       </view>
 
-      <view v-else-if="workers.length === 0" class="empty-state">
-        <text class="empty-emoji">👥</text>
-        <text class="empty-title">暂无兼职</text>
-        <text class="empty-desc">还没有工人加入平台</text>
+      <view v-else-if="workers.length === 0" class="e-empty">
+        <text class="e-empty-title">暂无兼职</text>
+        <text class="e-empty-desc">还没有工人加入平台</text>
       </view>
 
-      <view v-else class="worker-list">
-        <view v-for="w in workers" :key="w.id || w.workerId" class="worker-card">
-          <view class="card-header">
-            <text class="worker-name">{{ w.name || '未实名' }}</text>
-            <view
-              class="badge"
-              :class="w.status === 'ACTIVE' ? 'badge-green' : 'badge-red'"
-            >{{ w.status === 'ACTIVE' ? '正常' : '已拉黑' }}</view>
+      <view v-else>
+        <view v-for="w in workers" :key="w.id || w.workerId" class="e-card">
+          <view class="e-card-title-row">
+            <text class="e-card-title">{{ w.name || '未实名' }}</text>
+            <view class="e-badge" :class="w.status === 'ACTIVE' ? 'e-badge-green' : 'e-badge-red'">{{ w.status === 'ACTIVE' ? '正常' : '已拉黑' }}</view>
           </view>
 
-          <view class="card-body">
-            <view class="info-row">
-              <text class="info-label">编号</text>
-              <text class="info-value">{{ w.workerId || w.id }}</text>
+          <view class="e-info-grid">
+            <view class="e-info-pill">
+              <text class="e-info-label">编号</text>
+              <text class="e-info-value">{{ w.workerId || w.id }}</text>
             </view>
-            <view class="info-row">
-              <text class="info-label">电话</text>
-              <text class="info-value">{{ w.phone || '-' }}</text>
+            <view class="e-info-pill">
+              <text class="e-info-label">电话</text>
+              <text class="e-info-value">{{ w.phone || '-' }}</text>
             </view>
-            <view class="info-row">
-              <text class="info-label">年龄</text>
-              <text class="info-value">{{ w.workerAge ?? '-' }}岁</text>
+            <view class="e-info-pill">
+              <text class="e-info-label">年龄</text>
+              <text class="e-info-value">{{ w.workerAge ?? '-' }}岁</text>
             </view>
-            <view class="info-row">
-              <text class="info-label">首次联系</text>
-              <text class="info-value">{{ w.firstContactAt || '-' }}</text>
+            <view class="e-info-pill">
+              <text class="e-info-label">首次联系</text>
+              <text class="e-info-value">{{ w.firstContactAt || '-' }}</text>
             </view>
-            <view class="info-row">
-              <text class="info-label">最近联系</text>
-              <text class="info-value">{{ w.lastContactAt || '-' }}</text>
+            <view class="e-info-pill info-wide">
+              <text class="e-info-label">最近联系</text>
+              <text class="e-info-value">{{ w.lastContactAt || '-' }}</text>
             </view>
           </view>
 
-          <view class="card-footer">
+          <view class="e-action-row">
             <view
               v-if="w.status === 'ACTIVE'"
-              class="action-pill pill-orange"
+              class="e-action-pill e-action-orange"
               @click="toggleStatus(w)"
             >拉黑</view>
             <view
               v-else
-              class="action-pill pill-green"
+              class="e-action-pill e-action-primary"
               @click="toggleStatus(w)"
-            >取消拉黑</view>
+            >启用</view>
           </view>
         </view>
       </view>
@@ -127,48 +123,34 @@ function toggleStatus(worker) {
 </template>
 
 <style scoped>
-.page {
-  min-height: 100vh;
-  background: #f6f8f7;
-}
-
-.header {
-  background: linear-gradient(135deg, #18c86b 0%, #08a95a 56%, #078a49 100%);
-  padding: 48rpx 32rpx 28rpx;
-  border-bottom-left-radius: 36rpx;
-  border-bottom-right-radius: 36rpx;
-}
-
-.header-title {
-  font-size: 36rpx;
-  font-weight: 700;
-  color: #fff;
-}
-
 .search-bar {
   display: flex;
-  gap: 16rpx;
-  padding: 20rpx 32rpx;
+  padding: 20rpx 28rpx;
   background: #fff;
   border-bottom: 2rpx solid #eee;
+  box-sizing: border-box;
 }
 
 .search-input {
   flex: 1;
+  min-width: 0;
   height: 72rpx;
   padding: 0 24rpx;
   border: 2rpx solid #e2e8f0;
   border-radius: 44rpx;
   font-size: 26rpx;
   background: #f8fafc;
+  box-sizing: border-box;
 }
 
 .search-btn {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
   width: 140rpx;
   height: 72rpx;
+  margin-left: 16rpx;
   background: #07c160;
   color: #fff;
   font-size: 26rpx;
@@ -176,133 +158,7 @@ function toggleStatus(worker) {
   border-radius: 44rpx;
 }
 
-.content {
-  padding: 24rpx 32rpx;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 120rpx 0;
-}
-
-.empty-emoji {
-  font-size: 64rpx;
-  margin-bottom: 20rpx;
-}
-
-.empty-title {
-  font-size: 30rpx;
-  font-weight: 700;
-  color: #1f2933;
-  margin-bottom: 8rpx;
-}
-
-.empty-desc {
-  font-size: 26rpx;
-  color: #98a3b3;
-}
-
-.worker-list {
-  display: flex;
-  flex-direction: column;
-  gap: 24rpx;
-}
-
-.worker-card {
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 30rpx;
-  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-
-.worker-name {
-  font-size: 32rpx;
-  font-weight: 600;
-  color: #1f2933;
-  flex: 1;
-  margin-right: 16rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.badge {
-  font-size: 24rpx;
-  font-weight: 700;
-  padding: 10rpx 22rpx;
-  border-radius: 999rpx;
-  flex-shrink: 0;
-}
-
-.badge-green {
-  background: #e7f8ef;
-  color: #08a857;
-}
-
-.badge-yellow {
-  background: #fff7df;
-  color: #d28a00;
-}
-
-.badge-red {
-  background: #feecec;
-  color: #df3b30;
-}
-
-.badge-gray {
-  background: #eef1f0;
-  color: #7b8580;
-}
-
-.card-body {
-  margin-bottom: 20rpx;
-}
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8rpx 0;
-}
-
-.info-label {
-  font-size: 26rpx;
-  color: #98a3b3;
-}
-
-.info-value {
-  font-size: 26rpx;
-  color: #1f2933;
-}
-
-.card-footer {
-  display: flex;
-}
-
-.action-pill {
-  font-size: 24rpx;
-  font-weight: 600;
-  padding: 10rpx 24rpx;
-  border-radius: 999rpx;
-  border: 2rpx solid;
-}
-
-.pill-green {
-  border-color: #07c160;
-  color: #07c160;
-}
-
-.pill-orange {
-  border-color: #f59e0b;
-  color: #f59e0b;
+.info-wide {
+  width: calc(100% - 14rpx);
 }
 </style>

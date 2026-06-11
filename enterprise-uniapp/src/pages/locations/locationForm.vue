@@ -105,39 +105,39 @@ async function handleSave() {
 </script>
 
 <template>
-  <view class="page">
-    <scroll-view scroll-y class="form-scroll">
-      <view class="form-section">
+  <view class="page e-page">
+    <scroll-view scroll-y class="form-scroll e-content">
+      <view class="form-section e-form-section">
         <text class="section-title">基本信息</text>
 
-        <view class="form-item">
-          <text class="label">地点名称 *</text>
-          <input v-model="form.name" class="input" placeholder="例：xx大厦、xx咖啡厅" />
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">地点名称 *</text>
+          <input v-model="form.name" class="input e-input" placeholder="例：xx大厦、xx咖啡厅" />
         </view>
 
-        <view class="form-item">
-          <text class="label">省/市/区</text>
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">省/市/区</text>
           <view class="region-row">
-            <input v-model="form.province" class="input region-input" placeholder="省" />
-            <input v-model="form.city" class="input region-input" placeholder="市" />
-            <input v-model="form.district" class="input region-input" placeholder="区" />
+            <input v-model="form.province" class="input e-input region-input" placeholder="省" />
+            <input v-model="form.city" class="input e-input region-input" placeholder="市" />
+            <input v-model="form.district" class="input e-input region-input" placeholder="区" />
           </view>
         </view>
 
-        <view class="form-item">
-          <text class="label">详细地址</text>
-          <input v-model="form.address" class="input" placeholder="街道、门牌号" />
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">详细地址</text>
+          <input v-model="form.address" class="input e-input" placeholder="街道、门牌号" />
         </view>
 
-        <view class="form-item">
-          <text class="label">坐标定位</text>
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">坐标定位</text>
           <button class="location-btn" @click="chooseLocation">从地图选择</button>
           <text v-if="form.latitude" class="coords">已选坐标：{{ form.latitude }}, {{ form.longitude }}</text>
         </view>
       </view>
 
-      <view class="form-actions">
-        <button class="save-btn" :disabled="saving" @click="handleSave">
+      <view class="form-actions e-bottom-safe">
+        <button class="save-btn btn-primary submit-btn" :disabled="saving" @click="handleSave">
           {{ saving ? '保存中...' : '保存' }}
         </button>
       </view>
@@ -153,8 +153,8 @@ async function handleSave() {
 .form-item { margin-bottom: 24rpx; }
 .label { display: block; font-size: 26rpx; color: #666; margin-bottom: 8rpx; }
 .input { width: 100%; height: 72rpx; border: 2rpx solid #e0e0e0; border-radius: 8rpx; padding: 0 20rpx; font-size: 28rpx; box-sizing: border-box; }
-.region-row { display: flex; gap: 12rpx; }
-.region-input { flex: 1; }
+.region-row { display: flex; margin: 0 -6rpx; }
+.region-input { flex: 1; margin: 0 6rpx; }
 .location-btn { height: 60rpx; line-height: 60rpx; font-size: 24rpx; background: #007aff; color: #fff; border-radius: 8rpx; padding: 0 20rpx; }
 .location-btn::after { border: none; }
 .coords { font-size: 22rpx; color: #999; margin-left: 12rpx; }

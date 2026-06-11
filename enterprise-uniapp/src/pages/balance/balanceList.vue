@@ -41,10 +41,6 @@ function formatAmount(amount) {
   return prefix + amount + ' 元'
 }
 
-function amountColor(amount) {
-  return amount > 0 ? '#07c160' : '#ff3b30'
-}
-
 function typeLabel(type) {
   const map = { TOP_UP: '充值', SETTLEMENT: '结算支出', SETTLEMENT_REFUND: '结算退款' }
   return map[type] || type
@@ -57,8 +53,12 @@ function typeLabel(type) {
       <text class="header-title">企业资金</text>
     </view>
     <view class="balance-cards">
+      <view class="top-balance-card">
+        <text class="top-balance-label">可用金额</text>
+        <text class="top-balance-value">{{ balanceInfo.usableBalance }}</text>
+      </view>
       <view class="card-row">
-        <view class="card balance-card">
+        <view class="card">
           <text class="card-label">账户余额</text>
           <text class="card-value primary">{{ balanceInfo.balance }}</text>
         </view>
@@ -69,12 +69,12 @@ function typeLabel(type) {
       </view>
       <view class="card-row">
         <view class="card">
-          <text class="card-label">可用额度</text>
-          <text class="card-value">{{ balanceInfo.usableBalance }}</text>
-        </view>
-        <view class="card">
           <text class="card-label">累计充值</text>
           <text class="card-value">{{ balanceInfo.totalTopUp }}</text>
+        </view>
+        <view class="card">
+          <text class="card-label">累计支出</text>
+          <text class="card-value">{{ balanceInfo.totalSpent }}</text>
         </view>
       </view>
     </view>
@@ -85,13 +85,13 @@ function typeLabel(type) {
     </view>
 
     <view class="txn-list">
-      <view v-for="item in transactions" :key="item.id" class="txn-item">
+      <view v-for="item in transactions" :key="item.id" class="e-card txn-item">
         <view class="txn-left">
           <text class="txn-type">{{ typeLabel(item.type) }}</text>
           <text class="txn-desc">{{ item.description || '-' }}</text>
           <text class="txn-time">{{ item.createdAt }}</text>
         </view>
-        <text class="txn-amount" :style="{ color: amountColor(item.amount) }">{{ formatAmount(item.amount) }}</text>
+        <text class="txn-amount" :class="item.amount > 0 ? 'amount-positive' : 'amount-negative'">{{ formatAmount(item.amount) }}</text>
       </view>
     </view>
 
@@ -120,18 +120,39 @@ function typeLabel(type) {
 .balance-cards {
   margin: 24rpx 32rpx 0;
 }
+.top-balance-card {
+  margin-bottom: 16rpx;
+  padding: 36rpx 30rpx;
+  background: linear-gradient(135deg, #18c86b, #08a95a);
+  border-radius: 24rpx;
+  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
+  box-sizing: border-box;
+}
+.top-balance-label {
+  display: block;
+  font-size: 26rpx;
+  color: rgba(255, 255, 255, 0.86);
+}
+.top-balance-value {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 54rpx;
+  font-weight: 800;
+  color: #fff;
+}
 .card-row {
   display: flex;
-  gap: 16rpx;
-  margin-bottom: 16rpx;
+  margin: 0 -8rpx 16rpx;
 }
 .card {
   flex: 1;
+  margin: 0 8rpx;
   background: #fff;
   border-radius: 24rpx;
   padding: 30rpx 24rpx;
   text-align: center;
   box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
+  box-sizing: border-box;
 }
 .card-label {
   font-size: 26rpx;
@@ -167,19 +188,15 @@ function typeLabel(type) {
   color: #1f2933;
 }
 .txn-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12rpx;
   padding: 0 32rpx;
 }
 .txn-item {
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 24rpx 30rpx;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
+}
+.txn-item + .txn-item {
+  margin-top: 12rpx;
 }
 .txn-left {
   flex: 1;
@@ -205,6 +222,12 @@ function typeLabel(type) {
 .txn-amount {
   font-size: 32rpx;
   font-weight: 600;
+}
+.amount-positive {
+  color: #07c160;
+}
+.amount-negative {
+  color: #ff3b30;
 }
 .load-more {
   text-align: center;

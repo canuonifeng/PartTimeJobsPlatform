@@ -468,7 +468,7 @@ async function handleSave() {
 </script>
 
 <template>
-  <view class="page">
+  <view class="page e-page">
     <view class="header">
       <view class="header-left" @click="uni.navigateBack()">
         <text class="back-arrow">‹</text>
@@ -477,17 +477,17 @@ async function handleSave() {
       <view class="header-right"></view>
     </view>
 
-    <scroll-view scroll-y class="form-scroll">
-      <view class="form-section">
+    <scroll-view scroll-y class="form-scroll e-content">
+      <view class="form-section e-form-section">
         <view class="section-title-row">
           <view class="section-accent"></view>
           <text class="section-title">岗位信息</text>
         </view>
 
-        <view class="form-item">
-          <text class="label">选择已有职位模版</text>
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">选择已有职位模版</text>
           <picker mode="selector" :range="templateNames" @change="onTemplatePick">
-            <view class="picker-btn">
+            <view class="picker-btn e-picker-value">
               <text>选择已有职位模版</text>
             </view>
           </picker>
@@ -496,55 +496,55 @@ async function handleSave() {
           </view>
         </view>
 
-        <view class="form-item">
-          <text class="label">职位名称 *</text>
-          <input v-model="formData.title" class="input" placeholder="请输入职位名称" />
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">职位名称 *</text>
+          <input v-model="formData.title" class="input e-input" placeholder="请输入职位名称" />
         </view>
 
-        <view class="form-item">
-          <text class="label">职位类型</text>
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">职位类型</text>
           <picker
             mode="selector"
             :range="categoryNames"
             :value="getCategoryIndex()"
             @change="onCategoryChange"
           >
-            <view class="picker">
+            <view class="picker e-picker-value">
               <text v-if="getSelectedCategoryName()" class="picker-value">{{ getSelectedCategoryName() }}</text>
               <text v-else class="picker-placeholder">请选择职位类型</text>
             </view>
           </picker>
         </view>
 
-        <view class="form-item">
-          <text class="label">岗位职责</text>
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">岗位职责</text>
           <editor
             id="responsibilityEditor"
-            class="editor"
+            class="editor e-textarea"
             placeholder="请输入岗位职责"
             @ready="onResponsibilityEditorReady"
             @input="onResponsibilityEditorInput"
           />
         </view>
 
-        <view class="form-item">
-          <text class="label">任职要求</text>
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">任职要求</text>
           <editor
             id="requirementEditor"
-            class="editor"
+            class="editor e-textarea"
             placeholder="请输入任职要求"
             @ready="onRequirementEditorReady"
             @input="onRequirementEditorInput"
           />
         </view>
 
-        <view class="form-item">
-          <text class="label">联系方式</text>
-          <input v-model="formData.contactPhone" class="input" type="number" placeholder="请输入联系电话" />
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">联系方式</text>
+          <input v-model="formData.contactPhone" class="input e-input" type="number" placeholder="请输入联系电话" />
         </view>
 
-        <view class="form-item">
-          <text class="label">岗位标签</text>
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">岗位标签</text>
           <view v-if="tagLoading" class="tag-hint">标签加载中...</view>
           <view v-else-if="tagLoadFailed" class="tag-hint error" @click="loadJobTags">标签加载失败，点击重试</view>
           <view v-else-if="!tagGroups.length" class="tag-hint">暂无可选标签</view>
@@ -564,23 +564,23 @@ async function handleSave() {
           </view>
         </view>
 
-        <view class="form-item">
-          <text class="label">职位图片</text>
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">职位图片</text>
           <view class="picker-btn" @click="chooseImage">选择图片</view>
           <image v-if="formData.imageUrl" class="preview-image" :src="formData.imageUrl" mode="aspectFill" @click="previewImage" />
         </view>
       </view>
 
-      <view class="form-section">
+      <view class="form-section e-form-section">
         <view class="section-title-row">
           <view class="section-accent"></view>
           <text class="section-title">地址信息</text>
         </view>
 
-        <view class="form-item">
-          <text class="label">选择已有工作地址</text>
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">选择已有工作地址</text>
           <picker mode="selector" :range="locationNames" @change="onLocationPick">
-            <view class="picker-btn">
+            <view class="picker-btn e-picker-value">
               <text>选择已有工作地址</text>
             </view>
           </picker>
@@ -589,47 +589,47 @@ async function handleSave() {
           </view>
         </view>
 
-        <view class="form-item">
-          <text class="label">省/市/区</text>
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">省/市/区</text>
           <picker mode="multiSelector" :range="[provinceList, cityList, districtList]" :value="regionIndexes" @columnchange="onRegionChange">
-            <view class="picker">
+            <view class="picker e-picker-value">
               <text v-if="formData.province" class="picker-value">{{ formData.province }} {{ formData.city }} {{ formData.district }}</text>
               <text v-else class="picker-placeholder">请选择省/市/区</text>
             </view>
           </picker>
         </view>
 
-        <view class="form-item">
-          <text class="label">详细地址</text>
-          <input v-model="formData.address" class="input" placeholder="街道、门牌号" />
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">详细地址</text>
+          <input v-model="formData.address" class="input e-input" placeholder="街道、门牌号" />
         </view>
 
-        <view class="form-item">
-          <text class="label">坐标定位</text>
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">坐标定位</text>
           <view class="picker-btn" @click="chooseLocation">选择位置</view>
           <text v-if="formData.latitude" class="location-coords">{{ formData.latitude }}, {{ formData.longitude }}</text>
         </view>
       </view>
 
-      <view class="form-section">
+      <view class="form-section e-form-section">
         <view class="section-title-row">
           <view class="section-accent"></view>
           <text class="section-title">招聘信息</text>
         </view>
 
-        <view class="form-item">
-          <text class="label">招聘人数</text>
-          <input v-model.number="formData.headcount" class="input" type="number" placeholder="招聘人数" />
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">招聘人数</text>
+          <input v-model.number="formData.headcount" class="input e-input" type="number" placeholder="招聘人数" />
         </view>
 
-        <view class="form-item">
-          <text class="label">截止日期</text>
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">截止日期</text>
           <picker
             mode="date"
             :value="formData.deadline"
             @change="(e) => formData.deadline = e.detail.value"
           >
-            <view class="picker">
+            <view class="picker e-picker-value">
               <text v-if="formData.deadline" class="picker-value">{{ formData.deadline }}</text>
               <text v-else class="picker-placeholder">请选择截止日期</text>
             </view>
@@ -637,7 +637,7 @@ async function handleSave() {
         </view>
       </view>
 
-      <view class="form-section">
+      <view class="form-section e-form-section">
         <view class="section-header">
           <view class="section-title-row">
             <view class="section-accent"></view>
@@ -653,11 +653,11 @@ async function handleSave() {
               :value="getRateTypeIndex(rate.type)"
               @change="(e) => onRateTypeChange(e, index)"
             >
-              <view class="picker picker-sm">
+              <view class="picker e-picker-value picker-sm">
                 <text>{{ rateTypeLabels[getRateTypeIndex(rate.type)] }}</text>
               </view>
             </picker>
-            <input v-model="rate.amount" class="input input-sm" type="digit" placeholder="金额" />
+            <input v-model="rate.amount" class="input e-input input-sm" type="digit" placeholder="金额" />
             <text class="currency-label">CNY</text>
             <text class="remove-btn" @click="removeRate(index)">删除</text>
           </view>
@@ -667,7 +667,7 @@ async function handleSave() {
         </view>
       </view>
 
-      <view class="form-section">
+      <view class="form-section e-form-section">
         <view class="section-header">
           <view class="section-title-row">
             <view class="section-accent"></view>
@@ -678,20 +678,20 @@ async function handleSave() {
         <view v-for="(sched, index) in schedules" :key="index" class="sub-item">
           <view class="sub-row">
             <picker mode="date" @change="(e) => sched.date = e.detail.value">
-              <view class="picker picker-sm">
+              <view class="picker e-picker-value picker-sm">
                 <text>{{ sched.date || '日期' }}</text>
               </view>
             </picker>
           </view>
           <view class="sub-row">
             <picker mode="time" @change="(e) => sched.startTime = e.detail.value">
-              <view class="picker picker-sm">
+              <view class="picker e-picker-value picker-sm">
                 <text>{{ sched.startTime || '开始' }}</text>
               </view>
             </picker>
             <text class="time-sep">至</text>
             <picker mode="time" @change="(e) => sched.endTime = e.detail.value">
-              <view class="picker picker-sm">
+              <view class="picker e-picker-value picker-sm">
                 <text>{{ sched.endTime || '结束' }}</text>
               </view>
             </picker>
@@ -703,8 +703,8 @@ async function handleSave() {
         </view>
       </view>
 
-      <view class="form-actions">
-        <button class="save-btn" :disabled="saving" @click="handleSave">
+      <view class="form-actions e-bottom-safe">
+        <button class="save-btn btn-primary submit-btn" :disabled="saving" @click="handleSave">
           <text v-if="saving">保存中...</text>
           <text v-else>保存</text>
         </button>
@@ -848,9 +848,10 @@ async function handleSave() {
 .tag-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 12rpx;
 }
 .tag-chip {
+  margin-right: 12rpx;
+  margin-bottom: 12rpx;
   padding: 10rpx 20rpx;
   border: 2rpx solid #edf0f3;
   border-radius: 999rpx;
@@ -889,8 +890,15 @@ async function handleSave() {
 .sub-row {
   display: flex;
   align-items: center;
-  gap: 12rpx;
-  margin-bottom: 8rpx;
+  margin: 0 -6rpx 8rpx;
+}
+.sub-row .picker-sm,
+.sub-row .input-sm,
+.sub-row .currency-label,
+.sub-row .time-sep,
+.sub-row .remove-btn {
+  margin-left: 6rpx;
+  margin-right: 6rpx;
 }
 .sub-row:last-child {
   margin-bottom: 0;
