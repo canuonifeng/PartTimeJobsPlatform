@@ -104,7 +104,7 @@ function handleLogout() {
   background: linear-gradient(135deg, #18c86b 0%, #08a95a 56%, #078a49 100%);
   border-bottom-left-radius: 36rpx;
   border-bottom-right-radius: 36rpx;
-  padding: 56rpx 32rpx 140rpx;
+  padding: 48rpx 32rpx 56rpx;
   position: relative;
   z-index: 1;
 }
@@ -139,8 +139,7 @@ function handleLogout() {
   font-weight: 500;
 }
 .content {
-  padding: 0 28rpx 40rpx;
-  margin-top: -60rpx;
+  padding: 24rpx 28rpx 40rpx;
   position: relative;
   z-index: 2;
 }
