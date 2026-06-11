@@ -11,4 +11,6 @@ public class AccountUpdateCmd {
     private String displayName;
     @Schema(description = "角色: ADMIN/HR/MANAGER/FINANCE")
     private String role;
+    @Schema(description = "状态: ACTIVE/DISABLED")
+    private String status;
 }

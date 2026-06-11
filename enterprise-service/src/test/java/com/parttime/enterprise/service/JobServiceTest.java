@@ -165,44 +165,11 @@ class JobServiceTest {
     }
 
     @Test
-    void deleteJob_shouldDeleteWhenClosedAndNoApplications() {
-        Job job = new Job();
-        job.setId(1L);
-        job.setStatus("CLOSED");
-
-        when(jobMapper.findById(1L)).thenReturn(Optional.of(job));
-        when(scheduleApplicationMapper.countByJobId(1L)).thenReturn(0);
-
-        jobService.deleteJob(1L);
-
-        verify(jobMapper).delete(1L);
-    }
-
-    @Test
-    void deleteJob_shouldThrowWhenJobIsNotClosed() {
-        Job job = new Job();
-        job.setId(1L);
-        job.setStatus("PUBLISHED");
-
-        when(jobMapper.findById(1L)).thenReturn(Optional.of(job));
-
+    void deleteJob_shouldAlwaysRejectDeletion() {
         assertThatThrownBy(() -> jobService.deleteJob(1L))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("只有关闭后的职位才能删除");
-    }
-
-    @Test
-    void deleteJob_shouldThrowWhenJobHasApplications() {
-        Job job = new Job();
-        job.setId(1L);
-        job.setStatus("CLOSED");
-
-        when(jobMapper.findById(1L)).thenReturn(Optional.of(job));
-        when(scheduleApplicationMapper.countByJobId(1L)).thenReturn(2);
-
-        assertThatThrownBy(() -> jobService.deleteJob(1L))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage("已有报名记录的职位不能删除");
+                .hasMessage("职位不能删除，请关闭职位");
+        verify(jobMapper, never()).delete(1L);
     }
 
     @Test

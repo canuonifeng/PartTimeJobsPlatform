@@ -29,7 +29,7 @@
         <template #default="{ row }">
           <el-button type="primary" size="small" text @click="handleEdit(row)">编辑</el-button>
           <el-button type="primary" size="small" text @click="handleResetPassword(row)">重置密码</el-button>
-          <el-button type="danger" size="small" text @click="handleDelete(row)">删除</el-button>
+          <el-button v-if="row.status === 'ACTIVE'" type="danger" size="small" text @click="handleDisable(row)">禁用</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -77,7 +77,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { listAccounts, createAccount, updateAccount, resetPassword, deleteAccount } from '../../api/account'
+import { listAccounts, createAccount, updateAccount, resetPassword } from '../../api/account'
 import { useAuthStore } from '../../stores/auth'
 
 const authStore = useAuthStore()
@@ -136,13 +136,13 @@ async function confirmResetPassword() {
   resetPwdDialog.value.visible = false
 }
 
-async function handleDelete(row) {
+async function handleDisable(row) {
   try {
-    await ElMessageBox.confirm(`确认删除账号 "${row.username}"？`, '确认')
-    await deleteAccount(row.id)
-    ElMessage.success('账号已删除')
+    await ElMessageBox.confirm(`确认禁用账号 "${row.username}"？`, '确认')
+    await updateAccount({ id: row.id, status: 'DISABLED' })
+    ElMessage.success('账号已禁用')
     await fetchData()
-  } catch { /* cancelled */ }
+  } catch {}
 }
 
 onMounted(fetchData)

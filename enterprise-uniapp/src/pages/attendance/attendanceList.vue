@@ -53,14 +53,20 @@ function loadMore() {
   loadRecords(true)
 }
 
-function toggleSelect(id) {
+function canOperate(record) {
+  return record?.settlementStatus !== 'PAID'
+}
+
+function toggleSelect(record) {
+  if (!canOperate(record)) return
+  const id = record.id
   const idx = selectedIds.value.indexOf(id)
   if (idx >= 0) selectedIds.value.splice(idx, 1)
   else selectedIds.value.push(id)
 }
 
 function toggleSelectAll() {
-  const allIds = records.value.map(r => r.id)
+  const allIds = records.value.filter(canOperate).map(r => r.id)
   if (selectedIds.value.length === allIds.length) {
     selectedIds.value = []
   } else {
@@ -69,6 +75,7 @@ function toggleSelectAll() {
 }
 
 async function handleBatchPay() {
+  selectedIds.value = selectedIds.value.filter(id => records.value.some(r => r.id === id && canOperate(r)))
   if (selectedIds.value.length === 0) {
     uni.showToast({ title: '请选择要结算的记录', icon: 'none' })
     return
@@ -83,6 +90,7 @@ async function handleBatchPay() {
 }
 
 async function handleBatchDelete() {
+  selectedIds.value = selectedIds.value.filter(id => records.value.some(r => r.id === id && canOperate(r)))
   if (selectedIds.value.length === 0) {
     uni.showToast({ title: '请选择要删除的记录', icon: 'none' })
     return
@@ -136,12 +144,12 @@ function settlementStatusLabel(s) {
         <view v-else-if="records.length === 0" class="state-msg">暂无考勤记录</view>
         <view v-else class="list">
           <view class="select-all" @click="toggleSelectAll">
-            <text class="checkbox" :class="{ checked: selectedIds.length === records.length && records.length > 0 }">{{ selectedIds.length === records.length && records.length > 0 ? '✓' : '' }}</text>
+            <text class="checkbox" :class="{ checked: selectedIds.length === records.filter(canOperate).length && records.filter(canOperate).length > 0 }">{{ selectedIds.length === records.filter(canOperate).length && records.filter(canOperate).length > 0 ? '✓' : '' }}</text>
             <text class="select-all-label">全选</text>
           </view>
-          <view v-for="r in records" :key="r.id" class="card" @click="toggleSelect(r.id)">
+          <view v-for="r in records" :key="r.id" class="card" @click="toggleSelect(r)">
             <view class="card-top">
-              <text class="checkbox" :class="{ checked: selectedIds.includes(r.id) }">{{ selectedIds.includes(r.id) ? '✓' : '' }}</text>
+              <text class="checkbox" :class="{ checked: selectedIds.includes(r.id), disabled: !canOperate(r) }">{{ selectedIds.includes(r.id) ? '✓' : '' }}</text>
               <text class="card-name">{{ r.workerName || '未知' }}</text>
               <text class="badge" :class="r.settlementStatus === 'PAID' ? 'badge-paid' : r.settlementStatus === 'PAYING' ? 'badge-paying' : 'badge-unpaid'">{{ settlementStatusLabel(r.settlementStatus) }}</text>
             </view>
@@ -187,6 +195,7 @@ function settlementStatusLabel(s) {
 .select-all { display: flex; align-items: center; padding: 12rpx 0; }
 .checkbox { width: 40rpx; height: 40rpx; border: 2rpx solid #d1d5db; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24rpx; color: #fff; margin-right: 12rpx; flex-shrink: 0; }
 .checkbox.checked { background: #07c160; border-color: #07c160; }
+.checkbox.disabled { background: #eef1f0; border-color: #eef1f0; }
 .select-all-label { font-size: 26rpx; color: #64748b; }
 .card { background: #fff; border-radius: 24rpx; padding: 28rpx; box-shadow: 0 12rpx 34rpx rgba(23,83,53,0.08); }
 .card-top { display: flex; align-items: center; margin-bottom: 16rpx; }

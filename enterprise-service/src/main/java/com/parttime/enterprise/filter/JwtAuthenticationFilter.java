@@ -1,6 +1,8 @@
 package com.parttime.enterprise.filter;
 
 import com.parttime.enterprise.config.JwtTokenProvider;
+import com.parttime.enterprise.mapper.EnterpriseAccountMapper;
+import com.parttime.enterprise.pojo.entity.EnterpriseAccount;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,13 +16,16 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final EnterpriseAccountMapper accountMapper;
 
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider) {
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, EnterpriseAccountMapper accountMapper) {
         this.jwtTokenProvider = jwtTokenProvider;
+        this.accountMapper = accountMapper;
     }
 
     @Override
@@ -32,6 +37,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String userId = jwtTokenProvider.getUserIdFromToken(token);
             List<String> roles = jwtTokenProvider.getRolesFromToken(token);
             Long companyId = jwtTokenProvider.getCompanyIdFromToken(token);
+            EnterpriseAccount account = accountMapper.findByUsername(userId).orElse(null);
+            if (account == null || !"ACTIVE".equals(account.getStatus()) || !Objects.equals(account.getEnterpriseId(), companyId)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
             List<SimpleGrantedAuthority> authorities = roles.stream()
                     .map(SimpleGrantedAuthority::new)

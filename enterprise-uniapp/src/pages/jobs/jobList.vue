@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { onPullDownRefresh } from '@dcloudio/uni-app'
-import { getJobs, publishJob, closeJob, reopenJob, deleteJob, getJobShareLink } from '@/api/jobs'
+import { getJobs, publishJob, closeJob, reopenJob, getJobShareLink } from '@/api/jobs'
 import { useAuthStore } from '@/store'
 
 const authStore = useAuthStore()
@@ -110,24 +110,6 @@ async function handleReopen(id) {
   }
 }
 
-function handleDelete(id) {
-  uni.showModal({
-    title: '确认删除',
-    content: '确定要删除该职位吗？此操作不可恢复。',
-    success: async (res) => {
-      if (res.confirm) {
-        try {
-          await deleteJob(id)
-          uni.showToast({ title: '已删除', icon: 'success' })
-          loadJobs()
-        } catch {
-          uni.showToast({ title: '删除失败', icon: 'none' })
-        }
-      }
-    }
-  })
-}
-
 function statusLabel(s) {
   const map = { DRAFT: '草稿', PUBLISHED: '已发布', CLOSED: '已关闭' }
   return map[s] || s
@@ -220,11 +202,6 @@ function statusClass(s) {
               class="e-action-pill e-action-blue"
               @click="handleReopen(job.id)"
             >重新发布</view>
-            <view
-              v-if="job.status === 'CLOSED' && (job.applicationCount ?? 0) === 0"
-              class="e-action-pill e-action-red"
-              @click="handleDelete(job.id)"
-            >删除</view>
           </view>
         </view>
       </view>

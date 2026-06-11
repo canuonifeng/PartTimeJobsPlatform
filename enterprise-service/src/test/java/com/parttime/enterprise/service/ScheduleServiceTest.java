@@ -131,14 +131,36 @@ class ScheduleServiceTest {
     }
 
     @Test
+    void getShifts_shouldNotUseUnpagedMapperForPagedCompanyQuery() {
+        ScheduleShift first = new ScheduleShift();
+        first.setId(1L);
+        first.setJobId(10L);
+        ScheduleShift second = new ScheduleShift();
+        second.setId(2L);
+        second.setJobId(11L);
+        when(shiftMapper.findPage(30L, null, null, null, 1, 1)).thenReturn(List.of(second));
+        when(shiftMapper.countPage(30L, null, null, null)).thenReturn(2);
+        when(attendanceRecordMapper.findByShiftIds(List.of(2L))).thenReturn(List.of());
+        when(jobMapper.findByIds(List.of(11L))).thenReturn(List.of());
+
+        var result = scheduleService.getShifts(30L, null, null, null, 2, 1);
+
+        assertThat(result.getTotal()).isEqualTo(2);
+        assertThat(result.getRecords()).hasSize(1);
+        assertThat(result.getRecords().get(0).getId()).isEqualTo(2L);
+        verify(shiftMapper, never()).findByCompanyId(30L);
+    }
+
+    @Test
     void getShifts_shouldFilterByJobIdAndDate() {
         ScheduleShift shift = new ScheduleShift();
         shift.setId(1L);
         shift.setJobId(10L);
         shift.setWorkerId(20L);
 
-        when(shiftMapper.findByJobIdAndDate(10L, LocalDate.of(2026, 6, 1)))
+        when(shiftMapper.findPage(null, 10L, null, LocalDate.of(2026, 6, 1), 0, 20))
                 .thenReturn(List.of(shift));
+        when(shiftMapper.countPage(null, 10L, null, LocalDate.of(2026, 6, 1))).thenReturn(1);
         when(attendanceRecordMapper.findByShiftIds(List.of(1L))).thenReturn(List.of());
         when(jobMapper.findByIds(List.of(10L))).thenReturn(List.of());
         when(workerSyncMapper.findWorkerNamesByIds(List.of(20L))).thenReturn(List.of());
@@ -162,7 +184,8 @@ class ScheduleServiceTest {
         shift.setId(1L);
         shift.setWorkerId(20L);
 
-        when(shiftMapper.findByWorkerId(20L)).thenReturn(List.of(shift));
+        when(shiftMapper.findPage(null, null, 20L, null, 0, 20)).thenReturn(List.of(shift));
+        when(shiftMapper.countPage(null, null, 20L, null)).thenReturn(1);
         when(workerSyncMapper.findWorkerNamesByIds(List.of(20L))).thenReturn(List.of(Map.of("id", 20L, "name", "TestWorker")));
         when(workerSyncMapper.findWorkerPhonesByIds(List.of(20L))).thenReturn(List.of(Map.of("id", 20L, "phone", "13800000000")));
         when(workerSyncMapper.findWorkerGendersByIds(List.of(20L))).thenReturn(List.of(Map.of("worker_id", 20L, "gender", "MALE")));
@@ -179,7 +202,8 @@ class ScheduleServiceTest {
 
     @Test
     void getShifts_shouldReturnEmptyWithoutFilters() {
-        when(shiftMapper.findAll()).thenReturn(List.of());
+        when(shiftMapper.findPage(null, null, null, null, 0, 20)).thenReturn(List.of());
+        when(shiftMapper.countPage(null, null, null, null)).thenReturn(0);
 
         var result = scheduleService.getShifts(null, null, null, null, 1, 20);
 
@@ -222,6 +246,9 @@ class ScheduleServiceTest {
         ScheduleShift existing = new ScheduleShift();
         existing.setId(99L);
         existing.setWorkerId(20L);
+        existing.setShiftDate(LocalDate.now().plusDays(1));
+        existing.setStartTime(LocalTime.of(9, 0));
+        existing.setStatus("SCHEDULED");
         when(shiftMapper.findById(99L)).thenReturn(Optional.of(existing));
 
         scheduleService.removeShift(99L);
@@ -235,6 +262,36 @@ class ScheduleServiceTest {
                 any(),
                 eq("SHIFT"),
                 eq(99L));
+    }
+
+    @Test
+    void removeShift_shouldRejectStartedShift() {
+        ScheduleShift existing = new ScheduleShift();
+        existing.setId(99L);
+        existing.setShiftDate(LocalDate.now().minusDays(1));
+        existing.setStartTime(LocalTime.of(9, 0));
+        existing.setStatus("SCHEDULED");
+        when(shiftMapper.findById(99L)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> scheduleService.removeShift(99L))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("只有未来的排班才能取消");
+        verify(shiftMapper, never()).cancelShift(99L);
+    }
+
+    @Test
+    void removeShift_shouldRejectCancelledShift() {
+        ScheduleShift existing = new ScheduleShift();
+        existing.setId(99L);
+        existing.setShiftDate(LocalDate.now().plusDays(1));
+        existing.setStartTime(LocalTime.of(9, 0));
+        existing.setStatus("CANCELLED");
+        when(shiftMapper.findById(99L)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> scheduleService.removeShift(99L))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("排班已取消");
+        verify(shiftMapper, never()).cancelShift(99L);
     }
 
     @Test

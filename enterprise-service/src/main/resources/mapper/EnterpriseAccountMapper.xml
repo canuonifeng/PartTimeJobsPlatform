@@ -32,7 +32,9 @@
     </insert>
 
     <update id="update">
-        UPDATE enterprise_accounts SET display_name = #{displayName}, role = #{role} WHERE id = #{id}
+        UPDATE enterprise_accounts
+        SET display_name = #{displayName}, role = #{role}, status = #{status}
+        WHERE id = #{id}
     </update>
 
     <update id="updatePassword">

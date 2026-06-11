@@ -66,6 +66,12 @@ async function handleSave() {
   } catch {}
 }
 
+function canCancelShift(row) {
+  if (!row || row.status === 'CANCELLED') return false
+  if (!row.shiftDate || !row.startTime) return false
+  return new Date(`${row.shiftDate}T${row.startTime}`).getTime() > Date.now()
+}
+
 async function handleDelete(row) {
   try {
     await ElMessageBox.confirm('确定取消该排班？取消后该兼职将无法签到', '提示')
@@ -220,14 +226,15 @@ onMounted(() => {
               <template #default="{ row }">
                 <el-tag v-if="row.status === 'CANCELLED'" type="danger" size="small">已取消</el-tag>
                 <el-tag v-else-if="row.status === 'COMPLETED'" type="success" size="small">已完成</el-tag>
+                <el-tag v-else-if="row.status === 'ABSENT'" type="danger" size="small">缺勤</el-tag>
                 <el-tag v-else-if="row.status === 'ON_DUTY' || row.status === 'LATE'" type="warning" size="small">工作中</el-tag>
                 <el-tag v-else type="info" size="small">待上岗</el-tag>
               </template>
             </el-table-column>
             <el-table-column label="操作" width="120" fixed="right">
               <template #default="{ row }">
-                <el-button v-if="row.status !== 'CANCELLED'" size="small" type="danger" @click="handleDelete(row)">取消排班</el-button>
-                <span v-else style="color:#999">已取消</span>
+                <el-button v-if="canCancelShift(row)" size="small" type="danger" @click="handleDelete(row)">取消排班</el-button>
+                <span v-else style="color:#999">{{ row.status === 'CANCELLED' ? '已取消' : '不可取消' }}</span>
               </template>
             </el-table-column>
           </el-table>

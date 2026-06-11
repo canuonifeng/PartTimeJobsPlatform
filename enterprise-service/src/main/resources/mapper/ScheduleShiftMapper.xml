@@ -56,6 +56,28 @@
         SELECT * FROM schedule_shifts WHERE job_id = #{jobId} AND shift_date = #{shiftDate} ORDER BY start_time
     </select>
 
+    <select id="findPage" resultMap="ShiftResultMap">
+        SELECT * FROM schedule_shifts
+        <where>
+            <if test="companyId != null">AND company_id = #{companyId}</if>
+            <if test="jobId != null">AND job_id = #{jobId}</if>
+            <if test="workerId != null">AND worker_id = #{workerId}</if>
+            <if test="shiftDate != null">AND shift_date = #{shiftDate}</if>
+        </where>
+        ORDER BY shift_date DESC, start_time
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countPage" resultType="int">
+        SELECT COUNT(*) FROM schedule_shifts
+        <where>
+            <if test="companyId != null">AND company_id = #{companyId}</if>
+            <if test="jobId != null">AND job_id = #{jobId}</if>
+            <if test="workerId != null">AND worker_id = #{workerId}</if>
+            <if test="shiftDate != null">AND shift_date = #{shiftDate}</if>
+        </where>
+    </select>
+
     <select id="findByDateRange" resultMap="ShiftResultMap">
         SELECT * FROM schedule_shifts
         WHERE shift_date BETWEEN #{startDate} AND #{endDate}

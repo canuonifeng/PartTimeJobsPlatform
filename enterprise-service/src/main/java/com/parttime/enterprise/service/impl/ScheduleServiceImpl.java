@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -71,27 +72,27 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Override
     public PageVO<ScheduleShiftVO> getShifts(Long companyId, Long jobId, Long workerId, LocalDate shiftDate, Integer page, Integer pageSize) {
         List<ScheduleShift> shifts;
-        if (jobId != null && shiftDate != null) {
+        int total;
+        if (page != null && pageSize != null && pageSize > 0) {
+            int currentPage = Math.max(page, 1);
+            int offset = (currentPage - 1) * pageSize;
+            shifts = shiftMapper.findPage(companyId, jobId, workerId, shiftDate, offset, pageSize);
+            total = shiftMapper.countPage(companyId, jobId, workerId, shiftDate);
+        } else if (jobId != null && shiftDate != null) {
             shifts = shiftMapper.findByJobIdAndDate(jobId, shiftDate);
+            total = shifts.size();
         } else if (jobId != null) {
             shifts = shiftMapper.findByJobId(jobId);
+            total = shifts.size();
         } else if (workerId != null) {
             shifts = shiftMapper.findByWorkerId(workerId);
+            total = shifts.size();
         } else if (companyId != null) {
             shifts = shiftMapper.findByCompanyId(companyId);
+            total = shifts.size();
         } else {
             shifts = shiftMapper.findAll();
-        }
-
-        int total = shifts.size();
-        if (page != null && pageSize != null && pageSize > 0) {
-            int fromIndex = Math.max(page - 1, 0) * pageSize;
-            if (fromIndex >= total) {
-                shifts = List.of();
-            } else {
-                int toIndex = Math.min(fromIndex + pageSize, total);
-                shifts = shifts.subList(fromIndex, toIndex);
-            }
+            total = shifts.size();
         }
 
         List<Long> shiftIds = shifts.stream().map(ScheduleShift::getId).collect(Collectors.toList());
@@ -165,6 +166,13 @@ public class ScheduleServiceImpl implements ScheduleService {
     public void removeShift(Long id) {
         ScheduleShift shift = shiftMapper.findById(id)
                 .orElseThrow(() -> new RuntimeException("ScheduleShift not found: " + id));
+        if ("CANCELLED".equals(shift.getStatus())) {
+            throw new RuntimeException("排班已取消");
+        }
+        if (shift.getShiftDate() == null || shift.getStartTime() == null
+                || !LocalDateTime.of(shift.getShiftDate(), shift.getStartTime()).isAfter(LocalDateTime.now())) {
+            throw new RuntimeException("只有未来的排班才能取消");
+        }
         shiftMapper.cancelShift(id);
         if (shift.getWorkerId() != null) {
             Job job = jobMapper.findById(shift.getJobId()).orElse(null);

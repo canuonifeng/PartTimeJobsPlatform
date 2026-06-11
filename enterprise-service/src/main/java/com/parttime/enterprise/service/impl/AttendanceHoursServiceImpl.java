@@ -47,7 +47,7 @@ public class AttendanceHoursServiceImpl implements AttendanceHoursService {
         List<AttendanceRecord> records = attendanceRecordMapper.findByIds(ids);
         for (AttendanceRecord record : records) {
             if ("PAID".equals(record.getSettlementStatus())) {
-                throw new RuntimeException("Cannot delete paid record: " + record.getId());
+                throw new RuntimeException("已结算记录不能结算或删除");
             }
         }
         attendanceRecordMapper.deleteByIds(ids);

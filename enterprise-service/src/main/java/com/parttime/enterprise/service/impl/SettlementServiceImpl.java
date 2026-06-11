@@ -55,6 +55,12 @@ public class SettlementServiceImpl implements SettlementService {
         java.util.Map<Long, ScheduleShift> shiftMap = shifts.stream()
                 .collect(java.util.stream.Collectors.toMap(ScheduleShift::getId, s -> s));
 
+        for (AttendanceRecord ar : allRecords) {
+            if ("PAID".equals(ar.getSettlementStatus())) {
+                throw new RuntimeException("已结算记录不能结算或删除");
+            }
+        }
+
         java.util.Map<Long, String> workerNames = new java.util.HashMap<>();
         java.util.Map<Long, WorkerBalance> workerBalances = new java.util.HashMap<>();
         List<Long> workerIds = allRecords.stream()
@@ -67,8 +73,6 @@ public class SettlementServiceImpl implements SettlementService {
 
         BigDecimal totalPay = BigDecimal.ZERO;
         for (AttendanceRecord ar : allRecords) {
-            if ("PAID".equals(ar.getSettlementStatus())) continue;
-
             ScheduleShift shift = shiftMap.get(ar.getShiftId());
             if (shift == null) throw new RuntimeException("Schedule shift not found: " + ar.getShiftId());
 

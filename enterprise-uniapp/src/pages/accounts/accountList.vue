@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { onShow, onPullDownRefresh } from '@dcloudio/uni-app'
-import { listAccounts, createAccount, updateAccount, resetPassword, deleteAccount } from '@/api/account'
+import { listAccounts, createAccount, updateAccount, resetPassword } from '@/api/account'
 import { useAuthStore } from '@/store'
 
 const authStore = useAuthStore()
@@ -94,18 +94,18 @@ async function confirmReset() {
   }
 }
 
-function handleDelete(account) {
+function handleDisable(account) {
   uni.showModal({
-    title: '确认删除',
-    content: `确定删除账号 ${account.username}@${emailSuffix} 吗？`,
+    title: '确认禁用',
+    content: `确定禁用账号 ${account.username}@${emailSuffix} 吗？`,
     success: async (res) => {
       if (!res.confirm) return
       try {
-        await deleteAccount(account.id)
-        uni.showToast({ title: '已删除', icon: 'success' })
+        await updateAccount({ id: account.id, status: 'DISABLED' })
+        uni.showToast({ title: '账号已禁用', icon: 'success' })
         loadAccounts()
       } catch {
-        uni.showToast({ title: '删除失败', icon: 'none' })
+        uni.showToast({ title: '禁用失败', icon: 'none' })
       }
     }
   })
@@ -157,7 +157,7 @@ function handleDelete(account) {
           <view class="e-action-row">
             <view class="e-action-pill e-action-blue" @click="openEdit(a)">编辑</view>
             <view class="e-action-pill e-action-blue" @click="openReset(a)">重置密码</view>
-            <view class="e-action-pill e-action-red" @click="handleDelete(a)">删除</view>
+            <view v-if="a.status === 'ACTIVE'" class="e-action-pill e-action-red" @click="handleDisable(a)">禁用</view>
           </view>
         </view>
       </view>

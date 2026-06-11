@@ -46,6 +46,7 @@ function statusLabel(status) {
     COMPLETED: '已完成',
     ON_DUTY: '工作中',
     LATE: '迟到',
+    ABSENT: '缺勤',
     SCHEDULED: '待上岗'
   }
   return map[status] || status || '-'
@@ -57,6 +58,7 @@ function statusClass(status) {
     COMPLETED: 'completed',
     ON_DUTY: 'on-duty',
     LATE: 'on-duty',
+    ABSENT: 'cancelled',
     SCHEDULED: 'pending'
   }
   return map[status] || 'default'
@@ -73,6 +75,14 @@ function ageLabel(age) {
 
 function phoneLabel(phone) {
   return phone || '暂无手机号'
+}
+
+function canCancelShift(shift) {
+  if (!shift || shift.status === 'CANCELLED') return false
+  const date = shift.shiftDate || shift.date
+  const startTime = shift.startTime
+  if (!date || !startTime) return false
+  return new Date(`${date}T${formatTime(startTime)}`).getTime() > Date.now()
 }
 
 function handleDelete(id) {
@@ -158,11 +168,11 @@ function initials(name) {
 
           <view class="card-footer">
             <view
-              v-if="s.status !== 'CANCELLED'"
+              v-if="canCancelShift(s)"
               class="action-btn"
               @click="handleDelete(s.id)"
             >取消排班</view>
-            <view v-else class="cancelled-label">已取消</view>
+            <view v-else class="cancelled-label">{{ s.status === 'CANCELLED' ? '已取消' : '不可取消' }}</view>
           </view>
         </view>
       </view>

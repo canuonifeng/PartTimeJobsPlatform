@@ -66,8 +66,12 @@ function handleReset() {
   fetchData()
 }
 
+function canOperate(row) {
+  return row?.settlementStatus !== 'PAID'
+}
+
 function handleSelectionChange(val) {
-  selectedIds.value = val.filter(r => r.settlementStatus !== 'PAID').map(r => r.id)
+  selectedIds.value = val.filter(canOperate).map(r => r.id)
 }
 
 function handleEdit(row) {
@@ -104,6 +108,7 @@ async function handlePay(row) {
 }
 
 async function handleBatchPay() {
+  selectedIds.value = selectedIds.value.filter(id => records.value.some(r => r.id === id && canOperate(r)))
   if (selectedIds.value.length === 0) {
     ElMessage.warning('请选择要结算的记录')
     return
@@ -140,6 +145,7 @@ async function handleUnsettle(row) {
 }
 
 async function handleBatchDelete() {
+  selectedIds.value = selectedIds.value.filter(id => records.value.some(r => r.id === id && canOperate(r)))
   if (selectedIds.value.length === 0) {
     ElMessage.warning('请选择要删除的记录')
     return
@@ -207,7 +213,7 @@ onMounted(() => {
         style="width: 100%"
         @selection-change="handleSelectionChange"
       >
-        <el-table-column type="selection" width="45" />
+        <el-table-column type="selection" width="45" :selectable="canOperate" />
         <el-table-column label="排班日期" width="110">
           <template #default="{ row }">{{ row.shiftDate }}</template>
         </el-table-column>

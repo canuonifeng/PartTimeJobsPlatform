@@ -1,8 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { listJobs, deleteJob, publishJob, closeJob, reopenJob, getJobShareLink } from '../../api/job'
+import { ElMessage } from 'element-plus'
+import { listJobs, publishJob, closeJob, reopenJob, getJobShareLink } from '../../api/job'
 
 const router = useRouter()
 const jobs = ref([])
@@ -60,15 +60,6 @@ async function handleInvite(row) {
   } catch {
     ElMessage.error('邀请失败')
   }
-}
-
-async function handleDelete(row) {
-  try {
-    await ElMessageBox.confirm(`确定删除职位"${row.title}"？`, '提示')
-    await deleteJob(row.id)
-    ElMessage.success('删除成功')
-    fetchData()
-  } catch {}
 }
 
 async function handlePublish(row) {
@@ -159,12 +150,6 @@ onMounted(() => {
             <el-button size="small" type="success" @click="handleInvite(row)">邀请报名</el-button>
             <el-button size="small" type="primary" @click="handleEdit(row)">编辑</el-button>
             <el-button v-if="row.status === 'PUBLISHED'" size="small" type="warning" @click="handleClose(row)">关闭</el-button>
-            <el-button
-              v-if="row.status === 'CLOSED' && (row.applicationCount ?? 0) === 0"
-              size="small"
-              type="danger"
-              @click="handleDelete(row)"
-            >删除</el-button>
             <el-button v-if="row.status === 'DRAFT'" size="small" type="success" @click="handlePublish(row)">发布</el-button>
           </template>
         </el-table-column>

@@ -25,6 +25,18 @@ public interface ScheduleShiftMapper {
 
     List<ScheduleShift> findByJobIdAndDate(@Param("jobId") Long jobId, @Param("shiftDate") LocalDate shiftDate);
 
+    List<ScheduleShift> findPage(@Param("companyId") Long companyId,
+                                 @Param("jobId") Long jobId,
+                                 @Param("workerId") Long workerId,
+                                 @Param("shiftDate") LocalDate shiftDate,
+                                 @Param("offset") int offset,
+                                 @Param("pageSize") int pageSize);
+
+    int countPage(@Param("companyId") Long companyId,
+                  @Param("jobId") Long jobId,
+                  @Param("workerId") Long workerId,
+                  @Param("shiftDate") LocalDate shiftDate);
+
     List<ScheduleShift> findByWorkerIdAndDateRange(
             @Param("workerId") Long workerId,
             @Param("startDate") LocalDate startDate,

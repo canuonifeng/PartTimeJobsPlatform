@@ -48,6 +48,7 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new BusinessException("Account not found: " + cmd.getId()));
         if (cmd.getDisplayName() != null) account.setDisplayName(cmd.getDisplayName());
         if (cmd.getRole() != null) account.setRole(cmd.getRole());
+        if (cmd.getStatus() != null) account.setStatus(cmd.getStatus());
         accountMapper.update(account);
         return toVO(account);
     }
@@ -61,9 +62,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void delete(Long id) {
-        EnterpriseAccount account = accountMapper.findById(id)
-                .orElseThrow(() -> new BusinessException("Account not found: " + id));
-        accountMapper.deleteById(id);
+        throw new BusinessException("账号不能删除，请禁用账号");
     }
 
     private AccountVO toVO(EnterpriseAccount account) {

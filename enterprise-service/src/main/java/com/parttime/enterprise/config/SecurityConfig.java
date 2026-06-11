@@ -2,6 +2,7 @@ package com.parttime.enterprise.config;
 
 import com.parttime.enterprise.config.JwtTokenProvider;
 import com.parttime.enterprise.filter.JwtAuthenticationFilter;
+import com.parttime.enterprise.mapper.EnterpriseAccountMapper;
 import com.parttime.enterprise.service.EnterpriseUserDetailsService;
 import jakarta.annotation.Resource;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -44,6 +45,9 @@ public class SecurityConfig {
     @Resource
     private EnterpriseUserDetailsService enterpriseUserDetailsService;
 
+    @Resource
+    private EnterpriseAccountMapper enterpriseAccountMapper;
+
     public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
         this.jwtTokenProvider = jwtTokenProvider;
     }
@@ -64,7 +68,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint((request, response, authException) ->
                                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED))
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, enterpriseAccountMapper),
                         UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

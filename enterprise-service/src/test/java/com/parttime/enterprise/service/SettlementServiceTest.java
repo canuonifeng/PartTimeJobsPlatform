@@ -23,7 +23,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -83,6 +85,19 @@ class SettlementServiceTest {
                 "您有一笔兼职收入120.00元已到账",
                 "ATTENDANCE",
                 1L);
+    }
+
+    @Test
+    void payFromAttendanceRecords_shouldRejectPaidRecords() {
+        AttendanceRecord record = new AttendanceRecord();
+        record.setId(1L);
+        record.setSettlementStatus("PAID");
+        when(attendanceRecordMapper.findByIds(List.of(1L))).thenReturn(List.of(record));
+
+        assertThatThrownBy(() -> settlementService.payFromAttendanceRecords(List.of(1L), 9L))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessage("已结算记录不能结算或删除");
+        verify(workerBalanceMapper, never()).upsert(org.mockito.ArgumentMatchers.anyLong(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test

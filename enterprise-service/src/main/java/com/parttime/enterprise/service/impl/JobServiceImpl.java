@@ -194,15 +194,7 @@ public class JobServiceImpl implements JobService {
 
     @Override
     public void deleteJob(Long id) {
-        Job job = jobMapper.findById(id)
-                .orElseThrow(() -> new RuntimeException("Job not found: " + id));
-        if (!"CLOSED".equals(job.getStatus())) {
-            throw new BusinessException("只有关闭后的职位才能删除");
-        }
-        if (scheduleApplicationMapper.countByJobId(id) > 0) {
-            throw new BusinessException("已有报名记录的职位不能删除");
-        }
-        jobMapper.delete(id);
+        throw new BusinessException("职位不能删除，请关闭职位");
     }
 
     @Override
