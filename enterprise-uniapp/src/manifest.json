@@ -20,7 +20,7 @@
     "title": "企业职位管理"
   },
   "mp-weixin": {
-    "appid": "",
+    "appid": "wx3fdcd5b95534d8f",
     "setting": {"urlCheck": false},
     "permission": {
       "scope.userLocation": {
