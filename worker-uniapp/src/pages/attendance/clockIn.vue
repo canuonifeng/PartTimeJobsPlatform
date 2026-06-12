@@ -102,7 +102,7 @@ async function loadShifts(p: number) {
   try {
     const dateStr = formatFullDate(new Date())
     const res: any = await getMyShifts({ endDate: dateStr, page: p, pageSize: PAGE_SIZE })
-    const list = Array.isArray(res) ? res : (res?.list || [])
+    const list = Array.isArray(res) ? res : (res?.records || res?.list || [])
     if (p === 1) {
       allShifts.value = list.map(normalizeShift)
       total.value = res?.total ?? res?.totalCount ?? list.length

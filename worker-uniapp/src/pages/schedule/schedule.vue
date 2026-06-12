@@ -210,7 +210,7 @@ async function loadShifts() {
   loading.value = true
   try {
     const res: any = await getMyShifts({ startDate: weekDays.value[0].fullDate, endDate: weekDays.value[6].fullDate })
-    const list = Array.isArray(res) ? res : (res?.list || [])
+    const list = Array.isArray(res) ? res : (res?.records || res?.list || [])
     allShifts.value = list.map(normalizeShift)
   } catch {
     allShifts.value = []

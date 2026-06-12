@@ -3,6 +3,7 @@ package com.parttime.cservice.controller;
 import com.parttime.cservice.pojo.cmd.CheckInCmd;
 import com.parttime.cservice.pojo.vo.ApiResponse;
 import com.parttime.cservice.pojo.vo.AttendanceVO;
+import com.parttime.cservice.pojo.vo.PageVO;
 import com.parttime.cservice.pojo.vo.WorkerShiftVO;
 import com.parttime.cservice.service.AttendanceService;
 import com.parttime.cservice.service.ReferralService;
@@ -37,7 +38,7 @@ public class AttendanceController {
 
     @Operation(summary = "获取我的班次", description = "获取当前工人的班次列表，可按日期范围筛选，支持分页")
     @GetMapping("/schedule-shifts/my")
-    public ApiResponse<PageResult<WorkerShiftVO>> getMyShifts(
+    public ApiResponse<PageVO<WorkerShiftVO>> getMyShifts(
             @Parameter(description = "开始日期") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @Parameter(description = "结束日期") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @Parameter(description = "页码，默认1") @RequestParam(defaultValue = "1") Integer page,
@@ -48,29 +49,7 @@ public class AttendanceController {
         }
         List<WorkerShiftVO> shifts = attendanceService.getMyShifts(workerId, startDate, endDate, page, pageSize);
         Long total = attendanceService.countMyShifts(workerId, startDate, endDate);
-        return ApiResponse.success(new PageResult<>(shifts, total, page, pageSize));
-    }
-
-    public static class PageResult<T> {
-        private List<T> list;
-        private Long total;
-        private Integer page;
-        private Integer pageSize;
-        private Integer totalPages;
-
-        public PageResult(List<T> list, Long total, Integer page, Integer pageSize) {
-            this.list = list;
-            this.total = total;
-            this.page = page;
-            this.pageSize = pageSize;
-            this.totalPages = pageSize > 0 ? (int) Math.ceil((double) total / pageSize) : 0;
-        }
-
-        public List<T> getList() { return list; }
-        public Long getTotal() { return total; }
-        public Integer getPage() { return page; }
-        public Integer getPageSize() { return pageSize; }
-        public Integer getTotalPages() { return totalPages; }
+        return ApiResponse.success(new PageVO<>(shifts, total));
     }
 
     @Operation(summary = "签到", description = "工人进行上班签到打卡")

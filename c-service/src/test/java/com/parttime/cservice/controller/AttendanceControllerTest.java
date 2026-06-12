@@ -62,8 +62,8 @@ class AttendanceControllerTest {
 
         mockMvc.perform(get("/api/schedule-shifts/my"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.list.length()").value(1))
-                .andExpect(jsonPath("$.data.list[0].jobTitle").value("Helper"))
+                .andExpect(jsonPath("$.data.records.length()").value(1))
+                .andExpect(jsonPath("$.data.records[0].jobTitle").value("Helper"))
                 .andExpect(jsonPath("$.data.total").value(1));
     }
 
