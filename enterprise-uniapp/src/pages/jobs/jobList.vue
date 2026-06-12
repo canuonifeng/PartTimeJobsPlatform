@@ -60,9 +60,13 @@ function navigateToApplications(job) {
   uni.navigateTo({ url: `/pages/jobs/applicationList?jobId=${job.id}&jobTitle=${encodeURIComponent(job.title || '')}` })
 }
 
-async function handleShare(id) {
+async function handleShare(job) {
+  if (job.status !== 'PUBLISHED') {
+    uni.showToast({ title: '仅已发布职位可邀请', icon: 'none' })
+    return
+  }
   try {
-    const res = await getJobShareLink(id)
+    const res = await getJobShareLink(job.id)
     const link = res?.link || res?.data?.link || ''
     if (!link) {
       throw new Error('empty link')
@@ -185,7 +189,7 @@ function statusClass(s) {
 
           <view class="e-action-row" @click.stop>
             <view class="e-action-pill e-action-blue" @click.stop="navigateToApplications(job)">报名记录</view>
-            <view class="e-action-pill e-action-primary" @click.stop="handleShare(job.id)">邀请报名</view>
+            <view v-if="job.status === 'PUBLISHED'" class="e-action-pill e-action-primary" @click.stop="handleShare(job)">邀请报名</view>
             <view class="e-action-pill e-action-blue" @click="navigateToEdit(job.id)">编辑</view>
             <view
               v-if="job.status === 'DRAFT'"

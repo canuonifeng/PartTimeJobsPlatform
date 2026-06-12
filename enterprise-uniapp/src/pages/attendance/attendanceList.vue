@@ -116,6 +116,21 @@ function settlementStatusLabel(s) {
   const map = { UNPAID: '未结算', PAYING: '结算中', PAID: '已结算' }
   return map[s] || s || '-'
 }
+
+function salaryLabel(record) {
+  if (record.salaryAmount == null) return '-'
+  const unitMap = { HOURLY: '元/小时', DAILY: '元/天' }
+  return `${record.salaryAmount}${unitMap[record.salaryType] || ''}`
+}
+
+function moneyLabel(value) {
+  return value == null ? '-' : `¥${value}`
+}
+
+function timeRange(record) {
+  if (!record.startTime && !record.endTime) return '-'
+  return `${record.startTime || '-'}~${record.endTime || '-'}`
+}
 </script>
 
 <template>
@@ -154,10 +169,16 @@ function settlementStatusLabel(s) {
               <text class="badge" :class="r.settlementStatus === 'PAID' ? 'badge-paid' : r.settlementStatus === 'PAYING' ? 'badge-paying' : 'badge-unpaid'">{{ settlementStatusLabel(r.settlementStatus) }}</text>
             </view>
             <view class="card-body">
-              <text class="info">日期：{{ r.recordDate || '-' }}</text>
+              <text class="info">岗位：{{ r.jobTitle || '-' }}</text>
+              <text class="info">日期：{{ r.shiftDate || '-' }}</text>
+              <text class="info">时间：{{ timeRange(r) }}</text>
               <text class="info">年龄：{{ r.workerAge ?? '-' }}岁</text>
+              <text class="info">薪资标准：{{ salaryLabel(r) }}</text>
               <text class="info">工时：{{ r.totalHours ?? '-' }}</text>
-              <text class="info">应付：¥{{ r.payablePay ?? r.scheduledPay ?? '0' }}</text>
+              <text class="info">排班薪资：{{ moneyLabel(r.scheduledPay) }}</text>
+              <text class="info">应付薪资：{{ moneyLabel(r.payablePay ?? r.scheduledPay) }}</text>
+              <text class="info">签到：{{ r.checkInTime || '-' }}</text>
+              <text class="info">签退：{{ r.checkOutTime || '-' }}</text>
             </view>
           </view>
         </view>
