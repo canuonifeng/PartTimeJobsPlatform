@@ -1,7 +1,7 @@
 import { request } from './request'
 
-export function listAccounts() {
-  return request('POST', '/accounts/list')
+export function listAccounts(params) {
+  return request('POST', '/accounts/list', params)
 }
 
 export function createAccount(data) {

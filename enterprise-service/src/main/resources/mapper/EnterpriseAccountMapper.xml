@@ -18,8 +18,13 @@
         SELECT * FROM enterprise_accounts WHERE username = #{username}
     </select>
 
-    <select id="findByEnterpriseId" resultMap="AccountResultMap">
+    <select id="findByEnterpriseIdPage" resultMap="AccountResultMap">
         SELECT * FROM enterprise_accounts WHERE enterprise_id = #{enterpriseId} ORDER BY created_at DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countByEnterpriseId" resultType="long">
+        SELECT COUNT(*) FROM enterprise_accounts WHERE enterprise_id = #{enterpriseId}
     </select>
 
     <select id="findById" resultMap="AccountResultMap">

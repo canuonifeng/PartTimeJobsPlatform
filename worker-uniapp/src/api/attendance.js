@@ -16,10 +16,11 @@ export function checkOut(data) {
   })
 }
 
-export function getMyAttendance() {
+export function getMyAttendance(params) {
   return request({
     url: '/api/attendance/my',
-    method: 'GET'
+    method: 'GET',
+    data: params
   })
 }
 

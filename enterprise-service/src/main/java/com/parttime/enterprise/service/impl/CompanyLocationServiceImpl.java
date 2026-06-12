@@ -6,6 +6,7 @@ import com.parttime.enterprise.pojo.cmd.LocationCreateCmd;
 import com.parttime.enterprise.pojo.cmd.LocationUpdateCmd;
 import com.parttime.enterprise.pojo.entity.CompanyLocation;
 import com.parttime.enterprise.pojo.vo.CompanyLocationVO;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.CompanyLocationService;
 import org.springframework.stereotype.Service;
 
@@ -20,9 +21,14 @@ public class CompanyLocationServiceImpl implements CompanyLocationService {
     private CompanyLocationMapper companyLocationMapper;
 
     @Override
-    public List<CompanyLocationVO> list(Long companyId) {
-        return companyLocationMapper.findByCompanyId(companyId)
+    public PageVO<CompanyLocationVO> list(Long companyId, Integer page, Integer pageSize) {
+        int currentPage = page == null || page < 1 ? 1 : page;
+        int currentPageSize = pageSize == null || pageSize < 1 ? 20 : Math.min(pageSize, 100);
+        int offset = (currentPage - 1) * currentPageSize;
+        long total = companyLocationMapper.countByCompanyId(companyId);
+        List<CompanyLocationVO> records = companyLocationMapper.findByCompanyIdPage(companyId, offset, currentPageSize)
                 .stream().map(this::toVO).collect(Collectors.toList());
+        return new PageVO<>(records, total);
     }
 
     @Override

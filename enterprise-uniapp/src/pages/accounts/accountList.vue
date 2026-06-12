@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from 'vue'
-import { onShow, onPullDownRefresh } from '@dcloudio/uni-app'
+import { onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { listAccounts, createAccount, updateAccount, resetPassword } from '@/api/account'
 import { useAuthStore } from '@/store'
 
@@ -8,6 +8,10 @@ const authStore = useAuthStore()
 const emailSuffix = authStore.emailSuffix
 const accounts = ref([])
 const loading = ref(false)
+const loadingMore = ref(false)
+const page = ref(1)
+const pageSize = 20
+const total = ref(0)
 const formVisible = ref(false)
 const resetVisible = ref(false)
 const isEdit = ref(false)
@@ -20,19 +24,31 @@ const roleOptions = [
   { label: '财务', value: 'FINANCE' }
 ]
 
-onShow(loadAccounts)
-onPullDownRefresh(() => loadAccounts().finally(() => uni.stopPullDownRefresh()))
+onShow(() => loadAccounts(1))
+onPullDownRefresh(() => loadAccounts(1).finally(() => uni.stopPullDownRefresh()))
+onReachBottom(loadMore)
 
-async function loadAccounts() {
-  loading.value = true
+async function loadAccounts(p = 1) {
+  if (p === 1) loading.value = true
+  else loadingMore.value = true
   try {
-    const res = await listAccounts()
-    accounts.value = Array.isArray(res) ? res : (res.records || res.data || [])
+    const res = await listAccounts({ page: p, pageSize })
+    const list = Array.isArray(res) ? res : (res.records || res.data || [])
+    if (p === 1) accounts.value = list
+    else accounts.value = accounts.value.concat(list)
+    page.value = p
+    total.value = Array.isArray(res) ? accounts.value.length : (res.total || accounts.value.length)
   } catch {
     uni.showToast({ title: '加载失败', icon: 'none' })
   } finally {
     loading.value = false
+    loadingMore.value = false
   }
+}
+
+function loadMore() {
+  if (loading.value || loadingMore.value || accounts.value.length >= total.value) return
+  loadAccounts(page.value + 1)
 }
 
 function roleLabel(role) {
@@ -159,6 +175,9 @@ function handleDisable(account) {
             <view class="e-action-pill e-action-blue" @click="openReset(a)">重置密码</view>
             <view v-if="a.status === 'ACTIVE'" class="e-action-pill e-action-red" @click="handleDisable(a)">禁用</view>
           </view>
+        </view>
+        <view v-if="loadingMore" class="e-empty">
+          <text class="e-empty-title">加载更多...</text>
         </view>
       </view>
     </view>

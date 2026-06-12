@@ -33,6 +33,16 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination
+      v-model:current-page="page"
+      v-model:page-size="pageSize"
+      :page-sizes="[10, 20, 50, 100]"
+      :total="total"
+      layout="total, sizes, prev, pager, next, jumper"
+      style="margin-top:16px;justify-content:flex-end"
+      @size-change="fetchData"
+      @current-change="fetchData"
+    />
   </el-card>
 
   <el-dialog v-model="formDialog.visible" :title="formDialog.isEdit ? '编辑账号' : '新增账号'" width="400px">
@@ -86,14 +96,18 @@ const roleMap = { ADMIN: '管理员', HR: '人力资源', MANAGER: '运营经理
 
 const loading = ref(false)
 const accounts = ref([])
+const page = ref(1)
+const pageSize = ref(20)
+const total = ref(0)
 const formDialog = ref({ visible: false, isEdit: false, form: {} })
 const resetPwdDialog = ref({ visible: false, id: null, newPassword: '' })
 
 async function fetchData() {
   loading.value = true
   try {
-    const data = await listAccounts()
-    accounts.value = Array.isArray(data) ? data : []
+    const data = await listAccounts({ page: page.value, pageSize: pageSize.value })
+    accounts.value = Array.isArray(data) ? data : (data.records || [])
+    total.value = Array.isArray(data) ? data.length : (data.total || 0)
   } finally {
     loading.value = false
   }

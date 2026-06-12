@@ -20,6 +20,7 @@ import com.parttime.cservice.pojo.entity.SystemConfig;
 import com.parttime.cservice.pojo.entity.WorkerBalance;
 import com.parttime.cservice.pojo.vo.AttendanceVO;
 import com.parttime.cservice.pojo.vo.NotificationVO;
+import com.parttime.cservice.pojo.vo.PageVO;
 import com.parttime.cservice.pojo.vo.WorkerShiftVO;
 import com.parttime.cservice.service.AttendanceService;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -298,42 +299,37 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
-    public List<AttendanceVO> getMyAttendance(Long workerId) {
-        List<AttendanceRecordEntity> records = attendanceRecordMapper.findByWorkerId(workerId);
+    public PageVO<AttendanceVO> getMyAttendance(Long workerId, Integer page, Integer pageSize) {
+        int currentPage = page == null || page < 1 ? 1 : page;
+        int currentPageSize = pageSize == null || pageSize < 1 ? 20 : pageSize;
+        int offset = (currentPage - 1) * currentPageSize;
+        long total = attendanceRecordMapper.countByWorkerId(workerId);
+        List<AttendanceRecordEntity> records = attendanceRecordMapper.findByWorkerIdPage(workerId, offset, currentPageSize);
         if (records.isEmpty()) {
-            return List.of();
+            return new PageVO<>(List.of(), total);
         }
-        // Batch load shifts
         List<Long> shiftIds = records.stream().map(AttendanceRecordEntity::getShiftId).filter(java.util.Objects::nonNull).distinct().toList();
         Map<Long, ShiftEntity> shiftMap = Map.of();
         if (!shiftIds.isEmpty()) {
             shiftMap = shiftMapper.findByIds(shiftIds).stream()
                     .collect(Collectors.toMap(ShiftEntity::getId, s -> s));
         }
-        // Batch load jobs
         List<Long> jobIds = records.stream().map(AttendanceRecordEntity::getJobId).filter(java.util.Objects::nonNull).distinct().toList();
         Map<Long, Job> jobMap = Map.of();
         if (!jobIds.isEmpty()) {
             jobMap = jobMapper.findByJobIds(jobIds).stream()
                     .collect(Collectors.toMap(Job::getId, j -> j));
         }
-        // Batch load companies
-        List<Long> companyIds = records.stream().map(AttendanceRecordEntity::getCompanyId).filter(java.util.Objects::nonNull).distinct().toList();
-        Map<Long, com.parttime.cservice.pojo.entity.Enterprise> companyMap = Map.of();
-        if (!companyIds.isEmpty()) {
-            // TODO: Use a proper batch loading method when EnterpriseMapper supports it
-        }
         Map<Long, ShiftEntity> finalShiftMap = shiftMap;
         Map<Long, Job> finalJobMap = jobMap;
-        Map<Long, com.parttime.cservice.pojo.entity.Enterprise> finalCompanyMap = companyMap;
-        return records.stream()
+        List<AttendanceVO> vos = records.stream()
                 .map(record -> {
                     ShiftEntity shift = record.getShiftId() != null ? finalShiftMap.get(record.getShiftId()) : null;
                     Job job = record.getJobId() != null ? finalJobMap.get(record.getJobId()) : null;
-                    com.parttime.cservice.pojo.entity.Enterprise company = record.getCompanyId() != null ? finalCompanyMap.get(record.getCompanyId()) : null;
-                    return toAttendanceResponse(record, shift, job, company);
+                    return toAttendanceResponse(record, shift, job, null);
                 })
                 .collect(Collectors.toList());
+        return new PageVO<>(vos, total);
     }
 
     public static BigDecimal calculateBillableHours(LocalDateTime checkInTime, LocalDateTime checkOutTime, LocalDate shiftDate, LocalTime startTime, LocalTime endTime) {

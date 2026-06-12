@@ -1,24 +1,40 @@
 <script setup>
 import { ref } from 'vue'
-import { onShow, onPullDownRefresh } from '@dcloudio/uni-app'
+import { onShow, onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { listLocations, deleteLocation, enableLocation, disableLocation } from '@/api/locations'
 
 const locations = ref([])
 const loading = ref(false)
+const loadingMore = ref(false)
+const page = ref(1)
+const pageSize = 20
+const total = ref(0)
 
-onShow(loadLocations)
-onPullDownRefresh(() => loadLocations().finally(() => uni.stopPullDownRefresh()))
+onShow(() => loadLocations(1))
+onPullDownRefresh(() => loadLocations(1).finally(() => uni.stopPullDownRefresh()))
+onReachBottom(loadMore)
 
-async function loadLocations() {
-  loading.value = true
+async function loadLocations(p = 1) {
+  if (p === 1) loading.value = true
+  else loadingMore.value = true
   try {
-    const res = await listLocations()
-    locations.value = Array.isArray(res) ? res : (res.records || res.data || [])
+    const res = await listLocations({ page: p, pageSize })
+    const list = Array.isArray(res) ? res : (res.records || res.data || [])
+    if (p === 1) locations.value = list
+    else locations.value = locations.value.concat(list)
+    page.value = p
+    total.value = Array.isArray(res) ? locations.value.length : (res.total || locations.value.length)
   } catch {
     uni.showToast({ title: '加载失败', icon: 'none' })
   } finally {
     loading.value = false
+    loadingMore.value = false
   }
+}
+
+function loadMore() {
+  if (loading.value || loadingMore.value || locations.value.length >= total.value) return
+  loadLocations(page.value + 1)
 }
 
 function openCreate() {
@@ -105,6 +121,9 @@ async function toggleEnabled(loc) {
             >{{ loc.status === 'ENABLED' ? '禁用' : '启用' }}</view>
             <view class="e-action-pill e-action-red" @click="handleDelete(loc.id)">删除</view>
           </view>
+        </view>
+        <view v-if="loadingMore" class="e-empty">
+          <text class="e-empty-title">加载更多...</text>
         </view>
       </view>
     </view>

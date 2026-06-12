@@ -2,6 +2,7 @@ package com.parttime.cservice.controller;
 
 import com.parttime.cservice.pojo.vo.AttendanceVO;
 import com.parttime.cservice.pojo.cmd.CheckInCmd;
+import com.parttime.cservice.pojo.vo.PageVO;
 import com.parttime.cservice.pojo.vo.WorkerShiftVO;
 import com.parttime.cservice.service.impl.AttendanceServiceImpl;
 import com.parttime.cservice.service.ReferralService;
@@ -152,11 +153,12 @@ class AttendanceControllerTest {
         record.setShiftId(100L);
         record.setStatus("CHECKED_IN");
 
-        when(attendanceService.getMyAttendance(1L)).thenReturn(List.of(record));
+        when(attendanceService.getMyAttendance(1L, 1, 20)).thenReturn(new PageVO<>(List.of(record), 1));
 
         mockMvc.perform(get("/api/attendance/my"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.length()").value(1))
-                .andExpect(jsonPath("$.data[0].status").value("CHECKED_IN"));
+                .andExpect(jsonPath("$.data.records.length()").value(1))
+                .andExpect(jsonPath("$.data.records[0].status").value("CHECKED_IN"))
+                .andExpect(jsonPath("$.data.total").value(1));
     }
 }

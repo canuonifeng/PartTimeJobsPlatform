@@ -1,7 +1,7 @@
 import { request } from './request'
 
-export function listLocations() {
-  return request('POST', '/locations/list')
+export function listLocations(params) {
+  return request('POST', '/locations/list', params)
 }
 
 export function createLocation(data) {

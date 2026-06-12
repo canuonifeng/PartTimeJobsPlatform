@@ -83,14 +83,15 @@ public class AttendanceController {
         }
     }
 
-    @Operation(summary = "获取我的考勤记录", description = "获取当前工人的考勤记录列表")
+    @Operation(summary = "获取我的考勤记录", description = "获取当前工人的考勤记录列表，支持分页")
     @GetMapping("/attendance/my")
-    public ApiResponse<List<AttendanceVO>> getMyAttendance() {
+    public ApiResponse<PageVO<AttendanceVO>> getMyAttendance(
+            @Parameter(description = "页码，默认1") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(description = "每页大小，默认20") @RequestParam(defaultValue = "20") Integer pageSize) {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
             return ApiResponse.error(401, "未登录");
         }
-        List<AttendanceVO> records = attendanceService.getMyAttendance(workerId);
-        return ApiResponse.success(records);
+        return ApiResponse.success(attendanceService.getMyAttendance(workerId, page, pageSize));
     }
 }

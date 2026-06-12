@@ -7,6 +7,7 @@ import com.parttime.enterprise.pojo.cmd.AccountResetPasswordCmd;
 import com.parttime.enterprise.pojo.cmd.AccountUpdateCmd;
 import com.parttime.enterprise.pojo.entity.EnterpriseAccount;
 import com.parttime.enterprise.pojo.vo.AccountVO;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.AccountService;
 import jakarta.annotation.Resource;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,9 +25,14 @@ public class AccountServiceImpl implements AccountService {
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
-    public List<AccountVO> list(Long enterpriseId) {
-        return accountMapper.findByEnterpriseId(enterpriseId).stream()
+    public PageVO<AccountVO> list(Long enterpriseId, Integer page, Integer pageSize) {
+        int currentPage = page == null || page < 1 ? 1 : page;
+        int currentPageSize = pageSize == null || pageSize < 1 ? 20 : Math.min(pageSize, 100);
+        int offset = (currentPage - 1) * currentPageSize;
+        long total = accountMapper.countByEnterpriseId(enterpriseId);
+        List<AccountVO> records = accountMapper.findByEnterpriseIdPage(enterpriseId, offset, currentPageSize).stream()
                 .map(this::toVO).collect(Collectors.toList());
+        return new PageVO<>(records, total);
     }
 
     @Override

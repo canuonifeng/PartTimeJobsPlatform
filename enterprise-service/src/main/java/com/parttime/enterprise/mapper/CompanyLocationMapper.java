@@ -9,7 +9,8 @@ import java.util.Optional;
 
 @Mapper
 public interface CompanyLocationMapper {
-    List<CompanyLocation> findByCompanyId(@Param("companyId") Long companyId);
+    List<CompanyLocation> findByCompanyIdPage(@Param("companyId") Long companyId, @Param("offset") int offset, @Param("pageSize") int pageSize);
+    long countByCompanyId(@Param("companyId") Long companyId);
     Optional<CompanyLocation> findById(@Param("id") Long id);
     int insert(CompanyLocation location);
     int update(CompanyLocation location);

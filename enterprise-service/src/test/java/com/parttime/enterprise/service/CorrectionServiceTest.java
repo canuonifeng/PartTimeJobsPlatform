@@ -189,6 +189,8 @@ public class CorrectionServiceTest {
         @Override public List<ScheduleShift> findByJobId(Long jobId) { return List.of(); }
         @Override public List<ScheduleShift> findByWorkerId(Long workerId) { return List.of(); }
         @Override public List<ScheduleShift> findByJobIdAndDate(Long jobId, LocalDate date) { return List.of(); }
+        @Override public List<ScheduleShift> findPage(Long companyId, Long jobId, Long workerId, LocalDate shiftDate, int offset, int pageSize) { return List.of(); }
+        @Override public int countPage(Long companyId, Long jobId, Long workerId, LocalDate shiftDate) { return 0; }
         @Override public List<ScheduleShift> findByIds(List<Long> ids) {
             List<ScheduleShift> result = new ArrayList<>();
             for (Long id : ids) {

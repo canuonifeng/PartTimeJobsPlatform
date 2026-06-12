@@ -5,6 +5,7 @@ import com.parttime.cservice.mapper.AttendanceRecordMapper;
 import com.parttime.cservice.service.impl.AttendanceServiceImpl;
 import com.parttime.cservice.service.impl.WorkerShiftVOConverter;
 import com.parttime.cservice.pojo.vo.AttendanceVO;
+import com.parttime.cservice.pojo.vo.PageVO;
 import com.parttime.cservice.pojo.vo.WorkerShiftVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -228,9 +229,10 @@ class AttendanceServiceTest {
 
         attendanceService.checkIn(1L, shiftId, null, null);
 
-        List<AttendanceVO> records = attendanceService.getMyAttendance(1L);
-        assertThat(records).hasSize(1);
-        assertThat(records.get(0).getStatus()).isEqualTo("LATE");
+        PageVO<AttendanceVO> page = attendanceService.getMyAttendance(1L, 1, 20);
+        assertThat(page.getRecords()).hasSize(1);
+        assertThat(page.getRecords().get(0).getStatus()).isEqualTo("LATE");
+        assertThat(page.getTotal()).isEqualTo(1);
     }
 
     @Test

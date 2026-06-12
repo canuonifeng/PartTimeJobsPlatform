@@ -255,8 +255,15 @@ public class InMemoryMappers {
             @Override public List<AttendanceRecordEntity> findByShiftIds(List<Long> shiftIds) {
                 return store.values().stream().filter(r -> shiftIds.contains(r.getShiftId())).collect(Collectors.toList());
             }
-            @Override public List<AttendanceRecordEntity> findByWorkerId(Long workerId) {
-                return store.values().stream().filter(r -> workerId.equals(r.getWorkerId())).collect(Collectors.toList());
+            @Override public List<AttendanceRecordEntity> findByWorkerIdPage(Long workerId, int offset, int pageSize) {
+                return store.values().stream()
+                        .filter(r -> workerId.equals(r.getWorkerId()))
+                        .skip(offset)
+                        .limit(pageSize)
+                        .collect(Collectors.toList());
+            }
+            @Override public long countByWorkerId(Long workerId) {
+                return store.values().stream().filter(r -> workerId.equals(r.getWorkerId())).count();
             }
             @Override public BigDecimal sumMonthlyHours(Long workerId, LocalDateTime startTime, LocalDateTime endTime) {
                 return BigDecimal.ZERO;

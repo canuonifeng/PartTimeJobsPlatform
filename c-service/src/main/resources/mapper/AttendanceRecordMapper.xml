@@ -30,11 +30,18 @@
         </foreach>
     </select>
 
-    <select id="findByWorkerId" resultType="com.parttime.cservice.pojo.entity.AttendanceRecordEntity">
+    <select id="findByWorkerIdPage" resultType="com.parttime.cservice.pojo.entity.AttendanceRecordEntity">
         SELECT ar.*
         FROM attendance_records ar
         WHERE ar.worker_id = #{workerId}
         ORDER BY COALESCE(ar.check_out_time, ar.check_in_time, ar.created_at) DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countByWorkerId" resultType="long">
+        SELECT COUNT(*)
+        FROM attendance_records ar
+        WHERE ar.worker_id = #{workerId}
     </select>
 
     <select id="sumMonthlyHours" resultType="java.math.BigDecimal">

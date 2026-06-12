@@ -6,12 +6,12 @@ import com.parttime.enterprise.pojo.cmd.AccountResetPasswordCmd;
 import com.parttime.enterprise.pojo.cmd.AccountUpdateCmd;
 import com.parttime.enterprise.pojo.vo.AccountVO;
 import com.parttime.enterprise.pojo.vo.ApiResponse;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.AccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -23,9 +23,11 @@ public class AccountController {
 
     @Operation(summary = "获取账号列表")
     @PostMapping("/list")
-    public ApiResponse<List<AccountVO>> list() {
+    public ApiResponse<PageVO<AccountVO>> list(@RequestBody(required = false) Map<String, Integer> body) {
         Long enterpriseId = SecurityUtil.getCurrentCompanyId();
-        return ApiResponse.success(accountService.list(enterpriseId));
+        Integer page = body == null ? null : body.get("page");
+        Integer pageSize = body == null ? null : body.get("pageSize");
+        return ApiResponse.success(accountService.list(enterpriseId, page, pageSize));
     }
 
     @Operation(summary = "新增账号")

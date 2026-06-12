@@ -12,7 +12,9 @@ public interface EnterpriseAccountMapper {
 
     Optional<EnterpriseAccount> findByUsername(@Param("username") String username);
 
-    List<EnterpriseAccount> findByEnterpriseId(@Param("enterpriseId") Long enterpriseId);
+    List<EnterpriseAccount> findByEnterpriseIdPage(@Param("enterpriseId") Long enterpriseId, @Param("offset") int offset, @Param("pageSize") int pageSize);
+
+    long countByEnterpriseId(@Param("enterpriseId") Long enterpriseId);
 
     Optional<EnterpriseAccount> findById(@Param("id") Long id);
 

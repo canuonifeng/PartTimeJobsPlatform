@@ -17,8 +17,13 @@
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
-    <select id="findByCompanyId" resultMap="LocationResultMap">
+    <select id="findByCompanyIdPage" resultMap="LocationResultMap">
         SELECT * FROM company_locations WHERE company_id = #{companyId} ORDER BY created_at DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countByCompanyId" resultType="long">
+        SELECT COUNT(*) FROM company_locations WHERE company_id = #{companyId}
     </select>
 
     <select id="findById" resultMap="LocationResultMap">

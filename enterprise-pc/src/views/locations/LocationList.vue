@@ -7,6 +7,9 @@ import LocationPicker from '../../components/LocationPicker.vue'
 
 const loading = ref(false)
 const locations = ref([])
+const page = ref(1)
+const pageSize = ref(20)
+const total = ref(0)
 const formDialog = ref({ visible: false, isEdit: false, form: {} })
 const showLocationPicker = ref(false)
 
@@ -34,7 +37,9 @@ const regionSelected = computed({
 async function fetchData() {
   loading.value = true
   try {
-    locations.value = await listLocations()
+    const data = await listLocations({ page: page.value, pageSize: pageSize.value })
+    locations.value = Array.isArray(data) ? data : (data.records || [])
+    total.value = Array.isArray(data) ? data.length : (data.total || 0)
   } finally {
     loading.value = false
   }
@@ -146,6 +151,16 @@ onMounted(fetchData)
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination
+      v-model:current-page="page"
+      v-model:page-size="pageSize"
+      :page-sizes="[10, 20, 50, 100]"
+      :total="total"
+      layout="total, sizes, prev, pager, next, jumper"
+      style="margin-top:16px;justify-content:flex-end"
+      @size-change="fetchData"
+      @current-change="fetchData"
+    />
   </el-card>
 
   <el-dialog v-model="formDialog.visible" :title="formDialog.isEdit ? '编辑地点' : '新建地点'" width="500px" :close-on-click-modal="false">

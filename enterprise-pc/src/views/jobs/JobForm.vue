@@ -246,7 +246,8 @@ async function handleSubmit() {
 
 async function openLocationPicker() {
   try {
-    availableLocations.value = await listLocations()
+    const data = await listLocations({ page: 1, pageSize: 100 })
+    availableLocations.value = Array.isArray(data) ? data : (data.records || [])
     locationDialogVisible.value = true
   } catch {
     ElMessage.error('加载地点列表失败')

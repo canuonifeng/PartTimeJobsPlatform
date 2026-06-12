@@ -4,6 +4,7 @@ import com.parttime.enterprise.exception.BusinessException;
 import com.parttime.enterprise.mapper.EnterpriseAccountMapper;
 import com.parttime.enterprise.pojo.cmd.AccountUpdateCmd;
 import com.parttime.enterprise.pojo.entity.EnterpriseAccount;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.impl.AccountServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,6 +29,25 @@ class AccountServiceTest {
 
     @InjectMocks
     private AccountServiceImpl accountService;
+
+    @Test
+    void list_shouldReturnPagedAccounts() {
+        EnterpriseAccount account = new EnterpriseAccount();
+        account.setId(1L);
+        account.setEnterpriseId(2L);
+        account.setUsername("admin");
+        account.setDisplayName("管理员");
+        account.setRole("ADMIN");
+        account.setStatus("ACTIVE");
+        when(accountMapper.countByEnterpriseId(2L)).thenReturn(1L);
+        when(accountMapper.findByEnterpriseIdPage(2L, 0, 20)).thenReturn(List.of(account));
+
+        PageVO<?> result = accountService.list(2L, 1, 20);
+
+        assertThat(result.getRecords()).hasSize(1);
+        assertThat(result.getTotal()).isEqualTo(1);
+        verify(accountMapper).findByEnterpriseIdPage(2L, 0, 20);
+    }
 
     @Test
     void delete_shouldRejectDeletion() {

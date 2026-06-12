@@ -4,6 +4,7 @@ import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.pojo.cmd.LocationCreateCmd;
 import com.parttime.enterprise.pojo.cmd.LocationUpdateCmd;
 import com.parttime.enterprise.pojo.vo.CompanyLocationVO;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.CompanyLocationService;
 import io.swagger.v3.oas.annotations.Operation;
 import com.parttime.enterprise.pojo.vo.ApiResponse;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -25,9 +25,11 @@ public class CompanyLocationController {
 
     @Operation(summary = "获取地点列表")
     @PostMapping("/list")
-    public ApiResponse<List<CompanyLocationVO>> list() {
+    public ApiResponse<PageVO<CompanyLocationVO>> list(@RequestBody(required = false) Map<String, Integer> body) {
         Long companyId = SecurityUtil.getCurrentCompanyId();
-        return ApiResponse.success(companyLocationService.list(companyId));
+        Integer page = body == null ? null : body.get("page");
+        Integer pageSize = body == null ? null : body.get("pageSize");
+        return ApiResponse.success(companyLocationService.list(companyId, page, pageSize));
     }
 
     @Operation(summary = "新增地点")

@@ -306,8 +306,8 @@ async function loadData() {
     }
 
     try {
-      const attendanceRes = await getMyAttendance()
-      const attrs = Array.isArray(attendanceRes) ? attendanceRes : (attendanceRes?.list || attendanceRes?.records || [])
+      const attendanceRes = await getMyAttendance({ page: 1, pageSize: 100 })
+      const attrs = normalizeRecords(attendanceRes)
       if (Array.isArray(attrs) && attrs.length > 0) {
         pendingAttendanceTransactions.value = attrs
           .filter((item: any) => settlementFilter(item?.settlementStatus) === 'pending')
