@@ -9,48 +9,12 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
-  datasource:
-    url: jdbc:mysql://localhost:3306/part_time_work?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    username: part_time_work
-    password: password123
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
   flyway:
     enabled: false
 
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      database: 0
-      timeout: 3000ms
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
-
-rocketmq:
-  name-server: localhost:9876
-  producer:
-    group: ${spring.application.name}-producer-group
-
-xxl:
-  job:
-    admin:
-      addresses: http://localhost:8080/xxl-job-admin
-    access-token: default_token
-    executor:
-      appname: ${spring.application.name}
-      address: ""
-      ip: ""
-      port: 9999
-      logpath: /data/applogs/xxl-job/jobhandler
-      logretentiondays: 30
-
 jwt:
-  secret: parttime-cservice-jwt-secret-key-must-be-at-least-256-bits
-  expiration: 86400000
+  secret: ${JWT_SECRET:parttime-cservice-jwt-secret-key-must-be-at-least-256-bits}
+  expiration: ${JWT_EXPIRATION:86400000}
 
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml

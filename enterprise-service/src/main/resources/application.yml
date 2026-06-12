@@ -9,55 +9,19 @@ spring:
     serialization:
       write-dates-as-timestamps: false
 
-  datasource:
-    url: jdbc:mysql://localhost:3306/part_time_work?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
-    username: part_time_work
-    password: password123
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
   flyway:
     enabled: false
 
-  data:
-    redis:
-      host: localhost
-      port: 6379
-      database: 0
-      timeout: 3000ms
-      lettuce:
-        pool:
-          max-active: 8
-          max-idle: 8
-          min-idle: 0
-
-rocketmq:
-  name-server: localhost:9876
-  producer:
-    group: ${spring.application.name}-producer-group
-
-xxl:
-  job:
-    admin:
-      addresses: http://localhost:8080/xxl-job-admin
-    access-token: default_token
-    executor:
-      appname: ${spring.application.name}
-      address: ""
-      ip: ""
-      port: 9999
-      logpath: /data/applogs/xxl-job/jobhandler
-      logretentiondays: 30
-
 jwt:
-  secret: parttime-enterprise-jwt-secret-key-must-be-at-least-256-bits
-  expiration: 86400000
+  secret: ${JWT_SECRET:parttime-enterprise-jwt-secret-key-must-be-at-least-256-bits}
+  expiration: ${JWT_EXPIRATION:86400000}
 
 wechat:
-  worker-app-id: mock_worker_app_id
-  worker-app-secret: mock_worker_app_secret
-  customer-app-id: wx3fdcd5b95534d8f8
-  token-url: https://api.weixin.qq.com/cgi-bin/token
-  code-url: https://api.weixin.qq.com/wxa/getwxacodeunlimit
+  worker-app-id: ${WECHAT_WORKER_APP_ID:mock_worker_app_id}
+  worker-app-secret: ${WECHAT_WORKER_APP_SECRET:mock_worker_app_secret}
+  customer-app-id: ${WECHAT_CUSTOMER_APP_ID:wx3fdcd5b95534d8f}
+  token-url: ${WECHAT_TOKEN_URL:https://api.weixin.qq.com/cgi-bin/token}
+  code-url: ${WECHAT_CODE_URL:https://api.weixin.qq.com/wxa/getwxacodeunlimit}
 
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml

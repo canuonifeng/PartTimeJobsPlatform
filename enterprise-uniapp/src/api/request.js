@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.DEV ? 'http://localhost:8081/api' : 'http://121.199.12.23:8081/api'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 export function request(method, url, data = null) {
   const token = uni.getStorageSync('token')

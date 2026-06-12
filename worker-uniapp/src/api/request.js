@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.DEV ? 'http://localhost:8082' : 'http://121.199.12.23:8082'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL
 
 function cleanParams(obj) {
   const result = {}
