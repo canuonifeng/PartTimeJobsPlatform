@@ -1,7 +1,9 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useAuthStore } from '@/store'
 import { request } from '@/api/request'
+import EnterpriseTabBar from '@/components/EnterpriseTabBar.vue'
 
 const authStore = useAuthStore()
 const companyName = ref('')
@@ -40,6 +42,10 @@ const quickActions = [
   { name: '创建排班', icon: '排', path: '/pages/schedules/scheduleList' },
   { name: '薪资结算', icon: '薪', path: '/pages/attendance/attendanceList' }
 ]
+
+onShow(() => {
+  uni.hideTabBar({ animation: false })
+})
 
 onMounted(async () => {
   try {
@@ -120,6 +126,7 @@ function switchToTodos() {
         </view>
       </view>
     </view>
+    <EnterpriseTabBar active="home" />
   </view>
 </template>
 

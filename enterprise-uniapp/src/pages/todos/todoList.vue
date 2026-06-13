@@ -1,6 +1,11 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { onPullDownRefresh } from '@dcloudio/uni-app'
+import { onPullDownRefresh, onShow } from '@dcloudio/uni-app'
+import EnterpriseTabBar from '@/components/EnterpriseTabBar.vue'
+
+onShow(() => {
+  uni.hideTabBar({ animation: false })
+})
 
 const currentType = ref('applications')
 
@@ -85,6 +90,7 @@ onPullDownRefresh(() => {
         </view>
       </view>
     </view>
+    <EnterpriseTabBar active="todos" />
   </view>
 </template>
 

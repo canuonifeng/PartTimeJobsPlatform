@@ -1,4 +1,11 @@
 <script setup>
+import { onShow } from '@dcloudio/uni-app'
+import EnterpriseTabBar from '@/components/EnterpriseTabBar.vue'
+
+onShow(() => {
+  uni.hideTabBar({ animation: false })
+})
+
 const steps = [
   { icon: '发', title: '发布职位', desc: '6 个岗位正在招聘中', tags: ['草稿 2', '已发布 6'], path: '/pages/jobs/jobList', state: 'done' },
   { icon: '报', title: '收到报名', desc: '今日新增 18 人报名', tags: ['总报名 48', '转化 +18%'], path: '/pages/applications/applicationList', state: 'done' },
@@ -40,6 +47,7 @@ function navigateTo(path) {
         </view>
       </view>
     </view>
+    <EnterpriseTabBar active="process" />
   </view>
 </template>
 

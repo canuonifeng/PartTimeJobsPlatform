@@ -1,7 +1,9 @@
 <script setup>
 import { onMounted, ref } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useAuthStore } from '@/store'
 import { request } from '@/api/request'
+import EnterpriseTabBar from '@/components/EnterpriseTabBar.vue'
 
 const authStore = useAuthStore()
 const companyName = ref('')
@@ -20,6 +22,10 @@ const settingItems = [
   { name: '账号安全', desc: '登录手机号、密码和权限', icon: '安', path: '/pages/accounts/accountList' },
   { name: '资金与流水', desc: '余额、充值、支出记录', icon: '钱', path: '/pages/balance/balanceList' }
 ]
+
+onShow(() => {
+  uni.hideTabBar({ animation: false })
+})
 
 onMounted(async () => {
   try {
@@ -90,6 +96,7 @@ function handleLogout() {
         </view>
       </view>
     </view>
+    <EnterpriseTabBar active="profile" />
   </view>
 </template>
 
