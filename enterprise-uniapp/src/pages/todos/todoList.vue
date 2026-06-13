@@ -1,41 +1,40 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { onPullDownRefresh, onShow } from '@dcloudio/uni-app'
+import { getOperationTodos } from '@/api/operations'
 import EnterpriseTabBar from '@/components/EnterpriseTabBar.vue'
 
 onShow(() => {
   uni.hideTabBar({ animation: false })
+  loadTodos()
 })
 
-const currentType = ref('applications')
+const currentType = ref('APPLICATION')
+const loading = ref(false)
+const todos = ref([])
 
 const types = [
-  { key: 'applications', name: '报名' },
-  { key: 'schedules', name: '排班' },
-  { key: 'attendance', name: '考勤' },
-  { key: 'salary', name: '薪资' }
+  { key: 'APPLICATION', name: '报名' },
+  { key: 'SCHEDULE', name: '排班' },
+  { key: 'ATTENDANCE', name: '考勤' },
+  { key: 'SALARY', name: '薪资' }
 ]
 
-const todoMap = {
-  applications: [
-    { name: '张小雨', status: '待审核', title: '周末促销员', time: '10:24', desc: '23 岁 · 女', path: '/pages/applications/applicationList' },
-    { name: '李明', status: '待审核', title: '仓库分拣员', time: '09:38', desc: '28 岁 · 男 · 做过 3 次', path: '/pages/applications/applicationList' }
-  ],
-  schedules: [
-    { name: '晚班服务员', status: '未排满', title: '今日 18:00-22:00', time: '缺 2 人', desc: '星河门店', path: '/pages/schedules/scheduleList' }
-  ],
-  attendance: [
-    { name: '考勤异常', status: '待确认', title: '2 条记录缺少签退', time: '今天', desc: '需确认实际工时', path: '/pages/schedules/scheduleList' }
-  ],
-  salary: [
-    { name: '薪资结算', status: '待结算', title: '5 条考勤记录', time: '预计 ¥1,240', desc: '确认后可发起结算', path: '/pages/attendance/attendanceList' }
-  ]
-}
+const heroDesc = computed(() => types.map(type => `${type.name}${type.key === currentType.value ? todos.value.length : '-'}`).join(' · '))
 
-const currentTodos = computed(() => todoMap[currentType.value] || [])
+const currentTodos = computed(() => todos.value.map(item => ({
+  id: item.id,
+  name: typeName(item.type),
+  status: statusLabel(item.status),
+  title: item.title || '-',
+  time: formatTime(item.createdAt),
+  desc: item.description || '-',
+  path: item.routePath || fallbackPath(item.type)
+})))
 
 function switchType(type) {
   currentType.value = type
+  loadTodos()
 }
 
 function navigateTo(path) {
@@ -43,8 +42,45 @@ function navigateTo(path) {
 }
 
 onPullDownRefresh(() => {
-  setTimeout(() => uni.stopPullDownRefresh(), 300)
+  loadTodos().finally(() => uni.stopPullDownRefresh())
 })
+
+async function loadTodos() {
+  loading.value = true
+  try {
+    const res = await getOperationTodos({ type: currentType.value, page: 1, pageSize: 50 })
+    todos.value = Array.isArray(res) ? res : (res?.records || [])
+  } catch {
+    uni.showToast({ title: '待办数据加载失败', icon: 'none' })
+  } finally {
+    loading.value = false
+  }
+}
+
+function typeName(type) {
+  const map = { APPLICATION: '报名待办', SCHEDULE: '排班待办', ATTENDANCE: '考勤待办', SALARY: '薪资待办' }
+  return map[type] || '待办'
+}
+
+function statusLabel(status) {
+  const map = { PENDING: '待审核', UNPAID: '待结算', NORMAL: '正常', WARNING: '预警' }
+  return map[status] || status || '-'
+}
+
+function formatTime(value) {
+  if (!value) return '-'
+  return String(value).replace('T', ' ').slice(0, 16)
+}
+
+function fallbackPath(type) {
+  const map = {
+    APPLICATION: '/pages/applications/applicationList',
+    SCHEDULE: '/pages/schedules/scheduleList',
+    ATTENDANCE: '/pages/schedules/scheduleList',
+    SALARY: '/pages/attendance/attendanceList'
+  }
+  return map[type] || '/pages/home/index'
+}
 </script>
 
 <template>
@@ -53,7 +89,7 @@ onPullDownRefresh(() => {
     <view class="op-hero">
       <text class="op-hero-kicker">待办中心</text>
       <text class="op-hero-title">按业务类型处理今天的事项</text>
-      <text class="op-hero-desc">报名 12 · 排班 5 · 考勤 2 · 薪资 5</text>
+      <text class="op-hero-desc">{{ heroDesc }}</text>
     </view>
 
     <scroll-view scroll-x class="type-tabs" scroll-with-animation>
@@ -65,28 +101,37 @@ onPullDownRefresh(() => {
     </scroll-view>
 
     <view class="op-content">
-      <view v-for="item in currentTodos" :key="item.name + item.title" class="op-card task-card" @click="navigateTo(item.path)">
-        <view class="task-head">
-          <text class="task-name">{{ item.name }}</text>
-          <text class="op-pill op-pill-warn">{{ item.status }}</text>
-        </view>
-        <view class="task-grid">
-          <view class="task-info">
-            <text class="task-label">事项</text>
-            <text class="task-value">{{ item.title }}</text>
+      <view v-if="loading" class="e-empty">
+        <text class="e-empty-title">加载中...</text>
+      </view>
+      <view v-else-if="currentTodos.length === 0" class="e-empty">
+        <text class="e-empty-title">暂无待办</text>
+        <text class="e-empty-desc">当前分类没有需要处理的事项</text>
+      </view>
+      <view v-else>
+        <view v-for="item in currentTodos" :key="item.id" class="op-card task-card" @click="navigateTo(item.path)">
+          <view class="task-head">
+            <text class="task-name">{{ item.name }}</text>
+            <text class="op-pill op-pill-warn">{{ item.status }}</text>
           </view>
-          <view class="task-info">
-            <text class="task-label">时间</text>
-            <text class="task-value">{{ item.time }}</text>
+          <view class="task-grid">
+            <view class="task-info">
+              <text class="task-label">事项</text>
+              <text class="task-value">{{ item.title }}</text>
+            </view>
+            <view class="task-info">
+              <text class="task-label">时间</text>
+              <text class="task-value">{{ item.time }}</text>
+            </view>
+            <view class="task-info wide">
+              <text class="task-label">说明</text>
+              <text class="task-value">{{ item.desc }}</text>
+            </view>
           </view>
-          <view class="task-info wide">
-            <text class="task-label">说明</text>
-            <text class="task-value">{{ item.desc }}</text>
+          <view class="task-actions">
+            <view class="task-btn secondary">查看详情</view>
+            <view class="task-btn primary">去处理</view>
           </view>
-        </view>
-        <view class="task-actions">
-          <view class="task-btn secondary">查看详情</view>
-          <view class="task-btn primary">去处理</view>
         </view>
       </view>
     </view>

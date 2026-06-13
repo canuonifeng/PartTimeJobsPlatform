@@ -3,10 +3,12 @@ import { computed, onMounted, ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { useAuthStore } from '@/store'
 import { request } from '@/api/request'
+import { getOperationDashboard } from '@/api/operations'
 import EnterpriseTabBar from '@/components/EnterpriseTabBar.vue'
 
 const authStore = useAuthStore()
 const companyName = ref('')
+const dashboard = ref(null)
 
 const greeting = computed(() => {
   const hour = new Date().getHours()
@@ -18,23 +20,31 @@ const greeting = computed(() => {
   return '晚上好'
 })
 
-const stats = [
-  { label: '发布中', value: 6 },
-  { label: '总报名', value: 48 },
-  { label: '待处理', value: 12 }
-]
+const stats = computed(() => {
+  const overview = dashboard.value?.overview || {}
+  return [
+    { label: '发布中', value: overview.publishedJobCount ?? 0 },
+    { label: '总报名', value: overview.totalApplicationCount ?? 0 },
+    { label: '待处理', value: overview.pendingTodoCount ?? 0 }
+  ]
+})
 
-const flowSteps = [
-  { name: '发布', value: '6', state: 'done' },
-  { name: '报名', value: '48', state: 'done' },
-  { name: '审核', value: '12', state: 'warn' },
-  { name: '薪资', value: '5', state: 'todo' }
-]
+const flowSteps = computed(() => (dashboard.value?.process || []).slice(0, 4).map(item => ({
+  name: shortProcessName(item.name),
+  value: item.count ?? 0,
+  state: processState(item.status)
+})))
 
-const todos = [
-  { type: '审', title: '12 个报名等待审核', desc: '服务员、分拣员岗位报名较多', tag: '紧急', path: '/pages/applications/applicationList' },
-  { type: '班', title: '5 个班次未排满', desc: '今晚 18:00 前建议处理', tag: '去处理', path: '/pages/schedules/scheduleList' }
-]
+const todos = computed(() => (dashboard.value?.todoSummary || [])
+  .filter(item => Number(item.count || 0) > 0)
+  .slice(0, 2)
+  .map(item => ({
+    type: todoIcon(item.type),
+    title: `${item.count || 0} 个${item.name}待办`,
+    desc: todoDesc(item.type),
+    tag: Number(item.count || 0) > 0 ? '去处理' : '已完成',
+    path: todoPath(item.type)
+  })))
 
 const quickActions = [
   { name: '发布职位', icon: '发', path: '/pages/jobs/jobForm' },
@@ -52,7 +62,16 @@ onMounted(async () => {
     const res = await request('GET', '/enterprise')
     companyName.value = res?.companyName || ''
   } catch {}
+  await loadDashboard()
 })
+
+async function loadDashboard() {
+  try {
+    dashboard.value = await getOperationDashboard()
+  } catch {
+    uni.showToast({ title: '运营数据加载失败', icon: 'none' })
+  }
+}
 
 function navigateTo(path) {
   uni.navigateTo({ url: path })
@@ -65,6 +84,46 @@ function switchToProcess() {
 function switchToTodos() {
   uni.switchTab({ url: '/pages/todos/todoList' })
 }
+
+function processState(status) {
+  if (status === 'WARNING') return 'warn'
+  if (status === 'TODO') return 'todo'
+  return 'done'
+}
+
+function shortProcessName(name) {
+  if (!name) return '-'
+  if (name.includes('发布')) return '发布'
+  if (name.includes('报名')) return '报名'
+  if (name.includes('审核')) return '审核'
+  if (name.includes('薪资')) return '薪资'
+  return name.slice(0, 2)
+}
+
+function todoIcon(type) {
+  const map = { APPLICATION: '审', SCHEDULE: '班', ATTENDANCE: '勤', SALARY: '薪' }
+  return map[type] || '办'
+}
+
+function todoDesc(type) {
+  const map = {
+    APPLICATION: '及时审核报名，提高招工转化',
+    SCHEDULE: '跟进排班，避免班次遗漏',
+    ATTENDANCE: '处理异常考勤，确认实际工时',
+    SALARY: '确认工时后完成薪资结算'
+  }
+  return map[type] || '查看并处理待办事项'
+}
+
+function todoPath(type) {
+  const map = {
+    APPLICATION: '/pages/applications/applicationList',
+    SCHEDULE: '/pages/schedules/scheduleList',
+    ATTENDANCE: '/pages/schedules/scheduleList',
+    SALARY: '/pages/attendance/attendanceList'
+  }
+  return map[type] || '/pages/todos/todoList'
+}
 </script>
 
 <template>
@@ -72,8 +131,8 @@ function switchToTodos() {
     <view class="top-space"></view>
     <view class="op-hero">
       <text class="op-hero-kicker">{{ greeting }}，{{ authStore.displayName || '企业管理员' }}</text>
-      <text class="op-hero-title">今天有 12 项招聘任务待推进</text>
-      <text class="op-hero-desc">{{ companyName || '企业名称' }} · 发布中岗位报名转化较昨日更活跃</text>
+      <text class="op-hero-title">今天有 {{ dashboard?.overview?.pendingTodoCount ?? 0 }} 项招聘任务待推进</text>
+      <text class="op-hero-desc">{{ companyName || '企业名称' }} · 今日新增报名 {{ dashboard?.today?.newApplicationCount ?? 0 }} 条</text>
     </view>
 
     <view class="stats-grid">

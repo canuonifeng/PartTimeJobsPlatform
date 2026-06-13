@@ -1,21 +1,45 @@
 <script setup>
+import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
+import { getOperationProcess } from '@/api/operations'
 import EnterpriseTabBar from '@/components/EnterpriseTabBar.vue'
 
 onShow(() => {
   uni.hideTabBar({ animation: false })
+  loadProcess()
 })
 
-const steps = [
-  { icon: '发', title: '发布职位', desc: '6 个岗位正在招聘中', tags: ['草稿 2', '已发布 6'], path: '/pages/jobs/jobList', state: 'done' },
-  { icon: '报', title: '收到报名', desc: '今日新增 18 人报名', tags: ['总报名 48', '转化 +18%'], path: '/pages/applications/applicationList', state: 'done' },
-  { icon: '审', title: '审核报名', desc: '12 人等待审核，建议优先处理', tags: ['待审核 12', '已通过 22'], path: '/pages/applications/applicationList', state: 'warn' },
-  { icon: '班', title: '创建排班', desc: '5 个班次未满员', tags: ['今日 9 班', '缺口 7 人'], path: '/pages/schedules/scheduleList', state: 'done' },
-  { icon: '薪', title: '薪资结算', desc: '待结算 5 条考勤记录', tags: ['预计 ¥1,240'], path: '/pages/attendance/attendanceList', state: 'muted' }
-]
+const steps = ref([])
+
+async function loadProcess() {
+  try {
+    const res = await getOperationProcess()
+    steps.value = (Array.isArray(res) ? res : []).map(item => ({
+      icon: processIcon(item.code),
+      title: item.name,
+      desc: item.description,
+      tags: item.tags || [],
+      path: item.routePath,
+      state: processState(item.status)
+    }))
+  } catch {
+    uni.showToast({ title: '流程数据加载失败', icon: 'none' })
+  }
+}
 
 function navigateTo(path) {
   uni.navigateTo({ url: path })
+}
+
+function processIcon(code) {
+  const map = { PUBLISH: '发', APPLICATION: '报', REVIEW: '审', SCHEDULE: '班', ATTENDANCE: '勤', SALARY: '薪' }
+  return map[code] || '流'
+}
+
+function processState(status) {
+  if (status === 'WARNING') return 'warn'
+  if (status === 'TODO') return 'muted'
+  return 'done'
 }
 </script>
 
@@ -24,8 +48,8 @@ function navigateTo(path) {
     <view class="top-space"></view>
     <view class="op-hero">
       <text class="op-hero-kicker">招聘运营流程</text>
-      <text class="op-hero-title">报名审核阶段需要优先处理</text>
-      <text class="op-hero-desc">当前链路：发布正常 · 报名充足 · 审核积压</text>
+      <text class="op-hero-title">招聘链路实时推进</text>
+      <text class="op-hero-desc">发布、报名、审核、排班、考勤、薪资节点来自后端统计</text>
     </view>
 
     <view class="op-content">
