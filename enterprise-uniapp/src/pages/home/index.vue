@@ -124,7 +124,7 @@ function switchToTodos() {
 </template>
 
 <style>
-.workbench-page { min-height: 100vh; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
+.workbench-page { min-height: 100vh; padding-bottom: calc(140rpx + env(safe-area-inset-bottom)); }
 .top-space { height: 24rpx; }
 .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16rpx; margin: -24rpx 28rpx 0; position: relative; z-index: 2; }
 .stat-card { background: rgba(255,255,255,.96); border-radius: 24rpx; padding: 22rpx 18rpx; box-shadow: 0 12rpx 30rpx rgba(23,83,53,.08); box-sizing: border-box; }

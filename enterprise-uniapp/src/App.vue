@@ -130,7 +130,21 @@ page {
   background: #f6f8f7;
   color: #1f2933;
   box-sizing: border-box;
-  padding-bottom: 40rpx;
+  padding-bottom: calc(140rpx + env(safe-area-inset-bottom));
+}
+
+uni-tabbar,
+.uni-tabbar-bottom,
+.uni-tabbar-bottom .uni-tabbar {
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 9999 !important;
+}
+
+.uni-tabbar-bottom .uni-tabbar {
+  padding-bottom: env(safe-area-inset-bottom) !important;
 }
 
 .op-hero {

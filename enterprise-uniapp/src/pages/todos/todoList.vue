@@ -89,7 +89,7 @@ onPullDownRefresh(() => {
 </template>
 
 <style>
-.todo-page { min-height: 100vh; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
+.todo-page { min-height: 100vh; padding-bottom: calc(140rpx + env(safe-area-inset-bottom)); }
 .top-space { height: 24rpx; }
 .type-tabs { width: 100%; margin-top: 22rpx; white-space: nowrap; }
 .type-tabs-inner { display: flex; padding: 0 28rpx; }

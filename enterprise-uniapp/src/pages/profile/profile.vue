@@ -94,7 +94,7 @@ function handleLogout() {
 </template>
 
 <style>
-.profile-page { min-height: 100vh; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
+.profile-page { min-height: 100vh; padding-bottom: calc(140rpx + env(safe-area-inset-bottom)); }
 .profile-card { display: flex; align-items: center; margin: 24rpx 28rpx 0; padding: 32rpx; border-radius: 32rpx; background: #fff; box-shadow: 0 12rpx 34rpx rgba(23,83,53,.08); box-sizing: border-box; }
 .avatar { width: 104rpx; height: 104rpx; margin-right: 22rpx; border-radius: 32rpx; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #18c86b, #047857); color: #fff; font-size: 42rpx; font-weight: 850; flex-shrink: 0; }
 .profile-name { display: block; font-size: 34rpx; font-weight: 850; color: #1f2933; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -44,7 +44,7 @@ function navigateTo(path) {
 </template>
 
 <style>
-.process-page { min-height: 100vh; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
+.process-page { min-height: 100vh; padding-bottom: calc(140rpx + env(safe-area-inset-bottom)); }
 .top-space { height: 24rpx; }
 .timeline { padding-top: 6rpx; }
 .timeline-step { position: relative; display: flex; padding-bottom: 26rpx; }
