@@ -43,7 +43,7 @@ onPullDownRefresh(() => {
 </script>
 
 <template>
-  <scroll-view scroll-y class="op-page todo-page">
+  <view class="op-page todo-page">
     <view class="top-space"></view>
     <view class="op-hero">
       <text class="op-hero-kicker">待办中心</text>
@@ -85,11 +85,11 @@ onPullDownRefresh(() => {
         </view>
       </view>
     </view>
-  </scroll-view>
+  </view>
 </template>
 
 <style>
-.todo-page { height: 100vh; }
+.todo-page { min-height: 100vh; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
 .top-space { height: 24rpx; }
 .type-tabs { width: 100%; margin-top: 22rpx; white-space: nowrap; }
 .type-tabs-inner { display: flex; padding: 0 28rpx; }

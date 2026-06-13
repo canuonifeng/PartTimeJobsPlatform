@@ -13,7 +13,7 @@ function navigateTo(path) {
 </script>
 
 <template>
-  <scroll-view scroll-y class="op-page process-page">
+  <view class="op-page process-page">
     <view class="top-space"></view>
     <view class="op-hero">
       <text class="op-hero-kicker">招聘运营流程</text>
@@ -40,11 +40,11 @@ function navigateTo(path) {
         </view>
       </view>
     </view>
-  </scroll-view>
+  </view>
 </template>
 
 <style>
-.process-page { height: 100vh; }
+.process-page { min-height: 100vh; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
 .top-space { height: 24rpx; }
 .timeline { padding-top: 6rpx; }
 .timeline-step { position: relative; display: flex; padding-bottom: 26rpx; }
