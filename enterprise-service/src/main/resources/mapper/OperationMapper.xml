@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.enterprise.mapper.OperationMapper">
+
+    <resultMap id="TodoItemMap" type="com.parttime.enterprise.pojo.vo.OperationTodoItemVO">
+        <id property="id" column="id"/>
+        <result property="type" column="type"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="status" column="status"/>
+        <result property="priority" column="priority"/>
+        <result property="bizId" column="biz_id"/>
+        <result property="bizType" column="biz_type"/>
+        <result property="actionText" column="action_text"/>
+        <result property="routePath" column="route_path"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="deadlineAt" column="deadline_at"/>
+    </resultMap>
+
+    <resultMap id="ExceptionMap" type="com.parttime.enterprise.pojo.vo.OperationExceptionVO">
+        <id property="id" column="id"/>
+        <result property="type" column="type"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="status" column="status"/>
+        <result property="priority" column="priority"/>
+        <result property="bizId" column="biz_id"/>
+        <result property="routePath" column="route_path"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <resultMap id="TrendPointMap" type="com.parttime.enterprise.pojo.vo.OperationTrendPointVO">
+        <result property="date" column="date"/>
+        <result property="applicationCount" column="application_count"/>
+        <result property="shiftCount" column="shift_count"/>
+        <result property="salaryAmount" column="salary_amount"/>
+    </resultMap>
+
+    <select id="countPublishedJobs" resultType="long">
+        SELECT COUNT(*) FROM jobs WHERE company_id = #{companyId} AND status = 'PUBLISHED'
+    </select>
+
+    <select id="countApplications" resultType="long">
+        SELECT COUNT(*)
+        FROM schedule_applications sa
+        JOIN job_schedules js ON sa.schedule_id = js.id
+        JOIN jobs j ON js.job_id = j.id
+        WHERE j.company_id = #{companyId}
+    </select>
+
+    <select id="countPendingApplications" resultType="long">
+        SELECT COUNT(*)
+        FROM schedule_applications sa
+        JOIN job_schedules js ON sa.schedule_id = js.id
+        JOIN jobs j ON js.job_id = j.id
+        WHERE j.company_id = #{companyId} AND sa.status = 'PENDING'
+    </select>
+
+    <select id="countTodayApplications" resultType="long">
+        SELECT COUNT(*)
+        FROM schedule_applications sa
+        JOIN job_schedules js ON sa.schedule_id = js.id
+        JOIN jobs j ON js.job_id = j.id
+        WHERE j.company_id = #{companyId} AND DATE(sa.applied_at) = #{today}
+    </select>
+
+    <select id="countTodayShifts" resultType="long">
+        SELECT COUNT(*) FROM schedule_shifts WHERE company_id = #{companyId} AND shift_date = #{today}
+    </select>
+
+    <select id="countFutureShifts" resultType="long">
+        SELECT COUNT(*) FROM schedule_shifts
+        WHERE company_id = #{companyId} AND shift_date &gt;= #{today} AND status NOT IN ('CANCELLED', 'CHECKED_OUT', 'COMPLETED')
+    </select>
+
+    <select id="countAttendanceExceptions" resultType="long">
+        SELECT COUNT(*)
+        FROM attendance_records a
+        WHERE a.company_id = #{companyId}
+          AND (a.status IS NOT NULL AND a.status != 'NORMAL' OR a.check_in_time IS NULL OR a.check_out_time IS NULL)
+    </select>
+
+    <select id="countUnpaidSalary" resultType="long">
+        SELECT COUNT(*) FROM attendance_records WHERE company_id = #{companyId} AND settlement_status = 'UNPAID'
+    </select>
+
+    <select id="findApplicationTodos" resultMap="TodoItemMap">
+        SELECT CONCAT('APPLICATION-', sa.id) AS id,
+               'APPLICATION' AS type,
+               CONCAT(COALESCE(w.name, '工人'), '报名', COALESCE(j.title, '岗位')) AS title,
+               CONCAT(COALESCE(wp.gender, '未知'), ' · ', COALESCE(w.phone, '暂无手机号')) AS description,
+               sa.status AS status,
+               'HIGH' AS priority,
+               sa.id AS biz_id,
+               'SCHEDULE_APPLICATION' AS biz_type,
+               '通过报名' AS action_text,
+               '/pages/applications/applicationList' AS route_path,
+               sa.applied_at AS created_at,
+               NULL AS deadline_at
+        FROM schedule_applications sa
+        JOIN job_schedules js ON sa.schedule_id = js.id
+        JOIN jobs j ON js.job_id = j.id
+        LEFT JOIN c_worker w ON sa.worker_id = w.id
+        LEFT JOIN worker_profiles wp ON sa.worker_id = wp.worker_id
+        WHERE j.company_id = #{companyId} AND sa.status = 'PENDING'
+        ORDER BY sa.applied_at DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countApplicationTodos" resultType="long">
+        SELECT COUNT(*)
+        FROM schedule_applications sa
+        JOIN job_schedules js ON sa.schedule_id = js.id
+        JOIN jobs j ON js.job_id = j.id
+        WHERE j.company_id = #{companyId} AND sa.status = 'PENDING'
+    </select>
+
+    <select id="findScheduleTodos" resultMap="TodoItemMap">
+        SELECT CONCAT('SCHEDULE-', s.id) AS id,
+               'SCHEDULE' AS type,
+               CONCAT(COALESCE(j.title, '岗位'), '排班待跟进') AS title,
+               CONCAT(s.shift_date, ' ', s.start_time, '-', s.end_time, ' · ', COALESCE(w.name, '未匹配工人')) AS description,
+               s.status AS status,
+               'MEDIUM' AS priority,
+               s.id AS biz_id,
+               'SCHEDULE_SHIFT' AS biz_type,
+               '取消排班' AS action_text,
+               '/pages/schedules/scheduleList' AS route_path,
+               s.created_at AS created_at,
+               TIMESTAMP(s.shift_date, s.start_time) AS deadline_at
+        FROM schedule_shifts s
+        JOIN jobs j ON s.job_id = j.id
+        LEFT JOIN c_worker w ON s.worker_id = w.id
+        WHERE s.company_id = #{companyId}
+          AND s.shift_date &gt;= #{today}
+          AND s.status NOT IN ('CANCELLED', 'CHECKED_OUT', 'COMPLETED')
+        ORDER BY s.shift_date ASC, s.start_time ASC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countScheduleTodos" resultType="long">
+        SELECT COUNT(*) FROM schedule_shifts s
+        WHERE s.company_id = #{companyId}
+          AND s.shift_date &gt;= #{today}
+          AND s.status NOT IN ('CANCELLED', 'CHECKED_OUT', 'COMPLETED')
+    </select>
+
+    <select id="findAttendanceTodos" resultMap="TodoItemMap">
+        SELECT CONCAT('ATTENDANCE-', a.id) AS id,
+               'ATTENDANCE' AS type,
+               CONCAT(COALESCE(w.name, '工人'), '考勤异常') AS title,
+               CONCAT(COALESCE(j.title, '岗位'), ' · ', COALESCE(a.status, '缺少打卡')) AS description,
+               COALESCE(a.status, 'EXCEPTION') AS status,
+               'HIGH' AS priority,
+               a.id AS biz_id,
+               'ATTENDANCE_RECORD' AS biz_type,
+               '查看处理' AS action_text,
+               '/pages/schedules/scheduleList' AS route_path,
+               a.created_at AS created_at,
+               NULL AS deadline_at
+        FROM attendance_records a
+        JOIN jobs j ON a.job_id = j.id
+        LEFT JOIN c_worker w ON a.worker_id = w.id
+        WHERE a.company_id = #{companyId}
+          AND (a.status IS NOT NULL AND a.status != 'NORMAL' OR a.check_in_time IS NULL OR a.check_out_time IS NULL)
+        ORDER BY a.id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countAttendanceTodos" resultType="long">
+        SELECT COUNT(*) FROM attendance_records a
+        WHERE a.company_id = #{companyId}
+          AND (a.status IS NOT NULL AND a.status != 'NORMAL' OR a.check_in_time IS NULL OR a.check_out_time IS NULL)
+    </select>
+
+    <select id="findSalaryTodos" resultMap="TodoItemMap">
+        SELECT CONCAT('SALARY-', a.id) AS id,
+               'SALARY' AS type,
+               CONCAT(COALESCE(w.name, '工人'), '薪资待结算') AS title,
+               CONCAT(COALESCE(j.title, '岗位'), ' · 应付 ', COALESCE(a.payable_pay, a.scheduled_pay, 0)) AS description,
+               a.settlement_status AS status,
+               'MEDIUM' AS priority,
+               a.id AS biz_id,
+               'ATTENDANCE_RECORD' AS biz_type,
+               '结算薪资' AS action_text,
+               '/pages/attendance/attendanceList' AS route_path,
+               a.created_at AS created_at,
+               NULL AS deadline_at
+        FROM attendance_records a
+        JOIN jobs j ON a.job_id = j.id
+        LEFT JOIN c_worker w ON a.worker_id = w.id
+        WHERE a.company_id = #{companyId} AND a.settlement_status = 'UNPAID'
+        ORDER BY a.id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countSalaryTodos" resultType="long">
+        SELECT COUNT(*) FROM attendance_records WHERE company_id = #{companyId} AND settlement_status = 'UNPAID'
+    </select>
+
+    <select id="findExceptions" resultMap="ExceptionMap">
+        SELECT * FROM (
+            SELECT CONCAT('ATTENDANCE-', a.id) AS id,
+                   'ATTENDANCE' AS type,
+                   CONCAT(COALESCE(w.name, '工人'), '考勤异常') AS title,
+                   CONCAT(COALESCE(j.title, '岗位'), ' · ', COALESCE(a.status, '缺少打卡')) AS description,
+                   COALESCE(a.status, 'EXCEPTION') AS status,
+                   'HIGH' AS priority,
+                   a.id AS biz_id,
+                   '/pages/schedules/scheduleList' AS route_path,
+                   a.created_at AS created_at
+            FROM attendance_records a
+            JOIN jobs j ON a.job_id = j.id
+            LEFT JOIN c_worker w ON a.worker_id = w.id
+            WHERE a.company_id = #{companyId}
+              AND (a.status IS NOT NULL AND a.status != 'NORMAL' OR a.check_in_time IS NULL OR a.check_out_time IS NULL)
+            UNION ALL
+            SELECT CONCAT('SALARY-', a.id) AS id,
+                   'SALARY' AS type,
+                   '薪资待结算' AS title,
+                   CONCAT(COALESCE(j.title, '岗位'), ' · 应付 ', COALESCE(a.payable_pay, a.scheduled_pay, 0)) AS description,
+                   a.settlement_status AS status,
+                   'MEDIUM' AS priority,
+                   a.id AS biz_id,
+                   '/pages/attendance/attendanceList' AS route_path,
+                   a.created_at AS created_at
+            FROM attendance_records a
+            JOIN jobs j ON a.job_id = j.id
+            WHERE a.company_id = #{companyId} AND a.settlement_status = 'UNPAID'
+        ) x
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countExceptions" resultType="long">
+        SELECT
+            (SELECT COUNT(*) FROM attendance_records a WHERE a.company_id = #{companyId}
+             AND (a.status IS NOT NULL AND a.status != 'NORMAL' OR a.check_in_time IS NULL OR a.check_out_time IS NULL))
+            +
+            (SELECT COUNT(*) FROM attendance_records a WHERE a.company_id = #{companyId} AND a.settlement_status = 'UNPAID')
+    </select>
+
+    <select id="findTrendPoints" resultMap="TrendPointMap">
+        SELECT d.date,
+               COALESCE(app.application_count, 0) AS application_count,
+               COALESCE(shift_count.shift_count, 0) AS shift_count,
+               COALESCE(salary.salary_amount, 0) AS salary_amount
+        FROM (
+            SELECT #{startDate} + INTERVAL seq DAY AS date
+            FROM (
+                SELECT 0 AS seq UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6
+            ) seqs
+        ) d
+        LEFT JOIN (
+            SELECT DATE(sa.applied_at) AS date, COUNT(*) AS application_count
+            FROM schedule_applications sa
+            JOIN job_schedules js ON sa.schedule_id = js.id
+            JOIN jobs j ON js.job_id = j.id
+            WHERE j.company_id = #{companyId} AND DATE(sa.applied_at) BETWEEN #{startDate} AND #{endDate}
+            GROUP BY DATE(sa.applied_at)
+        ) app ON app.date = d.date
+        LEFT JOIN (
+            SELECT s.shift_date AS date, COUNT(*) AS shift_count
+            FROM schedule_shifts s
+            WHERE s.company_id = #{companyId} AND s.shift_date BETWEEN #{startDate} AND #{endDate}
+            GROUP BY s.shift_date
+        ) shift_count ON shift_count.date = d.date
+        LEFT JOIN (
+            SELECT DATE(COALESCE(a.calculated_at, a.created_at)) AS date, SUM(COALESCE(a.payable_pay, a.scheduled_pay, 0)) AS salary_amount
+            FROM attendance_records a
+            WHERE a.company_id = #{companyId} AND DATE(COALESCE(a.calculated_at, a.created_at)) BETWEEN #{startDate} AND #{endDate}
+            GROUP BY DATE(COALESCE(a.calculated_at, a.created_at))
+        ) salary ON salary.date = d.date
+        ORDER BY d.date
+    </select>
+
+</mapper>
