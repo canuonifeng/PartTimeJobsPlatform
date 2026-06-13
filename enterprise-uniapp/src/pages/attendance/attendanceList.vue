@@ -134,98 +134,116 @@ function timeRange(record) {
 </script>
 
 <template>
-  <view class="page">
-    <view class="header">
-      <text class="header-title">薪资管理</text>
-      <view class="header-actions">
-        <button class="header-btn pay-btn" @click="handleBatchPay">结算</button>
-        <button class="header-btn del-btn" @click="handleBatchDelete">删除</button>
-      </view>
+  <scroll-view scroll-y class="op-page salary-page" @scrolltolower="loadMore">
+    <view class="top-space"></view>
+    <view class="op-hero">
+      <text class="op-hero-kicker">薪资结算</text>
+      <text class="op-hero-title">确认工时并批量结算</text>
+      <text class="op-hero-desc">{{ records.length }} 条记录 · 已选 {{ selectedIds.length }} 条</text>
     </view>
-    <view class="content">
+
+    <view class="op-content">
       <view class="summary-card">
         <view class="summary-item">
-          <text class="summary-label">记录数</text>
           <text class="summary-value">{{ records.length }}</text>
+          <text class="summary-label">记录数</text>
         </view>
-        <view class="summary-divider"></view>
         <view class="summary-item">
-          <text class="summary-label">已选</text>
-          <text class="summary-value">{{ selectedIds.length }}</text>
+          <text class="summary-value selected">{{ selectedIds.length }}</text>
+          <text class="summary-label">已选择</text>
         </view>
       </view>
-      <scroll-view scroll-y class="list-scroll" @scrolltolower="loadMore">
-        <view v-if="loading" class="state-msg">加载中...</view>
-        <view v-else-if="records.length === 0" class="state-msg">暂无考勤记录</view>
-        <view v-else class="list">
-          <view class="select-all" @click="toggleSelectAll">
-            <text class="checkbox" :class="{ checked: selectedIds.length === records.filter(canOperate).length && records.filter(canOperate).length > 0 }">{{ selectedIds.length === records.filter(canOperate).length && records.filter(canOperate).length > 0 ? '✓' : '' }}</text>
-            <text class="select-all-label">全选</text>
-          </view>
-          <view v-for="r in records" :key="r.id" class="card" @click="toggleSelect(r)">
-            <view class="card-top">
-              <text class="checkbox" :class="{ checked: selectedIds.includes(r.id), disabled: !canOperate(r) }">{{ selectedIds.includes(r.id) ? '✓' : '' }}</text>
-              <text class="card-name">{{ r.workerName || '未知' }}</text>
-              <text class="badge" :class="r.settlementStatus === 'PAID' ? 'badge-paid' : r.settlementStatus === 'PAYING' ? 'badge-paying' : 'badge-unpaid'">{{ settlementStatusLabel(r.settlementStatus) }}</text>
-            </view>
-            <view class="card-body">
-              <text class="info">岗位：{{ r.jobTitle || '-' }}</text>
-              <text class="info">日期：{{ r.shiftDate || '-' }}</text>
-              <text class="info">时间：{{ timeRange(r) }}</text>
-              <text class="info">年龄：{{ r.workerAge ?? '-' }}岁</text>
-              <text class="info">薪资标准：{{ salaryLabel(r) }}</text>
-              <text class="info">工时：{{ r.totalHours ?? '-' }}</text>
-              <text class="info">排班薪资：{{ moneyLabel(r.scheduledPay) }}</text>
-              <text class="info">应付薪资：{{ moneyLabel(r.payablePay ?? r.scheduledPay) }}</text>
-              <text class="info">签到：{{ r.checkInTime || '-' }}</text>
-              <text class="info">签退：{{ r.checkOutTime || '-' }}</text>
-            </view>
-          </view>
-        </view>
 
-        <view class="load-more-wrap">
-          <uni-load-more v-if="loadingMore" status="loading" />
-          <uni-load-more v-else-if="hasMore" status="more" />
-          <uni-load-more v-else status="noMore" />
+      <view class="batch-bar">
+        <view class="select-all" @click="toggleSelectAll">
+          <text class="checkbox" :class="{ checked: selectedIds.length === records.filter(canOperate).length && records.filter(canOperate).length > 0 }">{{ selectedIds.length === records.filter(canOperate).length && records.filter(canOperate).length > 0 ? '✓' : '' }}</text>
+          <text class="select-all-label">全选可操作记录</text>
         </view>
-      </scroll-view>
+        <view class="batch-actions">
+          <view class="batch-btn pay" @click="handleBatchPay">结算</view>
+          <view class="batch-btn delete" @click="handleBatchDelete">删除</view>
+        </view>
+      </view>
+
+      <view v-if="loading" class="e-empty">
+        <text class="e-empty-title">加载中...</text>
+      </view>
+
+      <view v-else-if="records.length === 0" class="e-empty">
+        <text class="e-empty-title">暂无考勤记录</text>
+      </view>
+
+      <view v-else class="salary-list">
+        <view v-for="r in records" :key="r.id" class="op-card salary-card" @click="toggleSelect(r)">
+          <view class="op-row">
+            <text class="checkbox" :class="{ checked: selectedIds.includes(r.id), disabled: !canOperate(r) }">{{ selectedIds.includes(r.id) ? '✓' : '' }}</text>
+            <view class="op-row-main">
+              <text class="op-row-title">{{ r.workerName || '未知' }}</text>
+              <text class="op-row-desc">{{ r.jobTitle || '-' }} · {{ r.shiftDate || '-' }}</text>
+            </view>
+            <text class="op-pill" :class="r.settlementStatus === 'PAID' ? '' : r.settlementStatus === 'PAYING' ? 'op-pill-warn' : 'pill-gray'">{{ settlementStatusLabel(r.settlementStatus) }}</text>
+          </view>
+
+          <view class="salary-grid">
+            <view class="salary-info">
+              <text class="salary-label">应付薪资</text>
+              <text class="salary-value money">{{ moneyLabel(r.payablePay ?? r.scheduledPay) }}</text>
+            </view>
+            <view class="salary-info">
+              <text class="salary-label">工时</text>
+              <text class="salary-value">{{ r.totalHours ?? '-' }}</text>
+            </view>
+            <view class="salary-info">
+              <text class="salary-label">薪资标准</text>
+              <text class="salary-value">{{ salaryLabel(r) }}</text>
+            </view>
+            <view class="salary-info">
+              <text class="salary-label">签到签退</text>
+              <text class="salary-value">{{ r.checkInTime || '-' }} / {{ r.checkOutTime || '-' }}</text>
+            </view>
+            <view class="salary-info wide">
+              <text class="salary-label">排班时间</text>
+              <text class="salary-value">{{ timeRange(r) }}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="load-more-wrap">
+        <uni-load-more v-if="loadingMore" status="loading" />
+        <uni-load-more v-else-if="hasMore" status="more" />
+        <uni-load-more v-else status="noMore" />
+      </view>
     </view>
-  </view>
+  </scroll-view>
 </template>
 
 <style>
-.page { min-height: 100vh; background: #f6f8f7; }
-.header { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, #18c86b 0%, #08a95a 56%, #078a49 100%); padding: 48rpx 32rpx 28rpx; border-bottom-left-radius: 36rpx; border-bottom-right-radius: 36rpx; }
-.header-title { font-size: 36rpx; font-weight: 700; color: #fff; }
-.header-actions { display: flex; }
-.header-actions .header-btn + .header-btn { margin-left: 16rpx; }
-.header-btn { height: 60rpx; line-height: 60rpx; font-size: 24rpx; padding: 0 24rpx; border-radius: 999rpx; color: #fff; font-weight: 600; }
-.header-btn::after { border: none; }
-.pay-btn { background: #07c160; }
-.del-btn { background: #ff3b30; }
-.content { padding: 24rpx 28rpx; }
-.summary-card { display: flex; align-items: center; margin-bottom: 24rpx; padding: 28rpx; background: #fff; border-radius: 24rpx; box-shadow: 0 12rpx 34rpx rgba(23,83,53,0.08); box-sizing: border-box; }
-.summary-item { flex: 1; text-align: center; }
-.summary-label { display: block; font-size: 24rpx; color: #64748b; }
-.summary-value { display: block; margin-top: 8rpx; font-size: 38rpx; font-weight: 800; color: #08a95a; }
-.summary-divider { width: 2rpx; height: 56rpx; background: #edf0f3; }
-.list-scroll { height: calc(100vh - 274rpx); }
-.state-msg { text-align: center; padding: 120rpx 0; color: #98a3b3; font-size: 28rpx; }
-.list { display: flex; flex-direction: column; }
-.list .card + .card { margin-top: 20rpx; }
-.select-all { display: flex; align-items: center; padding: 12rpx 0; }
-.checkbox { width: 40rpx; height: 40rpx; border: 2rpx solid #d1d5db; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24rpx; color: #fff; margin-right: 12rpx; flex-shrink: 0; }
-.checkbox.checked { background: #07c160; border-color: #07c160; }
+.salary-page { height: 100vh; }
+.top-space { height: 24rpx; }
+.summary-card { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16rpx; margin-bottom: 20rpx; }
+.summary-item { padding: 24rpx; border-radius: 24rpx; background: #fff; box-shadow: 0 12rpx 30rpx rgba(23,83,53,.08); }
+.summary-value { display: block; font-size: 40rpx; font-weight: 850; color: #16a34a; line-height: 1; }
+.summary-value.selected { color: #b45309; }
+.summary-label { display: block; margin-top: 10rpx; font-size: 23rpx; color: #64748b; }
+.batch-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20rpx; padding: 18rpx; border-radius: 24rpx; background: #fff; box-shadow: 0 10rpx 24rpx rgba(23,83,53,.06); }
+.select-all { display: flex; align-items: center; min-width: 0; }
+.checkbox { width: 42rpx; height: 42rpx; margin-right: 12rpx; border: 2rpx solid #d1d5db; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24rpx; color: #fff; flex-shrink: 0; }
+.checkbox.checked { background: #16a34a; border-color: #16a34a; }
 .checkbox.disabled { background: #eef1f0; border-color: #eef1f0; }
-.select-all-label { font-size: 26rpx; color: #64748b; }
-.card { background: #fff; border-radius: 24rpx; padding: 28rpx; box-shadow: 0 12rpx 34rpx rgba(23,83,53,0.08); }
-.card-top { display: flex; align-items: center; margin-bottom: 16rpx; }
-.card-name { font-size: 30rpx; font-weight: 600; color: #1f2933; flex: 1; margin-left: 8rpx; }
-.badge { font-size: 22rpx; padding: 6rpx 18rpx; border-radius: 999rpx; font-weight: 700; flex-shrink: 0; }
-.badge-paid { background: #e7f8ef; color: #08a857; }
-.badge-paying { background: #fff7df; color: #d28a00; }
-.badge-unpaid { background: #eef1f0; color: #7b8580; }
-.card-body { margin-top: 8rpx; }
-.info { display: block; font-size: 26rpx; color: #64748b; line-height: 1.8; }
-.load-more-wrap { padding-bottom: 24rpx; }
+.select-all-label { font-size: 24rpx; color: #64748b; }
+.batch-actions { display: flex; gap: 12rpx; flex-shrink: 0; }
+.batch-btn { min-width: 96rpx; height: 58rpx; line-height: 58rpx; border-radius: 999rpx; text-align: center; font-size: 24rpx; font-weight: 850; }
+.batch-btn.pay { background: #16a34a; color: #fff; }
+.batch-btn.delete { background: #fee2e2; color: #dc2626; }
+.salary-list { display: flex; flex-direction: column; gap: 20rpx; }
+.salary-card { overflow: hidden; }
+.pill-gray { color: #64748b; background: #f1f5f9; }
+.salary-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14rpx; margin-top: 22rpx; }
+.salary-info { min-width: 0; padding: 16rpx; border-radius: 18rpx; background: #f8fafc; }
+.salary-info.wide { grid-column: span 2; }
+.salary-label { display: block; font-size: 22rpx; color: #64748b; }
+.salary-value { display: block; margin-top: 8rpx; font-size: 25rpx; font-weight: 750; color: #1f2933; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.salary-value.money { color: #16a34a; font-size: 30rpx; font-weight: 850; }
+.load-more-wrap { padding: 16rpx 0 32rpx; }
 </style>

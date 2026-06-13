@@ -117,62 +117,49 @@ function initials(name) {
 </script>
 
 <template>
-  <view class="page">
-    <view class="header">
-      <text class="header-title">排班考勤</text>
+  <scroll-view scroll-y class="op-page schedules-page" @scrolltolower="loadMore">
+    <view class="top-space"></view>
+    <view class="op-hero">
+      <text class="op-hero-kicker">排班考勤</text>
+      <text class="op-hero-title">跟进班次人员与签到状态</text>
+      <text class="op-hero-desc">{{ shifts.length }} 条排班 · 及时处理未开始班次</text>
     </view>
 
-    <view class="content">
-      <view v-if="loading" class="empty-state">
-        <text class="empty-emoji">⏳</text>
-        <text class="empty-title">加载中...</text>
+    <view class="op-content">
+      <view v-if="loading" class="e-empty">
+        <text class="e-empty-title">加载中...</text>
       </view>
 
-      <view v-else-if="shifts.length === 0" class="empty-state">
-        <text class="empty-emoji">📅</text>
-        <text class="empty-title">暂无排班</text>
-        <text class="empty-desc">还没有安排排班计划</text>
+      <view v-else-if="shifts.length === 0" class="e-empty">
+        <text class="e-empty-title">暂无排班</text>
+        <text class="e-empty-desc">还没有安排排班计划</text>
       </view>
 
       <view v-else class="schedule-list">
-        <view v-for="s in shifts" :key="s.id" class="schedule-card">
-          <view class="card-header">
-            <view class="worker-info">
-              <view class="worker-avatar">{{ initials(s.workerName) }}</view>
-              <view class="worker-detail">
-                <text class="worker-name">{{ s.workerName || '-' }}</text>
-                <text class="worker-meta">{{ genderLabel(s.workerGender) }} · {{ ageLabel(s.workerAge) }} · {{ phoneLabel(s.workerPhone) }}</text>
-              </view>
-            </view>
-            <view class="status-badge" :class="statusClass(s.status)">{{ statusLabel(s.status) }}</view>
-          </view>
-
-          <view class="time-block">
+        <view v-for="s in shifts" :key="s.id" class="op-card schedule-card">
+          <view class="op-row">
             <view class="date-box">
               <text class="date-day">{{ (s.shiftDate || s.date || '').slice(-2) || '-' }}</text>
               <text class="date-month">{{ (s.shiftDate || s.date || '').slice(5, 7) || '' }}月</text>
             </view>
-            <view class="time-info">
-              <text class="time-label">工作时间</text>
-              <text class="time-value">{{ formatTime(s.startTime) }} - {{ formatTime(s.endTime) }}</text>
+            <view class="op-row-main">
+              <text class="op-row-title">{{ s.jobTitle || '-' }}</text>
+              <text class="op-row-desc">{{ formatTime(s.startTime) }} - {{ formatTime(s.endTime) }}</text>
+            </view>
+            <text class="op-pill" :class="statusClass(s.status) === 'cancelled' ? 'op-pill-danger' : statusClass(s.status) === 'pending' ? 'op-pill-warn' : ''">{{ statusLabel(s.status) }}</text>
+          </view>
+
+          <view class="worker-box">
+            <view class="worker-avatar">{{ initials(s.workerName) }}</view>
+            <view class="op-row-main">
+              <text class="worker-name">{{ s.workerName || '-' }}</text>
+              <text class="worker-desc">{{ genderLabel(s.workerGender) }} · {{ ageLabel(s.workerAge) }} · {{ phoneLabel(s.workerPhone) }}</text>
             </view>
           </view>
 
-          <view class="info-block">
-            <text class="info-icon">💼</text>
-            <view class="info-text">
-              <text class="info-label">岗位</text>
-              <text class="info-value">{{ s.jobTitle || '-' }}</text>
-            </view>
-          </view>
-
-          <view class="card-footer">
-            <view
-              v-if="canCancelShift(s)"
-              class="action-btn"
-              @click="handleDelete(s.id)"
-            >取消排班</view>
-            <view v-else class="cancelled-label">{{ s.status === 'CANCELLED' ? '已取消' : '不可取消' }}</view>
+          <view class="action-row">
+            <view v-if="canCancelShift(s)" class="action-btn danger" @click="handleDelete(s.id)">取消排班</view>
+            <view v-else class="action-btn disabled">{{ s.status === 'CANCELLED' ? '已取消' : '不可取消' }}</view>
           </view>
         </view>
       </view>
@@ -183,274 +170,24 @@ function initials(name) {
         <uni-load-more v-else status="noMore" />
       </view>
     </view>
-  </view>
+  </scroll-view>
 </template>
 
-<style scoped>
-.page {
-  min-height: 100vh;
-  background: #f6f8f7;
-}
-
-.header {
-  background: linear-gradient(135deg, #18c86b 0%, #08a95a 56%, #078a49 100%);
-  padding: 48rpx 32rpx 28rpx;
-  border-bottom-left-radius: 36rpx;
-  border-bottom-right-radius: 36rpx;
-}
-
-.header-title {
-  font-size: 36rpx;
-  font-weight: 700;
-  color: #fff;
-}
-
-.content {
-  padding: 24rpx 32rpx;
-  padding-bottom: 80rpx;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 120rpx 0;
-}
-
-.empty-emoji {
-  font-size: 64rpx;
-  margin-bottom: 20rpx;
-}
-
-.empty-title {
-  font-size: 30rpx;
-  font-weight: 700;
-  color: #1f2933;
-  margin-bottom: 8rpx;
-}
-
-.empty-desc {
-  font-size: 26rpx;
-  color: #98a3b3;
-}
-
-.schedule-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-}
-
-.schedule-card {
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 24rpx;
-  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-
-.worker-info {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  min-width: 0;
-  margin-right: 16rpx;
-}
-
-.worker-avatar {
-  flex-shrink: 0;
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #06b6d4, #0891b2);
-  color: #fff;
-  font-size: 28rpx;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 16rpx;
-}
-
-.worker-detail {
-  flex: 1;
-  min-width: 0;
-}
-
-.worker-name {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #1f2933;
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.worker-meta {
-  font-size: 24rpx;
-  color: #98a3b3;
-  display: block;
-  margin-top: 4rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.status-badge {
-  font-size: 22rpx;
-  font-weight: 700;
-  padding: 8rpx 18rpx;
-  border-radius: 999rpx;
-  flex-shrink: 0;
-}
-
-.status-badge.pending {
-  background: #fff7df;
-  color: #d28a00;
-}
-
-.status-badge.completed {
-  background: #eef1f0;
-  color: #7b8580;
-}
-
-.status-badge.on-duty {
-  background: #e7f8ef;
-  color: #08a857;
-}
-
-.status-badge.cancelled {
-  background: #feecec;
-  color: #df3b30;
-}
-
-.status-badge.default {
-  background: #eef1f0;
-  color: #7b8580;
-}
-
-.time-block {
-  display: flex;
-  align-items: center;
-  gap: 20rpx;
-  background: #f8faf9;
-  border-radius: 16rpx;
-  padding: 18rpx 20rpx;
-  margin-bottom: 16rpx;
-}
-
-.date-box {
-  flex-shrink: 0;
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 18rpx;
-  background: #eafaf1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.date-day {
-  font-size: 30rpx;
-  line-height: 34rpx;
-  color: #08a857;
-  font-weight: 800;
-}
-
-.date-month {
-  font-size: 20rpx;
-  color: #58b987;
-}
-
-.time-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.time-label {
-  font-size: 22rpx;
-  color: #98a3b3;
-  display: block;
-  margin-bottom: 6rpx;
-}
-
-.time-value {
-  font-size: 32rpx;
-  color: #1f2933;
-  font-weight: 700;
-  display: block;
-}
-
-.info-block {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  padding: 14rpx 16rpx;
-  background: #f8faf9;
-  border-radius: 16rpx;
-  margin-bottom: 20rpx;
-}
-
-.info-icon {
-  font-size: 26rpx;
-  flex-shrink: 0;
-}
-
-.info-text {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4rpx;
-}
-
-.info-label {
-  font-size: 22rpx;
-  color: #98a3b3;
-}
-
-.info-value {
-  font-size: 26rpx;
-  font-weight: 500;
-  color: #1f2933;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.card-footer {
-  display: flex;
-}
-
-.action-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 76rpx;
-  border: 2rpx solid #ef4444;
-  border-radius: 38rpx;
-  font-size: 26rpx;
-  font-weight: 600;
-  color: #ef4444;
-}
-
-.cancelled-label {
-  flex: 1;
-  text-align: center;
-  font-size: 24rpx;
-  color: #98a3b3;
-  line-height: 76rpx;
-}
-
-.load-more-wrap {
-  padding: 24rpx 0;
-}
+<style>
+.schedules-page { height: 100vh; }
+.top-space { height: 24rpx; }
+.schedule-list { display: flex; flex-direction: column; gap: 20rpx; }
+.schedule-card { overflow: hidden; }
+.date-box { width: 78rpx; height: 86rpx; margin-right: 18rpx; border-radius: 24rpx; background: #ecfdf5; color: #16a34a; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
+.date-day { font-size: 34rpx; font-weight: 850; line-height: 1; }
+.date-month { margin-top: 6rpx; font-size: 20rpx; font-weight: 750; }
+.worker-box { display: flex; align-items: center; margin-top: 22rpx; padding: 18rpx; border-radius: 20rpx; background: #f8fafc; }
+.worker-avatar { width: 64rpx; height: 64rpx; margin-right: 16rpx; border-radius: 22rpx; background: #16a34a; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 26rpx; font-weight: 850; flex-shrink: 0; }
+.worker-name { display: block; font-size: 27rpx; font-weight: 800; color: #1f2933; }
+.worker-desc { display: block; margin-top: 6rpx; font-size: 23rpx; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.action-row { margin-top: 20rpx; }
+.action-btn { height: 68rpx; line-height: 68rpx; border-radius: 999rpx; text-align: center; font-size: 26rpx; font-weight: 850; }
+.action-btn.danger { background: #fee2e2; color: #dc2626; }
+.action-btn.disabled { background: #f1f5f9; color: #98a3b3; }
+.load-more-wrap { padding: 16rpx 0 32rpx; }
 </style>
