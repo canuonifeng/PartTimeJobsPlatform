@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>企业端小程序重设计视觉稿</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 34px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+      background: radial-gradient(circle at top left, #dcfce7 0, transparent 30%), #eef4f0;
+      color: #172033;
+    }
+    .page-title { max-width: 1280px; margin: 0 auto 24px; }
+    .page-title h1 { margin: 0; font-size: 30px; letter-spacing: -0.02em; }
+    .page-title p { margin: 8px 0 0; color: #64748b; font-size: 15px; }
+    .board { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, minmax(260px, 1fr)); gap: 22px; align-items: start; }
+    .phone { width: 100%; max-width: 300px; margin: 0 auto; background: #0f172a; border-radius: 38px; padding: 10px; box-shadow: 0 28px 60px rgba(15, 23, 42, .24); }
+    .screen { height: 640px; overflow: hidden; position: relative; border-radius: 30px; background: #f6f8f7; }
+    .status { height: 26px; padding: 8px 18px 0; display: flex; justify-content: space-between; align-items: center; color: #123524; font-size: 11px; font-weight: 800; }
+    .hero { margin: 8px 14px 0; padding: 18px; border-radius: 24px; background: linear-gradient(135deg, #17b65f 0%, #0c8f4d 52%, #047857 100%); color: #fff; position: relative; overflow: hidden; }
+    .hero:after { content: ""; position: absolute; right: -28px; top: -28px; width: 110px; height: 110px; border-radius: 50%; background: rgba(255,255,255,.13); }
+    .hero small { display: block; opacity: .82; font-weight: 650; }
+    .hero h2 { margin: 8px 0 0; font-size: 23px; line-height: 1.18; letter-spacing: -0.04em; }
+    .hero .hint { margin-top: 9px; font-size: 12px; opacity: .82; }
+    .section { padding: 14px 14px 0; }
+    .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .section-head b { font-size: 15px; }
+    .section-head span { color: #16a34a; font-size: 12px; font-weight: 800; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: -20px; padding: 0 14px; position: relative; z-index: 2; }
+    .stat { background: rgba(255,255,255,.96); border: 1px solid rgba(226,232,240,.9); border-radius: 18px; padding: 12px 10px; box-shadow: 0 10px 24px rgba(22,101,52,.08); }
+    .stat strong { display: block; color: #118246; font-size: 20px; line-height: 1; }
+    .stat em { display: block; margin-top: 6px; color: #64748b; font-size: 11px; font-style: normal; }
+    .card { background: #fff; border: 1px solid #edf2ef; border-radius: 20px; box-shadow: 0 10px 24px rgba(22, 101, 52, .07); padding: 14px; }
+    .flow-mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+    .flow-mini div { background: #ecfdf5; color: #087443; border-radius: 14px; padding: 10px 4px; text-align: center; font-size: 11px; font-weight: 800; }
+    .flow-mini .warn { background: #fffbeb; color: #b45309; }
+    .todo-row, .profile-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+    .todo-row:last-child, .profile-row:last-child { border-bottom: none; }
+    .dot { width: 36px; height: 36px; border-radius: 14px; display: grid; place-items: center; color: #fff; font-weight: 900; font-size: 13px; flex: none; background: #16a34a; }
+    .dot.blue { background: #3b82f6; } .dot.orange { background: #f59e0b; } .dot.gray { background: #64748b; } .dot.red { background: #ef4444; }
+    .row-main { min-width: 0; flex: 1; }
+    .row-main b { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .row-main span { display: block; margin-top: 3px; color: #64748b; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pill { padding: 5px 8px; border-radius: 999px; font-size: 11px; font-weight: 850; background: #ecfdf5; color: #12834a; }
+    .pill.warn { background: #fffbeb; color: #b45309; } .pill.red { background: #fee2e2; color: #dc2626; }
+    .quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .quick div { text-align: center; font-size: 11px; color: #334155; }
+    .quick i { display: grid; place-items: center; width: 42px; height: 42px; margin: 0 auto 6px; border-radius: 16px; background: #ecfdf5; color: #16a34a; font-style: normal; font-weight: 900; }
+    .timeline { padding: 4px 0 0; }
+    .step { position: relative; display: flex; gap: 12px; padding: 0 0 15px; }
+    .step:before { content: ""; position: absolute; left: 17px; top: 38px; bottom: 0; width: 2px; background: #dbe8df; }
+    .step:last-child:before { display: none; }
+    .node { width: 36px; height: 36px; border-radius: 50%; background: #16a34a; color: white; display: grid; place-items: center; font-size: 12px; font-weight: 900; flex: none; box-shadow: 0 8px 16px rgba(22,163,74,.18); }
+    .node.pending { background: #f59e0b; } .node.muted { background: #cbd5e1; }
+    .step-card { flex: 1; background: #fff; border: 1px solid #edf2ef; border-radius: 18px; padding: 12px; box-shadow: 0 8px 18px rgba(22,101,52,.06); }
+    .step-card h3 { margin: 0; font-size: 14px; }
+    .step-card p { margin: 5px 0 10px; color: #64748b; font-size: 11px; }
+    .meta { display: flex; gap: 6px; flex-wrap: wrap; }
+    .meta span { background: #f1f5f9; border-radius: 999px; padding: 5px 7px; color: #475569; font-size: 10px; font-weight: 700; }
+    .tabs { display: flex; gap: 8px; overflow: hidden; padding: 2px 14px 0; }
+    .tab { flex: none; padding: 8px 12px; border-radius: 999px; background: #fff; color: #64748b; border: 1px solid #e5e7eb; font-size: 12px; font-weight: 800; }
+    .tab.active { background: #16a34a; color: white; border-color: #16a34a; }
+    .task-card { margin-bottom: 10px; }
+    .task-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; }
+    .task-top b { font-size: 14px; }
+    .task-info { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .task-info div { background: #f8fafc; border-radius: 12px; padding: 8px; font-size: 11px; color: #64748b; }
+    .task-info strong { display: block; margin-top: 3px; color: #172033; font-size: 13px; }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .btn { border-radius: 13px; padding: 9px; text-align: center; font-size: 12px; font-weight: 900; background: #ecfdf5; color: #16a34a; }
+    .btn.primary { background: #16a34a; color: #fff; }
+    .profile-head { margin: 8px 14px 0; padding: 18px; border-radius: 24px; background: #fff; box-shadow: 0 10px 24px rgba(22,101,52,.07); border: 1px solid #edf2ef; }
+    .avatar { width: 52px; height: 52px; border-radius: 18px; background: linear-gradient(135deg,#16a34a,#047857); color: #fff; display: grid; place-items: center; font-size: 20px; font-weight: 900; float: left; margin-right: 12px; }
+    .profile-head h2 { margin: 2px 0 4px; font-size: 18px; }
+    .profile-head p { margin: 0; color: #64748b; font-size: 12px; }
+    .menu-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+    .menu-grid div { background: #fff; border: 1px solid #edf2ef; border-radius: 18px; padding: 13px 8px; text-align: center; font-size: 11px; font-weight: 750; color: #334155; box-shadow: 0 8px 18px rgba(22,101,52,.05); }
+    .menu-grid i { display: block; margin: 0 auto 7px; width: 34px; height: 34px; line-height: 34px; border-radius: 13px; background: #ecfdf5; color: #16a34a; font-style: normal; font-weight: 900; }
+    .bottom-tab { position: absolute; left: 12px; right: 12px; bottom: 12px; background: rgba(255,255,255,.94); backdrop-filter: blur(14px); border: 1px solid #edf2ef; border-radius: 24px; display: grid; grid-template-columns: repeat(4, 1fr); padding: 8px 4px; box-shadow: 0 -8px 30px rgba(15,23,42,.10); }
+    .bottom-tab div { text-align: center; color: #94a3b8; font-size: 10px; font-weight: 800; }
+    .bottom-tab i { display: block; width: 24px; height: 24px; line-height: 24px; margin: 0 auto 3px; border-radius: 10px; font-style: normal; }
+    .bottom-tab .active { color: #16a34a; } .bottom-tab .active i { background: #dcfce7; }
+    .caption { max-width: 300px; margin: 12px auto 0; color: #475569; font-size: 13px; line-height: 1.55; }
+    @media (max-width: 1180px) { .board { grid-template-columns: repeat(2, minmax(260px, 1fr)); } }
+    @media (max-width: 640px) { body { padding: 18px; } .board { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="page-title">
+    <h1>企业端小程序重设计视觉稿</h1>
+    <p>方向：清爽专业绿 · 运营中台重构 · 工作台 / 流程 / 待办 / 我的</p>
+  </div>
+  <div class="board">
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>●●● 98%</span></div>
+        <div class="hero"><small>下午好，门店运营部</small><h2>今天有 12 项招聘任务待推进</h2><div class="hint">发布中 6 个岗位，报名转化较昨日 +18%</div></div>
+        <div class="stats"><div class="stat"><strong>6</strong><em>发布中</em></div><div class="stat"><strong>48</strong><em>总报名</em></div><div class="stat"><strong>12</strong><em>待处理</em></div></div>
+        <div class="section"><div class="section-head"><b>招聘流程</b><span>查看流程</span></div><div class="card"><div class="flow-mini"><div>发布 6</div><div>报名 48</div><div class="warn">审核 12</div><div>薪资 5</div></div></div></div>
+        <div class="section"><div class="section-head"><b>今日待办</b><span>全部</span></div><div class="card"><div class="todo-row"><div class="dot orange">审</div><div class="row-main"><b>12 个报名等待审核</b><span>服务员、分拣员岗位报名较多</span></div><div class="pill warn">紧急</div></div><div class="todo-row"><div class="dot blue">班</div><div class="row-main"><b>5 个班次未排满</b><span>今晚 18:00 前建议处理</span></div><div class="pill">去处理</div></div></div></div>
+        <div class="section"><div class="section-head"><b>快捷操作</b></div><div class="quick"><div><i>发</i>发布职位</div><div><i>审</i>审核报名</div><div><i>排</i>创建排班</div><div><i>薪</i>薪资结算</div></div></div>
+        <div class="bottom-tab"><div class="active"><i>⌂</i>工作台</div><div><i>↗</i>流程</div><div><i>✓</i>待办</div><div><i>我</i>我的</div></div>
+      </div></div>
+      <div class="caption"><b>工作台</b>：首屏先给运营结论，再给流程、待办和快捷动作，避免变成纯菜单页。</div>
+    </div>
+
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>●●● 98%</span></div>
+        <div class="hero"><small>招聘运营流程</small><h2>报名审核阶段需要优先处理</h2><div class="hint">当前链路：发布正常 · 报名充足 · 审核积压</div></div>
+        <div class="section"><div class="timeline">
+          <div class="step"><div class="node">发</div><div class="step-card"><h3>发布职位</h3><p>6 个岗位正在招聘中</p><div class="meta"><span>草稿 2</span><span>已发布 6</span></div></div></div>
+          <div class="step"><div class="node">报</div><div class="step-card"><h3>收到报名</h3><p>今日新增 18 人报名</p><div class="meta"><span>总报名 48</span><span>转化 +18%</span></div></div></div>
+          <div class="step"><div class="node pending">审</div><div class="step-card"><h3>审核报名</h3><p>12 人等待审核，建议优先处理</p><div class="meta"><span>待审核 12</span><span>已通过 22</span></div></div></div>
+          <div class="step"><div class="node">班</div><div class="step-card"><h3>创建排班</h3><p>5 个班次未满员</p><div class="meta"><span>今日 9 班</span><span>缺口 7 人</span></div></div></div>
+          <div class="step"><div class="node muted">薪</div><div class="step-card"><h3>薪资结算</h3><p>待结算 5 条考勤记录</p><div class="meta"><span>预计 ¥1,240</span></div></div></div>
+        </div></div>
+        <div class="bottom-tab"><div><i>⌂</i>工作台</div><div class="active"><i>↗</i>流程</div><div><i>✓</i>待办</div><div><i>我</i>我的</div></div>
+      </div></div>
+      <div class="caption"><b>流程</b>：用时间线把核心业务串起来，每一步都能看到数量、异常和入口。</div>
+    </div>
+
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>●●● 98%</span></div>
+        <div class="hero"><small>待办中心</small><h2>按业务类型处理今天的事项</h2><div class="hint">报名 12 · 排班 5 · 考勤 2 · 薪资 5</div></div>
+        <div class="tabs"><div class="tab active">报名</div><div class="tab">排班</div><div class="tab">考勤</div><div class="tab">薪资</div></div>
+        <div class="section">
+          <div class="card task-card"><div class="task-top"><b>张小雨</b><span class="pill warn">待审核</span></div><div class="task-info"><div>报名岗位<strong>周末促销员</strong></div><div>报名时间<strong>10:24</strong></div><div>年龄/性别<strong>23 岁 · 女</strong></div><div>手机号<strong>138****9527</strong></div></div><div class="btn-row"><div class="btn">查看详情</div><div class="btn primary">通过报名</div></div></div>
+          <div class="card task-card"><div class="task-top"><b>李明</b><span class="pill warn">待审核</span></div><div class="task-info"><div>报名岗位<strong>仓库分拣员</strong></div><div>报名时间<strong>09:38</strong></div><div>年龄/性别<strong>28 岁 · 男</strong></div><div>经验<strong>做过 3 次</strong></div></div><div class="btn-row"><div class="btn">拒绝</div><div class="btn primary">通过报名</div></div></div>
+          <div class="card task-card"><div class="task-top"><b>王安安</b><span class="pill">已联系</span></div><div class="task-info"><div>报名岗位<strong>咖啡店店员</strong></div><div>报名时间<strong>昨天</strong></div><div>状态<strong>等待确认</strong></div><div>备注<strong>可上晚班</strong></div></div></div>
+        </div>
+        <div class="bottom-tab"><div><i>⌂</i>工作台</div><div><i>↗</i>流程</div><div class="active"><i>✓</i>待办</div><div><i>我</i>我的</div></div>
+      </div></div>
+      <div class="caption"><b>待办</b>：按报名、排班、考勤、薪资分组，中密度卡片保留主信息和主操作。</div>
+    </div>
+
+    <div>
+      <div class="phone"><div class="screen">
+        <div class="status"><span>9:41</span><span>●●● 98%</span></div>
+        <div class="profile-head"><div class="avatar">企</div><h2>星河餐饮管理</h2><p>已认证 · 管理员：王经理</p><div style="clear:both"></div></div>
+        <div class="section"><div class="section-head"><b>常用管理</b></div><div class="menu-grid"><div><i>地</i>工作地点</div><div><i>模</i>职位模板</div><div><i>人</i>兼职管理</div><div><i>号</i>账号管理</div><div><i>余</i>账户余额</div><div><i>认</i>实名认证</div></div></div>
+        <div class="section"><div class="section-head"><b>企业设置</b></div><div class="card"><div class="profile-row"><div class="dot">企</div><div class="row-main"><b>企业资料</b><span>公司名称、联系人、营业信息</span></div><span>›</span></div><div class="profile-row"><div class="dot blue">安</div><div class="row-main"><b>账号安全</b><span>登录手机号、密码和权限</span></div><span>›</span></div><div class="profile-row"><div class="dot orange">钱</div><div class="row-main"><b>资金与流水</b><span>余额、充值、支出记录</span></div><span>›</span></div><div class="profile-row"><div class="dot red">退</div><div class="row-main"><b>退出登录</b><span>退出当前企业账号</span></div><span>›</span></div></div></div>
+        <div class="bottom-tab"><div><i>⌂</i>工作台</div><div><i>↗</i>流程</div><div><i>✓</i>待办</div><div class="active"><i>我</i>我的</div></div>
+      </div></div>
+      <div class="caption"><b>我的</b>：低频配置和企业基础能力集中到这里，减少工作台噪音。</div>
+    </div>
+  </div>
+</body>
+</html>
