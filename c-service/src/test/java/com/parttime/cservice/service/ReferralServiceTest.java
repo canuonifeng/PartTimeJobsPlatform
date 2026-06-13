@@ -1,5 +1,7 @@
 package com.parttime.cservice.service;
 
+import com.parttime.cservice.mapper.ReferralRecordMapper;
+import com.parttime.cservice.mapper.ReferralRewardMapper;
 import com.parttime.cservice.service.impl.ReferralServiceImpl;
 import com.parttime.cservice.pojo.entity.ReferralCode;
 import com.parttime.cservice.pojo.entity.ReferralRecord;
@@ -22,6 +24,9 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class ReferralServiceTest {
 
@@ -146,6 +151,23 @@ class ReferralServiceTest {
         assertThat(page.getTotal()).isEqualTo(2);
         assertThat(page.getRecords()).hasSize(2);
         assertThat(page.getRecords().get(0).getRewardStatus()).isEqualTo("NOT_QUALIFIED");
+    }
+
+    @Test
+    void getReferees_shouldUseMapperPagination() {
+        ReferralRecordMapper recordMapper = org.mockito.Mockito.mock(ReferralRecordMapper.class);
+        ReferralRewardMapper rewardMapper = org.mockito.Mockito.mock(ReferralRewardMapper.class);
+        ReferralServiceImpl service = new ReferralServiceImpl();
+        ReflectionTestUtils.setField(service, "referralRecordMapper", recordMapper);
+        ReflectionTestUtils.setField(service, "referralRewardMapper", rewardMapper);
+        when(recordMapper.findByReferrerIdPage(100L, 10, 10)).thenReturn(List.of());
+        when(recordMapper.countByReferrerId(100L)).thenReturn(15);
+
+        PageVO<RefereeVO> page = service.getReferees(100L, 2, 10);
+
+        assertThat(page.getTotal()).isEqualTo(15);
+        verify(recordMapper).findByReferrerIdPage(100L, 10, 10);
+        verify(recordMapper, never()).findByReferrerId(100L);
     }
 
     @Test

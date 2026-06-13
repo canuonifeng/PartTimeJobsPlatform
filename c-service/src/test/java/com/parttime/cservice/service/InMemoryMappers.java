@@ -654,6 +654,13 @@ public class InMemoryMappers {
             @Override public List<com.parttime.cservice.pojo.entity.ReferralRecord> findByReferrerId(Long referrerId) {
                 return store.values().stream().filter(r -> referrerId.equals(r.getReferrerId())).collect(Collectors.toList());
             }
+            @Override public List<com.parttime.cservice.pojo.entity.ReferralRecord> findByReferrerIdPage(Long referrerId, int offset, int pageSize) {
+                return store.values().stream()
+                        .filter(r -> referrerId.equals(r.getReferrerId()))
+                        .skip(offset)
+                        .limit(pageSize)
+                        .collect(Collectors.toList());
+            }
             @Override public void insert(com.parttime.cservice.pojo.entity.ReferralRecord referralRecord) {
                 if (referralRecord.getId() == null) referralRecord.setId(idGen.getAndIncrement());
                 if (referralRecord.getBoundAt() == null) referralRecord.setBoundAt(LocalDateTime.now());

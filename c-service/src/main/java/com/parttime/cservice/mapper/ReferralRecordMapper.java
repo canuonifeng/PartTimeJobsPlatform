@@ -13,6 +13,8 @@ public interface ReferralRecordMapper {
 
     List<ReferralRecord> findByReferrerId(@Param("referrerId") Long referrerId);
 
+    List<ReferralRecord> findByReferrerIdPage(@Param("referrerId") Long referrerId, @Param("offset") int offset, @Param("pageSize") int pageSize);
+
     void insert(ReferralRecord referralRecord);
 
     int countByReferrerId(@Param("referrerId") Long referrerId);

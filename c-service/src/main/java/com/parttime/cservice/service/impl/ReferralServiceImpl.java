@@ -171,19 +171,19 @@ public class ReferralServiceImpl implements ReferralService {
 
     @Override
     public PageVO<RefereeVO> getReferees(Long workerId, int page, int pageSize) {
-        List<ReferralRecord> records = referralRecordMapper.findByReferrerId(workerId);
-        long total = records.size();
+        int currentPage = page < 1 ? 1 : page;
+        int currentPageSize = pageSize < 1 ? 20 : Math.min(pageSize, 100);
+        int offset = (currentPage - 1) * currentPageSize;
+        List<ReferralRecord> records = referralRecordMapper.findByReferrerIdPage(workerId, offset, currentPageSize);
+        long total = referralRecordMapper.countByReferrerId(workerId);
 
-        int offset = (page - 1) * pageSize;
-        List<ReferralRecord> pageRecords = records.stream().skip(offset).limit(pageSize).collect(Collectors.toList());
-
-        List<Long> recordIds = pageRecords.stream().map(ReferralRecord::getId).collect(Collectors.toList());
+        List<Long> recordIds = records.stream().map(ReferralRecord::getId).collect(Collectors.toList());
         Map<Long, ReferralReward> rewardByRecordId = recordIds.isEmpty()
                 ? Map.of()
                 : referralRewardMapper.findByReferralRecordIds(recordIds).stream()
                         .collect(Collectors.toMap(ReferralReward::getReferralRecordId, r -> r));
 
-        List<RefereeVO> list = pageRecords.stream()
+        List<RefereeVO> list = records.stream()
                 .map(record -> {
                     RefereeVO vo = new RefereeVO();
                     vo.setId(record.getRefereeId());

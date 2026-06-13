@@ -18,6 +18,11 @@
         SELECT * FROM referral_record WHERE referrer_id = #{referrerId} ORDER BY bound_at DESC
     </select>
 
+    <select id="findByReferrerIdPage" resultMap="ReferralRecordResultMap">
+        SELECT * FROM referral_record WHERE referrer_id = #{referrerId} ORDER BY bound_at DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO referral_record (referrer_id, referee_id, referral_code) VALUES (#{referrerId}, #{refereeId}, #{referralCode})
     </insert>
