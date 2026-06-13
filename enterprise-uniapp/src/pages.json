@@ -1,7 +1,10 @@
 {
   "pages": [
     {"path": "pages/login/login", "style": {"navigationBarTitleText": "登录"}},
-    {"path": "pages/home/index", "style": {"navigationBarTitleText": "职管"}},
+    {"path": "pages/home/index", "style": {"navigationBarTitleText": "工作台"}},
+    {"path": "pages/process/process", "style": {"navigationBarTitleText": "流程"}},
+    {"path": "pages/todos/todoList", "style": {"navigationBarTitleText": "待办", "enablePullDownRefresh": true}},
+    {"path": "pages/profile/profile", "style": {"navigationBarTitleText": "我的"}},
     {"path": "pages/jobs/jobList", "style": {"navigationBarTitleText": "职位管理", "enablePullDownRefresh": true}},
     {"path": "pages/jobs/jobForm", "style": {"navigationBarTitleText": "发布职位"}},
     {"path": "pages/jobs/jobDetail", "style": {"navigationBarTitleText": "职位详情"}},
@@ -22,7 +25,19 @@
   "globalStyle": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "职管",
-    "navigationBarBackgroundColor": "#F8F8F8",
+    "navigationBarBackgroundColor": "#F6F8F7",
     "backgroundColor": "#F5F5F5"
+  },
+  "tabBar": {
+    "color": "#98A3B3",
+    "selectedColor": "#16A34A",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {"pagePath": "pages/home/index", "text": "工作台"},
+      {"pagePath": "pages/process/process", "text": "流程"},
+      {"pagePath": "pages/todos/todoList", "text": "待办"},
+      {"pagePath": "pages/profile/profile", "text": "我的"}
+    ]
   }
 }

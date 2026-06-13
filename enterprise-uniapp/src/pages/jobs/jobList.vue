@@ -126,19 +126,21 @@ function statusClass(s) {
 </script>
 
 <template>
-  <view class="page e-page">
-    <view class="header e-header">
-      <text class="e-header-title">职位管理</text>
-      <text class="e-header-desc">管理发布、报名与职位状态</text>
+  <scroll-view scroll-y class="op-page jobs-page">
+    <view class="top-space"></view>
+    <view class="op-hero jobs-hero">
+      <text class="op-hero-kicker">职位运营</text>
+      <text class="op-hero-title">管理发布、报名与职位状态</text>
+      <text class="op-hero-desc">{{ filteredJobs.length }} 个职位 · {{ tabs[currentTab].name }}视图</text>
     </view>
 
-    <scroll-view scroll-x class="tabs-wrap" scroll-with-animation>
-      <view class="tabs-inner">
+    <scroll-view scroll-x class="status-tabs" scroll-with-animation>
+      <view class="status-tabs-inner">
         <view
           v-for="(tab, index) in tabs"
           :key="index"
-          class="tab"
-          :class="{ 'tab-active': currentTab === index }"
+          class="status-tab"
+          :class="{ active: currentTab === index }"
           @click="switchTab(index)"
         >
           {{ tab.name }}
@@ -146,7 +148,7 @@ function statusClass(s) {
       </view>
     </scroll-view>
 
-    <view class="content e-content">
+    <view class="op-content jobs-content">
       <view v-if="loading" class="e-empty">
         <text class="e-empty-title">加载中...</text>
       </view>
@@ -157,55 +159,37 @@ function statusClass(s) {
       </view>
 
       <view v-else class="job-list">
-        <view
-          v-for="job in filteredJobs"
-          :key="job.id"
-          class="job-card e-card"
-          @click="navigateToDetail(job.id)"
-        >
-          <view class="e-card-title-row">
-            <text class="job-title e-card-title">{{ job.title }}</text>
-            <view class="e-badge" :class="'e-' + statusClass(job.status)">{{ statusLabel(job.status) }}</view>
+        <view v-for="job in filteredJobs" :key="job.id" class="op-card job-card" @click="navigateToDetail(job.id)">
+          <view class="op-row">
+            <view class="op-row-main">
+              <text class="op-row-title">{{ job.title }}</text>
+              <text class="op-row-desc">截止 {{ job.deadline || '不限' }}</text>
+            </view>
+            <text class="op-pill" :class="statusClass(job.status) === 'badge-red' ? 'op-pill-danger' : statusClass(job.status) === 'badge-gray' ? 'pill-gray' : ''">{{ statusLabel(job.status) }}</text>
           </view>
 
-          <view class="e-info-grid">
-            <view class="e-info-pill">
-              <text class="e-info-label">招聘人数</text>
-              <text class="e-info-value">{{ job.headcount }}</text>
+          <view class="metric-grid">
+            <view class="metric-item">
+              <text class="metric-label">招聘人数</text>
+              <text class="metric-value">{{ job.headcount ?? '-' }}</text>
             </view>
-            <view class="e-info-pill">
-              <text class="e-info-label">总报名数</text>
-              <text class="e-info-value">{{ job.applicationCount ?? 0 }}</text>
+            <view class="metric-item">
+              <text class="metric-label">总报名</text>
+              <text class="metric-value">{{ job.applicationCount ?? 0 }}</text>
             </view>
-            <view class="e-info-pill">
-              <text class="e-info-label">待审核</text>
-              <text class="e-info-value">{{ job.pendingApplicationCount ?? 0 }}</text>
-            </view>
-            <view class="e-info-pill">
-              <text class="e-info-label">截止日期</text>
-              <text class="e-info-value">{{ job.deadline || '不限' }}</text>
+            <view class="metric-item">
+              <text class="metric-label">待审核</text>
+              <text class="metric-value warn">{{ job.pendingApplicationCount ?? 0 }}</text>
             </view>
           </view>
 
-          <view class="e-action-row" @click.stop>
-            <view class="e-action-pill e-action-blue" @click.stop="navigateToApplications(job)">报名记录</view>
-            <view v-if="job.status === 'PUBLISHED'" class="e-action-pill e-action-primary" @click.stop="handleShare(job)">邀请报名</view>
-            <view class="e-action-pill e-action-blue" @click="navigateToEdit(job.id)">编辑</view>
-            <view
-              v-if="job.status === 'DRAFT'"
-              class="e-action-pill e-action-primary"
-              @click="handlePublish(job.id)"
-            >发布</view>
-            <view
-              v-if="job.status === 'PUBLISHED'"
-              class="e-action-pill e-action-orange"
-              @click="handleClose(job.id)"
-            >关闭</view>
-            <view
-              v-if="job.status === 'CLOSED'"
-              class="e-action-pill e-action-blue"
-              @click="handleReopen(job.id)"
-            >重新发布</view>
+          <view class="action-row" @click.stop>
+            <view class="action-btn light" @click.stop="navigateToApplications(job)">报名</view>
+            <view v-if="job.status === 'PUBLISHED'" class="action-btn light" @click.stop="handleShare(job)">邀请</view>
+            <view class="action-btn light" @click.stop="navigateToEdit(job.id)">编辑</view>
+            <view v-if="job.status === 'DRAFT'" class="action-btn primary" @click.stop="handlePublish(job.id)">发布</view>
+            <view v-if="job.status === 'PUBLISHED'" class="action-btn warn" @click.stop="handleClose(job.id)">关闭</view>
+            <view v-if="job.status === 'CLOSED'" class="action-btn primary" @click.stop="handleReopen(job.id)">重发</view>
           </view>
         </view>
       </view>
@@ -214,85 +198,30 @@ function statusClass(s) {
     <view class="fab" @click="navigateToCreate">
       <text class="fab-icon">+</text>
     </view>
-  </view>
+  </scroll-view>
 </template>
 
 <style scoped>
-.header {
-  box-sizing: border-box;
-}
-
-.tabs-wrap {
-  background: #fff;
-  border-bottom: 2rpx solid #eee;
-  box-sizing: border-box;
-  white-space: nowrap;
-}
-
-.tabs-inner {
-  display: flex;
-  white-space: nowrap;
-  padding: 20rpx 32rpx;
-  box-sizing: border-box;
-}
-
-.tab {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  padding: 10rpx 28rpx;
-  margin-right: 16rpx;
-  font-size: 26rpx;
-  color: #64748b;
-  background: #f1f5f9;
-  border-radius: 999rpx;
-  box-sizing: border-box;
-}
-
-.tab:last-child {
-  margin-right: 0;
-}
-
-.tab-active {
-  color: #fff;
-  background: #07c160;
-}
-
-.content {
-  padding-bottom: 140rpx;
-}
-
-.job-list {
-  box-sizing: border-box;
-}
-
-.job-card {
-  width: 100%;
-}
-
-.job-title {
-  min-width: 0;
-}
-
-.fab {
-  position: fixed;
-  right: 32rpx;
-  bottom: 40rpx;
-  width: 96rpx;
-  height: 96rpx;
-  background: linear-gradient(135deg, #18c86b, #08a95a);
-  color: #fff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8rpx 28rpx rgba(7, 193, 96, 0.4);
-  z-index: 100;
-}
-
-.fab-icon {
-  font-size: 52rpx;
-  line-height: 1;
-}
+.jobs-page { height: 100vh; }
+.top-space { height: 24rpx; }
+.jobs-content { padding-bottom: 160rpx; }
+.status-tabs { width: 100%; margin-top: 22rpx; white-space: nowrap; }
+.status-tabs-inner { display: flex; padding: 0 28rpx; }
+.status-tab { flex-shrink: 0; margin-right: 16rpx; padding: 14rpx 28rpx; border-radius: 999rpx; background: #fff; color: #64748b; font-size: 26rpx; font-weight: 800; box-shadow: 0 8rpx 20rpx rgba(23,83,53,.06); }
+.status-tab.active { background: #16a34a; color: #fff; }
+.job-list { display: flex; flex-direction: column; gap: 20rpx; }
+.job-card { overflow: hidden; }
+.pill-gray { color: #64748b; background: #f1f5f9; }
+.metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14rpx; margin-top: 22rpx; }
+.metric-item { min-width: 0; padding: 16rpx; border-radius: 18rpx; background: #f8fafc; }
+.metric-label { display: block; font-size: 22rpx; color: #64748b; }
+.metric-value { display: block; margin-top: 8rpx; font-size: 30rpx; font-weight: 850; color: #1f2933; }
+.metric-value.warn { color: #b45309; }
+.action-row { display: flex; flex-wrap: wrap; gap: 14rpx; margin-top: 22rpx; }
+.action-btn { flex: 1 1 120rpx; height: 64rpx; line-height: 64rpx; border-radius: 999rpx; text-align: center; font-size: 25rpx; font-weight: 850; }
+.action-btn.light { background: #ecfdf5; color: #16a34a; }
+.action-btn.primary { background: #16a34a; color: #fff; }
+.action-btn.warn { background: #fffbeb; color: #b45309; }
+.fab { position: fixed; right: 32rpx; bottom: 54rpx; width: 96rpx; height: 96rpx; background: linear-gradient(135deg, #18c86b, #08a95a); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8rpx 28rpx rgba(7, 193, 96, 0.4); z-index: 100; }
+.fab-icon { font-size: 52rpx; line-height: 1; }
 </style>

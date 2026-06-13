@@ -95,63 +95,53 @@ function formatTimeRange(startTime, endTime) {
 </script>
 
 <template>
-  <view class="page">
-    <view class="header">
-      <text class="header-title">应聘管理</text>
+  <scroll-view scroll-y class="op-page applications-page" @scrolltolower="loadMore">
+    <view class="top-space"></view>
+    <view class="op-hero">
+      <text class="op-hero-kicker">报名审核</text>
+      <text class="op-hero-title">及时处理工人报名</text>
+      <text class="op-hero-desc">{{ applications.length }} 条报名记录 · 优先处理待审核</text>
     </view>
 
-    <view class="content">
-      <view v-if="loading" class="empty-state">
-        <text class="empty-emoji">⏳</text>
-        <text class="empty-title">加载中...</text>
+    <view class="op-content">
+      <view v-if="loading" class="e-empty">
+        <text class="e-empty-title">加载中...</text>
       </view>
 
-      <view v-else-if="applications.length === 0" class="empty-state">
-        <text class="empty-emoji">📝</text>
-        <text class="empty-title">暂无报名记录</text>
-        <text class="empty-desc">等待工人投递简历</text>
+      <view v-else-if="applications.length === 0" class="e-empty">
+        <text class="e-empty-title">暂无报名记录</text>
+        <text class="e-empty-desc">等待工人投递简历</text>
       </view>
 
       <view v-else class="application-list">
-        <view v-for="app in applications" :key="app.applicationId" class="application-card">
-          <view class="card-header">
-            <view class="worker-info">
-              <view class="worker-avatar">{{ (app.workerName || '工').slice(0, 1) }}</view>
-              <view class="worker-detail">
-                <text class="worker-name">{{ app.workerName || '未知姓名' }}</text>
-                <text class="worker-meta">{{ genderLabel(app.workerGender) }} · {{ ageLabel(app.workerAge) }} · {{ phoneLabel(app.workerPhone) }}</text>
-              </view>
+        <view v-for="app in applications" :key="app.applicationId" class="op-card application-card">
+          <view class="op-row">
+            <view class="worker-avatar">{{ (app.workerName || '工').slice(0, 1) }}</view>
+            <view class="op-row-main">
+              <text class="op-row-title">{{ app.workerName || '未知姓名' }}</text>
+              <text class="op-row-desc">{{ genderLabel(app.workerGender) }} · {{ ageLabel(app.workerAge) }} · {{ phoneLabel(app.workerPhone) }}</text>
             </view>
-            <view class="status-badge" :class="statusClass(app.status)">{{ statusLabel(app.status) }}</view>
+            <text class="op-pill" :class="statusClass(app.status) === 'rejected' ? 'op-pill-danger' : statusClass(app.status) === 'pending' ? 'op-pill-warn' : ''">{{ statusLabel(app.status) }}</text>
           </view>
 
           <view class="info-grid">
-            <view class="info-item">
-              <text class="info-icon">💼</text>
-              <view class="info-text">
-                <text class="info-label">报名岗位</text>
-                <text class="info-value">{{ app.jobTitle || '-' }}</text>
-              </view>
+            <view class="info-item wide">
+              <text class="info-label">报名岗位</text>
+              <text class="info-value">{{ app.jobTitle || '-' }}</text>
             </view>
             <view class="info-item">
-              <text class="info-icon">🕐</text>
-              <view class="info-text">
-                <text class="info-label">排班时间</text>
-                <text class="info-value">{{ app.scheduleDate || '' }} {{ formatTimeRange(app.startTime, app.endTime) }}</text>
-              </view>
+              <text class="info-label">排班时间</text>
+              <text class="info-value">{{ app.scheduleDate || '-' }} {{ formatTimeRange(app.startTime, app.endTime) }}</text>
             </view>
             <view class="info-item">
-              <text class="info-icon">📅</text>
-              <view class="info-text">
-                <text class="info-label">申请时间</text>
-                <text class="info-value">{{ app.appliedAt || '暂无申请时间' }}</text>
-              </view>
+              <text class="info-label">申请时间</text>
+              <text class="info-value">{{ app.appliedAt || '暂无' }}</text>
             </view>
           </view>
 
-          <view v-if="app.status === 'PENDING'" class="card-footer">
-            <view class="action-accept" @click="handleAccept(app.applicationId)">通过</view>
-            <view class="action-reject" @click="handleReject(app.applicationId)">拒绝</view>
+          <view v-if="app.status === 'PENDING'" class="action-row">
+            <view class="action-btn reject" @click="handleReject(app.applicationId)">拒绝</view>
+            <view class="action-btn accept" @click="handleAccept(app.applicationId)">通过报名</view>
           </view>
         </view>
 
@@ -162,229 +152,23 @@ function formatTimeRange(startTime, endTime) {
         </view>
       </view>
     </view>
-  </view>
+  </scroll-view>
 </template>
 
-<style scoped>
-.page {
-  min-height: 100vh;
-  background: #f6f8f7;
-}
-
-.header {
-  background: linear-gradient(135deg, #18c86b 0%, #08a95a 56%, #078a49 100%);
-  padding: 48rpx 32rpx 28rpx;
-  border-bottom-left-radius: 36rpx;
-  border-bottom-right-radius: 36rpx;
-}
-
-.header-title {
-  font-size: 36rpx;
-  font-weight: 700;
-  color: #fff;
-}
-
-.content {
-  padding: 24rpx 32rpx;
-  padding-bottom: 80rpx;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 120rpx 0;
-}
-
-.empty-emoji {
-  font-size: 64rpx;
-  margin-bottom: 20rpx;
-}
-
-.empty-title {
-  font-size: 30rpx;
-  font-weight: 700;
-  color: #1f2933;
-  margin-bottom: 8rpx;
-}
-
-.empty-desc {
-  font-size: 26rpx;
-  color: #98a3b3;
-}
-
-.application-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20rpx;
-}
-
-.application-card {
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 24rpx;
-  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20rpx;
-}
-
-.worker-info {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  min-width: 0;
-  margin-right: 16rpx;
-}
-
-.worker-avatar {
-  flex-shrink: 0;
-  width: 64rpx;
-  height: 64rpx;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #18c86b, #08a95a);
-  color: #fff;
-  font-size: 28rpx;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 16rpx;
-}
-
-.worker-detail {
-  flex: 1;
-  min-width: 0;
-}
-
-.worker-name {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #1f2933;
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.worker-meta {
-  font-size: 24rpx;
-  color: #98a3b3;
-  display: block;
-  margin-top: 4rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.status-badge {
-  font-size: 22rpx;
-  font-weight: 700;
-  padding: 8rpx 18rpx;
-  border-radius: 999rpx;
-  flex-shrink: 0;
-}
-
-.status-badge.pending {
-  background: #fff7df;
-  color: #d28a00;
-}
-
-.status-badge.accepted {
-  background: #e7f8ef;
-  color: #08a857;
-}
-
-.status-badge.rejected {
-  background: #feecec;
-  color: #df3b30;
-}
-
-.status-badge.default {
-  background: #eef1f0;
-  color: #7b8580;
-}
-
-.info-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 16rpx;
-  margin-bottom: 20rpx;
-}
-
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  padding: 14rpx 16rpx;
-  background: #f8faf9;
-  border-radius: 16rpx;
-}
-
-.info-icon {
-  font-size: 26rpx;
-  flex-shrink: 0;
-}
-
-.info-text {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4rpx;
-}
-
-.info-label {
-  font-size: 22rpx;
-  color: #98a3b3;
-}
-
-.info-value {
-  font-size: 26rpx;
-  font-weight: 500;
-  color: #1f2933;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.card-footer {
-  display: flex;
-  gap: 16rpx;
-}
-
-.action-accept {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 76rpx;
-  background: #07c160;
-  color: #fff;
-  font-size: 26rpx;
-  font-weight: 600;
-  border-radius: 38rpx;
-}
-
-.action-reject {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 76rpx;
-  background: #fff;
-  color: #1f2933;
-  font-size: 26rpx;
-  font-weight: 600;
-  border-radius: 38rpx;
-  border: 2rpx solid #e2e8f0;
-}
-
-.load-more-wrap {
-  padding: 24rpx 0;
-}
+<style>
+.applications-page { height: 100vh; }
+.top-space { height: 24rpx; }
+.application-list { display: flex; flex-direction: column; gap: 20rpx; }
+.application-card { overflow: hidden; }
+.worker-avatar { width: 76rpx; height: 76rpx; margin-right: 18rpx; border-radius: 26rpx; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #18c86b, #047857); color: #fff; font-size: 30rpx; font-weight: 850; flex-shrink: 0; }
+.info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14rpx; margin-top: 22rpx; }
+.info-item { min-width: 0; padding: 16rpx; border-radius: 18rpx; background: #f8fafc; }
+.info-item.wide { grid-column: span 2; }
+.info-label { display: block; font-size: 22rpx; color: #64748b; }
+.info-value { display: block; margin-top: 8rpx; font-size: 26rpx; font-weight: 750; color: #1f2933; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14rpx; margin-top: 22rpx; }
+.action-btn { height: 72rpx; line-height: 72rpx; border-radius: 18rpx; text-align: center; font-size: 26rpx; font-weight: 850; }
+.action-btn.reject { background: #fee2e2; color: #dc2626; }
+.action-btn.accept { background: #16a34a; color: #fff; }
+.load-more-wrap { padding: 16rpx 0 32rpx; }
 </style>

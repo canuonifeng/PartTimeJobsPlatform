@@ -124,4 +124,136 @@ page {
 .e-textarea { min-height: 180rpx; padding-top: 20rpx; line-height: 1.6; }
 .e-picker-value { display: flex; align-items: center; justify-content: space-between; }
 .e-bottom-safe { padding-bottom: 64rpx; }
+
+.op-page {
+  min-height: 100vh;
+  background: #f6f8f7;
+  color: #1f2933;
+  box-sizing: border-box;
+  padding-bottom: 40rpx;
+}
+
+.op-hero {
+  margin: 0 28rpx;
+  padding: 34rpx 32rpx;
+  border-radius: 32rpx;
+  background: linear-gradient(135deg, #18c86b 0%, #0f9f54 52%, #047857 100%);
+  color: #fff;
+  box-shadow: 0 18rpx 40rpx rgba(4, 120, 87, 0.18);
+  box-sizing: border-box;
+}
+
+.op-hero-kicker {
+  display: block;
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.op-hero-title {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 42rpx;
+  font-weight: 850;
+  line-height: 1.22;
+  color: #fff;
+}
+
+.op-hero-desc {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.op-content {
+  padding: 24rpx 28rpx 48rpx;
+  box-sizing: border-box;
+}
+
+.op-section {
+  margin-top: 28rpx;
+}
+
+.op-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.op-section-title {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #1f2933;
+}
+
+.op-section-link {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.op-card {
+  background: #fff;
+  border-radius: 28rpx;
+  padding: 26rpx;
+  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
+  box-sizing: border-box;
+}
+
+.op-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44rpx;
+  padding: 0 18rpx;
+  border-radius: 999rpx;
+  font-size: 22rpx;
+  font-weight: 800;
+  color: #12834a;
+  background: #ecfdf5;
+}
+
+.op-pill-warn {
+  color: #b45309;
+  background: #fffbeb;
+}
+
+.op-pill-danger {
+  color: #dc2626;
+  background: #fee2e2;
+}
+
+.op-row {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.op-row-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.op-row-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 800;
+  color: #1f2933;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.op-row-desc {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  line-height: 1.45;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 </style>

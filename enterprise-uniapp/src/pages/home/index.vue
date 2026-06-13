@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '@/store'
 import { request } from '@/api/request'
 
@@ -16,6 +16,31 @@ const greeting = computed(() => {
   return '晚上好'
 })
 
+const stats = [
+  { label: '发布中', value: 6 },
+  { label: '总报名', value: 48 },
+  { label: '待处理', value: 12 }
+]
+
+const flowSteps = [
+  { name: '发布', value: '6', state: 'done' },
+  { name: '报名', value: '48', state: 'done' },
+  { name: '审核', value: '12', state: 'warn' },
+  { name: '薪资', value: '5', state: 'todo' }
+]
+
+const todos = [
+  { type: '审', title: '12 个报名等待审核', desc: '服务员、分拣员岗位报名较多', tag: '紧急', path: '/pages/applications/applicationList' },
+  { type: '班', title: '5 个班次未排满', desc: '今晚 18:00 前建议处理', tag: '去处理', path: '/pages/schedules/scheduleList' }
+]
+
+const quickActions = [
+  { name: '发布职位', icon: '发', path: '/pages/jobs/jobForm' },
+  { name: '审核报名', icon: '审', path: '/pages/applications/applicationList' },
+  { name: '创建排班', icon: '排', path: '/pages/schedules/scheduleList' },
+  { name: '薪资结算', icon: '薪', path: '/pages/attendance/attendanceList' }
+]
+
 onMounted(async () => {
   try {
     const res = await request('GET', '/enterprise')
@@ -23,71 +48,74 @@ onMounted(async () => {
   } catch {}
 })
 
-const sections = [
-  {
-    name: '招聘管理',
-    items: [
-      { name: '职位管理', bg: '#07c160', text: '职', path: '/pages/jobs/jobList' },
-      { name: '报名管理', bg: '#3b82f6', text: '报', path: '/pages/applications/applicationList' },
-      { name: '排班考勤', bg: '#ff9500', text: '班', path: '/pages/schedules/scheduleList' },
-      { name: '薪资管理', bg: '#f59e0b', text: '薪', path: '/pages/attendance/attendanceList' }
-    ]
-  },
-  {
-    name: '基础管理',
-    items: [
-      { name: '工作地点', bg: '#06b6d4', text: '地', path: '/pages/locations/locationList' },
-      { name: '职位模版', bg: '#8b5cf6', text: '模', path: '/pages/templates/templateList' },
-      { name: '兼职管理', bg: '#ec4899', text: '人', path: '/pages/workers/workerList' },
-      { name: '账号管理', bg: '#6366f1', text: '号', path: '/pages/accounts/accountList' },
-      { name: '企业设置', bg: '#64748b', text: '设', path: '/pages/settings/companySettings' },
-      { name: '账户余额', bg: '#f59e0b', text: '余', path: '/pages/balance/balanceList' }
-    ]
-  }
-]
-
 function navigateTo(path) {
   uni.navigateTo({ url: path })
 }
 
-function handleLogout() {
-  uni.showModal({
-    title: '退出登录',
-    content: '确定要退出登录吗？',
-    success: (res) => {
-      if (res.confirm) authStore.logout()
-    }
-  })
+function switchToProcess() {
+  uni.switchTab({ url: '/pages/process/process' })
+}
+
+function switchToTodos() {
+  uni.switchTab({ url: '/pages/todos/todoList' })
 }
 </script>
 
 <template>
-  <scroll-view scroll-y class="page">
-    <view class="header">
-      <view class="header-top">
-        <view class="header-info">
-          <text class="greeting">{{ greeting }}，{{ authStore.displayName }}</text>
-          <text class="company-name">{{ companyName || '企业名称' }}</text>
-        </view>
-        <view class="logout-btn" @click="handleLogout">
-          <text class="logout-text">退出</text>
-        </view>
+  <scroll-view scroll-y class="op-page workbench-page">
+    <view class="top-space"></view>
+    <view class="op-hero">
+      <text class="op-hero-kicker">{{ greeting }}，{{ authStore.displayName || '企业管理员' }}</text>
+      <text class="op-hero-title">今天有 12 项招聘任务待推进</text>
+      <text class="op-hero-desc">{{ companyName || '企业名称' }} · 发布中岗位报名转化较昨日更活跃</text>
+    </view>
+
+    <view class="stats-grid">
+      <view v-for="item in stats" :key="item.label" class="stat-card">
+        <text class="stat-value">{{ item.value }}</text>
+        <text class="stat-label">{{ item.label }}</text>
       </view>
     </view>
-    <view class="content">
-      <view v-for="(sec, si) in sections" :key="si" class="section">
-        <view class="section-header">
-          <view class="section-dot"></view>
-          <text class="section-title">{{ sec.name }}</text>
+
+    <view class="op-content">
+      <view class="op-section">
+        <view class="op-section-head">
+          <text class="op-section-title">招聘流程</text>
+          <text class="op-section-link" @click="switchToProcess">查看流程</text>
         </view>
-        <view class="card">
-          <view class="grid">
-            <view v-for="mod in sec.items" :key="mod.path" class="grid-item" @click="navigateTo(mod.path)">
-              <view class="icon-box" :style="{ background: mod.bg }">
-                <text class="icon-text">{{ mod.text }}</text>
-              </view>
-              <text class="grid-name">{{ mod.name }}</text>
+        <view class="op-card flow-card">
+          <view v-for="step in flowSteps" :key="step.name" class="flow-item" :class="'flow-' + step.state">
+            <text class="flow-value">{{ step.value }}</text>
+            <text class="flow-name">{{ step.name }}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="op-section">
+        <view class="op-section-head">
+          <text class="op-section-title">今日待办</text>
+          <text class="op-section-link" @click="switchToTodos">全部</text>
+        </view>
+        <view class="op-card todo-card">
+          <view v-for="item in todos" :key="item.title" class="todo-row" @click="navigateTo(item.path)">
+            <view class="todo-icon">{{ item.type }}</view>
+            <view class="op-row-main">
+              <text class="op-row-title">{{ item.title }}</text>
+              <text class="op-row-desc">{{ item.desc }}</text>
             </view>
+            <text class="op-pill op-pill-warn">{{ item.tag }}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="op-section">
+        <view class="op-section-head">
+          <text class="op-section-title">快捷操作</text>
+        </view>
+        <view class="quick-grid">
+          <view v-for="item in quickActions" :key="item.name" class="quick-item" @click="navigateTo(item.path)">
+            <view class="quick-icon">{{ item.icon }}</view>
+            <text class="quick-name">{{ item.name }}</text>
           </view>
         </view>
       </view>
@@ -96,112 +124,24 @@ function handleLogout() {
 </template>
 
 <style>
-.page {
-  min-height: 100vh;
-  height: 100vh;
-  background: #f6f8f7;
-  box-sizing: border-box;
-}
-.header {
-  background: linear-gradient(135deg, #18c86b 0%, #08a95a 56%, #078a49 100%);
-  border-bottom-left-radius: 36rpx;
-  border-bottom-right-radius: 36rpx;
-  padding: 48rpx 32rpx 56rpx;
-  position: relative;
-  z-index: 1;
-}
-.header-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-.header-info {
-  display: flex;
-  flex-direction: column;
-}
-.greeting {
-  font-size: 44rpx;
-  font-weight: 800;
-  color: #fff;
-}
-.company-name {
-  font-size: 28rpx;
-  color: rgba(255, 255, 255, 0.85);
-  margin-top: 8rpx;
-}
-.logout-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 999rpx;
-  padding: 10rpx 24rpx;
-}
-.logout-text {
-  font-size: 24rpx;
-  color: #fff;
-  font-weight: 500;
-}
-.content {
-  padding: 24rpx 28rpx 40rpx;
-  position: relative;
-  z-index: 2;
-}
-.section {
-  margin-bottom: 24rpx;
-}
-.section-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 20rpx;
-  padding-top: 8rpx;
-}
-.section-dot {
-  width: 8rpx;
-  height: 28rpx;
-  background: #08a95a;
-  border-radius: 4rpx;
-  margin-right: 12rpx;
-}
-.section-title {
-  font-size: 30rpx;
-  font-weight: 700;
-  color: #1a2e1e;
-}
-.card {
-  background: #fff;
-  border-radius: 24rpx;
-  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
-  padding: 24rpx;
-  box-sizing: border-box;
-}
-.grid {
-  display: flex;
-  flex-wrap: wrap;
-  margin-bottom: -24rpx;
-}
-.grid-item {
-  width: 25%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 24rpx;
-  box-sizing: border-box;
-}
-.icon-box {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 24rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 12rpx;
-}
-.icon-text {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #fff;
-}
-.grid-name {
-  font-size: 24rpx;
-  color: #333;
-  text-align: center;
-}
+.workbench-page { height: 100vh; }
+.top-space { height: 24rpx; }
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16rpx; margin: -24rpx 28rpx 0; position: relative; z-index: 2; }
+.stat-card { background: rgba(255,255,255,.96); border-radius: 24rpx; padding: 22rpx 18rpx; box-shadow: 0 12rpx 30rpx rgba(23,83,53,.08); box-sizing: border-box; }
+.stat-value { display: block; font-size: 40rpx; line-height: 1; font-weight: 850; color: #12834a; }
+.stat-label { display: block; margin-top: 10rpx; font-size: 22rpx; color: #64748b; }
+.flow-card { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14rpx; }
+.flow-item { border-radius: 22rpx; padding: 20rpx 8rpx; text-align: center; background: #ecfdf5; color: #12834a; }
+.flow-warn { background: #fffbeb; color: #b45309; }
+.flow-todo { background: #f1f5f9; color: #64748b; }
+.flow-value { display: block; font-size: 34rpx; font-weight: 850; line-height: 1; }
+.flow-name { display: block; margin-top: 10rpx; font-size: 22rpx; font-weight: 750; }
+.todo-card { padding-top: 8rpx; padding-bottom: 8rpx; }
+.todo-row { display: flex; align-items: center; min-width: 0; padding: 18rpx 0; border-bottom: 1rpx solid #edf0f3; }
+.todo-row:last-child { border-bottom: none; }
+.todo-icon { width: 72rpx; height: 72rpx; margin-right: 18rpx; border-radius: 24rpx; display: flex; align-items: center; justify-content: center; background: #16a34a; color: #fff; font-size: 28rpx; font-weight: 850; flex-shrink: 0; }
+.quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16rpx; }
+.quick-item { text-align: center; }
+.quick-icon { width: 84rpx; height: 84rpx; margin: 0 auto 12rpx; border-radius: 28rpx; display: flex; align-items: center; justify-content: center; background: #ecfdf5; color: #16a34a; font-size: 32rpx; font-weight: 850; }
+.quick-name { font-size: 23rpx; color: #334155; }
 </style>
