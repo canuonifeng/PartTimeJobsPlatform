@@ -4,6 +4,7 @@ import com.parttime.cservice.config.JwtTokenProvider;
 import com.parttime.cservice.filter.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -26,7 +27,12 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    private static final String DEFAULT_ALLOWED_ORIGIN_PATTERNS = "http://localhost:*,http://127.0.0.1:*";
+
     private final JwtTokenProvider jwtTokenProvider;
+
+    @Value("${cors.allowed-origin-patterns:" + DEFAULT_ALLOWED_ORIGIN_PATTERNS + "}")
+    private String allowedOriginPatterns;
 
     public SecurityConfig(JwtTokenProvider jwtTokenProvider) {
         this.jwtTokenProvider = jwtTokenProvider;
@@ -59,13 +65,20 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("http://121.199.12.23:*", "http://localhost:*", "http://127.0.0.1:*"));
+        configuration.setAllowedOriginPatterns(parseAllowedOriginPatterns());
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    private List<String> parseAllowedOriginPatterns() {
+        String patterns = allowedOriginPatterns == null || allowedOriginPatterns.isBlank()
+                ? DEFAULT_ALLOWED_ORIGIN_PATTERNS
+                : allowedOriginPatterns;
+        return List.of(patterns.split(","));
     }
 
     @Bean

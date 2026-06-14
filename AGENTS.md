@@ -133,11 +133,11 @@ MyBatis XML 位置：`<service>/src/main/resources/mapper/`。
 ### 4. 前端接口地址
 
 - 工人端开发：`http://localhost:8082`
-- 工人端生产：`http://121.199.12.23:8082`
+- 工人端生产：`https://your-domain.example`
 - 企业端开发：`http://localhost:8081/api`
-- 企业端生产：`http://121.199.12.23:8081/api`
+- 企业端生产：`https://your-domain.example/api`
 - 平台端开发：`http://localhost:8083/api`
-- 平台端生产：`http://121.199.12.23:8083/api`
+- 平台端生产：`https://your-domain.example/api`
 
 ### 5. 前端规范文档
 
@@ -279,4 +279,4 @@ git diff --check
 
 - 线上接口 404：先确认服务已部署最新 commit。
 - 线上 SQL 报缺表/缺字段：先确认对应 `scripts/` 迁移已执行。
-- 后端 CORS 允许来源包含 `http://121.199.12.23:*`、`http://localhost:*`、`http://127.0.0.1:*`。
+- 后端 CORS 允许来源包含 `http://localhost:*`、`http://127.0.0.1:*` 和正式部署域名；不得提交真实生产 IP。
