@@ -22,7 +22,7 @@
 │  -service  │  (工人端)    │     (平台管理端)              │
 │  (企业端)   │             │                              │
 ├────────────┴─────────────┴──────────────────────────────┤
-│        MySQL + Redis Queue + JDK Scheduler              │
+│                      MySQL + Redis                      │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -30,12 +30,11 @@
 
 | 层 | 技术 |
 |---|---|
-| 后端 | Java 17, Spring Boot 3.2.5, MyBatis 3.x, Flyway |
+| 后端 | Java 17, Spring Boot 3.2.5, MyBatis 3.0.3 |
 | 前端 PC | Vue 3.4, Element Plus, Pinia, Axios |
 | 小程序 | UniApp 3.x (微信小程序 + H5) |
-| 数据库 | MySQL 8.x, Redis |
-| 消息队列 | Redis Queue |
-| 定时任务 | JDK 自带调度能力 |
+| 数据库 | MySQL 8.x |
+| 缓存 | Redis |
 | 认证 | JWT + Spring Security |
 | API 文档 | SpringDoc OpenAPI 2.3.0 |
 
@@ -83,9 +82,9 @@
 mkdir -p config logs
 
 # 按本地环境创建并填写数据库、Redis、JWT 等配置
-touch config/c-service-env.yml
-touch config/enterprise-service-env.yml
-touch config/platform-service-env.yml
+vi config/c-service-env.yml
+vi config/enterprise-service-env.yml
+vi config/platform-service-env.yml
 
 # 一键启动
 chmod +x start.sh
@@ -157,7 +156,7 @@ npm run dev:mp-weixin
 │   │       └── pojo/        # 实体 / CMD / VO
 │   └── src/main/resources/
 │       ├── mapper/          # MyBatis XML 映射
-│       └── db/migration/    # Flyway 数据库迁移
+│       └── application*.yml # 服务配置
 ├── c-service/               # 工人端后端
 ├── platform-service/        # 平台管理端后端
 ├── enterprise-pc/           # 企业 PC 前端
@@ -168,7 +167,9 @@ npm run dev:mp-weixin
 
 ## 数据库
 
-三个服务共享同一 MySQL 实例，使用独立 schema：
+三个服务本地开发默认连接同一个 MySQL 数据库：
 
-- `enterprise-service` + `c-service`: 共享核心业务库
-- `platform-service`: 独立管理库
+- 默认数据库：`part_time_work`
+- 默认账号：`part_time_work`
+- 初始化和迁移脚本位于 `scripts/` 目录
+- 当前 Flyway 默认关闭，数据库变更以 `scripts/` 中的 SQL 脚本为准
