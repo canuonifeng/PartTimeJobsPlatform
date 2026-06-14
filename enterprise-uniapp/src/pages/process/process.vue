@@ -10,16 +10,17 @@ onShow(() => {
 })
 
 const steps = ref([])
+const hiddenProcessCodes = ['APPLICATION', 'SCHEDULE']
 
 async function loadProcess() {
   try {
     const res = await getOperationProcess()
-    steps.value = (Array.isArray(res) ? res : []).map(item => ({
+    steps.value = (Array.isArray(res) ? res : []).filter(item => !hiddenProcessCodes.includes(item.code)).map(item => ({
       icon: processIcon(item.code),
       title: item.name,
       desc: item.description,
       tags: item.tags || [],
-      path: item.routePath,
+      path: processPath(item),
       state: processState(item.status)
     }))
   } catch {
@@ -32,8 +33,13 @@ function navigateTo(path) {
 }
 
 function processIcon(code) {
-  const map = { PUBLISH: '发', APPLICATION: '报', REVIEW: '审', SCHEDULE: '班', ATTENDANCE: '勤', SALARY: '薪' }
+  const map = { PUBLISH: '发', REVIEW: '审', ATTENDANCE: '勤', SALARY: '薪' }
   return map[code] || '流'
+}
+
+function processPath(item) {
+  if (item.code === 'REVIEW') return '/pages/applications/applicationList?status=PENDING'
+  return item.routePath
 }
 
 function processState(status) {
@@ -49,7 +55,7 @@ function processState(status) {
     <view class="op-hero">
       <text class="op-hero-kicker">招聘运营流程</text>
       <text class="op-hero-title">招聘链路实时推进</text>
-      <text class="op-hero-desc">发布、报名、审核、排班、考勤、薪资节点来自后端统计</text>
+      <text class="op-hero-desc">发布、审核、考勤、薪资节点来自后端统计</text>
     </view>
 
     <view class="op-content">

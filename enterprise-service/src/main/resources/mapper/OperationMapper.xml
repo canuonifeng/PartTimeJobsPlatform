@@ -145,6 +145,29 @@
           AND s.status NOT IN ('CANCELLED', 'CHECKED_OUT', 'COMPLETED')
     </select>
 
+    <select id="findAttendanceConfirmTodos" resultMap="TodoItemMap">
+        SELECT CONCAT('ATTENDANCE-', s.id) AS id,
+               'ATTENDANCE' AS type,
+               CONCAT(COALESCE(j.title, '岗位'), '考勤待确认') AS title,
+               CONCAT(s.shift_date, ' ', s.start_time, '-', s.end_time, ' · ', COALESCE(w.name, '未匹配工人')) AS description,
+               s.status AS status,
+               'MEDIUM' AS priority,
+               s.id AS biz_id,
+               'SCHEDULE_SHIFT' AS biz_type,
+               '查看确认' AS action_text,
+               '/pages/schedules/scheduleList?status=SCHEDULED' AS route_path,
+               s.created_at AS created_at,
+               TIMESTAMP(s.shift_date, s.start_time) AS deadline_at
+        FROM schedule_shifts s
+        JOIN jobs j ON s.job_id = j.id
+        LEFT JOIN c_worker w ON s.worker_id = w.id
+        WHERE s.company_id = #{companyId}
+          AND s.shift_date &gt;= #{today}
+          AND s.status NOT IN ('CANCELLED', 'CHECKED_OUT', 'COMPLETED')
+        ORDER BY s.shift_date ASC, s.start_time ASC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
     <select id="findAttendanceTodos" resultMap="TodoItemMap">
         SELECT CONCAT('ATTENDANCE-', a.id) AS id,
                'ATTENDANCE' AS type,

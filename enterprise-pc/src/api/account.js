@@ -16,6 +16,10 @@ export function resetPassword(data) {
   return request.post('/accounts/reset-password', data)
 }
 
+export function updateCurrentPassword(data) {
+  return request.post('/accounts/me/password', data)
+}
+
 export function deleteAccount(id) {
   return request.post('/accounts/delete', { id })
 }

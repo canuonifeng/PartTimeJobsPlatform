@@ -9,19 +9,35 @@ const loadingMore = ref(false)
 const hasMore = ref(true)
 const page = ref(1)
 const pageSize = 20
+const currentStatus = ref('')
+const statusTabs = [
+  { label: '全部', value: '' },
+  { label: '待审核', value: 'PENDING' },
+  { label: '已通过', value: 'ACCEPTED' },
+  { label: '已拒绝', value: 'REJECTED' }
+]
 
-onLoad(() => {
+onLoad((options = {}) => {
+  currentStatus.value = normalizeStatus(options.status)
+  refreshApplications()
+})
+
+function normalizeStatus(status) {
+  return statusTabs.some(tab => tab.value === status) ? status : ''
+}
+
+function refreshApplications() {
   page.value = 1
   applications.value = []
   hasMore.value = true
-  loadApplications()
-})
+  return loadApplications()
+}
 
 async function loadApplications(append = false) {
   if (!append) loading.value = true
   else loadingMore.value = true
   try {
-    const res = await getApplications(null, { page: page.value, pageSize })
+    const res = await getApplications(null, { status: currentStatus.value, page: page.value, pageSize })
     const list = Array.isArray(res) ? res : (res.records || res.data || [])
     applications.value = append ? applications.value.concat(list) : list
     hasMore.value = list.length >= pageSize
@@ -31,6 +47,12 @@ async function loadApplications(append = false) {
     loading.value = false
     loadingMore.value = false
   }
+}
+
+function switchStatus(status) {
+  if (currentStatus.value === status || loading.value) return
+  currentStatus.value = status
+  refreshApplications()
 }
 
 function loadMore() {
@@ -92,6 +114,25 @@ function formatTimeRange(startTime, endTime) {
   if (!startTime || !endTime) return ''
   return `${startTime.slice(0, 5)}-${endTime.slice(0, 5)}`
 }
+
+function formatBeijingTime(value) {
+  if (!value) return '暂无'
+  const raw = String(value).replace('T', ' ')
+  const hasTimezone = /Z$|[+-]\d{2}:?\d{2}$/.test(String(value))
+  if (!hasTimezone) return raw.slice(0, 16)
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return raw.slice(0, 16)
+  const beijing = new Date(date.getTime() + 8 * 60 * 60 * 1000)
+  return `${beijing.getUTCFullYear()}-${pad2(beijing.getUTCMonth() + 1)}-${pad2(beijing.getUTCDate())} ${pad2(beijing.getUTCHours())}:${pad2(beijing.getUTCMinutes())}`
+}
+
+function scheduleDateLabel(value) {
+  return value || '-'
+}
+
+function pad2(value) {
+  return String(value).padStart(2, '0')
+}
 </script>
 
 <template>
@@ -104,6 +145,12 @@ function formatTimeRange(startTime, endTime) {
     </view>
 
     <view class="op-content">
+      <scroll-view scroll-x class="filter-scroll" show-scrollbar="false">
+        <view class="filter-row">
+          <view v-for="tab in statusTabs" :key="tab.value || 'ALL'" class="filter-pill" :class="{ active: currentStatus === tab.value }" @click="switchStatus(tab.value)">{{ tab.label }}</view>
+        </view>
+      </scroll-view>
+
       <view v-if="loading" class="e-empty">
         <text class="e-empty-title">加载中...</text>
       </view>
@@ -114,7 +161,7 @@ function formatTimeRange(startTime, endTime) {
       </view>
 
       <view v-else class="application-list">
-        <view v-for="app in applications" :key="app.applicationId" class="op-card application-card">
+        <view v-for="app in applications" :key="app.applicationId" class="op-card operation-card application-card">
           <view class="op-row">
             <view class="worker-avatar">{{ (app.workerName || '工').slice(0, 1) }}</view>
             <view class="op-row-main">
@@ -131,11 +178,12 @@ function formatTimeRange(startTime, endTime) {
             </view>
             <view class="info-item">
               <text class="info-label">排班时间</text>
-              <text class="info-value">{{ app.scheduleDate || '-' }} {{ formatTimeRange(app.startTime, app.endTime) }}</text>
+              <text class="info-value multi">{{ scheduleDateLabel(app.scheduleDate) }}</text>
+              <text class="info-value sub">{{ formatTimeRange(app.startTime, app.endTime) || '-' }}</text>
             </view>
             <view class="info-item">
               <text class="info-label">申请时间</text>
-              <text class="info-value">{{ app.appliedAt || '暂无' }}</text>
+              <text class="info-value time">{{ formatBeijingTime(app.appliedAt) }}</text>
             </view>
           </view>
 
@@ -158,14 +206,23 @@ function formatTimeRange(startTime, endTime) {
 <style>
 .applications-page { height: 100vh; }
 .top-space { height: 24rpx; }
+.filter-scroll { margin-bottom: 20rpx; white-space: nowrap; }
+.filter-row { display: inline-flex; gap: 14rpx; padding-right: 8rpx; }
+.filter-pill { display: inline-flex; align-items: center; justify-content: center; height: 62rpx; padding: 0 28rpx; border-radius: 999rpx; background: #fff; color: #64748b; font-size: 25rpx; font-weight: 800; box-shadow: 0 10rpx 24rpx rgba(23,83,53,.06); }
+.filter-pill.active { background: #16a34a; color: #fff; box-shadow: 0 12rpx 28rpx rgba(22,163,74,.2); }
 .application-list { display: flex; flex-direction: column; gap: 20rpx; }
+.operation-card { position: relative; overflow: hidden; }
+.operation-card::before { content: ''; position: absolute; left: 0; top: 28rpx; bottom: 28rpx; width: 8rpx; border-radius: 0 999rpx 999rpx 0; background: linear-gradient(180deg, #18c86b, #047857); }
 .application-card { overflow: hidden; }
 .worker-avatar { width: 76rpx; height: 76rpx; margin-right: 18rpx; border-radius: 26rpx; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #18c86b, #047857); color: #fff; font-size: 30rpx; font-weight: 850; flex-shrink: 0; }
 .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14rpx; margin-top: 22rpx; }
 .info-item { min-width: 0; padding: 16rpx; border-radius: 18rpx; background: #f8fafc; }
 .info-item.wide { grid-column: span 2; }
 .info-label { display: block; font-size: 22rpx; color: #64748b; }
-.info-value { display: block; margin-top: 8rpx; font-size: 26rpx; font-weight: 750; color: #1f2933; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.info-value { display: block; margin-top: 8rpx; font-size: 26rpx; font-weight: 750; color: #1f2933; white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.35; word-break: break-all; }
+.info-value.multi { white-space: normal; }
+.info-value.sub { margin-top: 6rpx; color: #64748b; font-size: 24rpx; }
+.info-value.time { white-space: normal; line-height: 1.35; }
 .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14rpx; margin-top: 22rpx; }
 .action-btn { height: 72rpx; line-height: 72rpx; border-radius: 18rpx; text-align: center; font-size: 26rpx; font-weight: 850; }
 .action-btn.reject { background: #fee2e2; color: #dc2626; }

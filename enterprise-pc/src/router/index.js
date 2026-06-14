@@ -67,6 +67,12 @@ const routes = [
     meta: { requiresAuth: true, title: '账号管理' }
   },
   {
+    path: '/accounts/password',
+    name: 'PasswordChange',
+    component: () => import('../views/accounts/PasswordChange.vue'),
+    meta: { requiresAuth: true, title: '修改密码' }
+  },
+  {
     path: '/templates',
     name: 'TemplateList',
     component: () => import('../views/templates/TemplateList.vue'),

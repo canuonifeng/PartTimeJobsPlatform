@@ -10,6 +10,7 @@ public class EnterpriseAccount {
     private String username;
     private String password;
     private String displayName;
+    private String phone;
     private String role;
     private String status;
     private LocalDateTime createdAt;

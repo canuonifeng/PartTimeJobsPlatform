@@ -9,7 +9,7 @@ const props = defineProps({
 const tabs = [
   { key: 'home', text: '工作台', icon: '台', url: '/pages/home/index' },
   { key: 'process', text: '流程', icon: '流', url: '/pages/process/process' },
-  { key: 'todos', text: '待办', icon: '办', url: '/pages/todos/todoList' },
+  { key: 'messages', text: '消息', icon: '消', url: '/pages/messages/messageList' },
   { key: 'profile', text: '我的', icon: '我', url: '/pages/profile/profile' }
 ]
 

@@ -8,6 +8,7 @@
         <result property="username" column="username"/>
         <result property="password" column="password"/>
         <result property="displayName" column="display_name"/>
+        <result property="phone" column="phone"/>
         <result property="role" column="role"/>
         <result property="status" column="status"/>
         <result property="createdAt" column="created_at"/>
@@ -32,13 +33,19 @@
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO enterprise_accounts (enterprise_id, username, password, display_name, role, status)
-        VALUES (#{enterpriseId}, #{username}, #{password}, #{displayName}, #{role}, #{status})
+        INSERT INTO enterprise_accounts (enterprise_id, username, password, display_name, phone, role, status)
+        VALUES (#{enterpriseId}, #{username}, #{password}, #{displayName}, #{phone}, #{role}, #{status})
     </insert>
 
     <update id="update">
         UPDATE enterprise_accounts
-        SET display_name = #{displayName}, role = #{role}, status = #{status}
+        SET display_name = #{displayName}, phone = #{phone}, role = #{role}, status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateProfile">
+        UPDATE enterprise_accounts
+        SET display_name = #{displayName}, phone = #{phone}
         WHERE id = #{id}
     </update>
 

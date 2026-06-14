@@ -44,11 +44,12 @@ public class ScheduleController {
             @Parameter(description = "工人ID") @RequestParam(required = false) Long workerId,
             @Parameter(description = "班次日期") @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate shiftDate,
             @Parameter(hidden = true) @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @Parameter(description = "班次状态") @RequestParam(required = false) String status,
             @Parameter(description = "页码") @RequestParam(required = false, defaultValue = "1") Integer page,
             @Parameter(description = "每页数量") @RequestParam(required = false, defaultValue = "20") Integer pageSize) {
         if (shiftDate == null && date != null) shiftDate = date;
         Long resolvedCompanyId = companyId != null ? companyId : SecurityUtil.getCurrentCompanyId();
-        return ApiResponse.success(scheduleService.getShifts(resolvedCompanyId, jobId, workerId, shiftDate, page, pageSize));
+        return ApiResponse.success(scheduleService.getShifts(resolvedCompanyId, jobId, workerId, shiftDate, status, page, pageSize));
     }
 
     @Operation(summary = "更新班次", description = "更新指定的班次信息")

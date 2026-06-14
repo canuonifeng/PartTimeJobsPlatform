@@ -36,6 +36,8 @@ public interface ScheduleApplicationMapper {
     // VO methods with JOINs
     List<ScheduleApplicationVO> findVOByCompanyId(@Param("companyId") Long companyId);
 
+    List<ScheduleApplicationVO> findVOByCompanyIdAndStatus(@Param("companyId") Long companyId, @Param("status") String status);
+
     List<ScheduleApplicationVO> findVOByJobId(@Param("jobId") Long jobId);
 
     List<ScheduleApplicationVO> findVOByJobIdAndStatus(@Param("jobId") Long jobId, @Param("status") String status);

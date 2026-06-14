@@ -12,6 +12,8 @@ public class AccountVO {
     private String username;
     @Schema(description = "显示名")
     private String displayName;
+    @Schema(description = "联系电话")
+    private String phone;
     @Schema(description = "角色")
     private String role;
     @Schema(description = "状态")

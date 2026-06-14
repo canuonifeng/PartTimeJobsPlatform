@@ -23,6 +23,7 @@ public interface OperationMapper {
     long countApplicationTodos(@Param("companyId") Long companyId);
     List<OperationTodoItemVO> findScheduleTodos(@Param("companyId") Long companyId, @Param("today") LocalDate today, @Param("offset") int offset, @Param("pageSize") int pageSize);
     long countScheduleTodos(@Param("companyId") Long companyId, @Param("today") LocalDate today);
+    List<OperationTodoItemVO> findAttendanceConfirmTodos(@Param("companyId") Long companyId, @Param("today") LocalDate today, @Param("offset") int offset, @Param("pageSize") int pageSize);
     List<OperationTodoItemVO> findAttendanceTodos(@Param("companyId") Long companyId, @Param("offset") int offset, @Param("pageSize") int pageSize);
     long countAttendanceTodos(@Param("companyId") Long companyId);
     List<OperationTodoItemVO> findSalaryTodos(@Param("companyId") Long companyId, @Param("offset") int offset, @Param("pageSize") int pageSize);

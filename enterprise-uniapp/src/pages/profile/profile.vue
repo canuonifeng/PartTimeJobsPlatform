@@ -19,7 +19,7 @@ const managementItems = [
 
 const settingItems = [
   { name: '企业资料', desc: '公司名称、联系人、营业信息', icon: '企', path: '/pages/settings/companySettings' },
-  { name: '账号安全', desc: '登录手机号、密码和权限', icon: '安', path: '/pages/accounts/accountList' },
+  { name: '账号安全', desc: '设置姓名、联系电话和密码', icon: '安', path: '/pages/security/accountSecurity' },
   { name: '资金与流水', desc: '余额、充值、支出记录', icon: '钱', path: '/pages/balance/balanceList' }
 ]
 

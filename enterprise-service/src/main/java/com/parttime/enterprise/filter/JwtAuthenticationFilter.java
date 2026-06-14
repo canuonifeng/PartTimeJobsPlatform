@@ -49,6 +49,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             Map<String, Object> details = new HashMap<>();
             details.put("companyId", companyId);
+            details.put("userId", account.getId());
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(userId, null, authorities);

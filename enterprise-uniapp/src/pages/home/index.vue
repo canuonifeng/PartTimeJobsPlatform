@@ -37,7 +37,6 @@ const flowSteps = computed(() => (dashboard.value?.process || []).slice(0, 4).ma
 
 const todos = computed(() => (dashboard.value?.todoSummary || [])
   .filter(item => Number(item.count || 0) > 0)
-  .slice(0, 2)
   .map(item => ({
     type: todoIcon(item.type),
     title: `${item.count || 0} 个${item.name}待办`,
@@ -55,6 +54,7 @@ const quickActions = [
 
 onShow(() => {
   uni.hideTabBar({ animation: false })
+  loadDashboard()
 })
 
 onMounted(async () => {
@@ -79,10 +79,6 @@ function navigateTo(path) {
 
 function switchToProcess() {
   uni.switchTab({ url: '/pages/process/process' })
-}
-
-function switchToTodos() {
-  uni.switchTab({ url: '/pages/todos/todoList' })
 }
 
 function processState(status) {
@@ -117,10 +113,9 @@ function todoDesc(type) {
 
 function todoPath(type) {
   const map = {
-    APPLICATION: '/pages/applications/applicationList',
-    SCHEDULE: '/pages/schedules/scheduleList',
-    ATTENDANCE: '/pages/schedules/scheduleList',
-    SALARY: '/pages/attendance/attendanceList'
+    APPLICATION: '/pages/applications/applicationList?status=PENDING',
+    ATTENDANCE: '/pages/schedules/scheduleList?status=SCHEDULED',
+    SALARY: '/pages/attendance/attendanceList?settlementStatus=UNPAID'
   }
   return map[type] || '/pages/todos/todoList'
 }
@@ -159,9 +154,9 @@ function todoPath(type) {
       <view class="op-section">
         <view class="op-section-head">
           <text class="op-section-title">今日待办</text>
-          <text class="op-section-link" @click="switchToTodos">全部</text>
         </view>
         <view class="op-card todo-card">
+          <view v-if="todos.length === 0" class="todo-empty">暂无待处理事项</view>
           <view v-for="item in todos" :key="item.title" class="todo-row" @click="navigateTo(item.path)">
             <view class="todo-icon">{{ item.type }}</view>
             <view class="op-row-main">
@@ -203,6 +198,7 @@ function todoPath(type) {
 .flow-value { display: block; font-size: 34rpx; font-weight: 850; line-height: 1; }
 .flow-name { display: block; margin-top: 10rpx; font-size: 22rpx; font-weight: 750; }
 .todo-card { padding-top: 8rpx; padding-bottom: 8rpx; }
+.todo-empty { padding: 28rpx 0; text-align: center; color: #98a3b3; font-size: 25rpx; }
 .todo-row { display: flex; align-items: center; min-width: 0; padding: 18rpx 0; border-bottom: 1rpx solid #edf0f3; }
 .todo-row:last-child { border-bottom: none; }
 .todo-icon { width: 72rpx; height: 72rpx; margin-right: 18rpx; border-radius: 24rpx; display: flex; align-items: center; justify-content: center; background: #16a34a; color: #fff; font-size: 28rpx; font-weight: 850; flex-shrink: 0; }

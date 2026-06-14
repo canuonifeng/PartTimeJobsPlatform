@@ -3,7 +3,9 @@ package com.parttime.enterprise.service.impl;
 import com.parttime.enterprise.exception.BusinessException;
 import com.parttime.enterprise.mapper.EnterpriseAccountMapper;
 import com.parttime.enterprise.pojo.cmd.AccountCreateCmd;
+import com.parttime.enterprise.pojo.cmd.AccountPasswordUpdateCmd;
 import com.parttime.enterprise.pojo.cmd.AccountResetPasswordCmd;
+import com.parttime.enterprise.pojo.cmd.AccountSecurityUpdateCmd;
 import com.parttime.enterprise.pojo.cmd.AccountUpdateCmd;
 import com.parttime.enterprise.pojo.entity.EnterpriseAccount;
 import com.parttime.enterprise.pojo.vo.AccountVO;
@@ -60,6 +62,32 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    public AccountVO getCurrent(Long accountId, Long enterpriseId) {
+        EnterpriseAccount account = findOwnAccount(accountId, enterpriseId);
+        return toVO(account);
+    }
+
+    @Override
+    public AccountVO updateCurrent(Long accountId, Long enterpriseId, AccountSecurityUpdateCmd cmd) {
+        EnterpriseAccount account = findOwnAccount(accountId, enterpriseId);
+        String displayName = cmd.getDisplayName() != null ? cmd.getDisplayName().trim() : account.getDisplayName();
+        String phone = cmd.getPhone() != null ? cmd.getPhone().trim() : account.getPhone();
+        accountMapper.updateProfile(account.getId(), displayName, phone);
+        account.setDisplayName(displayName);
+        account.setPhone(phone);
+        return toVO(account);
+    }
+
+    @Override
+    public void updateCurrentPassword(Long accountId, Long enterpriseId, AccountPasswordUpdateCmd cmd) {
+        EnterpriseAccount account = findOwnAccount(accountId, enterpriseId);
+        if (cmd.getNewPassword() == null || cmd.getNewPassword().isBlank()) {
+            throw new BusinessException("新密码不能为空");
+        }
+        accountMapper.updatePassword(account.getId(), passwordEncoder.encode(cmd.getNewPassword()));
+    }
+
+    @Override
     public void resetPassword(AccountResetPasswordCmd cmd) {
         EnterpriseAccount account = accountMapper.findById(cmd.getId())
                 .orElseThrow(() -> new BusinessException("Account not found: " + cmd.getId()));
@@ -76,9 +104,19 @@ public class AccountServiceImpl implements AccountService {
         vo.setId(account.getId());
         vo.setUsername(account.getUsername());
         vo.setDisplayName(account.getDisplayName());
+        vo.setPhone(account.getPhone());
         vo.setRole(account.getRole());
         vo.setStatus(account.getStatus());
         vo.setCreatedAt(account.getCreatedAt());
         return vo;
+    }
+
+    private EnterpriseAccount findOwnAccount(Long accountId, Long enterpriseId) {
+        EnterpriseAccount account = accountMapper.findById(accountId)
+                .orElseThrow(() -> new BusinessException("Account not found: " + accountId));
+        if (!account.getEnterpriseId().equals(enterpriseId)) {
+            throw new BusinessException("不能操作其他企业账号");
+        }
+        return account;
     }
 }

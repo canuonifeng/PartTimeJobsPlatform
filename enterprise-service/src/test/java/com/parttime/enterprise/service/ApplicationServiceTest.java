@@ -127,6 +127,24 @@ class ApplicationServiceTest {
     }
 
     @Test
+    void getApplicationsByJob_shouldFilterByCompanyAndStatus() {
+        ScheduleApplicationVO pending = new ScheduleApplicationVO();
+        pending.setId(1L);
+        pending.setJobId(100L);
+        pending.setStatus(ApplicationStatus.PENDING);
+
+        when(applicationMapper.findVOByCompanyIdAndStatus(1L, "PENDING")).thenReturn(List.of(pending));
+
+        PageVO<ScheduleApplicationVO> result = applicationService.getApplicationsByJob(1L, null, null, "PENDING", 1, 20);
+
+        assertThat(result.getTotal()).isEqualTo(1);
+        assertThat(result.getRecords()).hasSize(1);
+        assertThat(result.getRecords().get(0).getStatus()).isEqualTo(ApplicationStatus.PENDING);
+        verify(applicationMapper).findVOByCompanyIdAndStatus(1L, "PENDING");
+        verify(applicationMapper, never()).findVOByCompanyId(1L);
+    }
+
+    @Test
     void acceptApplication_shouldChangeStatusToAccepted() {
         ScheduleApplication app = pendingApplication();
         Job job = job();

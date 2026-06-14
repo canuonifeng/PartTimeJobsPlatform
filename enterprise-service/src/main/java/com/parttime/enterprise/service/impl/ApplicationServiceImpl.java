@@ -58,6 +58,8 @@ public class ApplicationServiceImpl implements ApplicationService {
             apps = scheduleApplicationMapper.findVOByJobIdAndStatus(jobId, status);
         } else if (jobId != null) {
             apps = scheduleApplicationMapper.findVOByJobId(jobId);
+        } else if (status != null && !status.isEmpty()) {
+            apps = scheduleApplicationMapper.findVOByCompanyIdAndStatus(companyId, status);
         } else {
             apps = scheduleApplicationMapper.findVOByCompanyId(companyId);
         }

@@ -14,7 +14,11 @@ public interface ScheduleService {
 
     ScheduleShiftVO updateShift(Long id, ScheduleShiftCmd request);
 
-    PageVO<ScheduleShiftVO> getShifts(Long companyId, Long jobId, Long workerId, LocalDate shiftDate, Integer page, Integer pageSize);
+    default PageVO<ScheduleShiftVO> getShifts(Long companyId, Long jobId, Long workerId, LocalDate shiftDate, Integer page, Integer pageSize) {
+        return getShifts(companyId, jobId, workerId, shiftDate, null, page, pageSize);
+    }
+
+    PageVO<ScheduleShiftVO> getShifts(Long companyId, Long jobId, Long workerId, LocalDate shiftDate, String status, Integer page, Integer pageSize);
 
     void removeShift(Long id);
 

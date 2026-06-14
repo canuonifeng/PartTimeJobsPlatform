@@ -2,7 +2,9 @@ package com.parttime.enterprise.controller;
 
 import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.pojo.cmd.AccountCreateCmd;
+import com.parttime.enterprise.pojo.cmd.AccountPasswordUpdateCmd;
 import com.parttime.enterprise.pojo.cmd.AccountResetPasswordCmd;
+import com.parttime.enterprise.pojo.cmd.AccountSecurityUpdateCmd;
 import com.parttime.enterprise.pojo.cmd.AccountUpdateCmd;
 import com.parttime.enterprise.pojo.vo.AccountVO;
 import com.parttime.enterprise.pojo.vo.ApiResponse;
@@ -28,6 +30,31 @@ public class AccountController {
         Integer page = body == null ? null : body.get("page");
         Integer pageSize = body == null ? null : body.get("pageSize");
         return ApiResponse.success(accountService.list(enterpriseId, page, pageSize));
+    }
+
+    @Operation(summary = "获取当前账号安全信息")
+    @GetMapping("/me")
+    public ApiResponse<AccountVO> me() {
+        Long enterpriseId = SecurityUtil.getCurrentCompanyId();
+        Long accountId = SecurityUtil.getCurrentUserId();
+        return ApiResponse.success(accountService.getCurrent(accountId, enterpriseId));
+    }
+
+    @Operation(summary = "更新当前账号安全信息")
+    @PostMapping("/me")
+    public ApiResponse<AccountVO> updateMe(@RequestBody AccountSecurityUpdateCmd cmd) {
+        Long enterpriseId = SecurityUtil.getCurrentCompanyId();
+        Long accountId = SecurityUtil.getCurrentUserId();
+        return ApiResponse.success(accountService.updateCurrent(accountId, enterpriseId, cmd));
+    }
+
+    @Operation(summary = "修改当前账号密码")
+    @PostMapping("/me/password")
+    public ApiResponse<Void> updateMyPassword(@RequestBody AccountPasswordUpdateCmd cmd) {
+        Long enterpriseId = SecurityUtil.getCurrentCompanyId();
+        Long accountId = SecurityUtil.getCurrentUserId();
+        accountService.updateCurrentPassword(accountId, enterpriseId, cmd);
+        return ApiResponse.success();
     }
 
     @Operation(summary = "新增账号")

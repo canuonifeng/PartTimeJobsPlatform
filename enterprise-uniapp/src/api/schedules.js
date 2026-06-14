@@ -5,6 +5,7 @@ export function listScheduleShifts(params = {}) {
   if (params.jobId != null) query.push(`jobId=${params.jobId}`)
   if (params.workerId != null) query.push(`workerId=${params.workerId}`)
   if (params.shiftDate) query.push(`shiftDate=${params.shiftDate}`)
+  if (params.status) query.push(`status=${encodeURIComponent(params.status)}`)
   if (params.page != null) query.push(`page=${params.page}`)
   if (params.pageSize != null) query.push(`pageSize=${params.pageSize}`)
   return request('GET', `/schedule-shifts${query.length ? `?${query.join('&')}` : ''}`)

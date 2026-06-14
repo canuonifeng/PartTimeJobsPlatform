@@ -3,6 +3,7 @@
     {"path": "pages/login/login", "style": {"navigationBarTitleText": "登录"}},
     {"path": "pages/home/index", "style": {"navigationBarTitleText": "工作台"}},
     {"path": "pages/process/process", "style": {"navigationBarTitleText": "流程"}},
+    {"path": "pages/messages/messageList", "style": {"navigationBarTitleText": "消息", "enablePullDownRefresh": true}},
     {"path": "pages/todos/todoList", "style": {"navigationBarTitleText": "待办", "enablePullDownRefresh": true}},
     {"path": "pages/profile/profile", "style": {"navigationBarTitleText": "我的"}},
     {"path": "pages/jobs/jobList", "style": {"navigationBarTitleText": "职位管理", "enablePullDownRefresh": true}},
@@ -18,6 +19,8 @@
     {"path": "pages/attendance/attendanceList", "style": {"navigationBarTitleText": "薪资管理", "enablePullDownRefresh": true}},
     {"path": "pages/workers/workerList", "style": {"navigationBarTitleText": "兼职管理", "enablePullDownRefresh": true}},
     {"path": "pages/accounts/accountList", "style": {"navigationBarTitleText": "账号管理", "enablePullDownRefresh": true}},
+    {"path": "pages/security/accountSecurity", "style": {"navigationBarTitleText": "账号安全"}},
+    {"path": "pages/security/passwordChange", "style": {"navigationBarTitleText": "修改密码"}},
     {"path": "pages/settings/companySettings", "style": {"navigationBarTitleText": "企业设置"}},
     {"path": "pages/balance/balanceList", "style": {"navigationBarTitleText": "账户余额", "enablePullDownRefresh": true}},
     {"path": "pages/auth/realName", "style": {"navigationBarTitleText": "企业实名认证"}}
@@ -37,7 +40,7 @@
     "list": [
       {"pagePath": "pages/home/index", "text": "工作台"},
       {"pagePath": "pages/process/process", "text": "流程"},
-      {"pagePath": "pages/todos/todoList", "text": "待办"},
+      {"pagePath": "pages/messages/messageList", "text": "消息"},
       {"pagePath": "pages/profile/profile", "text": "我的"}
     ]
   }

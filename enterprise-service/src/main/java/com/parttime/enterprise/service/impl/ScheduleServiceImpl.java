@@ -70,14 +70,20 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     @Override
-    public PageVO<ScheduleShiftVO> getShifts(Long companyId, Long jobId, Long workerId, LocalDate shiftDate, Integer page, Integer pageSize) {
+    public PageVO<ScheduleShiftVO> getShifts(Long companyId, Long jobId, Long workerId, LocalDate shiftDate, String status, Integer page, Integer pageSize) {
+        String normalizedStatus = status == null || status.isBlank() ? null : status.trim().toUpperCase();
         List<ScheduleShift> shifts;
         int total;
         if (page != null && pageSize != null && pageSize > 0) {
             int currentPage = Math.max(page, 1);
             int offset = (currentPage - 1) * pageSize;
-            shifts = shiftMapper.findPage(companyId, jobId, workerId, shiftDate, offset, pageSize);
-            total = shiftMapper.countPage(companyId, jobId, workerId, shiftDate);
+            if (normalizedStatus != null) {
+                shifts = shiftMapper.findPageByStatus(companyId, jobId, workerId, shiftDate, normalizedStatus, offset, pageSize);
+                total = shiftMapper.countPageByStatus(companyId, jobId, workerId, shiftDate, normalizedStatus);
+            } else {
+                shifts = shiftMapper.findPage(companyId, jobId, workerId, shiftDate, offset, pageSize);
+                total = shiftMapper.countPage(companyId, jobId, workerId, shiftDate);
+            }
         } else if (jobId != null && shiftDate != null) {
             shifts = shiftMapper.findByJobIdAndDate(jobId, shiftDate);
             total = shifts.size();
@@ -92,6 +98,10 @@ public class ScheduleServiceImpl implements ScheduleService {
             total = shifts.size();
         } else {
             shifts = shiftMapper.findAll();
+            total = shifts.size();
+        }
+        if (normalizedStatus != null && (page == null || pageSize == null || pageSize <= 0)) {
+            shifts = shifts.stream().filter(s -> normalizedStatus.equals(s.getStatus())).collect(Collectors.toList());
             total = shifts.size();
         }
 

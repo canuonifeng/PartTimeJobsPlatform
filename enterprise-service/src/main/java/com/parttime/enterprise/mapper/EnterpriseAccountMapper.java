@@ -22,6 +22,8 @@ public interface EnterpriseAccountMapper {
 
     int update(EnterpriseAccount account);
 
+    int updateProfile(@Param("id") Long id, @Param("displayName") String displayName, @Param("phone") String phone);
+
     int updatePassword(@Param("id") Long id, @Param("password") String password);
 
     int deleteById(@Param("id") Long id);

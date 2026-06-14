@@ -56,18 +56,14 @@ public class OperationServiceImpl implements OperationService {
     public List<OperationProcessNodeVO> getProcess(Long companyId) {
         LocalDate today = LocalDate.now();
         long publishedJobs = operationMapper.countPublishedJobs(companyId);
-        long totalApplications = operationMapper.countApplications(companyId);
         long pendingApplications = operationMapper.countPendingApplications(companyId);
-        long scheduleTodos = operationMapper.countScheduleTodos(companyId, today);
-        long attendanceExceptions = operationMapper.countAttendanceTodos(companyId);
+        long attendanceTodos = operationMapper.countScheduleTodos(companyId, today);
         long unpaidSalary = operationMapper.countSalaryTodos(companyId);
         List<OperationProcessNodeVO> nodes = new ArrayList<>();
         nodes.add(node("PUBLISH", "发布职位", publishedJobs, "NORMAL", publishedJobs + " 个岗位正在招聘中", Collections.singletonList("发布中 " + publishedJobs), "/pages/jobs/jobList"));
-        nodes.add(node("APPLICATION", "收到报名", totalApplications, "NORMAL", "累计 " + totalApplications + " 条报名", Collections.singletonList("总报名 " + totalApplications), "/pages/applications/applicationList"));
-        nodes.add(node("REVIEW", "审核报名", pendingApplications, pendingApplications > 0 ? "WARNING" : "NORMAL", pendingApplications + " 人等待审核", Collections.singletonList("待审核 " + pendingApplications), "/pages/applications/applicationList"));
-        nodes.add(node("SCHEDULE", "创建排班", scheduleTodos, scheduleTodos > 0 ? "WARNING" : "NORMAL", scheduleTodos + " 个班次待跟进", Collections.singletonList("待排班 " + scheduleTodos), "/pages/schedules/scheduleList"));
-        nodes.add(node("ATTENDANCE", "考勤确认", attendanceExceptions, attendanceExceptions > 0 ? "WARNING" : "NORMAL", attendanceExceptions + " 条考勤异常", Collections.singletonList("异常 " + attendanceExceptions), "/pages/schedules/scheduleList"));
-        nodes.add(node("SALARY", "薪资结算", unpaidSalary, unpaidSalary > 0 ? "TODO" : "NORMAL", unpaidSalary + " 条薪资待结算", Collections.singletonList("待结算 " + unpaidSalary), "/pages/attendance/attendanceList"));
+        nodes.add(node("REVIEW", "审核报名", pendingApplications, pendingApplications > 0 ? "WARNING" : "NORMAL", pendingApplications + " 人等待审核", Collections.singletonList("待审核 " + pendingApplications), "/pages/applications/applicationList?status=PENDING"));
+        nodes.add(node("ATTENDANCE", "考勤确认", attendanceTodos, attendanceTodos > 0 ? "WARNING" : "NORMAL", attendanceTodos + " 条考勤待确认", Collections.singletonList("待确认 " + attendanceTodos), "/pages/schedules/scheduleList?status=SCHEDULED"));
+        nodes.add(node("SALARY", "薪资结算", unpaidSalary, unpaidSalary > 0 ? "TODO" : "NORMAL", unpaidSalary + " 条薪资待结算", Collections.singletonList("待结算 " + unpaidSalary), "/pages/attendance/attendanceList?settlementStatus=UNPAID"));
         return nodes;
     }
 
@@ -90,8 +86,8 @@ public class OperationServiceImpl implements OperationService {
                 total = operationMapper.countScheduleTodos(companyId, today);
             }
             case "ATTENDANCE" -> {
-                records = operationMapper.findAttendanceTodos(companyId, offset, safePageSize);
-                total = operationMapper.countAttendanceTodos(companyId);
+                records = operationMapper.findAttendanceConfirmTodos(companyId, today, offset, safePageSize);
+                total = operationMapper.countScheduleTodos(companyId, today);
             }
             case "SALARY" -> {
                 records = operationMapper.findSalaryTodos(companyId, offset, safePageSize);
@@ -100,12 +96,10 @@ public class OperationServiceImpl implements OperationService {
             default -> {
                 records = new ArrayList<>();
                 records.addAll(operationMapper.findApplicationTodos(companyId, 0, safePageSize));
-                records.addAll(operationMapper.findScheduleTodos(companyId, today, 0, safePageSize));
-                records.addAll(operationMapper.findAttendanceTodos(companyId, 0, safePageSize));
+                records.addAll(operationMapper.findAttendanceConfirmTodos(companyId, today, 0, safePageSize));
                 records.addAll(operationMapper.findSalaryTodos(companyId, 0, safePageSize));
                 total = operationMapper.countApplicationTodos(companyId)
                         + operationMapper.countScheduleTodos(companyId, today)
-                        + operationMapper.countAttendanceTodos(companyId)
                         + operationMapper.countSalaryTodos(companyId);
                 records = records.stream().limit(safePageSize).toList();
             }
@@ -150,13 +144,12 @@ public class OperationServiceImpl implements OperationService {
     private OperationOverviewVO buildOverview(Long companyId) {
         LocalDate today = LocalDate.now();
         long applicationTodos = operationMapper.countApplicationTodos(companyId);
-        long scheduleTodos = operationMapper.countScheduleTodos(companyId, today);
-        long attendanceTodos = operationMapper.countAttendanceTodos(companyId);
+        long attendanceTodos = operationMapper.countScheduleTodos(companyId, today);
         long salaryTodos = operationMapper.countSalaryTodos(companyId);
         OperationOverviewVO overview = new OperationOverviewVO();
         overview.setPublishedJobCount(operationMapper.countPublishedJobs(companyId));
         overview.setTotalApplicationCount(operationMapper.countApplications(companyId));
-        overview.setPendingTodoCount(applicationTodos + scheduleTodos + attendanceTodos + salaryTodos);
+        overview.setPendingTodoCount(applicationTodos + attendanceTodos + salaryTodos);
         overview.setTodayShiftCount(operationMapper.countTodayShifts(companyId, today));
         overview.setUnpaidSalaryCount(salaryTodos);
         return overview;
@@ -175,8 +168,7 @@ public class OperationServiceImpl implements OperationService {
         LocalDate today = LocalDate.now();
         List<OperationTodoSummaryVO> summaries = new ArrayList<>();
         summaries.add(summary("APPLICATION", "报名", operationMapper.countApplicationTodos(companyId)));
-        summaries.add(summary("SCHEDULE", "排班", operationMapper.countScheduleTodos(companyId, today)));
-        summaries.add(summary("ATTENDANCE", "考勤", operationMapper.countAttendanceTodos(companyId)));
+        summaries.add(summary("ATTENDANCE", "考勤", operationMapper.countScheduleTodos(companyId, today)));
         summaries.add(summary("SALARY", "薪资", operationMapper.countSalaryTodos(companyId)));
         return summaries;
     }
@@ -225,6 +217,7 @@ public class OperationServiceImpl implements OperationService {
             switch (item.getType()) {
                 case "APPLICATION" -> item.setActions(List.of("ACCEPT_APPLICATION", "REJECT_APPLICATION"));
                 case "SCHEDULE" -> item.setActions(List.of("CANCEL_SHIFT"));
+                case "ATTENDANCE" -> item.setActions(Collections.emptyList());
                 case "SALARY" -> item.setActions(List.of("PAY_SALARY"));
                 default -> item.setActions(Collections.emptyList());
             }

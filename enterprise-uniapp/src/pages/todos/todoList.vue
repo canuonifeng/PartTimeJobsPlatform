@@ -2,10 +2,8 @@
 import { computed, ref } from 'vue'
 import { onPullDownRefresh, onShow } from '@dcloudio/uni-app'
 import { getOperationTodos } from '@/api/operations'
-import EnterpriseTabBar from '@/components/EnterpriseTabBar.vue'
 
 onShow(() => {
-  uni.hideTabBar({ animation: false })
   loadTodos()
 })
 
@@ -135,12 +133,11 @@ function fallbackPath(type) {
         </view>
       </view>
     </view>
-    <EnterpriseTabBar active="todos" />
   </view>
 </template>
 
 <style>
-.todo-page { min-height: 100vh; padding-bottom: calc(140rpx + env(safe-area-inset-bottom)); }
+.todo-page { min-height: 100vh; padding-bottom: 40rpx; }
 .top-space { height: 24rpx; }
 .type-tabs { width: 100%; margin-top: 22rpx; white-space: nowrap; }
 .type-tabs-inner { display: flex; padding: 0 28rpx; }
