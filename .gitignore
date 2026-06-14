@@ -3,6 +3,6 @@
 .opencode/
 .codex/
 .DS_Store
-opensepc/
+openspec
 config/*.yml
 docs/
