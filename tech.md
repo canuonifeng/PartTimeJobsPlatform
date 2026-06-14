@@ -70,21 +70,75 @@
 
 ## 快速启动
 
+### 方式一：一键启动生产构建
+
+`start.sh` 会构建并启动 3 个后端服务，同时构建 PC 与 H5 前端产物。启动前请先准备本地外部配置文件，配置文件不提交到 Git。
+
 ```bash
-# 启动企业端后端
-cd enterprise-service && mvn spring-boot:run
+# 准备本地配置与日志目录
+mkdir -p config logs
 
-# 启动工人端后端
-cd c-service && mvn spring-boot:run
+# 按本地环境创建并填写数据库、Redis、JWT 等配置
+touch config/c-service-env.yml
+touch config/enterprise-service-env.yml
+touch config/platform-service-env.yml
 
-# 启动平台管理端后端
-cd platform-service && mvn spring-boot:run
+# 一键启动
+chmod +x start.sh
+./start.sh
+```
 
-# 启动企业 PC 前端
-cd enterprise-pc && npm install && npm run dev
+后端服务端口与接口前缀：
 
-# 启动平台 PC 前端
-cd platform-pc && npm install && npm run dev
+| 服务 | 端口 | 接口前缀 |
+|---|---:|---|
+| `enterprise-service` | 8081 | `/api/enterprise` |
+| `c-service` | 8082 | `/api/worker` |
+| `platform-service` | 8083 | `/api/admin` |
+
+### 方式二：开发环境分别启动
+
+```bash
+# 后端需使用 JDK 17
+export JAVA_HOME=$(/usr/libexec/java_home -v 17 2>/dev/null)
+
+# 企业端后端：http://localhost:8081/api/enterprise
+cd enterprise-service
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
+
+# 工人端后端：http://localhost:8082/api/worker
+cd c-service
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
+
+# 平台端后端：http://localhost:8083/api/admin
+cd platform-service
+mvn spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+前端开发服务：
+
+```bash
+# 企业 PC 前端
+cd enterprise-pc
+npm install
+npm run dev
+
+# 平台 PC 前端
+cd platform-pc
+npm install
+npm run dev
+
+# 企业小程序 / H5
+cd enterprise-uniapp
+npm install
+npm run dev:h5
+npm run dev:mp-weixin
+
+# 工人小程序 / H5
+cd worker-uniapp
+npm install
+npm run dev:h5
+npm run dev:mp-weixin
 ```
 
 ## 项目结构
