@@ -4,3 +4,4 @@
 .codex/
 .DS_Store
 config/*.yml
+docs/
