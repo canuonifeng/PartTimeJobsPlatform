@@ -30,4 +30,11 @@
         </foreach>
     </select>
 
+    <select id="findWorkerRealNameStatusesByIds" resultType="java.util.Map">
+        SELECT worker_id, status FROM worker_real_name_auth WHERE worker_id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
 </mapper>

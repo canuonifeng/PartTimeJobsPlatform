@@ -46,10 +46,10 @@ const todos = computed(() => (dashboard.value?.todoSummary || [])
   })))
 
 const quickActions = [
-  { name: '发布职位', icon: '发', path: '/pages/jobs/jobForm' },
+  { name: '发布职位', icon: '+岗', path: '/pages/jobs/jobForm' },
   { name: '审核报名', icon: '审', path: '/pages/applications/applicationList' },
-  { name: '创建排班', icon: '排', path: '/pages/schedules/scheduleList' },
-  { name: '薪资结算', icon: '薪', path: '/pages/attendance/attendanceList' }
+  { name: '考勤确认', icon: '勤', path: '/pages/schedules/scheduleList?status=SCHEDULED' },
+  { name: '薪资结算', icon: '¥', path: '/pages/attendance/attendanceList?settlementStatus=UNPAID' }
 ]
 
 onShow(() => {
@@ -204,6 +204,6 @@ function todoPath(type) {
 .todo-icon { width: 72rpx; height: 72rpx; margin-right: 18rpx; border-radius: 24rpx; display: flex; align-items: center; justify-content: center; background: #16a34a; color: #fff; font-size: 28rpx; font-weight: 850; flex-shrink: 0; }
 .quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16rpx; }
 .quick-item { text-align: center; }
-.quick-icon { width: 84rpx; height: 84rpx; margin: 0 auto 12rpx; border-radius: 28rpx; display: flex; align-items: center; justify-content: center; background: #ecfdf5; color: #16a34a; font-size: 32rpx; font-weight: 850; }
+.quick-icon { width: 86rpx; height: 86rpx; margin: 0 auto 12rpx; border: 2rpx solid rgba(22,163,74,.28); border-radius: 30rpx; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f0fdf4, #dcfce7); color: #16a34a; font-size: 30rpx; font-weight: 900; box-sizing: border-box; box-shadow: inset 0 0 0 6rpx rgba(255,255,255,.54); }
 .quick-name { font-size: 23rpx; color: #334155; }
 </style>

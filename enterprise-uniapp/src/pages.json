@@ -39,7 +39,7 @@
     "borderStyle": "white",
     "list": [
       {"pagePath": "pages/home/index", "text": "工作台"},
-      {"pagePath": "pages/process/process", "text": "流程"},
+      {"pagePath": "pages/process/process", "text": "招聘"},
       {"pagePath": "pages/messages/messageList", "text": "消息"},
       {"pagePath": "pages/profile/profile", "text": "我的"}
     ]

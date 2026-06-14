@@ -66,7 +66,10 @@ function goRealName() {
         <view class="e-form-section">
           <text class="e-section-title">认证信息</text>
           <view class="menu-item" @click="goRealName">
-            <text class="menu-label">企业实名认证</text>
+            <view class="menu-left">
+              <view class="menu-icon">✓</view>
+              <text class="menu-label">企业实名认证</text>
+            </view>
             <text class="menu-arrow">›</text>
           </view>
         </view>
@@ -121,6 +124,26 @@ function goRealName() {
   justify-content: space-between;
   align-items: center;
   padding: 4rpx 0;
+}
+.menu-left {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.menu-icon {
+  width: 68rpx;
+  height: 68rpx;
+  margin-right: 18rpx;
+  border: 2rpx solid rgba(22,163,74,.26);
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  color: #16a34a;
+  font-size: 28rpx;
+  font-weight: 900;
+  box-sizing: border-box;
 }
 .menu-label {
   font-size: 28rpx;

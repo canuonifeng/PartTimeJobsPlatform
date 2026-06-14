@@ -215,10 +215,13 @@ public class CorrectionServiceTest {
         @Override public String findWorkerNameById(Long workerId) { return "测试工人"; }
         @Override public String findWorkerPhoneById(Long workerId) { return "13800138000"; }
         @Override public LocalDate findWorkerBirthdayById(Long workerId) { return null; }
+        @Override public String findWorkerGenderById(Long workerId) { return null; }
+        @Override public String findWorkerRealNameStatusById(Long workerId) { return "NONE"; }
         @Override public List<Map<String, Object>> findWorkerNamesByIds(List<Long> ids) { return List.of(); }
         @Override public List<Map<String, Object>> findWorkerPhonesByIds(List<Long> ids) { return List.of(); }
         @Override public List<Map<String, Object>> findWorkerGendersByIds(List<Long> ids) { return List.of(); }
         @Override public List<Map<String, Object>> findWorkerBirthdaysByIds(List<Long> ids) { return List.of(); }
+        @Override public List<Map<String, Object>> findWorkerRealNameStatusesByIds(List<Long> ids) { return List.of(); }
     }
 
     static class TestJobMapper implements JobMapper {

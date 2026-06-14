@@ -44,6 +44,23 @@ function toggleStatus(worker) {
     }
   })
 }
+
+function genderLabel(gender) {
+  const map = { MALE: '男', FEMALE: '女', OTHER: '其他' }
+  return map[gender] || gender || '未知'
+}
+
+function realNameStatusLabel(status) {
+  const map = { NONE: '未实名', PENDING: '审核中', APPROVED: '已实名', REJECTED: '未通过' }
+  return map[status] || status || '未实名'
+}
+
+function realNameStatusClass(status) {
+  if (status === 'APPROVED') return 'value-green'
+  if (status === 'PENDING') return 'value-warn'
+  if (status === 'REJECTED') return 'value-red'
+  return ''
+}
 </script>
 
 <template>
@@ -77,15 +94,14 @@ function toggleStatus(worker) {
       <view v-else>
         <view v-for="w in workers" :key="w.id || w.workerId" class="e-card">
           <view class="e-card-title-row">
-            <text class="e-card-title">{{ w.name || '未实名' }}</text>
+            <view class="worker-title">
+              <text class="e-card-title">{{ w.name || '未实名' }}</text>
+              <text class="gender-pill">{{ genderLabel(w.workerGender || w.gender) }}</text>
+            </view>
             <view class="e-badge" :class="w.status === 'ACTIVE' ? 'e-badge-green' : 'e-badge-red'">{{ w.status === 'ACTIVE' ? '正常' : '已拉黑' }}</view>
           </view>
 
           <view class="e-info-grid">
-            <view class="e-info-pill">
-              <text class="e-info-label">编号</text>
-              <text class="e-info-value">{{ w.workerId || w.id }}</text>
-            </view>
             <view class="e-info-pill">
               <text class="e-info-label">电话</text>
               <text class="e-info-value">{{ w.phone || '-' }}</text>
@@ -95,12 +111,8 @@ function toggleStatus(worker) {
               <text class="e-info-value">{{ w.workerAge ?? '-' }}岁</text>
             </view>
             <view class="e-info-pill">
-              <text class="e-info-label">首次联系</text>
-              <text class="e-info-value">{{ w.firstContactAt || '-' }}</text>
-            </view>
-            <view class="e-info-pill info-wide">
-              <text class="e-info-label">最近联系</text>
-              <text class="e-info-value">{{ w.lastContactAt || '-' }}</text>
+              <text class="e-info-label">实名</text>
+              <text class="e-info-value" :class="realNameStatusClass(w.realNameStatus)">{{ realNameStatusLabel(w.realNameStatus) }}</text>
             </view>
           </view>
 
@@ -158,7 +170,32 @@ function toggleStatus(worker) {
   border-radius: 44rpx;
 }
 
-.info-wide {
-  width: calc(100% - 14rpx);
+.worker-title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.gender-pill {
+  flex-shrink: 0;
+  margin-left: 12rpx;
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  background: #ecfdf5;
+  color: #16a34a;
+  font-size: 22rpx;
+  font-weight: 750;
+}
+
+.value-green {
+  color: #16a34a;
+}
+
+.value-warn {
+  color: #d97706;
+}
+
+.value-red {
+  color: #dc2626;
 }
 </style>

@@ -7,10 +7,10 @@ const props = defineProps({
 })
 
 const tabs = [
-  { key: 'home', text: '工作台', icon: '台', url: '/pages/home/index' },
-  { key: 'process', text: '流程', icon: '流', url: '/pages/process/process' },
-  { key: 'messages', text: '消息', icon: '消', url: '/pages/messages/messageList' },
-  { key: 'profile', text: '我的', icon: '我', url: '/pages/profile/profile' }
+  { key: 'home', text: '工作台', icon: '⌂', url: '/pages/home/index' },
+  { key: 'process', text: '招聘', icon: '▣', url: '/pages/process/process' },
+  { key: 'messages', text: '消息', icon: '✉', url: '/pages/messages/messageList' },
+  { key: 'profile', text: '我的', icon: '○', url: '/pages/profile/profile' }
 ]
 
 function switchTab(item) {
@@ -61,15 +61,17 @@ function switchTab(item) {
 }
 
 .enterprise-tabbar-icon {
-  width: 44rpx;
-  height: 44rpx;
-  border-radius: 16rpx;
+  width: 48rpx;
+  height: 48rpx;
+  border: 2rpx solid currentColor;
+  border-radius: 18rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 850;
   line-height: 1;
+  box-sizing: border-box;
 }
 
 .enterprise-tabbar-text {
@@ -85,5 +87,6 @@ function switchTab(item) {
 
 .enterprise-tabbar-item.active .enterprise-tabbar-icon {
   background: #dcfce7;
+  border-color: #16a34a;
 }
 </style>

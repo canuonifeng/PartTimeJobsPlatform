@@ -16,6 +16,10 @@ public class WorkerListVO {
     private String phone;
     @Schema(description = "年龄")
     private Integer workerAge;
+    @Schema(description = "性别: MALE/FEMALE/OTHER")
+    private String workerGender;
+    @Schema(description = "实名认证状态: NONE/PENDING/APPROVED/REJECTED")
+    private String realNameStatus;
     @Schema(description = "头像URL")
     private String avatarUrl;
     @Schema(description = "状态: ACTIVE/BLACKLISTED")
