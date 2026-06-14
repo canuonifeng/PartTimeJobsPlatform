@@ -8,8 +8,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Map;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -23,14 +21,14 @@ class EnterpriseServiceTest {
     private EnterpriseServiceImpl enterpriseService;
 
     @Test
-    void getEnterpriseInfo_shouldReturnMap() {
+    void getEnterpriseInfo_shouldReturnVO() {
         when(enterpriseMapper.findCompanyNameById(100L)).thenReturn("Acme Corp");
         when(enterpriseMapper.findCompanyLogoById(100L)).thenReturn("https://logo.png");
 
-        Map<String, Object> result = enterpriseService.getEnterpriseInfo(100L);
+        var result = enterpriseService.getEnterpriseInfo(100L);
 
-        assertThat(result).containsEntry("id", 100L);
-        assertThat(result).containsEntry("companyName", "Acme Corp");
-        assertThat(result).containsEntry("companyLogo", "https://logo.png");
+        assertThat(result.getId()).isEqualTo(100L);
+        assertThat(result.getCompanyName()).isEqualTo("Acme Corp");
+        assertThat(result.getCompanyLogo()).isEqualTo("https://logo.png");
     }
 }

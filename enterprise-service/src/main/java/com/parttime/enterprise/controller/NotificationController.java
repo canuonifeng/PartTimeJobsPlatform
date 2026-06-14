@@ -1,5 +1,6 @@
 package com.parttime.enterprise.controller;
 
+import com.parttime.enterprise.pojo.cmd.IdCmd;
 import com.parttime.enterprise.pojo.cmd.NotificationTemplateCmd;
 import com.parttime.enterprise.pojo.entity.NotificationTemplate;
 import com.parttime.enterprise.pojo.vo.NotificationLogVO;
@@ -8,10 +9,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 
 import com.parttime.enterprise.pojo.vo.ApiResponse;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -52,12 +51,10 @@ public class NotificationController {
     }
 
     @Operation(summary = "更新通知模板", description = "更新指定的通知模板")
-    @PutMapping("/notification-templates")
-    public ApiResponse<NotificationTemplate> updateTemplate(
-            @Parameter(description = "模板ID") @RequestParam Long id,
-            @RequestBody NotificationTemplateCmd request) {
+    @PostMapping("/notification-templates/update")
+    public ApiResponse<NotificationTemplate> updateTemplate(@RequestBody NotificationTemplateCmd request) {
         try {
-            NotificationTemplate template = notificationService.updateNotificationTemplate(id, request);
+            NotificationTemplate template = notificationService.updateNotificationTemplate(request.getId(), request);
             return ApiResponse.success(template);
         } catch (RuntimeException e) {
             return ApiResponse.error("模板不存在");
@@ -65,9 +62,9 @@ public class NotificationController {
     }
 
     @Operation(summary = "删除通知模板", description = "删除指定的通知模板")
-    @DeleteMapping("/notification-templates")
-    public ApiResponse<Void> deleteTemplate(@Parameter(description = "模板ID") @RequestParam Long id) {
-        notificationService.deleteNotificationTemplate(id);
+    @PostMapping("/notification-templates/delete")
+    public ApiResponse<Void> deleteTemplate(@RequestBody IdCmd cmd) {
+        notificationService.deleteNotificationTemplate(cmd.getId());
         return ApiResponse.success();
     }
 }

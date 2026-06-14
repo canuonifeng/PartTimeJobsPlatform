@@ -3,6 +3,7 @@ package com.parttime.enterprise.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Value;
 import com.parttime.enterprise.pojo.vo.ApiResponse;
+import com.parttime.enterprise.pojo.vo.FileUploadVO;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -11,7 +12,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -23,7 +23,7 @@ public class FileController {
 
     @Operation(summary = "上传文件")
     @PostMapping("/upload")
-    public ApiResponse<Map<String, String>> upload(@RequestParam("file") MultipartFile file) {
+    public ApiResponse<FileUploadVO> upload(@RequestParam("file") MultipartFile file) {
         if (file.isEmpty()) {
             return ApiResponse.error("文件为空");
         }
@@ -39,7 +39,9 @@ public class FileController {
             File dest = new File(dir, filename);
             file.transferTo(dest);
             String url = "http://localhost:" + port + "/uploads/" + filename;
-            return ApiResponse.success(Map.of("url", url));
+            FileUploadVO vo = new FileUploadVO();
+            vo.setUrl(url);
+            return ApiResponse.success(vo);
         } catch (IOException e) {
             return ApiResponse.error(e.getMessage());
         }

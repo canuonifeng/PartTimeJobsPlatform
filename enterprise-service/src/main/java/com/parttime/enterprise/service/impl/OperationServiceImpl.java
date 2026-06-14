@@ -95,13 +95,21 @@ public class OperationServiceImpl implements OperationService {
             }
             default -> {
                 records = new ArrayList<>();
-                records.addAll(operationMapper.findApplicationTodos(companyId, 0, safePageSize));
-                records.addAll(operationMapper.findAttendanceConfirmTodos(companyId, today, 0, safePageSize));
-                records.addAll(operationMapper.findSalaryTodos(companyId, 0, safePageSize));
+                int remaining = safePageSize;
+                List<OperationTodoItemVO> applicationTodos = operationMapper.findApplicationTodos(companyId, 0, remaining);
+                records.addAll(applicationTodos);
+                remaining -= applicationTodos.size();
+                if (remaining > 0) {
+                    List<OperationTodoItemVO> attendanceTodos = operationMapper.findAttendanceConfirmTodos(companyId, today, 0, remaining);
+                    records.addAll(attendanceTodos);
+                    remaining -= attendanceTodos.size();
+                }
+                if (remaining > 0) {
+                    records.addAll(operationMapper.findSalaryTodos(companyId, 0, remaining));
+                }
                 total = operationMapper.countApplicationTodos(companyId)
                         + operationMapper.countScheduleTodos(companyId, today)
                         + operationMapper.countSalaryTodos(companyId);
-                records = records.stream().limit(safePageSize).toList();
             }
         }
         fillActions(records);

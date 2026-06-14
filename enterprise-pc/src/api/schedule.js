@@ -9,15 +9,15 @@ export function createShift(data) {
 }
 
 export function updateShift(id, data) {
-  return request.put('/schedule-shifts', data, { params: { id } })
+  return request.post('/schedule-shifts/update', { ...data, id })
 }
 
 export function deleteShift(id) {
-  return request.delete('/schedule-shifts', { params: { id } })
+  return request.post('/schedule-shifts/delete', { id })
 }
 
 export function cancelShift(id) {
-  return request.put('/schedule-shifts/cancel', { id })
+  return request.post('/schedule-shifts/cancel', { id })
 }
 
 export function getAttendanceReport(params) {
@@ -29,9 +29,9 @@ export function listCorrections(params) {
 }
 
 export function approveCorrection(id) {
-  return request.put('/schedules/corrections/approve', null, { params: { id } })
+  return request.post('/schedules/corrections/approve', { id })
 }
 
 export function rejectCorrection(id, data) {
-  return request.put('/schedules/corrections/reject', data, { params: { id } })
+  return request.post('/schedules/corrections/reject', { ...data, id })
 }

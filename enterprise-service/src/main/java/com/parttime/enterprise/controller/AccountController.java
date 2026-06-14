@@ -6,6 +6,8 @@ import com.parttime.enterprise.pojo.cmd.AccountPasswordUpdateCmd;
 import com.parttime.enterprise.pojo.cmd.AccountResetPasswordCmd;
 import com.parttime.enterprise.pojo.cmd.AccountSecurityUpdateCmd;
 import com.parttime.enterprise.pojo.cmd.AccountUpdateCmd;
+import com.parttime.enterprise.pojo.cmd.IdCmd;
+import com.parttime.enterprise.pojo.cmd.PageQueryCmd;
 import com.parttime.enterprise.pojo.vo.AccountVO;
 import com.parttime.enterprise.pojo.vo.ApiResponse;
 import com.parttime.enterprise.pojo.vo.PageVO;
@@ -13,8 +15,6 @@ import com.parttime.enterprise.service.AccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/accounts")
@@ -25,10 +25,10 @@ public class AccountController {
 
     @Operation(summary = "获取账号列表")
     @PostMapping("/list")
-    public ApiResponse<PageVO<AccountVO>> list(@RequestBody(required = false) Map<String, Integer> body) {
+    public ApiResponse<PageVO<AccountVO>> list(@RequestBody(required = false) PageQueryCmd cmd) {
         Long enterpriseId = SecurityUtil.getCurrentCompanyId();
-        Integer page = body == null ? null : body.get("page");
-        Integer pageSize = body == null ? null : body.get("pageSize");
+        Integer page = cmd == null ? null : cmd.getPage();
+        Integer pageSize = cmd == null ? null : cmd.getPageSize();
         return ApiResponse.success(accountService.list(enterpriseId, page, pageSize));
     }
 
@@ -78,7 +78,7 @@ public class AccountController {
 
     @Operation(summary = "删除账号")
     @PostMapping("/delete")
-    public void delete(@RequestBody Map<String, Long> body) {
-        accountService.delete(body.get("id"));
+    public void delete(@RequestBody IdCmd cmd) {
+        accountService.delete(cmd.getId());
     }
 }

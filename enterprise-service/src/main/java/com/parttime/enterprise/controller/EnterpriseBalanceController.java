@@ -1,6 +1,7 @@
 package com.parttime.enterprise.controller;
 
 import com.parttime.enterprise.config.SecurityUtil;
+import com.parttime.enterprise.pojo.cmd.EnterpriseTopUpCmd;
 import com.parttime.enterprise.pojo.vo.ApiResponse;
 import com.parttime.enterprise.pojo.vo.EnterpriseBalanceVO;
 import com.parttime.enterprise.pojo.vo.EnterpriseTransactionVO;
@@ -10,8 +11,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.math.BigDecimal;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/enterprise/balance")
@@ -29,9 +28,9 @@ public class EnterpriseBalanceController {
 
     @Operation(summary = "企业充值（模拟支付）")
     @PostMapping("/top-up")
-    public void topUp(@RequestBody Map<String, BigDecimal> body) {
+    public void topUp(@RequestBody EnterpriseTopUpCmd cmd) {
         Long companyId = SecurityUtil.getCurrentCompanyId();
-        enterpriseBalanceService.topUp(companyId, body.get("amount"));
+        enterpriseBalanceService.topUp(companyId, cmd.getAmount());
     }
 
     @Operation(summary = "企业流水列表")

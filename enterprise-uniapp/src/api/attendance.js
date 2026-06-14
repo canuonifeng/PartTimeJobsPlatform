@@ -12,13 +12,13 @@ export function listAttendance(params = {}) {
 }
 
 export function updateAttendance(id, data) {
-  return request('PUT', `/attendance/hours?id=${id}`, data)
+  return request('POST', '/attendance/hours/update', { ...data, id })
 }
 
 export function batchPay(ids) {
-  return request('PUT', '/attendance/hours/pay', ids)
+  return request('POST', '/attendance/hours/pay', { ids })
 }
 
 export function batchDeleteAttendance(ids) {
-  return request('DELETE', '/attendance/hours', ids)
+  return request('POST', '/attendance/hours/delete', { ids })
 }

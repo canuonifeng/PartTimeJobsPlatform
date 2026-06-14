@@ -15,11 +15,11 @@ export function createJob(data) {
 }
 
 export function updateJob(id, data) {
-  return request('PUT', `/jobs?id=${id}`, data)
+  return request('POST', '/jobs/update', { ...data, id })
 }
 
 export function deleteJob(id) {
-  return request('DELETE', `/jobs?id=${id}`)
+  return request('POST', '/jobs/delete', { id })
 }
 
 export function getJobShareCode(id) {
@@ -40,23 +40,23 @@ export function getApplications(jobId, params = {}) {
 }
 
 export function acceptApplication(applicationId) {
-  return request('PUT', `/applications/accept?applicationId=${applicationId}`)
+  return request('POST', '/applications/accept', { applicationId })
 }
 
 export function rejectApplication(applicationId) {
-  return request('PUT', `/applications/reject?applicationId=${applicationId}`)
+  return request('POST', '/applications/reject', { applicationId })
 }
 
 export function publishJob(id) {
-  return request('PUT', `/jobs/publish?id=${id}`)
+  return request('POST', '/jobs/publish', { id })
 }
 
 export function closeJob(id) {
-  return request('PUT', `/jobs/close?id=${id}`)
+  return request('POST', '/jobs/close', { id })
 }
 
 export function reopenJob(id) {
-  return request('PUT', `/jobs/reopen?id=${id}`)
+  return request('POST', '/jobs/reopen', { id })
 }
 
 export function getCategories() {
@@ -72,15 +72,15 @@ export function getRates(jobId) {
 }
 
 export function createRate(jobId, data) {
-  return request('POST', `/jobs/rates?jobId=${jobId}`, data)
+  return request('POST', '/jobs/rates', { ...data, jobId })
 }
 
 export function updateRate(jobId, rateId, data) {
-  return request('PUT', `/jobs/rates?jobId=${jobId}&rateId=${rateId}`, data)
+  return request('POST', '/jobs/rates/update', { ...data, jobId, rateId })
 }
 
 export function deleteRate(jobId, rateId) {
-  return request('DELETE', `/jobs/rates?jobId=${jobId}&rateId=${rateId}`)
+  return request('POST', '/jobs/rates/delete', { jobId, rateId })
 }
 
 export function getSchedules(jobId) {
@@ -88,13 +88,13 @@ export function getSchedules(jobId) {
 }
 
 export function createSchedule(jobId, data) {
-  return request('POST', `/jobs/schedules?jobId=${jobId}`, data)
+  return request('POST', '/jobs/schedules', { ...data, jobId })
 }
 
 export function updateSchedule(jobId, scheduleId, data) {
-  return request('PUT', `/jobs/schedules?jobId=${jobId}&scheduleId=${scheduleId}`, data)
+  return request('POST', '/jobs/schedules/update', { ...data, jobId, id: scheduleId })
 }
 
 export function deleteSchedule(jobId, scheduleId) {
-  return request('DELETE', `/jobs/schedules?jobId=${jobId}&scheduleId=${scheduleId}`)
+  return request('POST', '/jobs/schedules/delete', { jobId, id: scheduleId })
 }

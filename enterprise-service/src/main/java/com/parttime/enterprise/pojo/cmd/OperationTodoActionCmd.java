@@ -4,5 +4,6 @@ import lombok.Data;
 
 @Data
 public class OperationTodoActionCmd {
+    private String todoId;
     private String action;
 }

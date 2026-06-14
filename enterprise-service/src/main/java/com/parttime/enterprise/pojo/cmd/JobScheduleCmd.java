@@ -8,6 +8,8 @@ import java.time.LocalTime;
 @Data
 public class JobScheduleCmd {
 
+    @Schema(description = "岗位ID")
+    private Long jobId;
     @Schema(description = "排班ID（编辑时传入）")
     private Long id;
     @Schema(description = "排班日期")

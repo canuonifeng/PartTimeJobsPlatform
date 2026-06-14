@@ -5,17 +5,17 @@ export function listAttendanceHours(params) {
 }
 
 export function updateAttendanceHours(id, data) {
-  return request.put('/attendance/hours', data, { params: { id } })
+  return request.post('/attendance/hours/update', { ...data, id })
 }
 
 export function batchPayAttendanceHours(data) {
-  return request.put('/attendance/hours/pay', data)
+  return request.post('/attendance/hours/pay', { ids: data })
 }
 
 export function batchDeleteAttendanceHours(data) {
-  return request.delete('/attendance/hours', { data })
+  return request.post('/attendance/hours/delete', { ids: data })
 }
 
 export function unsettleAttendanceHours(id) {
-  return request.put('/settlement/unsettle', null, { params: { attendanceRecordId: id } })
+  return request.post('/settlement/unsettle', { attendanceRecordId: id })
 }

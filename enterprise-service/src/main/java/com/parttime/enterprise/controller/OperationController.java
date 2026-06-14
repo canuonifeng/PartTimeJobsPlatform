@@ -13,7 +13,6 @@ import com.parttime.enterprise.service.OperationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -71,10 +70,10 @@ public class OperationController {
     }
 
     @Operation(summary = "执行企业运营待办动作")
-    @PostMapping("/todos/{todoId}/actions")
-    public ApiResponse<Void> executeTodoAction(@PathVariable String todoId, @RequestBody OperationTodoActionCmd cmd) {
+    @PostMapping("/todos/actions")
+    public ApiResponse<Void> executeTodoAction(@RequestBody OperationTodoActionCmd cmd) {
         Long companyId = SecurityUtil.getCurrentCompanyId();
-        operationService.executeTodoAction(companyId, todoId, cmd);
+        operationService.executeTodoAction(companyId, cmd.getTodoId(), cmd);
         return ApiResponse.success();
     }
 }

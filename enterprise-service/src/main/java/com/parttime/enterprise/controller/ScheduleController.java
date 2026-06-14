@@ -1,6 +1,7 @@
 package com.parttime.enterprise.controller;
 
 import com.parttime.enterprise.config.SecurityUtil;
+import com.parttime.enterprise.pojo.cmd.IdCmd;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
 import com.parttime.enterprise.pojo.cmd.CorrectionRejectCmd;
 import com.parttime.enterprise.pojo.vo.ApiResponse;
@@ -19,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -53,22 +53,21 @@ public class ScheduleController {
     }
 
     @Operation(summary = "更新班次", description = "更新指定的班次信息")
-    @PutMapping("/schedule-shifts")
-    public ApiResponse<ScheduleShiftVO> updateShift(@Parameter(description = "班次ID") @RequestParam Long id,
-                                        @RequestBody ScheduleShiftCmd request) {
-        return ApiResponse.success(scheduleService.updateShift(id, request));
+    @PostMapping("/schedule-shifts/update")
+    public ApiResponse<ScheduleShiftVO> updateShift(@RequestBody ScheduleShiftCmd request) {
+        return ApiResponse.success(scheduleService.updateShift(request.getId(), request));
     }
 
     @Operation(summary = "删除班次", description = "删除指定的班次")
-    @DeleteMapping("/schedule-shifts")
-    public void removeShift(@Parameter(description = "班次ID") @RequestParam Long id) {
-        scheduleService.removeShift(id);
+    @PostMapping("/schedule-shifts/delete")
+    public void removeShift(@RequestBody IdCmd cmd) {
+        scheduleService.removeShift(cmd.getId());
     }
 
     @Operation(summary = "取消排班", description = "取消排班（保留记录，状态改为CANCELLED）")
-    @PutMapping("/schedule-shifts/cancel")
-    public void cancelShift(@RequestBody Map<String, Long> body) {
-        scheduleService.removeShift(body.get("id"));
+    @PostMapping("/schedule-shifts/cancel")
+    public void cancelShift(@RequestBody IdCmd cmd) {
+        scheduleService.removeShift(cmd.getId());
     }
 
     @Operation(summary = "获取考勤报表", description = "根据条件获取考勤报表数据")
@@ -93,15 +92,14 @@ public class ScheduleController {
     }
 
     @Operation(summary = "通过补卡申请", description = "通过补卡申请并生成/更新考勤记录")
-    @PutMapping("/schedules/corrections/approve")
-    public void approveCorrection(@Parameter(description = "补卡申请ID") @RequestParam Long id) {
-        correctionService.approve(id, SecurityUtil.getCurrentUserId());
+    @PostMapping("/schedules/corrections/approve")
+    public void approveCorrection(@RequestBody IdCmd cmd) {
+        correctionService.approve(cmd.getId(), SecurityUtil.getCurrentUserId());
     }
 
     @Operation(summary = "拒绝补卡申请", description = "拒绝补卡申请")
-    @PutMapping("/schedules/corrections/reject")
-    public void rejectCorrection(@Parameter(description = "补卡申请ID") @RequestParam Long id,
-                                  @RequestBody CorrectionRejectCmd cmd) {
-        correctionService.reject(id, SecurityUtil.getCurrentUserId(), cmd.getRejectReason());
+    @PostMapping("/schedules/corrections/reject")
+    public void rejectCorrection(@RequestBody CorrectionRejectCmd cmd) {
+        correctionService.reject(cmd.getId(), SecurityUtil.getCurrentUserId(), cmd.getRejectReason());
     }
 }

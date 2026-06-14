@@ -1,5 +1,6 @@
 package com.parttime.enterprise.controller;
 
+import com.parttime.enterprise.pojo.cmd.IdCmd;
 import com.parttime.enterprise.pojo.cmd.JobCategoryCmd;
 import com.parttime.enterprise.pojo.vo.ApiResponse;
 import com.parttime.enterprise.pojo.vo.JobCategoryVO;
@@ -7,10 +8,8 @@ import com.parttime.enterprise.service.JobCategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -46,14 +45,14 @@ public class JobCategoryController {
     }
 
     @Operation(summary = "更新岗位分类", description = "更新岗位分类信息")
-    @PutMapping
-    public ApiResponse<JobCategoryVO> updateCategory(@Parameter(description = "分类ID") @RequestParam Long id, @RequestBody JobCategoryCmd request) {
-        return ApiResponse.success(jobCategoryService.updateCategory(id, request));
+    @PostMapping("/update")
+    public ApiResponse<JobCategoryVO> updateCategory(@RequestBody JobCategoryCmd request) {
+        return ApiResponse.success(jobCategoryService.updateCategory(request.getId(), request));
     }
 
     @Operation(summary = "删除岗位分类", description = "删除指定的岗位分类")
-    @DeleteMapping
-    public void deleteCategory(@Parameter(description = "分类ID") @RequestParam Long id) {
-        jobCategoryService.deleteCategory(id);
+    @PostMapping("/delete")
+    public void deleteCategory(@RequestBody IdCmd cmd) {
+        jobCategoryService.deleteCategory(cmd.getId());
     }
 }

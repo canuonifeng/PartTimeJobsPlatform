@@ -21,23 +21,23 @@ export function createJob(data) {
 }
 
 export function updateJob(id, data) {
-  return request.put('/jobs', data, { params: { id } })
+  return request.post('/jobs/update', { ...data, id })
 }
 
 export function deleteJob(id) {
-  return request.delete('/jobs', { params: { id } })
+  return request.post('/jobs/delete', { id })
 }
 
 export function publishJob(id) {
-  return request.put('/jobs/publish', null, { params: { id } })
+  return request.post('/jobs/publish', { id })
 }
 
 export function closeJob(id) {
-  return request.put('/jobs/close', null, { params: { id } })
+  return request.post('/jobs/close', { id })
 }
 
 export function reopenJob(id) {
-  return request.put('/jobs/reopen', null, { params: { id } })
+  return request.post('/jobs/reopen', { id })
 }
 
 export function getJobRates(jobId) {
@@ -45,15 +45,15 @@ export function getJobRates(jobId) {
 }
 
 export function addJobRate(jobId, data) {
-  return request.post('/jobs/rates', data, { params: { jobId } })
+  return request.post('/jobs/rates', { ...data, jobId })
 }
 
 export function updateJobRate(jobId, rateId, data) {
-  return request.put('/jobs/rates', data, { params: { jobId, rateId } })
+  return request.post('/jobs/rates/update', { ...data, jobId, rateId })
 }
 
 export function removeJobRate(jobId, rateId) {
-  return request.delete('/jobs/rates', { params: { jobId, rateId } })
+  return request.post('/jobs/rates/delete', { jobId, rateId })
 }
 
 export function getJobSchedules(jobId) {
@@ -61,13 +61,13 @@ export function getJobSchedules(jobId) {
 }
 
 export function addJobSchedule(jobId, data) {
-  return request.post('/jobs/schedules', data, { params: { jobId } })
+  return request.post('/jobs/schedules', { ...data, jobId })
 }
 
 export function updateJobSchedule(jobId, scheduleId, data) {
-  return request.put('/jobs/schedules', data, { params: { jobId, scheduleId } })
+  return request.post('/jobs/schedules/update', { ...data, jobId, id: scheduleId })
 }
 
 export function removeJobSchedule(jobId, scheduleId) {
-  return request.delete('/jobs/schedules', { params: { jobId, scheduleId } })
+  return request.post('/jobs/schedules/delete', { jobId, id: scheduleId })
 }

@@ -6,6 +6,8 @@ import lombok.Data;
 @Data
 public class BlacklistCmd {
 
+    @Schema(description = "工人ID")
+    private Long workerId;
     @Schema(description = "企业ID")
     private Long companyId;
     @Schema(description = "拉黑原因")

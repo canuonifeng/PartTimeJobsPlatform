@@ -1,5 +1,6 @@
 package com.parttime.enterprise.controller;
 
+import com.parttime.enterprise.pojo.cmd.IdCmd;
 import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.pojo.cmd.JobCreateCmd;
 import com.parttime.enterprise.pojo.cmd.JobRateCmd;
@@ -13,10 +14,8 @@ import com.parttime.enterprise.service.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -55,33 +54,33 @@ public class JobController {
     }
 
     @Operation(summary = "更新岗位")
-    @PutMapping
-    public ApiResponse<JobVO> updateJob(@RequestParam Long id, @RequestBody UpdateJobCmd request) {
-        return ApiResponse.success(jobService.updateJob(id, request));
+    @PostMapping("/update")
+    public ApiResponse<JobVO> updateJob(@RequestBody UpdateJobCmd request) {
+        return ApiResponse.success(jobService.updateJob(request.getId(), request));
     }
 
     @Operation(summary = "删除岗位")
-    @DeleteMapping
-    public void deleteJob(@RequestParam Long id) {
-        jobService.deleteJob(id);
+    @PostMapping("/delete")
+    public void deleteJob(@RequestBody IdCmd cmd) {
+        jobService.deleteJob(cmd.getId());
     }
 
     @Operation(summary = "发布岗位", description = "将草稿状态的岗位发布为已发布状态")
-    @PutMapping("/publish")
-    public ApiResponse<JobVO> publishJob(@Parameter(description = "岗位ID") @RequestParam Long id) {
-        return ApiResponse.success(jobService.publishJob(id));
+    @PostMapping("/publish")
+    public ApiResponse<JobVO> publishJob(@RequestBody IdCmd cmd) {
+        return ApiResponse.success(jobService.publishJob(cmd.getId()));
     }
 
     @Operation(summary = "关闭岗位", description = "关闭已发布的岗位")
-    @PutMapping("/close")
-    public ApiResponse<JobVO> closeJob(@Parameter(description = "岗位ID") @RequestParam Long id) {
-        return ApiResponse.success(jobService.closeJob(id));
+    @PostMapping("/close")
+    public ApiResponse<JobVO> closeJob(@RequestBody IdCmd cmd) {
+        return ApiResponse.success(jobService.closeJob(cmd.getId()));
     }
 
     @Operation(summary = "重新开放岗位", description = "重新开放已关闭的岗位")
-    @PutMapping("/reopen")
-    public ApiResponse<JobVO> reopenJob(@Parameter(description = "岗位ID") @RequestParam Long id) {
-        return ApiResponse.success(jobService.reopenJob(id));
+    @PostMapping("/reopen")
+    public ApiResponse<JobVO> reopenJob(@RequestBody IdCmd cmd) {
+        return ApiResponse.success(jobService.reopenJob(cmd.getId()));
     }
 
     @Operation(summary = "获取岗位薪资规则", description = "根据岗位ID获取所有薪资规则")
@@ -92,23 +91,20 @@ public class JobController {
 
     @Operation(summary = "添加薪资规则", description = "为岗位添加一条薪资规则")
     @PostMapping("/rates")
-    public ApiResponse<JobRateVO> addJobRate(@Parameter(description = "岗位ID") @RequestParam Long jobId, @RequestBody JobRateCmd request) {
-        return ApiResponse.success(jobService.addJobRate(jobId, request));
+    public ApiResponse<JobRateVO> addJobRate(@RequestBody JobRateCmd request) {
+        return ApiResponse.success(jobService.addJobRate(request.getJobId(), request));
     }
 
     @Operation(summary = "更新薪资规则", description = "更新岗位的薪资规则")
-    @PutMapping("/rates")
-    public ApiResponse<JobRateVO> updateJobRate(@Parameter(description = "岗位ID") @RequestParam Long jobId,
-                                   @Parameter(description = "薪资规则ID") @RequestParam Long rateId,
-                                   @RequestBody JobRateCmd request) {
-        return ApiResponse.success(jobService.updateJobRate(rateId, request));
+    @PostMapping("/rates/update")
+    public ApiResponse<JobRateVO> updateJobRate(@RequestBody JobRateCmd request) {
+        return ApiResponse.success(jobService.updateJobRate(request.getRateId(), request));
     }
 
     @Operation(summary = "删除薪资规则", description = "删除岗位的薪资规则")
-    @DeleteMapping("/rates")
-    public void removeJobRate(@Parameter(description = "岗位ID") @RequestParam Long jobId,
-                              @Parameter(description = "薪资规则ID") @RequestParam Long rateId) {
-        jobService.removeJobRate(rateId);
+    @PostMapping("/rates/delete")
+    public void removeJobRate(@RequestBody JobRateCmd request) {
+        jobService.removeJobRate(request.getRateId());
     }
 
     @Operation(summary = "获取岗位排班", description = "根据岗位ID获取所有排班")
@@ -119,22 +115,19 @@ public class JobController {
 
     @Operation(summary = "添加排班", description = "为岗位添加一条排班记录")
     @PostMapping("/schedules")
-    public ApiResponse<JobScheduleVO> addJobSchedule(@Parameter(description = "岗位ID") @RequestParam Long jobId, @RequestBody JobScheduleCmd request) {
-        return ApiResponse.success(jobService.addJobSchedule(jobId, request));
+    public ApiResponse<JobScheduleVO> addJobSchedule(@RequestBody JobScheduleCmd request) {
+        return ApiResponse.success(jobService.addJobSchedule(request.getJobId(), request));
     }
 
     @Operation(summary = "更新排班", description = "更新岗位的排班记录")
-    @PutMapping("/schedules")
-    public ApiResponse<JobScheduleVO> updateJobSchedule(@Parameter(description = "岗位ID") @RequestParam Long jobId,
-                                           @Parameter(description = "排班ID") @RequestParam Long scheduleId,
-                                           @RequestBody JobScheduleCmd request) {
-        return ApiResponse.success(jobService.updateJobSchedule(scheduleId, request));
+    @PostMapping("/schedules/update")
+    public ApiResponse<JobScheduleVO> updateJobSchedule(@RequestBody JobScheduleCmd request) {
+        return ApiResponse.success(jobService.updateJobSchedule(request.getId(), request));
     }
 
     @Operation(summary = "删除排班", description = "删除岗位的排班记录")
-    @DeleteMapping("/schedules")
-    public void removeJobSchedule(@Parameter(description = "岗位ID") @RequestParam Long jobId,
-                                  @Parameter(description = "排班ID") @RequestParam Long scheduleId) {
-        jobService.removeJobSchedule(scheduleId);
+    @PostMapping("/schedules/delete")
+    public void removeJobSchedule(@RequestBody JobScheduleCmd request) {
+        jobService.removeJobSchedule(request.getId());
     }
 }

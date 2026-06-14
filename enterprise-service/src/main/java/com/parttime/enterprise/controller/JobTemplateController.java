@@ -1,5 +1,6 @@
 package com.parttime.enterprise.controller;
 
+import com.parttime.enterprise.pojo.cmd.IdCmd;
 import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.pojo.cmd.TemplateCreateCmd;
 import com.parttime.enterprise.pojo.cmd.TemplateUpdateCmd;
@@ -14,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/templates")
@@ -45,8 +45,8 @@ public class JobTemplateController {
 
     @Operation(summary = "删除模版")
     @PostMapping("/delete")
-    public ApiResponse<Void> delete(@RequestBody Map<String, Long> body) {
-        jobTemplateService.delete(body.get("id"));
+    public ApiResponse<Void> delete(@RequestBody IdCmd cmd) {
+        jobTemplateService.delete(cmd.getId());
         return ApiResponse.success();
     }
 }

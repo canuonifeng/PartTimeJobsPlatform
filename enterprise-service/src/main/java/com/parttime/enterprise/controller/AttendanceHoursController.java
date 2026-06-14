@@ -1,6 +1,8 @@
 package com.parttime.enterprise.controller;
 
 import com.parttime.enterprise.config.SecurityUtil;
+import com.parttime.enterprise.pojo.cmd.AttendanceHoursUpdateCmd;
+import com.parttime.enterprise.pojo.cmd.IdsCmd;
 import com.parttime.enterprise.pojo.vo.ApiResponse;
 import com.parttime.enterprise.pojo.vo.AttendanceHoursVO;
 import com.parttime.enterprise.pojo.vo.PageVO;
@@ -8,15 +10,11 @@ import com.parttime.enterprise.service.AttendanceHoursService;
 import com.parttime.enterprise.service.SettlementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/attendance/hours")
@@ -42,30 +40,22 @@ public class AttendanceHoursController {
     }
 
     @Operation(summary = "编辑考勤工时", description = "编辑考勤工时的工时数和应付薪资")
-    @PutMapping
-    public void update(@Parameter(description = "考勤记录ID") @RequestParam Long id,
-                       @RequestBody AttendanceHoursUpdateCmd cmd) {
-        attendanceHoursService.update(id, cmd.getTotalHours(), cmd.getScheduledPay(), cmd.getPayablePay());
+    @PostMapping("/update")
+    public void update(@RequestBody AttendanceHoursUpdateCmd cmd) {
+        attendanceHoursService.update(cmd.getId(), cmd.getTotalHours(), cmd.getScheduledPay(), cmd.getPayablePay());
     }
 
     @Operation(summary = "批量结算", description = "结算考勤记录，调用第三方支付并生成结算账单")
-    @PutMapping("/pay")
-    public void batchPay(@RequestBody List<Long> ids) {
-        if (ids == null || ids.isEmpty()) return;
+    @PostMapping("/pay")
+    public void batchPay(@RequestBody IdsCmd cmd) {
+        if (cmd == null || cmd.getIds() == null || cmd.getIds().isEmpty()) return;
         Long companyId = SecurityUtil.getCurrentCompanyId();
-        settlementService.payFromAttendanceRecords(ids, companyId);
+        settlementService.payFromAttendanceRecords(cmd.getIds(), companyId);
     }
 
     @Operation(summary = "批量删除", description = "删除指定的考勤记录，已发放的记录不可删除")
-    @DeleteMapping
-    public void batchDelete(@RequestBody List<Long> ids) {
-        attendanceHoursService.batchDelete(ids);
-    }
-
-    @Data
-    public static class AttendanceHoursUpdateCmd {
-        private BigDecimal totalHours;
-        private BigDecimal scheduledPay;
-        private BigDecimal payablePay;
+    @PostMapping("/delete")
+    public void batchDelete(@RequestBody IdsCmd cmd) {
+        attendanceHoursService.batchDelete(cmd.getIds());
     }
 }

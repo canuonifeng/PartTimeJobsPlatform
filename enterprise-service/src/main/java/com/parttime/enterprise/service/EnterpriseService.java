@@ -1,8 +1,8 @@
 package com.parttime.enterprise.service;
 
-import java.util.Map;
+import com.parttime.enterprise.pojo.vo.EnterpriseInfoVO;
 
 public interface EnterpriseService {
-    Map<String, Object> getEnterpriseInfo(Long companyId);
+    EnterpriseInfoVO getEnterpriseInfo(Long companyId);
     void updateLogo(Long companyId, String logoUrl);
 }

@@ -2,7 +2,6 @@ package com.parttime.enterprise.service.impl;
 
 import com.parttime.enterprise.enums.ApplicationStatus;
 import com.parttime.enterprise.exception.BusinessException;
-import com.parttime.enterprise.mapper.ScheduleApplicationMapper;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.ScheduleApplicationMapper;
 import com.parttime.enterprise.mapper.JobMapper;
@@ -25,8 +24,8 @@ import org.springframework.dao.DuplicateKeyException;
 
 import javax.annotation.Resource;
 
-import java.util.List;
 import java.util.Set;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -53,30 +52,11 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     public PageVO<ScheduleApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, String status, Integer page, Integer pageSize) {
-        List<ScheduleApplicationVO> apps;
-        if (jobId != null && status != null && !status.isEmpty()) {
-            apps = scheduleApplicationMapper.findVOByJobIdAndStatus(jobId, status);
-        } else if (jobId != null) {
-            apps = scheduleApplicationMapper.findVOByJobId(jobId);
-        } else if (status != null && !status.isEmpty()) {
-            apps = scheduleApplicationMapper.findVOByCompanyIdAndStatus(companyId, status);
-        } else {
-            apps = scheduleApplicationMapper.findVOByCompanyId(companyId);
-        }
-        if (jobTitle != null && !jobTitle.isEmpty()) {
-            apps = apps.stream()
-                    .filter(a -> a.getJobTitle() != null && a.getJobTitle().contains(jobTitle))
-                    .collect(Collectors.toList());
-        }
-        int total = apps.size();
-        if (page != null && pageSize != null) {
-            int fromIndex = Math.max(page - 1, 0) * pageSize;
-            if (fromIndex >= apps.size()) {
-                return new PageVO<>(List.of(), total);
-            }
-            int toIndex = Math.min(fromIndex + pageSize, apps.size());
-            apps = apps.subList(fromIndex, toIndex);
-        }
+        int safePage = page == null || page < 1 ? 1 : page;
+        int safePageSize = pageSize == null || pageSize < 1 ? 20 : Math.min(pageSize, 100);
+        int offset = (safePage - 1) * safePageSize;
+        long total = scheduleApplicationMapper.countVO(companyId, jobId, jobTitle, status);
+        List<ScheduleApplicationVO> apps = total == 0 ? List.of() : scheduleApplicationMapper.findVOPage(companyId, jobId, jobTitle, status, offset, safePageSize);
         return new PageVO<>(apps, total);
     }
 

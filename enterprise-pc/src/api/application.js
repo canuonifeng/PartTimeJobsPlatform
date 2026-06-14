@@ -9,9 +9,9 @@ export function getApplication(id) {
 }
 
 export function acceptApplication(applicationId) {
-  return request.put('/applications/accept', null, { params: { applicationId } })
+  return request.post('/applications/accept', { applicationId })
 }
 
 export function rejectApplication(applicationId) {
-  return request.put('/applications/reject', null, { params: { applicationId } })
+  return request.post('/applications/reject', { applicationId })
 }

@@ -1,8 +1,10 @@
 package com.parttime.enterprise.controller;
 
+import com.parttime.enterprise.pojo.cmd.IdCmd;
 import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.pojo.cmd.LocationCreateCmd;
 import com.parttime.enterprise.pojo.cmd.LocationUpdateCmd;
+import com.parttime.enterprise.pojo.cmd.PageQueryCmd;
 import com.parttime.enterprise.pojo.vo.CompanyLocationVO;
 import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.CompanyLocationService;
@@ -14,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/locations")
@@ -25,10 +26,10 @@ public class CompanyLocationController {
 
     @Operation(summary = "获取地点列表")
     @PostMapping("/list")
-    public ApiResponse<PageVO<CompanyLocationVO>> list(@RequestBody(required = false) Map<String, Integer> body) {
+    public ApiResponse<PageVO<CompanyLocationVO>> list(@RequestBody(required = false) PageQueryCmd cmd) {
         Long companyId = SecurityUtil.getCurrentCompanyId();
-        Integer page = body == null ? null : body.get("page");
-        Integer pageSize = body == null ? null : body.get("pageSize");
+        Integer page = cmd == null ? null : cmd.getPage();
+        Integer pageSize = cmd == null ? null : cmd.getPageSize();
         return ApiResponse.success(companyLocationService.list(companyId, page, pageSize));
     }
 
@@ -47,22 +48,22 @@ public class CompanyLocationController {
 
     @Operation(summary = "删除地点")
     @PostMapping("/delete")
-    public ApiResponse<Void> delete(@RequestBody Map<String, Long> body) {
-        companyLocationService.delete(body.get("id"));
+    public ApiResponse<Void> delete(@RequestBody IdCmd cmd) {
+        companyLocationService.delete(cmd.getId());
         return ApiResponse.success();
     }
 
     @Operation(summary = "启用地点")
     @PostMapping("/enable")
-    public ApiResponse<Void> enable(@RequestBody Map<String, Long> body) {
-        companyLocationService.enable(body.get("id"));
+    public ApiResponse<Void> enable(@RequestBody IdCmd cmd) {
+        companyLocationService.enable(cmd.getId());
         return ApiResponse.success();
     }
 
     @Operation(summary = "禁用地点")
     @PostMapping("/disable")
-    public ApiResponse<Void> disable(@RequestBody Map<String, Long> body) {
-        companyLocationService.disable(body.get("id"));
+    public ApiResponse<Void> disable(@RequestBody IdCmd cmd) {
+        companyLocationService.disable(cmd.getId());
         return ApiResponse.success();
     }
 }

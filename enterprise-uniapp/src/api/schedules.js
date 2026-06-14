@@ -16,13 +16,13 @@ export function assignShift(data) {
 }
 
 export function updateShift(id, data) {
-  return request('PUT', `/schedule-shifts?id=${id}`, data)
+  return request('POST', '/schedule-shifts/update', { ...data, id })
 }
 
 export function deleteShift(id) {
-  return request('DELETE', `/schedule-shifts?id=${id}`)
+  return request('POST', '/schedule-shifts/delete', { id })
 }
 
 export function cancelShift(id) {
-  return request('PUT', '/schedule-shifts/cancel', { id })
+  return request('POST', '/schedule-shifts/cancel', { id })
 }

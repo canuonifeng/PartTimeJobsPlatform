@@ -6,6 +6,8 @@ import lombok.Data;
 @Data
 public class JobCategoryCmd {
 
+    @Schema(description = "分类ID")
+    private Long id;
     @Schema(description = "分类名称")
     private String name;
     @Schema(description = "父分类ID")

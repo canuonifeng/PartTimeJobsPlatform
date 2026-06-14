@@ -163,4 +163,46 @@
         ORDER BY sa.applied_at DESC
     </select>
 
+    <select id="findVOPage" resultMap="ScheduleApplicationVOResultMap">
+        SELECT sa.id as application_id, sa.schedule_id, j.id as job_id, j.title as job_title,
+               sa.worker_id, w.name as worker_name, w.phone as worker_phone, wp.gender AS worker_gender,
+               js.schedule_date, js.start_time, js.end_time,
+               sa.status, sa.applied_at,
+               TIMESTAMPDIFF(YEAR, wp.birthday, CURDATE()) AS worker_age
+        FROM schedule_applications sa
+        JOIN job_schedules js ON sa.schedule_id = js.id
+        JOIN jobs j ON js.job_id = j.id
+        LEFT JOIN c_worker w ON sa.worker_id = w.id
+        LEFT JOIN worker_profiles wp ON sa.worker_id = wp.worker_id
+        WHERE j.company_id = #{companyId}
+        <if test="jobId != null">
+            AND j.id = #{jobId}
+        </if>
+        <if test="jobTitle != null and jobTitle != ''">
+            AND j.title LIKE CONCAT('%', #{jobTitle}, '%')
+        </if>
+        <if test="status != null and status != ''">
+            AND sa.status = #{status}
+        </if>
+        ORDER BY sa.applied_at DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countVO" resultType="long">
+        SELECT COUNT(*)
+        FROM schedule_applications sa
+        JOIN job_schedules js ON sa.schedule_id = js.id
+        JOIN jobs j ON js.job_id = j.id
+        WHERE j.company_id = #{companyId}
+        <if test="jobId != null">
+            AND j.id = #{jobId}
+        </if>
+        <if test="jobTitle != null and jobTitle != ''">
+            AND j.title LIKE CONCAT('%', #{jobTitle}, '%')
+        </if>
+        <if test="status != null and status != ''">
+            AND sa.status = #{status}
+        </if>
+    </select>
+
 </mapper>

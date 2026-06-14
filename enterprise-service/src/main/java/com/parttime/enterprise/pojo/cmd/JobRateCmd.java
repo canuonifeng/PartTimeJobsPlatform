@@ -8,6 +8,10 @@ import java.math.BigDecimal;
 @Data
 public class JobRateCmd {
 
+    @Schema(description = "岗位ID")
+    private Long jobId;
+    @Schema(description = "薪资规则ID")
+    private Long rateId;
     @Schema(description = "薪资类型")
     private JobRateType type;
     @Schema(description = "金额")

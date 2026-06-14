@@ -17,5 +17,5 @@ export function getOperationTodos(params = {}) {
 }
 
 export function executeOperationTodoAction(todoId, action) {
-  return request('POST', `/operations/todos/${encodeURIComponent(todoId)}/actions`, { action })
+  return request('POST', '/operations/todos/actions', { todoId, action })
 }

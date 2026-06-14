@@ -47,16 +47,14 @@ public class WorkerProfileController {
 
     @Operation(summary = "拉黑工人", description = "将工人加入企业黑名单")
     @PostMapping("/blacklist")
-    public void addToBlacklist(@Parameter(description = "工人ID") @RequestParam Long workerId,
-                                @RequestBody BlacklistCmd request) {
-        workerProfileService.addToBlacklist(request.getCompanyId(), workerId, request.getReason());
+    public void addToBlacklist(@RequestBody BlacklistCmd request) {
+        workerProfileService.addToBlacklist(request.getCompanyId(), request.getWorkerId(), request.getReason());
     }
 
     @Operation(summary = "移除黑名单", description = "将工人从企业黑名单中移除")
-    @DeleteMapping("/blacklist")
-    public void removeFromBlacklist(@Parameter(description = "工人ID") @RequestParam Long workerId,
-                                    @Parameter(description = "企业ID") @RequestParam Long companyId) {
-        workerProfileService.removeFromBlacklist(companyId, workerId);
+    @PostMapping("/blacklist/remove")
+    public void removeFromBlacklist(@RequestBody BlacklistCmd request) {
+        workerProfileService.removeFromBlacklist(request.getCompanyId(), request.getWorkerId());
     }
 
     @Operation(summary = "获取工人工作记录", description = "获取工人在该企业的工作历史")

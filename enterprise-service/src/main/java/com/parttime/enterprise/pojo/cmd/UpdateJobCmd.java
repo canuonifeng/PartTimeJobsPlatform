@@ -10,6 +10,8 @@ import java.util.List;
 @Data
 public class UpdateJobCmd {
 
+    @Schema(description = "岗位ID")
+    private Long id;
     @Schema(description = "企业ID")
     private Long companyId;
     @Schema(description = "岗位标题")

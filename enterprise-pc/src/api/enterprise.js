@@ -5,5 +5,5 @@ export function getEnterpriseInfo() {
 }
 
 export function updateCompanyLogo(companyLogo) {
-  return request.put('/enterprise/logo', { companyLogo })
+  return request.post('/enterprise/logo', { companyLogo })
 }

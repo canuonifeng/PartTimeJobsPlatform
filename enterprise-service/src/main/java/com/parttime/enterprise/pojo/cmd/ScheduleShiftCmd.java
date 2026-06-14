@@ -9,6 +9,8 @@ import java.time.LocalTime;
 @Data
 public class ScheduleShiftCmd {
 
+    @Schema(description = "班次ID")
+    private Long id;
     @Schema(description = "岗位ID")
     private Long jobId;
     @Schema(description = "工人ID")
