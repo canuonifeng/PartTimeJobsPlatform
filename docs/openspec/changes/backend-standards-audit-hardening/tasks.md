@@ -21,8 +21,8 @@
 - [ ] 复核当前企业端已改造 Controller，确保无 PUT/DELETE、Map 入参/返回、POST query/body 混用。
 - [ ] 决策 `FileController.upload` 是否作为 Multipart 例外，或改为 JSON 元数据流程。
 - [ ] 将 `WorkerProfileController.evaluateWorker` 的 `workerId` 合并进 `EvaluationCmd`。
-- [ ] 迁移 `EnterpriseMapper` 注解 SQL 到 XML。
-- [ ] 迁移或标记 `WorkerSyncMapper` 注解 SQL，确保列表场景只用批量查询。
+- [x] 迁移 `EnterpriseMapper` 注解 SQL 到 XML。
+- [x] 迁移或标记 `WorkerSyncMapper` 注解 SQL，确保列表场景只用批量查询。
 - [ ] 保持已修复的报名列表数据库分页和待办聚合查询，并复扫确认。
 
 ## 4. Platform Backend (`platform-service`)

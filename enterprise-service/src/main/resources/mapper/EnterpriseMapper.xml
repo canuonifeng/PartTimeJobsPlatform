@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.enterprise.mapper.EnterpriseMapper">
+
+    <select id="findCompanyNameById" resultType="java.lang.String">
+        SELECT company_name FROM enterprises WHERE id = #{id}
+    </select>
+
+    <select id="findCompanyLogoById" resultType="java.lang.String">
+        SELECT company_logo FROM enterprises WHERE id = #{id}
+    </select>
+
+    <select id="findIdByEmailSuffix" resultType="java.lang.Long">
+        SELECT id FROM enterprises WHERE email_suffix = #{emailSuffix}
+    </select>
+
+    <update id="updateLogo">
+        UPDATE enterprises SET company_logo = #{logoUrl} WHERE id = #{id}
+    </update>
+
+</mapper>

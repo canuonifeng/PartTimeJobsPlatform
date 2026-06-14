@@ -2,6 +2,26 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.parttime.enterprise.mapper.WorkerSyncMapper">
 
+    <select id="findWorkerNameById" resultType="java.lang.String">
+        SELECT name FROM c_worker WHERE id = #{id}
+    </select>
+
+    <select id="findWorkerPhoneById" resultType="java.lang.String">
+        SELECT phone FROM c_worker WHERE id = #{id}
+    </select>
+
+    <select id="findWorkerBirthdayById" resultType="java.time.LocalDate">
+        SELECT birthday FROM worker_profiles WHERE worker_id = #{id}
+    </select>
+
+    <select id="findWorkerGenderById" resultType="java.lang.String">
+        SELECT gender FROM worker_profiles WHERE worker_id = #{id}
+    </select>
+
+    <select id="findWorkerRealNameStatusById" resultType="java.lang.String">
+        SELECT COALESCE((SELECT status FROM worker_real_name_auth WHERE worker_id = #{id}), 'NONE')
+    </select>
+
     <select id="findWorkerNamesByIds" resultType="java.util.Map">
         SELECT id, name FROM c_worker WHERE id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">
