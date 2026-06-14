@@ -7,10 +7,9 @@ import com.parttime.platform.service.SystemConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.annotation.Resource;
@@ -30,9 +29,8 @@ public class SystemConfigController {
     }
 
     @Operation(summary = "更新系统配置", description = "根据配置键更新系统配置值")
-    @PutMapping
-    public ApiResponse<SystemConfigVO> update(@Parameter(description = "配置键") @RequestParam String key,
-                                 @RequestBody SystemConfigUpdateCmd cmd) {
-        return ApiResponse.success(systemConfigService.updateConfig(key, cmd.getValue()));
+    @PostMapping
+    public ApiResponse<SystemConfigVO> update(@RequestBody SystemConfigUpdateCmd cmd) {
+        return ApiResponse.success(systemConfigService.updateConfig(cmd.getKey(), cmd.getValue()));
     }
 }

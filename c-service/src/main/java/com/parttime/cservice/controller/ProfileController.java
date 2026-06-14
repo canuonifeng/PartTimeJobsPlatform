@@ -71,7 +71,7 @@ public class ProfileController {
     }
 
     @Operation(summary = "更新工人档案", description = "更新当前登录工人的档案信息")
-    @PutMapping("/profile")
+    @PostMapping("/profile")
     public ApiResponse<ProfileVO> updateProfile(@RequestBody ProfileUpdateCmd request) {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {

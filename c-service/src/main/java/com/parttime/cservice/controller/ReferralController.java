@@ -1,6 +1,9 @@
 package com.parttime.cservice.controller;
 
+import com.parttime.cservice.pojo.cmd.ReferralConfigUpdateCmd;
+import com.parttime.cservice.pojo.vo.ApiResponse;
 import com.parttime.cservice.pojo.vo.ReferralLinkVO;
+import com.parttime.cservice.pojo.vo.ReferralPosterVO;
 import com.parttime.cservice.pojo.vo.ReferralStatsVO;
 import com.parttime.cservice.pojo.vo.RefereeVO;
 import com.parttime.cservice.pojo.vo.PageVO;
@@ -14,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.Resource;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/referral")
@@ -40,10 +42,10 @@ public class ReferralController {
 
     @Operation(summary = "获取邀请海报")
     @GetMapping("/poster")
-    public Map<String, String> getReferralPoster() {
+    public ApiResponse<ReferralPosterVO> getReferralPoster() {
         Long workerId = getCurrentWorkerId();
         String posterUrl = referralService.getReferralPoster(workerId);
-        return Map.of("posterUrl", posterUrl);
+        return ApiResponse.success(new ReferralPosterVO(posterUrl));
     }
 
     @Operation(summary = "邀请统计概览")
@@ -78,8 +80,8 @@ public class ReferralController {
     }
 
     @Operation(summary = "修改奖励规则配置")
-    @PutMapping("/config")
-    public void updateConfig(@RequestBody List<ReferralConfig> configs) {
-        referralService.updateConfig(configs);
+    @PostMapping("/config")
+    public void updateConfig(@RequestBody ReferralConfigUpdateCmd cmd) {
+        referralService.updateConfig(cmd.getConfigs());
     }
 }

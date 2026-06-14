@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.cservice.mapper.CompanyWorkerInsertMapper">
+    <insert id="upsert">
+        INSERT INTO company_workers (company_id, worker_id, status)
+        VALUES (#{companyId}, #{workerId}, 'ACTIVE')
+        ON DUPLICATE KEY UPDATE last_contact_at = NOW(), updated_at = NOW()
+    </insert>
+</mapper>

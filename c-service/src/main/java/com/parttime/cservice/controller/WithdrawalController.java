@@ -1,5 +1,6 @@
 package com.parttime.cservice.controller;
 
+import com.parttime.cservice.pojo.cmd.WithdrawalCmd;
 import com.parttime.cservice.pojo.vo.ApiResponse;
 import com.parttime.cservice.pojo.vo.BankCardVO;
 import com.parttime.cservice.pojo.vo.EarningsSummaryVO;
@@ -20,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.annotation.Resource;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 public class WithdrawalController {
@@ -38,18 +38,14 @@ public class WithdrawalController {
 
     @Operation(summary = "申请提现", description = "工人申请提现账户余额")
     @PostMapping("/api/withdrawals")
-    public ApiResponse<?> requestWithdrawal(@RequestBody Map<String, Object> request) {
+    public ApiResponse<?> requestWithdrawal(@RequestBody WithdrawalCmd request) {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
             return ApiResponse.error(401, "未登录");
         }
         try {
-            java.math.BigDecimal amount = new java.math.BigDecimal(request.get("amount").toString());
-            String withdrawalMethod = (String) request.get("withdrawalMethod");
-            Long bankAccountId = request.get("bankAccountId") != null ? 
-                Long.valueOf(request.get("bankAccountId").toString()) : null;
-            
-            WithdrawalVO response = withdrawalService.requestWithdrawal(workerId, amount, withdrawalMethod, bankAccountId);
+            WithdrawalVO response = withdrawalService.requestWithdrawal(workerId,
+                    request.getAmount(), request.getWithdrawalMethod(), request.getBankAccountId());
             return ApiResponse.success(response);
         } catch (RuntimeException e) {
             return ApiResponse.error(e.getMessage());

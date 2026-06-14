@@ -6,6 +6,9 @@ import lombok.Data;
 @Data
 public class JobTagGroupCmd {
 
+    @Schema(description = "标签组ID")
+    private Long id;
+
     @Schema(description = "标签组名称")
     private String name;
     @Schema(description = "标签组编码")

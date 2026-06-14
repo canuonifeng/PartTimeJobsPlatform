@@ -22,7 +22,7 @@ public class WeChatPayServiceImpl implements WeChatPayService {
 
     @Override
     public TransferResult transferToWechat(Long workerId, BigDecimal amount, String openId, String description) {
-        log.info("开始微信零钱转账: workerId={}, amount={}, openId={}", workerId, amount, openId);
+        log.info("开始微信零钱转账: workerId={}, amount={}", workerId, amount);
         
         TransferResult result = new TransferResult();
         try {
@@ -53,7 +53,7 @@ public class WeChatPayServiceImpl implements WeChatPayService {
 
     @Override
     public TransferResult transferToBankCard(Long workerId, BigDecimal amount, String bankAccount, String bankName, String description) {
-        log.info("开始银行卡转账: workerId={}, amount={}, bankAccount={}", workerId, amount, bankAccount);
+        log.info("开始银行卡转账: workerId={}, amount={}, bankName={}", workerId, amount, bankName);
         
         TransferResult result = new TransferResult();
         try {

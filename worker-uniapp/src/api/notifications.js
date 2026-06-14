@@ -10,7 +10,8 @@ export function getMyNotifications(params = {}) {
 
 export function markNotificationRead(id) {
   return request({
-    url: `/api/notifications/read?id=${id}`,
-    method: 'PUT'
+    url: '/api/notifications/read',
+    method: 'POST',
+    data: { id }
   })
 }

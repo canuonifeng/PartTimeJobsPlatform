@@ -5,9 +5,9 @@ export function getBankCard() {
 }
 
 export function upsertBankCard(data) {
-  return request({ url: '/api/worker/bank-card', method: 'PUT', data })
+  return request({ url: '/api/worker/bank-card', method: 'POST', data })
 }
 
 export function deleteBankCard() {
-  return request({ url: '/api/worker/bank-card', method: 'DELETE' })
+  return request({ url: '/api/worker/bank-card/delete', method: 'POST', data: {} })
 }

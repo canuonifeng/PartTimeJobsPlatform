@@ -25,9 +25,9 @@ export function getJobDetail(id) {
 
 export function applyJob(id, data) {
   return request({
-    url: `/api/jobs/apply?id=${id}`,
+    url: '/api/jobs/apply',
     method: 'POST',
-    data
+    data: { ...data, jobId: id }
   })
 }
 

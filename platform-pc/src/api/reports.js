@@ -9,9 +9,9 @@ export function getJobReport(id) {
 }
 
 export function dismissReport(id, data) {
-  return request.put('/job-reports/dismiss', data, { params: { id } })
+  return request.post('/job-reports/dismiss', { ...data, id })
 }
 
 export function banJob(id, data) {
-  return request.put('/job-reports/ban', data, { params: { id } })
+  return request.post('/job-reports/ban', { ...data, id })
 }

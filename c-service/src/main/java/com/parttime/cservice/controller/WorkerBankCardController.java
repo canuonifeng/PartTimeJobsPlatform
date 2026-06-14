@@ -35,7 +35,7 @@ public class WorkerBankCardController {
     }
 
     @Operation(summary = "绑定/更新银行卡")
-    @PutMapping
+    @PostMapping
     public ApiResponse<WorkerBankCard> upsert(@RequestBody WorkerBankCardCmd cmd) {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) return ApiResponse.error(401, "未登录");
@@ -47,8 +47,8 @@ public class WorkerBankCardController {
     }
 
     @Operation(summary = "解绑银行卡")
-    @DeleteMapping
-    public ApiResponse<Void> delete() {
+    @PostMapping("/delete")
+    public ApiResponse<Void> delete(@RequestBody(required = false) com.parttime.cservice.pojo.cmd.EmptyCmd cmd) {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) return ApiResponse.error(401, "未登录");
         workerBankCardService.delete(workerId);

@@ -5,9 +5,9 @@ export function listWorkerRealName(params) {
 }
 
 export function approveWorkerRealName(id) {
-  return request.post('/admin/worker-real-name/approve', null, { params: { id } })
+  return request.post('/admin/worker-real-name/approve', { id })
 }
 
 export function rejectWorkerRealName(id, reason) {
-  return request.post('/admin/worker-real-name/reject', { reason }, { params: { id } })
+  return request.post('/admin/worker-real-name/reject', { id, reason })
 }

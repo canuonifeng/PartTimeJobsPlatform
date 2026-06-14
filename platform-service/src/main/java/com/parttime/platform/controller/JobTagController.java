@@ -1,5 +1,6 @@
 package com.parttime.platform.controller;
 
+import com.parttime.platform.pojo.cmd.IdCmd;
 import com.parttime.platform.pojo.cmd.JobTagCmd;
 import com.parttime.platform.pojo.cmd.JobTagGroupCmd;
 import com.parttime.platform.pojo.vo.ApiResponse;
@@ -7,14 +8,10 @@ import com.parttime.platform.pojo.vo.JobTagGroupVO;
 import com.parttime.platform.pojo.vo.JobTagVO;
 import com.parttime.platform.service.JobTagService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.annotation.Resource;
@@ -40,15 +37,15 @@ public class JobTagController {
     }
 
     @Operation(summary = "更新岗位标签组", description = "更新岗位标签组信息")
-    @PutMapping("/job-tag-groups")
-    public ApiResponse<JobTagGroupVO> updateGroup(@Parameter(description = "标签组ID") @RequestParam Long id, @RequestBody JobTagGroupCmd cmd) {
-        return ApiResponse.success(jobTagService.updateGroup(id, cmd));
+    @PostMapping("/job-tag-groups/update")
+    public ApiResponse<JobTagGroupVO> updateGroup(@RequestBody JobTagGroupCmd cmd) {
+        return ApiResponse.success(jobTagService.updateGroup(cmd.getId(), cmd));
     }
 
     @Operation(summary = "删除岗位标签组", description = "删除指定的岗位标签组")
-    @DeleteMapping("/job-tag-groups")
-    public void deleteGroup(@Parameter(description = "标签组ID") @RequestParam Long id) {
-        jobTagService.deleteGroup(id);
+    @PostMapping("/job-tag-groups/delete")
+    public void deleteGroup(@RequestBody IdCmd cmd) {
+        jobTagService.deleteGroup(cmd.getId());
     }
 
     @Operation(summary = "创建岗位标签", description = "创建新的岗位标签")
@@ -58,14 +55,14 @@ public class JobTagController {
     }
 
     @Operation(summary = "更新岗位标签", description = "更新岗位标签信息")
-    @PutMapping("/job-tags")
-    public ApiResponse<JobTagVO> updateTag(@Parameter(description = "标签ID") @RequestParam Long id, @RequestBody JobTagCmd cmd) {
-        return ApiResponse.success(jobTagService.updateTag(id, cmd));
+    @PostMapping("/job-tags/update")
+    public ApiResponse<JobTagVO> updateTag(@RequestBody JobTagCmd cmd) {
+        return ApiResponse.success(jobTagService.updateTag(cmd.getId(), cmd));
     }
 
     @Operation(summary = "删除岗位标签", description = "删除指定的岗位标签")
-    @DeleteMapping("/job-tags")
-    public void deleteTag(@Parameter(description = "标签ID") @RequestParam Long id) {
-        jobTagService.deleteTag(id);
+    @PostMapping("/job-tags/delete")
+    public void deleteTag(@RequestBody IdCmd cmd) {
+        jobTagService.deleteTag(cmd.getId());
     }
 }

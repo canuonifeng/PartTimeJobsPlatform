@@ -6,6 +6,9 @@ import lombok.Data;
 @Data
 public class SystemConfigUpdateCmd {
 
+    @Schema(description = "配置键")
+    private String key;
+
     @Schema(description = "配置值")
     private String value;
 }

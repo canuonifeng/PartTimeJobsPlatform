@@ -1,7 +1,9 @@
 package com.parttime.platform.controller;
 
+import com.parttime.platform.pojo.cmd.EnterpriseIdCmd;
 import com.parttime.platform.pojo.cmd.EnterpriseAccountCreateCmd;
 import com.parttime.platform.pojo.cmd.EnterpriseAccountUpdateCmd;
+import com.parttime.platform.pojo.cmd.IdCmd;
 import com.parttime.platform.pojo.cmd.ResetPasswordCmd;
 import com.parttime.platform.pojo.vo.ApiResponse;
 import com.parttime.platform.pojo.vo.EnterpriseAccountVO;
@@ -14,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -25,8 +26,8 @@ public class EnterpriseAccountController {
 
     @Operation(summary = "获取企业下账号列表")
     @PostMapping("/enterprises/accounts/list")
-    public ApiResponse<List<EnterpriseAccountVO>> list(@RequestBody Map<String, Long> body) {
-        return ApiResponse.success(accountService.listByEnterprise(body.get("enterpriseId")));
+    public ApiResponse<List<EnterpriseAccountVO>> list(@RequestBody EnterpriseIdCmd body) {
+        return ApiResponse.success(accountService.listByEnterprise(body.getEnterpriseId()));
     }
 
     @Operation(summary = "创建账号")
@@ -49,7 +50,7 @@ public class EnterpriseAccountController {
 
     @Operation(summary = "删除账号")
     @PostMapping("/accounts/delete")
-    public void delete(@RequestBody Map<String, Long> body) {
-        accountService.delete(body.get("id"));
+    public void delete(@RequestBody IdCmd body) {
+        accountService.delete(body.getId());
     }
 }

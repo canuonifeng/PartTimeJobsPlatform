@@ -142,7 +142,6 @@ public class WorkerServiceImpl implements WorkerService {
     public void sendSmsCode(String phone) {
         String code = String.format("%06d", new Random().nextInt(999999));
         smsCodeStore.put(phone, code);
-        System.out.println("[SMS] Code for " + phone + ": " + code);
     }
 
     @Override

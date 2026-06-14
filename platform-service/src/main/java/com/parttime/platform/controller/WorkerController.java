@@ -1,5 +1,7 @@
 package com.parttime.platform.controller;
 
+import com.parttime.platform.pojo.cmd.IdCmd;
+import com.parttime.platform.pojo.cmd.WorkerListQueryCmd;
 import com.parttime.platform.pojo.cmd.WorkerUpdateCmd;
 import com.parttime.platform.pojo.vo.ApiResponse;
 import com.parttime.platform.pojo.vo.WorkerVO;
@@ -12,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/workers")
@@ -23,16 +24,16 @@ public class WorkerController {
 
     @Operation(summary = "获取兼职列表")
     @PostMapping("/list")
-    public ApiResponse<List<WorkerVO>> list(@RequestBody(required = false) Map<String, String> body) {
-        String status = body != null ? body.get("status") : null;
-        String keyword = body != null ? body.get("keyword") : null;
+    public ApiResponse<List<WorkerVO>> list(@RequestBody(required = false) WorkerListQueryCmd body) {
+        String status = body != null ? body.getStatus() : null;
+        String keyword = body != null ? body.getKeyword() : null;
         return ApiResponse.success(workerService.list(status, keyword));
     }
 
     @Operation(summary = "获取兼职详情")
     @PostMapping("/detail")
-    public ApiResponse<WorkerVO> detail(@RequestBody Map<String, Long> body) {
-        return ApiResponse.success(workerService.detail(body.get("id")));
+    public ApiResponse<WorkerVO> detail(@RequestBody IdCmd body) {
+        return ApiResponse.success(workerService.detail(body.getId()));
     }
 
     @Operation(summary = "编辑兼职信息")
@@ -43,13 +44,13 @@ public class WorkerController {
 
     @Operation(summary = "封禁兼职")
     @PostMapping("/ban")
-    public void ban(@RequestBody Map<String, Long> body) {
-        workerService.ban(body.get("id"));
+    public void ban(@RequestBody IdCmd body) {
+        workerService.ban(body.getId());
     }
 
     @Operation(summary = "解封兼职")
     @PostMapping("/unban")
-    public void unban(@RequestBody Map<String, Long> body) {
-        workerService.unban(body.get("id"));
+    public void unban(@RequestBody IdCmd body) {
+        workerService.unban(body.getId());
     }
 }

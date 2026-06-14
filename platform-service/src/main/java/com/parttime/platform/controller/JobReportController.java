@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -37,18 +37,16 @@ public class JobReportController {
     }
 
     @Operation(summary = "驳回举报", description = "驳回岗位举报，标记为无效")
-    @PutMapping("/dismiss")
-    public ApiResponse<JobReportVO> dismiss(@Parameter(description = "举报ID") @RequestParam Long id,
-                                      @RequestBody ReviewJobReportCmd cmd,
+    @PostMapping("/dismiss")
+    public ApiResponse<JobReportVO> dismiss(@RequestBody ReviewJobReportCmd cmd,
                                       Authentication authentication) {
-        return ApiResponse.success(jobReportService.dismissReport(id, Long.valueOf(authentication.getName()), cmd));
+        return ApiResponse.success(jobReportService.dismissReport(cmd.getId(), Long.valueOf(authentication.getName()), cmd));
     }
 
     @Operation(summary = "封禁岗位", description = "因举报封禁岗位")
-    @PutMapping("/ban")
-    public ApiResponse<JobReportVO> ban(@Parameter(description = "举报ID") @RequestParam Long id,
-                                  @RequestBody ReviewJobReportCmd cmd,
+    @PostMapping("/ban")
+    public ApiResponse<JobReportVO> ban(@RequestBody ReviewJobReportCmd cmd,
                                   Authentication authentication) {
-        return ApiResponse.success(jobReportService.banJobReport(id, Long.valueOf(authentication.getName()), cmd));
+        return ApiResponse.success(jobReportService.banJobReport(cmd.getId(), Long.valueOf(authentication.getName()), cmd));
     }
 }

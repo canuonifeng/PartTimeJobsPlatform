@@ -10,7 +10,7 @@ export function getSettings() {
 export function updateSettings(data) {
   return request({
     url: '/api/settings',
-    method: 'PUT',
+    method: 'POST',
     data
   })
 }

@@ -62,7 +62,7 @@ public class JobController {
 
     @Operation(summary = "申请岗位", description = "工人申请岗位并选择排班")
     @PostMapping("/apply")
-    public ApiResponse<?> applyForJob(@Parameter(description = "岗位ID") @RequestParam Long id, @RequestBody ApplyJobCmd request) {
+    public ApiResponse<?> applyForJob(@RequestBody ApplyJobCmd request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
             return ApiResponse.error(401, "未登录");
@@ -72,7 +72,7 @@ public class JobController {
         if (!completeness.isComplete()) {
             return ApiResponse.error("PROFILE_INCOMPLETE，请先完善个人信息");
         }
-        boolean success = jobService.applyForJob(workerId, id, request.scheduleIds());
+        boolean success = jobService.applyForJob(workerId, request.jobId(), request.scheduleIds());
         return ApiResponse.success(Map.of("success", success));
     }
 

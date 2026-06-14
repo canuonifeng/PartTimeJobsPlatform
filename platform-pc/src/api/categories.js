@@ -9,9 +9,9 @@ export function createCategory(data) {
 }
 
 export function updateCategory(id, data) {
-  return request.put('/admin/job-categories', data, { params: { id } })
+  return request.post('/admin/job-categories/update', { ...data, id })
 }
 
 export function deleteCategory(id) {
-  return request.delete('/admin/job-categories', { params: { id } })
+  return request.post('/admin/job-categories/delete', { id })
 }

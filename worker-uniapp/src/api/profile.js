@@ -17,7 +17,7 @@ export function getProfileDashboard() {
 export function updateProfile(data) {
   return request({
     url: '/api/profile',
-    method: 'PUT',
+    method: 'POST',
     data
   })
 }

@@ -17,7 +17,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -102,7 +101,7 @@ public class AuthController {
     }
 
     @Operation(summary = "更新工人信息", description = "更新当前登录工人的基本信息")
-    @PutMapping("/profile")
+    @PostMapping("/profile")
     public ApiResponse<WorkerVO> updateProfile(@Parameter(description = "更新信息") @RequestBody RegisterCmd request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {

@@ -9,11 +9,11 @@ export function createTagGroup(data) {
 }
 
 export function updateTagGroup(id, data) {
-  return request.put('/admin/job-tag-groups', data, { params: { id } })
+  return request.post('/admin/job-tag-groups/update', { ...data, id })
 }
 
 export function deleteTagGroup(id) {
-  return request.delete('/admin/job-tag-groups', { params: { id } })
+  return request.post('/admin/job-tag-groups/delete', { id })
 }
 
 export function createTag(data) {
@@ -21,9 +21,9 @@ export function createTag(data) {
 }
 
 export function updateTag(id, data) {
-  return request.put('/admin/job-tags', data, { params: { id } })
+  return request.post('/admin/job-tags/update', { ...data, id })
 }
 
 export function deleteTag(id) {
-  return request.delete('/admin/job-tags', { params: { id } })
+  return request.post('/admin/job-tags/delete', { id })
 }

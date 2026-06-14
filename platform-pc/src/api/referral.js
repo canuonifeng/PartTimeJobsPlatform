@@ -5,7 +5,7 @@ export function getConfig() {
 }
 
 export function updateConfig(configs) {
-  return request.put('/referral/config', configs)
+  return request.post('/referral/config', { configs })
 }
 
 export function getAuditList(params) {
@@ -13,9 +13,9 @@ export function getAuditList(params) {
 }
 
 export function approveReward(id, remark) {
-  return request.post('/referral/audit/approve', { remark }, { params: { id } })
+  return request.post('/referral/audit/approve', { id, remark })
 }
 
 export function rejectReward(id, remark) {
-  return request.post('/referral/audit/reject', { remark }, { params: { id } })
+  return request.post('/referral/audit/reject', { id, remark })
 }

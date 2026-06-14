@@ -5,5 +5,5 @@ export function getConfigs() {
 }
 
 export function updateConfig(key, value) {
-  return request.put('/admin/configs', { value }, { params: { key } })
+  return request.post('/admin/configs', { key, value })
 }

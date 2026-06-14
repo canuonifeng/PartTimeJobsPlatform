@@ -1,5 +1,7 @@
 package com.parttime.platform.controller;
 
+import com.parttime.platform.pojo.cmd.ReferralAuditCmd;
+import com.parttime.platform.pojo.cmd.ReferralConfigUpdateCmd;
 import com.parttime.platform.pojo.entity.ReferralConfig;
 import com.parttime.platform.service.ReferralService;
 import com.parttime.platform.pojo.vo.ReferralAuditVO;
@@ -10,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.Resource;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/referral")
@@ -26,9 +27,9 @@ public class ReferralController {
     }
 
     @Operation(summary = "修改奖励规则配置")
-    @PutMapping("/config")
-    public ApiResponse<Void> updateConfig(@RequestBody List<ReferralConfig> configs) {
-        referralService.updateConfig(configs);
+    @PostMapping("/config")
+    public ApiResponse<Void> updateConfig(@RequestBody ReferralConfigUpdateCmd cmd) {
+        referralService.updateConfig(cmd.getConfigs());
         return ApiResponse.success();
     }
 
@@ -42,15 +43,15 @@ public class ReferralController {
 
     @Operation(summary = "审核通过")
     @PostMapping("/audit/approve")
-    public ApiResponse<Void> approveReward(@RequestParam Long id, @RequestBody Map<String, String> body) {
-        referralService.approveReward(id, body.get("remark"));
+    public ApiResponse<Void> approveReward(@RequestBody ReferralAuditCmd cmd) {
+        referralService.approveReward(cmd.getId(), cmd.getRemark());
         return ApiResponse.success();
     }
 
     @Operation(summary = "审核拒绝")
     @PostMapping("/audit/reject")
-    public ApiResponse<Void> rejectReward(@RequestParam Long id, @RequestBody Map<String, String> body) {
-        referralService.rejectReward(id, body.get("remark"));
+    public ApiResponse<Void> rejectReward(@RequestBody ReferralAuditCmd cmd) {
+        referralService.rejectReward(cmd.getId(), cmd.getRemark());
         return ApiResponse.success();
     }
 }

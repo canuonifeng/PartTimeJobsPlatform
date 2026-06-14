@@ -741,6 +741,12 @@ public class InMemoryMappers {
             @Override public List<com.parttime.cservice.pojo.entity.Enterprise> findByIds(List<Long> ids) {
                 return ids.stream().map(store::get).filter(Objects::nonNull).collect(Collectors.toList());
             }
+            @Override public com.parttime.cservice.pojo.entity.Enterprise findByEmailSuffix(String emailSuffix) {
+                return store.values().stream()
+                        .filter(enterprise -> Objects.equals(emailSuffix, enterprise.getEmailSuffix()))
+                        .findFirst()
+                        .orElse(null);
+            }
         };
     }
 
