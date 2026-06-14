@@ -49,7 +49,7 @@ class WorkerSettingsControllerTest {
         WorkerSettingsVO defaultVo = WorkerSettingsVO.defaults();
         when(workerSettingsService.getSettings(1L)).thenReturn(defaultVo);
 
-        mockMvc.perform(get("/api/settings"))
+        mockMvc.perform(get("/api/worker/settings"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.pushEnabled").value(true))
                 .andExpect(jsonPath("$.data.locationEnabled").value(true))
@@ -69,7 +69,7 @@ class WorkerSettingsControllerTest {
         cmd.setPushEnabled(false);
         cmd.setQuietEnabled(true);
 
-        mockMvc.perform(post("/api/settings")
+        mockMvc.perform(post("/api/worker/settings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cmd)))
                 .andExpect(status().isOk())
@@ -80,7 +80,7 @@ class WorkerSettingsControllerTest {
 
     @Test
     void getSettings_withoutAuth_shouldReturn401() throws Exception {
-        mockMvc.perform(get("/api/settings"))
+        mockMvc.perform(get("/api/worker/settings"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(401));
     }

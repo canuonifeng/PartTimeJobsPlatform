@@ -37,7 +37,7 @@ public class WithdrawalController {
     }
 
     @Operation(summary = "申请提现", description = "工人申请提现账户余额")
-    @PostMapping("/api/withdrawals")
+    @PostMapping("/api/worker/withdrawals")
     public ApiResponse<?> requestWithdrawal(@RequestBody WithdrawalCmd request) {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
@@ -53,7 +53,7 @@ public class WithdrawalController {
     }
 
     @Operation(summary = "获取可用提现方式", description = "获取当前工人可用的提现方式")
-    @GetMapping("/api/withdrawal-methods")
+    @GetMapping("/api/worker/withdrawal-methods")
     public ApiResponse<List<WithdrawalMethodVO>> getAvailableMethods() {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
@@ -64,7 +64,7 @@ public class WithdrawalController {
     }
 
     @Operation(summary = "获取银行卡列表", description = "获取当前工人的银行卡列表")
-    @GetMapping("/api/bank-cards")
+    @GetMapping("/api/worker/bank-cards")
     public ApiResponse<List<BankCardVO>> getBankCards() {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
@@ -75,7 +75,7 @@ public class WithdrawalController {
     }
 
     @Operation(summary = "获取收益汇总", description = "获取当前工人的收益汇总信息")
-    @GetMapping("/api/earnings/summary")
+    @GetMapping("/api/worker/earnings/summary")
     public ApiResponse<EarningsSummaryVO> getEarningsSummary() {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
@@ -86,7 +86,7 @@ public class WithdrawalController {
     }
 
     @Operation(summary = "获取账户流水", description = "获取当前工人的余额变动记录，分页返回")
-    @GetMapping("/api/earnings/transactions")
+    @GetMapping("/api/worker/earnings/transactions")
     public ApiResponse<PageVO<TransactionVO>> getTransactions(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int pageSize) {
@@ -98,7 +98,7 @@ public class WithdrawalController {
     }
 
     @Operation(summary = "获取提现记录", description = "获取当前工人的提现历史记录")
-    @GetMapping("/api/withdrawals/my")
+    @GetMapping("/api/worker/withdrawals/my")
     public ApiResponse<List<WithdrawalVO>> getWithdrawalHistory() {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {

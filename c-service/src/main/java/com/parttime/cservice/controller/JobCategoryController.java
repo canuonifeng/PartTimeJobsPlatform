@@ -12,7 +12,7 @@ import jakarta.annotation.Resource;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/job-categories")
+@RequestMapping("/api/worker/job-categories")
 public class JobCategoryController {
 
     @Resource

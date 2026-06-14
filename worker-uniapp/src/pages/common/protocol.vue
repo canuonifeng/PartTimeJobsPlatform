@@ -50,7 +50,7 @@ async function loadContent() {
   loading.value = true
   try {
     const data = await request({
-      url: `/api/auth/configs?key=${configKey.value}`,
+      url: `/auth/configs?key=${configKey.value}`,
       method: 'GET'
     })
     content.value = data?.value || ''

@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.annotation.Resource;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/worker")
 public class CorrectionController {
 
     @Resource

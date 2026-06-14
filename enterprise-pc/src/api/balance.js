@@ -1,13 +1,13 @@
 import request from './request'
 
 export function getBalance() {
-  return request.get('/enterprise/balance')
+  return request.get('/balance')
 }
 
 export function topUp(amount) {
-  return request.post('/enterprise/balance/top-up', { amount })
+  return request.post('/balance/top-up', { amount })
 }
 
 export function getTransactions(params) {
-  return request.get('/enterprise/balance/transactions', { params })
+  return request.get('/balance/transactions', { params })
 }

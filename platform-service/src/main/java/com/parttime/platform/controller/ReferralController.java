@@ -14,7 +14,7 @@ import jakarta.annotation.Resource;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/referral")
+@RequestMapping("/api/admin/referral")
 public class ReferralController {
 
     @Resource

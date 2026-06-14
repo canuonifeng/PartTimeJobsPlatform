@@ -69,7 +69,7 @@ class ScheduleControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/schedule-shifts")
+        mockMvc.perform(post("/api/enterprise/schedule-shifts")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
@@ -86,7 +86,7 @@ class ScheduleControllerTest {
         PageVO<ScheduleShiftVO> result = new PageVO<>(List.of(shift), 1);
         when(scheduleService.getShifts(1L, 10L, null, null, null, 1, 20)).thenReturn(result);
 
-        mockMvc.perform(get("/api/schedule-shifts")
+        mockMvc.perform(get("/api/enterprise/schedule-shifts")
                         .param("jobId", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.records.length()").value(1));
@@ -94,7 +94,7 @@ class ScheduleControllerTest {
 
     @Test
     void removeShift_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(post("/api/schedule-shifts/delete")
+        mockMvc.perform(post("/api/enterprise/schedule-shifts/delete")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"id\":99}"))
                 .andExpect(status().isOk());
@@ -110,7 +110,7 @@ class ScheduleControllerTest {
 
         when(scheduleService.getAttendanceReport(10L, null, null)).thenReturn(List.of(report));
 
-        mockMvc.perform(get("/api/attendance/report")
+        mockMvc.perform(get("/api/enterprise/attendance/report")
                         .param("jobId", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()").value(1))

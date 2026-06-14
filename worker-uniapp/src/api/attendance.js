@@ -2,7 +2,7 @@ import request from './request'
 
 export function checkIn(data) {
   return request({
-    url: '/api/attendance/check-in',
+    url: '/attendance/check-in',
     method: 'POST',
     data
   })
@@ -10,7 +10,7 @@ export function checkIn(data) {
 
 export function checkOut(data) {
   return request({
-    url: '/api/attendance/check-out',
+    url: '/attendance/check-out',
     method: 'POST',
     data
   })
@@ -18,7 +18,7 @@ export function checkOut(data) {
 
 export function getMyAttendance(params) {
   return request({
-    url: '/api/attendance/my',
+    url: '/attendance/my',
     method: 'GET',
     data: params
   })
@@ -26,7 +26,7 @@ export function getMyAttendance(params) {
 
 export function submitCorrection(data) {
   return request({
-    url: '/api/attendance/correction',
+    url: '/attendance/correction',
     method: 'POST',
     data
   })
@@ -34,7 +34,7 @@ export function submitCorrection(data) {
 
 export function getCorrectionStatus(params) {
   return request({
-    url: '/api/attendance/correction/status',
+    url: '/attendance/correction/status',
     method: 'GET',
     data: params
   })

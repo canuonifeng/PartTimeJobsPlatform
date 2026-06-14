@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/company-workers")
+@RequestMapping("/api/enterprise/company-workers")
 public class CompanyWorkerController {
 
     @Resource

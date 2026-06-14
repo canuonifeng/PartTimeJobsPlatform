@@ -23,7 +23,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/operations")
+@RequestMapping("/api/enterprise/operations")
 public class OperationController {
 
     @Resource

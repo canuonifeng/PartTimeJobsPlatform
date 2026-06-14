@@ -35,7 +35,7 @@ class JobShareControllerTest {
         when(jobShareService.getShareCode(42L))
                 .thenReturn(new JobShareCodeVO(42L, "/pages/jobs/jobDetail?scene=42", "iVBORw0KGgoAAA"));
 
-        mockMvc.perform(get("/api/jobs/share-code").param("id", "42"))
+        mockMvc.perform(get("/api/enterprise/jobs/share-code").param("id", "42"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.jobId").value(42))
                 .andExpect(jsonPath("$.data.path").value("/pages/jobs/jobDetail?scene=42"))
@@ -47,7 +47,7 @@ class JobShareControllerTest {
         when(jobShareService.getShareLink(42L))
                 .thenReturn(new JobShareLinkVO(42L, "weixin://dl/business/?appid=test_appid&path=/pages/jobs/jobDetail&query=id%3D42&env_version=release"));
 
-        mockMvc.perform(get("/api/jobs/share-link").param("id", "42")
+        mockMvc.perform(get("/api/enterprise/jobs/share-link").param("id", "42")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.jobId").value(42))

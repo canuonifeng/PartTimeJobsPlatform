@@ -25,7 +25,7 @@ import jakarta.annotation.Resource;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/worker/auth")
 public class AuthController {
 
     @Resource

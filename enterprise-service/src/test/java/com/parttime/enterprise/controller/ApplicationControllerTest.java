@@ -58,7 +58,7 @@ class ApplicationControllerTest {
 
         when(applicationService.getApplicationsByJob(1L, 100L, null, null, 1, 20)).thenReturn(new PageVO<>(List.of(app), 1));
 
-        mockMvc.perform(get("/api/applications").param("jobId", "100"))
+        mockMvc.perform(get("/api/enterprise/applications").param("jobId", "100"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.records[0].id").value(1L))
                 .andExpect(jsonPath("$.data.records[0].workerPhone").value("13800000000"))
@@ -76,7 +76,7 @@ class ApplicationControllerTest {
 
         when(applicationService.getApplicationsByJob(1L, 100L, null, null, 2, 20)).thenReturn(new PageVO<>(List.of(app), 1));
 
-        mockMvc.perform(get("/api/applications").param("jobId", "100").param("page", "2").param("pageSize", "20"))
+        mockMvc.perform(get("/api/enterprise/applications").param("jobId", "100").param("page", "2").param("pageSize", "20"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.records[0].id").value(1L));
     }
@@ -91,7 +91,7 @@ class ApplicationControllerTest {
 
         when(applicationService.acceptApplication(1L)).thenReturn(app);
 
-        mockMvc.perform(post("/api/applications/accept")
+        mockMvc.perform(post("/api/enterprise/applications/accept")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"applicationId\":1}"))
                 .andExpect(status().isOk())
@@ -108,7 +108,7 @@ class ApplicationControllerTest {
 
         when(applicationService.rejectApplication(1L)).thenReturn(app);
 
-        mockMvc.perform(post("/api/applications/reject")
+        mockMvc.perform(post("/api/enterprise/applications/reject")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"applicationId\":1}"))
                 .andExpect(status().isOk())
@@ -120,7 +120,7 @@ class ApplicationControllerTest {
         when(applicationService.acceptApplication(anyLong()))
                 .thenThrow(new BusinessException("岗位已录满"));
 
-        mockMvc.perform(post("/api/applications/accept")
+        mockMvc.perform(post("/api/enterprise/applications/accept")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"applicationId\":1}"))
                 .andExpect(status().isBadRequest());

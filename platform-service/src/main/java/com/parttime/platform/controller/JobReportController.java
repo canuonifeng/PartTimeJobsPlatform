@@ -18,7 +18,7 @@ import jakarta.annotation.Resource;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/job-reports")
+@RequestMapping("/api/admin/job-reports")
 public class JobReportController {
 
     @Resource

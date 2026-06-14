@@ -17,7 +17,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/templates")
+@RequestMapping("/api/enterprise/templates")
 public class JobTemplateController {
 
     @Resource

@@ -51,7 +51,7 @@ class JobCategoryControllerTest {
 
         when(jobCategoryService.getAllCategories()).thenReturn(List.of(cat));
 
-        mockMvc.perform(get("/api/job-categories"))
+        mockMvc.perform(get("/api/enterprise/job-categories"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].name").value("Parent"));
 
@@ -71,7 +71,7 @@ class JobCategoryControllerTest {
 
         when(jobCategoryService.createCategory(any(JobCategoryCmd.class))).thenReturn(response);
 
-        mockMvc.perform(post("/api/job-categories")
+        mockMvc.perform(post("/api/enterprise/job-categories")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -91,7 +91,7 @@ class JobCategoryControllerTest {
 
         request.setId(1L);
 
-        mockMvc.perform(post("/api/job-categories/update")
+        mockMvc.perform(post("/api/enterprise/job-categories/update")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -100,7 +100,7 @@ class JobCategoryControllerTest {
 
     @Test
     void deleteCategory_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(post("/api/job-categories/delete")
+        mockMvc.perform(post("/api/enterprise/job-categories/delete")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"id\":1}"))
                 .andExpect(status().isOk());

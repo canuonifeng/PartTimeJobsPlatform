@@ -59,7 +59,7 @@ class NotificationControllerTest {
 
         when(notificationService.getMyNotifications(1L, 1, 20)).thenReturn(new PageVO<>(List.of(response), 1));
 
-        mockMvc.perform(get("/api/notifications/my"))
+        mockMvc.perform(get("/api/worker/notifications/my"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.total").value(1))
                 .andExpect(jsonPath("$.data.records.length()").value(1))
@@ -78,7 +78,7 @@ class NotificationControllerTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("1", null, List.of()));
 
-        mockMvc.perform(post("/api/notifications/read")
+        mockMvc.perform(post("/api/worker/notifications/read")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"id\":10}"))
                 .andExpect(status().isOk());
@@ -88,7 +88,7 @@ class NotificationControllerTest {
 
     @Test
     void getMyNotifications_withoutAuth_shouldReturn401() throws Exception {
-        mockMvc.perform(get("/api/notifications/my"))
+        mockMvc.perform(get("/api/worker/notifications/my"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(401));
     }
@@ -100,7 +100,7 @@ class NotificationControllerTest {
 
         when(notificationService.getMyNotifications(2L, 1, 20)).thenReturn(new PageVO<>(List.of(), 0));
 
-        mockMvc.perform(get("/api/notifications/my"))
+        mockMvc.perform(get("/api/worker/notifications/my"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.records").isArray())
                 .andExpect(jsonPath("$.data.records.length()").value(0))

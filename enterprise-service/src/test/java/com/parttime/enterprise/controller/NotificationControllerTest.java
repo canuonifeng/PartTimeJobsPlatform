@@ -63,7 +63,7 @@ class NotificationControllerTest {
         when(notificationService.getNotificationsByRecipient(100L, "ENTERPRISE"))
                 .thenReturn(List.of(response));
 
-        mockMvc.perform(get("/api/notifications")
+        mockMvc.perform(get("/api/enterprise/notifications")
                         .param("recipientId", "100")
                         .param("recipientType", "ENTERPRISE"))
                 .andExpect(status().isOk())
@@ -77,7 +77,7 @@ class NotificationControllerTest {
         when(notificationService.getNotificationsByRecipient(100L, "ENTERPRISE"))
                 .thenReturn(List.of());
 
-        mockMvc.perform(get("/api/notifications")
+        mockMvc.perform(get("/api/enterprise/notifications")
                         .param("recipientId", "100"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
@@ -95,7 +95,7 @@ class NotificationControllerTest {
         when(notificationService.getNotificationTemplates("APPLICATION_RECEIVED", null))
                 .thenReturn(List.of(template));
 
-        mockMvc.perform(get("/api/notification-templates")
+        mockMvc.perform(get("/api/enterprise/notification-templates")
                         .param("type", "APPLICATION_RECEIVED"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1))
@@ -107,7 +107,7 @@ class NotificationControllerTest {
     void getTemplates_shouldReturnEmptyListWhenNone() throws Exception {
         when(notificationService.getNotificationTemplates("UNKNOWN", null)).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/notification-templates")
+        mockMvc.perform(get("/api/enterprise/notification-templates")
                         .param("type", "UNKNOWN"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
@@ -131,7 +131,7 @@ class NotificationControllerTest {
         request.setTitleTemplate("New Job");
         request.setContentTemplate("Job {jobTitle} posted");
 
-        mockMvc.perform(post("/api/notification-templates")
+        mockMvc.perform(post("/api/enterprise/notification-templates")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -154,7 +154,7 @@ class NotificationControllerTest {
 
         request.setId(1L);
 
-        mockMvc.perform(post("/api/notification-templates/update")
+        mockMvc.perform(post("/api/enterprise/notification-templates/update")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -163,7 +163,7 @@ class NotificationControllerTest {
 
     @Test
     void deleteTemplate_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(post("/api/notification-templates/delete")
+        mockMvc.perform(post("/api/enterprise/notification-templates/delete")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"id\":1}"))
                 .andExpect(status().isOk());

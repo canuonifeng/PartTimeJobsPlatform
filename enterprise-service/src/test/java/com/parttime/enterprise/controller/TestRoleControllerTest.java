@@ -20,28 +20,28 @@ class TestRoleControllerTest {
 
     @Test
     void adminEndpoint_shouldReturnOk() throws Exception {
-        mockMvc.perform(get("/api/test/admin"))
+        mockMvc.perform(get("/api/enterprise/test/admin"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("{\"code\":200,\"message\":\"\",\"data\":\"admin ok\"}"));
     }
 
     @Test
     void hrEndpoint_shouldReturnOk() throws Exception {
-        mockMvc.perform(get("/api/test/hr"))
+        mockMvc.perform(get("/api/enterprise/test/hr"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("{\"code\":200,\"message\":\"\",\"data\":\"hr ok\"}"));
     }
 
     @Test
     void managerEndpoint_shouldReturnOk() throws Exception {
-        mockMvc.perform(get("/api/test/manager"))
+        mockMvc.perform(get("/api/enterprise/test/manager"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("{\"code\":200,\"message\":\"\",\"data\":\"manager ok\"}"));
     }
 
     @Test
     void financeEndpoint_shouldReturnOk() throws Exception {
-        mockMvc.perform(get("/api/test/finance"))
+        mockMvc.perform(get("/api/enterprise/test/finance"))
                 .andExpect(status().isOk())
                 .andExpect(content().json("{\"code\":200,\"message\":\"\",\"data\":\"finance ok\"}"));
     }

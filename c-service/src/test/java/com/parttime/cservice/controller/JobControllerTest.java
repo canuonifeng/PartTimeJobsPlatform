@@ -78,7 +78,7 @@ class JobControllerTest {
         when(jobService.searchJobs(null, null, null, null, null, null, null))
                 .thenReturn(List.of(job1, job2));
 
-        mockMvc.perform(get("/api/jobs"))
+        mockMvc.perform(get("/api/worker/jobs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data.length()").value(2))
@@ -100,7 +100,7 @@ class JobControllerTest {
         when(jobService.searchJobs(eq("engineer"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull()))
                 .thenReturn(List.of(job));
 
-        mockMvc.perform(get("/api/jobs?keyword=engineer"))
+        mockMvc.perform(get("/api/worker/jobs?keyword=engineer"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].title").value("Software Engineer"));
@@ -136,7 +136,7 @@ class JobControllerTest {
 
         when(jobService.getJobDetail(1L, null)).thenReturn(detail);
 
-        mockMvc.perform(get("/api/jobs/detail?id=1"))
+        mockMvc.perform(get("/api/worker/jobs/detail?id=1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.id").value(1))
                 .andExpect(jsonPath("$.data.title").value("Software Engineer"))
@@ -160,7 +160,7 @@ class JobControllerTest {
 
         when(jobService.getJobDetail(1L, 1L)).thenReturn(detail);
 
-        mockMvc.perform(get("/api/jobs/detail?id=1"))
+        mockMvc.perform(get("/api/worker/jobs/detail?id=1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.applyStatus").value("已报名"));
     }
@@ -175,7 +175,7 @@ class JobControllerTest {
         when(profileService.getCompleteness(1L)).thenReturn(new ProfileCompletenessVO(true, List.of()));
         when(jobService.applyForJob(1L, 1L, List.of(1L, 2L))).thenReturn(true);
 
-        mockMvc.perform(post("/api/jobs/apply?id=1")
+        mockMvc.perform(post("/api/worker/jobs/apply?id=1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -186,7 +186,7 @@ class JobControllerTest {
     void applyForJob_withoutAuth_shouldReturn401() throws Exception {
         ApplyJobCmd request = new ApplyJobCmd(1L, List.of(1L));
 
-        mockMvc.perform(post("/api/jobs/apply?id=1")
+        mockMvc.perform(post("/api/worker/jobs/apply?id=1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -215,7 +215,7 @@ class JobControllerTest {
 
         when(jobService.getMySignups(1L, 1, 10)).thenReturn(new PageVO<>(List.of(signup), 1));
 
-        mockMvc.perform(get("/api/jobs/applications/my?page=1&pageSize=10"))
+        mockMvc.perform(get("/api/worker/jobs/applications/my?page=1&pageSize=10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.total").value(1))
                 .andExpect(jsonPath("$.data.records.length()").value(1))
@@ -226,7 +226,7 @@ class JobControllerTest {
 
     @Test
     void getMySignups_withoutAuth_shouldReturn401() throws Exception {
-        mockMvc.perform(get("/api/jobs/applications/my"))
+        mockMvc.perform(get("/api/worker/jobs/applications/my"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(401));
     }
@@ -245,7 +245,7 @@ class JobControllerTest {
 
         when(jobService.getApplicationStatus(1L, 1L)).thenReturn(List.of(app));
 
-        mockMvc.perform(get("/api/jobs/application?id=1"))
+        mockMvc.perform(get("/api/worker/jobs/application?id=1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data[0].id").value(10))
@@ -254,7 +254,7 @@ class JobControllerTest {
 
     @Test
     void getApplicationStatus_withoutAuth_shouldReturn401() throws Exception {
-        mockMvc.perform(get("/api/jobs/application?id=1"))
+        mockMvc.perform(get("/api/worker/jobs/application?id=1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(401));
     }

@@ -12,7 +12,7 @@ class SecurityConfigTest {
     void corsConfiguration_shouldAllowServerIpWithAnyPort() {
         SecurityConfig config = new SecurityConfig(new JwtTokenProvider("parttime-cservice-jwt-secret-key-must-be-at-least-256-bits", 86400000));
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/api/profile");
+        request.setRequestURI("/api/worker/profile");
 
         CorsConfiguration cors = config.corsConfigurationSource().getCorsConfiguration(request);
 

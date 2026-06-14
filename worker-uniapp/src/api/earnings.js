@@ -2,21 +2,21 @@ import request from './request'
 
 export function getEarningsSummary() {
   return request({
-    url: '/api/earnings/summary',
+    url: '/earnings/summary',
     method: 'GET'
   })
 }
 
 export function getMyWithdrawals() {
   return request({
-    url: '/api/withdrawals/my',
+    url: '/withdrawals/my',
     method: 'GET'
   })
 }
 
 export function createWithdrawal(data) {
   return request({
-    url: '/api/withdrawals',
+    url: '/withdrawals',
     method: 'POST',
     data
   })
@@ -24,7 +24,7 @@ export function createWithdrawal(data) {
 
 export function getEarningsTransactions(params) {
   return request({
-    url: '/api/earnings/transactions',
+    url: '/earnings/transactions',
     method: 'GET',
     data: params
   })
@@ -32,21 +32,21 @@ export function getEarningsTransactions(params) {
 
 export function getWithdrawalMethods() {
   return request({
-    url: '/api/withdrawal-methods',
+    url: '/withdrawal-methods',
     method: 'GET'
   })
 }
 
 export function getBankCards() {
   return request({
-    url: '/api/bank-cards',
+    url: '/bank-cards',
     method: 'GET'
   })
 }
 
 export function getReferralRewards() {
   return request({
-    url: '/api/referral/rewards',
+    url: '/referral/rewards',
     method: 'GET'
   })
 }

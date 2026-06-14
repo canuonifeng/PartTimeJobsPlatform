@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.annotation.Resource;
 
 @RestController
-@RequestMapping("/api/home")
+@RequestMapping("/api/worker/home")
 public class HomeController {
 
     @Resource

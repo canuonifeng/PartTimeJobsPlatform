@@ -65,7 +65,7 @@ class AuthControllerTest {
         when(workerService.register(any(RegisterCmd.class))).thenReturn(sampleWorker);
         when(jwtTokenProvider.generateToken(eq("1"), any())).thenReturn("test.jwt.token");
 
-        mockMvc.perform(post("/api/auth/register")
+        mockMvc.perform(post("/api/worker/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -79,7 +79,7 @@ class AuthControllerTest {
         when(workerService.login("wx_test_code")).thenReturn("test.jwt.token");
         when(jwtTokenProvider.getUserIdFromToken("test.jwt.token")).thenReturn("1");
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/worker/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"wechatCode\":\"wx_test_code\"}"))
                 .andExpect(status().isOk())
@@ -95,7 +95,7 @@ class AuthControllerTest {
 
         when(workerService.getWorkerById(1L)).thenReturn(sampleWorker);
 
-        mockMvc.perform(get("/api/auth/profile"))
+        mockMvc.perform(get("/api/worker/auth/profile"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.id").value(1))
@@ -107,7 +107,7 @@ class AuthControllerTest {
     void getProfile_shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
         SecurityContextHolder.clearContext();
 
-        mockMvc.perform(get("/api/auth/profile"))
+        mockMvc.perform(get("/api/worker/auth/profile"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(401));
     }
@@ -118,7 +118,7 @@ class AuthControllerTest {
 
         when(workerService.loginWithWechat("test_code")).thenReturn(wechatResponse);
 
-        mockMvc.perform(post("/api/auth/wechat-login")
+        mockMvc.perform(post("/api/worker/auth/wechat-login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"code\":\"test_code\"}"))
                 .andExpect(status().isOk())
@@ -145,7 +145,7 @@ class AuthControllerTest {
 
         when(workerService.updateProfile(eq(1L), any(RegisterCmd.class))).thenReturn(updatedWorker);
 
-        mockMvc.perform(post("/api/auth/profile")
+        mockMvc.perform(post("/api/worker/auth/profile")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateRequest)))
                 .andExpect(status().isOk())

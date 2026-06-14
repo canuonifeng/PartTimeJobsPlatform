@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 
 @RestController
-@RequestMapping("/api/settlement")
+@RequestMapping("/api/enterprise/settlement")
 public class SettlementController {
 
     @Resource

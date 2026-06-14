@@ -50,7 +50,7 @@ class AuthControllerTest {
         when(authenticationManager.authenticate(any())).thenReturn(auth);
         when(jwtTokenProvider.generateToken("admin", List.of())).thenReturn("test-token");
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/admin/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"admin\",\"password\":\"admin123\"}"))
                 .andExpect(status().isOk())
@@ -63,7 +63,7 @@ class AuthControllerTest {
         when(authenticationManager.authenticate(any()))
                 .thenThrow(new BadCredentialsException("Bad credentials"));
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/admin/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"admin\",\"password\":\"wrong\"}"))
                 .andExpect(status().isOk())

@@ -20,7 +20,7 @@ import jakarta.annotation.Resource;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/worker")
 public class ProfileController {
 
     @Resource

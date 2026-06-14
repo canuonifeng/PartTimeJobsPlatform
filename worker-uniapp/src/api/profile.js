@@ -2,21 +2,21 @@ import request from './request'
 
 export function getProfile() {
   return request({
-    url: '/api/profile',
+    url: '/profile',
     method: 'GET'
   })
 }
 
 export function getProfileDashboard() {
   return request({
-    url: '/api/profile/dashboard',
+    url: '/profile/dashboard',
     method: 'GET'
   })
 }
 
 export function updateProfile(data) {
   return request({
-    url: '/api/profile',
+    url: '/profile',
     method: 'POST',
     data
   })
@@ -24,7 +24,7 @@ export function updateProfile(data) {
 
 export function getProfileCompleteness() {
   return request({
-    url: '/api/profile/completeness',
+    url: '/profile/completeness',
     method: 'GET'
   })
 }

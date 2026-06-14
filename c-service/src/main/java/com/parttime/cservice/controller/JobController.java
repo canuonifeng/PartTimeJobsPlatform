@@ -24,7 +24,7 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/jobs")
+@RequestMapping("/api/worker/jobs")
 public class JobController {
 
     @Resource

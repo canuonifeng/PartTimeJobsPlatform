@@ -1,4 +1,5 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+const BASE_URL = `${API_BASE_URL}/enterprise`
 
 export function request(method, url, data = null) {
   const token = uni.getStorageSync('token')

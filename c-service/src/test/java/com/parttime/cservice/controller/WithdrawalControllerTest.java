@@ -66,7 +66,7 @@ class WithdrawalControllerTest {
         request.put("amount", "500.00");
         request.put("withdrawalMethod", "WECHAT");
 
-        mockMvc.perform(post("/api/withdrawals")
+        mockMvc.perform(post("/api/worker/withdrawals")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -86,7 +86,7 @@ class WithdrawalControllerTest {
         request.put("amount", "999999.00");
         request.put("withdrawalMethod", "WECHAT");
 
-        mockMvc.perform(post("/api/withdrawals")
+        mockMvc.perform(post("/api/worker/withdrawals")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -100,7 +100,7 @@ class WithdrawalControllerTest {
         Map<String, Object> request = new HashMap<>();
         request.put("amount", "100.00");
 
-        mockMvc.perform(post("/api/withdrawals")
+        mockMvc.perform(post("/api/worker/withdrawals")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -120,7 +120,7 @@ class WithdrawalControllerTest {
 
         when(withdrawalService.getWithdrawalHistory(1L)).thenReturn(List.of(record));
 
-        mockMvc.perform(get("/api/withdrawals/my"))
+        mockMvc.perform(get("/api/worker/withdrawals/my"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].status").value("PENDING"));
@@ -130,7 +130,7 @@ class WithdrawalControllerTest {
     void getWithdrawalHistory_shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
         SecurityContextHolder.clearContext();
 
-        mockMvc.perform(get("/api/withdrawals/my"))
+        mockMvc.perform(get("/api/worker/withdrawals/my"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(401));
     }
@@ -149,7 +149,7 @@ class WithdrawalControllerTest {
 
         when(withdrawalService.getTransactions(1L, 1, 20)).thenReturn(new PageVO<>(List.of(transaction), 1));
 
-        mockMvc.perform(get("/api/earnings/transactions?page=1&pageSize=20"))
+        mockMvc.perform(get("/api/worker/earnings/transactions?page=1&pageSize=20"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.records[0].amount").value(120.00))
                 .andExpect(jsonPath("$.data.records[0].type").value("EARNINGS"))
@@ -168,7 +168,7 @@ class WithdrawalControllerTest {
 
         when(withdrawalService.getEarningsSummary(1L)).thenReturn(summary);
 
-        mockMvc.perform(get("/api/earnings/summary"))
+        mockMvc.perform(get("/api/worker/earnings/summary"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.totalEarned").value(1000.00))
                 .andExpect(jsonPath("$.data.totalWithdrawn").value(400.00))
@@ -179,7 +179,7 @@ class WithdrawalControllerTest {
     void getEarningsSummary_shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
         SecurityContextHolder.clearContext();
 
-        mockMvc.perform(get("/api/earnings/summary"))
+        mockMvc.perform(get("/api/worker/earnings/summary"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(401));
     }
@@ -195,7 +195,7 @@ class WithdrawalControllerTest {
 
         when(withdrawalService.getAvailableMethods(1L)).thenReturn(List.of(method));
 
-        mockMvc.perform(get("/api/withdrawal-methods"))
+        mockMvc.perform(get("/api/worker/withdrawal-methods"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].code").value("WECHAT"));
@@ -205,7 +205,7 @@ class WithdrawalControllerTest {
     void getAvailableMethods_shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
         SecurityContextHolder.clearContext();
 
-        mockMvc.perform(get("/api/withdrawal-methods"))
+        mockMvc.perform(get("/api/worker/withdrawal-methods"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(401));
     }
@@ -222,7 +222,7 @@ class WithdrawalControllerTest {
 
         when(withdrawalService.getBankCards(1L)).thenReturn(List.of(card));
 
-        mockMvc.perform(get("/api/bank-cards"))
+        mockMvc.perform(get("/api/worker/bank-cards"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].bankName").value("中国银行"));
@@ -232,7 +232,7 @@ class WithdrawalControllerTest {
     void getBankCards_shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
         SecurityContextHolder.clearContext();
 
-        mockMvc.perform(get("/api/bank-cards"))
+        mockMvc.perform(get("/api/worker/bank-cards"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(401));
     }

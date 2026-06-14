@@ -47,7 +47,7 @@ class JobReportControllerTest {
     void listJobReports_shouldReturnList() throws Exception {
         when(jobReportService.getJobReports(null)).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/job-reports"))
+        mockMvc.perform(get("/api/admin/job-reports"))
                 .andExpect(status().isOk());
 
         verify(jobReportService).getJobReports(null);
@@ -58,7 +58,7 @@ class JobReportControllerTest {
     void listJobReports_withStatus_shouldReturnFiltered() throws Exception {
         when(jobReportService.getJobReports("PENDING")).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/job-reports?status=PENDING"))
+        mockMvc.perform(get("/api/admin/job-reports?status=PENDING"))
                 .andExpect(status().isOk());
 
         verify(jobReportService).getJobReports("PENDING");
@@ -74,7 +74,7 @@ class JobReportControllerTest {
 
         when(jobReportService.getJobReport(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/job-reports").param("id", "1"))
+        mockMvc.perform(get("/api/admin/job-reports").param("id", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.reason").value("Spam"));
 
@@ -92,7 +92,7 @@ class JobReportControllerTest {
 
         String json = "{\"id\":1,\"remark\":\"No violation\"}";
 
-        mockMvc.perform(post("/api/job-reports/dismiss")
+        mockMvc.perform(post("/api/admin/job-reports/dismiss")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
@@ -112,7 +112,7 @@ class JobReportControllerTest {
 
         String json = "{\"id\":1,\"remark\":\"Violates terms\"}";
 
-        mockMvc.perform(post("/api/job-reports/ban")
+        mockMvc.perform(post("/api/admin/job-reports/ban")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
@@ -123,7 +123,7 @@ class JobReportControllerTest {
 
     @Test
     void listJobReports_withoutAuth_shouldReturn401() throws Exception {
-        mockMvc.perform(get("/api/job-reports"))
+        mockMvc.perform(get("/api/admin/job-reports"))
                 .andExpect(status().isUnauthorized());
     }
 }

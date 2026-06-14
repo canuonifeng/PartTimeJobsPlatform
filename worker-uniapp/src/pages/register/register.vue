@@ -100,7 +100,7 @@ async function handleSendCode() {
   codeSending.value = true
   try {
     await request({
-      url: '/api/auth/send-code',
+      url: '/auth/send-code',
       method: 'POST',
       data: { phone: phone.value }
     })
@@ -137,7 +137,7 @@ async function handleRegister() {
   registerLoading.value = true
   try {
     const data = await request({
-      url: '/api/auth/register',
+      url: '/auth/register',
       method: 'POST',
       data: {
         name: name.value,

@@ -19,7 +19,7 @@ import jakarta.annotation.Resource;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/admin/auth")
 public class AuthController {
 
     @Resource

@@ -17,7 +17,7 @@ import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/accounts")
+@RequestMapping("/api/enterprise/accounts")
 public class AccountController {
 
     @Resource

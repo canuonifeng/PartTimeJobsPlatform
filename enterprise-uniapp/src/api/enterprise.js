@@ -1,9 +1,9 @@
 import { request } from './request'
 
 export function getEnterpriseInfo() {
-  return request('GET', '/enterprise')
+  return request('GET', '')
 }
 
 export function updateCompanyLogo(companyLogo) {
-  return request('POST', '/enterprise/logo', { companyLogo })
+  return request('POST', '/logo', { companyLogo })
 }

@@ -40,10 +40,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/api/auth/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/api/jobs/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/api/job-categories")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/api/**")).authenticated()
+                        .requestMatchers(new AntPathRequestMatcher("/api/worker/auth/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/worker/jobs/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/worker/job-categories")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/worker/**")).authenticated()
                         .anyRequest().permitAll()
                 )
                 .exceptionHandling(ex -> ex

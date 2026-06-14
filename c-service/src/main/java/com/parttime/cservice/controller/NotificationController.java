@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.annotation.Resource;
 
 @RestController
-@RequestMapping("/api/notifications")
+@RequestMapping("/api/worker/notifications")
 public class NotificationController {
 
     @Resource

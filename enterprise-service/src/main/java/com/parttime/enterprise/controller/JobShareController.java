@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/jobs")
+@RequestMapping("/api/enterprise/jobs")
 public class JobShareController {
 
     private final JobShareService jobShareService;

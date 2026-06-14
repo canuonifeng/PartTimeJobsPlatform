@@ -2,7 +2,7 @@ import request from './request'
 
 export function getJobs(params) {
   return request({
-    url: '/api/jobs',
+    url: '/jobs',
     method: 'GET',
     data: params
   })
@@ -10,14 +10,14 @@ export function getJobs(params) {
 
 export function getCategories() {
   return request({
-    url: '/api/job-categories',
+    url: '/job-categories',
     method: 'GET'
   })
 }
 
 export function getJobDetail(id) {
   return request({
-    url: '/api/jobs/detail',
+    url: '/jobs/detail',
     method: 'GET',
     data: { id }
   })
@@ -25,7 +25,7 @@ export function getJobDetail(id) {
 
 export function applyJob(id, data) {
   return request({
-    url: '/api/jobs/apply',
+    url: '/jobs/apply',
     method: 'POST',
     data: { ...data, jobId: id }
   })
@@ -33,7 +33,7 @@ export function applyJob(id, data) {
 
 export function getMySignups(params) {
   return request({
-    url: '/api/jobs/applications/my',
+    url: '/jobs/applications/my',
     method: 'GET',
     data: params
   })

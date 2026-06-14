@@ -64,7 +64,7 @@ class ReferralControllerTest {
         link.setLink("https://worker.example.com/invite?code=ABC12345");
         when(referralService.getReferralLink(1L)).thenReturn(link);
 
-        mockMvc.perform(get("/api/referral/link"))
+        mockMvc.perform(get("/api/worker/referral/link"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("ABC12345"))
                 .andExpect(jsonPath("$.link").value("https://worker.example.com/invite?code=ABC12345"));
@@ -72,7 +72,7 @@ class ReferralControllerTest {
 
     @Test
     void getReferralLink_withoutAuth_shouldReturn401() throws Exception {
-        mockMvc.perform(get("/api/referral/link"))
+        mockMvc.perform(get("/api/worker/referral/link"))
                 .andExpect(status().isOk());
     }
 
@@ -82,7 +82,7 @@ class ReferralControllerTest {
 
         when(referralService.getReferralPoster(1L)).thenReturn("https://cdn.example.com/poster.jpg");
 
-        mockMvc.perform(get("/api/referral/poster"))
+        mockMvc.perform(get("/api/worker/referral/poster"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.posterUrl").value("https://cdn.example.com/poster.jpg"));
     }
@@ -97,7 +97,7 @@ class ReferralControllerTest {
         stats.setPendingRewardAmount(new BigDecimal("50"));
         when(referralService.getReferralStats(1L)).thenReturn(stats);
 
-        mockMvc.perform(get("/api/referral/stats"))
+        mockMvc.perform(get("/api/worker/referral/stats"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.totalReferees").value(5))
                 .andExpect(jsonPath("$.totalRewardAmount").value(100))
@@ -115,7 +115,7 @@ class ReferralControllerTest {
         referee.setRewardStatus("NOT_QUALIFIED");
         when(referralService.getReferees(1L, 1, 10)).thenReturn(new PageVO<>(List.of(referee), 1));
 
-        mockMvc.perform(get("/api/referral/referees"))
+        mockMvc.perform(get("/api/worker/referral/referees"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.records.length()").value(1))
                 .andExpect(jsonPath("$.records[0].name").value("测试用户"))
@@ -129,7 +129,7 @@ class ReferralControllerTest {
         PageVO<com.parttime.cservice.pojo.vo.ReferralRewardVO> emptyPage = new PageVO<>(List.of(), 0);
         when(referralService.getReferralRewards(1L, 1, 10)).thenReturn(emptyPage);
 
-        mockMvc.perform(get("/api/referral/rewards"))
+        mockMvc.perform(get("/api/worker/referral/rewards"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.records").isArray())
                 .andExpect(jsonPath("$.records.length()").value(0))
@@ -145,7 +145,7 @@ class ReferralControllerTest {
         config.setConfigValue("20");
         when(referralService.getConfig()).thenReturn(List.of(config));
 
-        mockMvc.perform(get("/api/referral/config"))
+        mockMvc.perform(get("/api/worker/referral/config"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].configKey").value("reward_amount"))
                 .andExpect(jsonPath("$[0].configValue").value("20"));
@@ -160,7 +160,7 @@ class ReferralControllerTest {
         config.setConfigValue("50");
         config.setDescription("奖励金额");
 
-        mockMvc.perform(post("/api/referral/config")
+        mockMvc.perform(post("/api/worker/referral/config")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(java.util.Map.of("configs", List.of(config)))))
                 .andExpect(status().isOk());
@@ -174,7 +174,7 @@ class ReferralControllerTest {
         config.setConfigKey("reward_amount");
         config.setConfigValue("50");
 
-        mockMvc.perform(post("/api/referral/config")
+        mockMvc.perform(post("/api/worker/referral/config")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(java.util.Map.of("configs", List.of(config)))))
                 .andExpect(status().isOk());

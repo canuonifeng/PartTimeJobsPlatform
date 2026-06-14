@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/files")
+@RequestMapping("/api/enterprise/files")
 public class FileController {
 
     @Value("${server.port:8081}")

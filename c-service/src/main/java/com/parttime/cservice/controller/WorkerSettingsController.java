@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/settings")
+@RequestMapping("/api/worker/settings")
 public class WorkerSettingsController {
     @Resource
     private WorkerSettingsService workerSettingsService;

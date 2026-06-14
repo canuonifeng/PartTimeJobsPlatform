@@ -51,7 +51,7 @@ class JobTagControllerTest {
 
         when(jobTagService.getActiveGroups()).thenReturn(List.of(group));
 
-        mockMvc.perform(get("/api/job-tags"))
+        mockMvc.perform(get("/api/enterprise/job-tags"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data[0].name").value("结算周期"))
                 .andExpect(jsonPath("$.data[0].tags[0].name").value("日结"));

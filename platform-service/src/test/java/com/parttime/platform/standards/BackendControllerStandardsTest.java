@@ -13,6 +13,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BackendControllerStandardsTest {
 
+    private static final String API_PREFIX = "/api/admin";
+
     @Test
     void controllersUseProjectHttpContract() throws IOException {
         Path controllerDir = Path.of("src/main/java/com/parttime/platform/controller");
@@ -31,6 +33,10 @@ class BackendControllerStandardsTest {
                 String line = lines.get(i);
                 if (line.contains("@PutMapping") || line.contains("@DeleteMapping") || line.contains("@PatchMapping")) {
                     violations.add(path + ":" + (i + 1) + " only @GetMapping/@PostMapping are allowed");
+                }
+                if (line.matches(".*@(RequestMapping|GetMapping|PostMapping)\\(\\\"/api.*")
+                        && !line.contains("\"" + API_PREFIX)) {
+                    violations.add(path + ":" + (i + 1) + " platform APIs must start with " + API_PREFIX);
                 }
                 if (line.contains("@PathVariable")) {
                     violations.add(path + ":" + (i + 1) + " @PathVariable is not allowed");

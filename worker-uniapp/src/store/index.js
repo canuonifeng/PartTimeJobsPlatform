@@ -41,7 +41,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function sendSmsCode(phone) {
     await request({
-      url: '/api/auth/send-code',
+      url: '/auth/send-code',
       method: 'POST',
       data: { phone }
     })
@@ -49,7 +49,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function phoneLogin(phone, code) {
     const data = await request({
-      url: '/api/auth/phone-login',
+      url: '/auth/phone-login',
       method: 'POST',
       data: { phone, code }
     })
@@ -67,7 +67,7 @@ export const useAuthStore = defineStore('auth', () => {
           const code = loginRes.code
           try {
             const data = await request({
-              url: '/api/auth/wechat-login',
+              url: '/auth/wechat-login',
               method: 'POST',
               data: { code }
             })
@@ -120,7 +120,7 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return null
     try {
       const data = await request({
-        url: '/api/auth/profile',
+        url: '/auth/profile',
         method: 'GET'
       })
       workerInfo.value = data

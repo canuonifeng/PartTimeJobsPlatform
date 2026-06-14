@@ -29,7 +29,7 @@ onShow(() => {
 
 onMounted(async () => {
   try {
-    const res = await request('GET', '/enterprise')
+    const res = await request('GET', '')
     companyName.value = res?.companyName || ''
   } catch {}
 })

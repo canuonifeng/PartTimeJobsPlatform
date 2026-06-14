@@ -1,21 +1,21 @@
 import request from './request'
 
 export function listWorkers(params) {
-  return request.post('/admin/workers/list', params)
+  return request.post('/workers/list', params)
 }
 
 export function detailWorker(id) {
-  return request.post('/admin/workers/detail', { id })
+  return request.post('/workers/detail', { id })
 }
 
 export function updateWorker(data) {
-  return request.post('/admin/workers/update', data)
+  return request.post('/workers/update', data)
 }
 
 export function banWorker(id) {
-  return request.post('/admin/workers/ban', { id })
+  return request.post('/workers/ban', { id })
 }
 
 export function unbanWorker(id) {
-  return request.post('/admin/workers/unban', { id })
+  return request.post('/workers/unban', { id })
 }

@@ -65,7 +65,7 @@ class ProfileControllerTest {
 
         when(profileService.getProfile(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/profile"))
+        mockMvc.perform(get("/api/worker/profile"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.name").value("John"));
     }
@@ -73,7 +73,7 @@ class ProfileControllerTest {
     @Test
     void getProfile_shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
         SecurityContextHolder.clearContext();
-        mockMvc.perform(get("/api/profile"))
+        mockMvc.perform(get("/api/worker/profile"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(401));
     }
@@ -93,7 +93,7 @@ class ProfileControllerTest {
         request.setName("John Updated");
         request.setPhone("13900139000");
 
-        mockMvc.perform(post("/api/profile")
+        mockMvc.perform(post("/api/worker/profile")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -116,7 +116,7 @@ class ProfileControllerTest {
         request.setFileName("resume.pdf");
         request.setFileUrl("http://files/resume.pdf");
 
-        mockMvc.perform(post("/api/profile/resumes")
+        mockMvc.perform(post("/api/worker/profile/resumes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -134,7 +134,7 @@ class ProfileControllerTest {
 
         when(profileService.getResumes(1L)).thenReturn(List.of(r1));
 
-        mockMvc.perform(get("/api/profile/resumes"))
+        mockMvc.perform(get("/api/worker/profile/resumes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.length()").value(1));
     }
@@ -167,7 +167,7 @@ class ProfileControllerTest {
         when(withdrawalService.getEarningsSummary(1L)).thenReturn(earnings);
         when(workerRealNameAuthService.getStatus(1L)).thenReturn(realNameAuth);
 
-        mockMvc.perform(get("/api/profile/dashboard"))
+        mockMvc.perform(get("/api/worker/profile/dashboard"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.profile.name").value("John"))
                 .andExpect(jsonPath("$.data.stats.monthHours").value(12.50))
@@ -179,7 +179,7 @@ class ProfileControllerTest {
     @Test
     void getDashboard_shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
         SecurityContextHolder.clearContext();
-        mockMvc.perform(get("/api/profile/dashboard"))
+        mockMvc.perform(get("/api/worker/profile/dashboard"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(401));
     }
@@ -191,7 +191,7 @@ class ProfileControllerTest {
 
         when(profileService.getProfile(1L)).thenThrow(new RuntimeException("Profile not found"));
 
-        mockMvc.perform(get("/api/profile"))
+        mockMvc.perform(get("/api/worker/profile"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(1));
     }

@@ -49,7 +49,7 @@ class AuthControllerTest {
 
     @Test
     void login_withValidCredentials_shouldReturn200WithToken() throws Exception {
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/enterprise/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"admin\",\"password\":\"admin123\"}"))
                 .andExpect(status().isOk())
@@ -58,7 +58,7 @@ class AuthControllerTest {
 
     @Test
     void login_withInvalidCredentials_shouldReturn401() throws Exception {
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/enterprise/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"username\":\"admin\",\"password\":\"wrong\"}"))
                 .andExpect(status().isOk())

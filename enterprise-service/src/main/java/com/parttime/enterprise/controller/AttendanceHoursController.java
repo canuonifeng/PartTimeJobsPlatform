@@ -17,7 +17,7 @@ import javax.annotation.Resource;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/api/attendance/hours")
+@RequestMapping("/api/enterprise/attendance/hours")
 public class AttendanceHoursController {
 
     @Resource

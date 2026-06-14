@@ -61,7 +61,7 @@ class AttendanceControllerTest {
         when(attendanceService.getMyShifts(eq(1L), any(), any(), any(), any())).thenReturn(List.of(shift));
         when(attendanceService.countMyShifts(eq(1L), any(), any())).thenReturn(1L);
 
-        mockMvc.perform(get("/api/schedule-shifts/my"))
+        mockMvc.perform(get("/api/worker/schedule-shifts/my"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.records.length()").value(1))
                 .andExpect(jsonPath("$.data.records[0].jobTitle").value("Helper"))
@@ -71,7 +71,7 @@ class AttendanceControllerTest {
     @Test
     void getMyShifts_shouldReturnUnauthorizedWhenNotAuthenticated() throws Exception {
         SecurityContextHolder.clearContext();
-        mockMvc.perform(get("/api/schedule-shifts/my"))
+        mockMvc.perform(get("/api/worker/schedule-shifts/my"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(401));
     }
@@ -94,7 +94,7 @@ class AttendanceControllerTest {
         request.setLat(new java.math.BigDecimal("31.2304"));
         request.setLng(new java.math.BigDecimal("121.4737"));
 
-        mockMvc.perform(post("/api/attendance/check-in")
+        mockMvc.perform(post("/api/worker/attendance/check-in")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -112,7 +112,7 @@ class AttendanceControllerTest {
         CheckInCmd request = new CheckInCmd();
         request.setShiftId(999L);
 
-        mockMvc.perform(post("/api/attendance/check-in")
+        mockMvc.perform(post("/api/worker/attendance/check-in")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -134,7 +134,7 @@ class AttendanceControllerTest {
         CheckInCmd request = new CheckInCmd();
         request.setShiftId(100L);
 
-        mockMvc.perform(post("/api/attendance/check-out")
+        mockMvc.perform(post("/api/worker/attendance/check-out")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -155,7 +155,7 @@ class AttendanceControllerTest {
 
         when(attendanceService.getMyAttendance(1L, 1, 20)).thenReturn(new PageVO<>(List.of(record), 1));
 
-        mockMvc.perform(get("/api/attendance/my"))
+        mockMvc.perform(get("/api/worker/attendance/my"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.records.length()").value(1))
                 .andExpect(jsonPath("$.data.records[0].status").value("CHECKED_IN"))

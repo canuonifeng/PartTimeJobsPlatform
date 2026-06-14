@@ -13,7 +13,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/job-tags")
+@RequestMapping("/api/enterprise/job-tags")
 public class JobTagController {
 
     @Resource

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.annotation.Resource;
 
 @RestController
-@RequestMapping("/api/auth/configs")
+@RequestMapping("/api/worker/auth/configs")
 public class PublicConfigController {
 
     @Resource
