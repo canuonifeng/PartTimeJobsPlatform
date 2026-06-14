@@ -21,17 +21,21 @@ nohup java -jar platform-service-1.0.0-SNAPSHOT.jar --spring.profiles.active=pro
 cd ../../
 
 cd enterprise-pc
+npm install
 npm run build
 cd ../
 
 cd enterprise-uniapp
+npm install
 npm run build:h5
 cd ../
 
 cd platform-pc
+npm install
 npm run build
 cd ../
 
 cd worker-uniapp
+npm install
 npm run build:h5
 cd ../
