@@ -3,5 +3,6 @@
 .opencode/
 .codex/
 .DS_Store
+opensepc/
 config/*.yml
 docs/
