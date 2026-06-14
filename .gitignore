@@ -3,3 +3,4 @@
 .opencode/
 .codex/
 .DS_Store
+config/*.yml
