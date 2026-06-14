@@ -18,7 +18,7 @@
 │  -service  │  (工人端)    │     (平台管理端)              │
 │  (企业端)   │             │                              │
 ├────────────┴─────────────┴──────────────────────────────┤
-│              MySQL + Redis + RocketMQ                   │
+│        MySQL + Redis Queue + JDK Scheduler              │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -30,8 +30,8 @@
 | 前端 PC | Vue 3.4, Element Plus, Pinia, Axios |
 | 小程序 | UniApp 3.x (微信小程序 + H5) |
 | 数据库 | MySQL 8.x, Redis |
-| 消息队列 | RocketMQ |
-| 定时任务 | XXL-Job |
+| 消息队列 | Redis Queue |
+| 定时任务 | JDK 自带调度能力 |
 | 认证 | JWT + Spring Security |
 | API 文档 | SpringDoc OpenAPI 2.3.0 |
 
@@ -67,8 +67,6 @@
 - Redis
 - Maven 3.8+
 - Node.js 18+
-- RocketMQ (enterprise-service / c-service)
-- XXL-Job (enterprise-service / c-service)
 
 ## 快速启动
 

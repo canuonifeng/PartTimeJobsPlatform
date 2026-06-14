@@ -8,8 +8,8 @@ context: |
     - Frontend (Mini Program): UniApp
     - Database: MySQL 8.x (shared instance, 3 separate schemas)
     - Cache: Redis
-    - Message Queue: RocketMQ (used by enterprise-service & c-service)
-    - Scheduled Tasks: XXL-Job (used by enterprise-service & c-service)
+    - Message Queue: Redis Queue
+    - Scheduled Tasks: JDK built-in scheduling primitives
     - ORM: MyBatis 3.x (Spring Boot starter)
     - Migration: Flyway
     - API Docs: SpringDoc OpenAPI 2.3.0
