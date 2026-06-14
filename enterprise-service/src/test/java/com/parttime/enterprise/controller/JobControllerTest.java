@@ -59,7 +59,9 @@ class JobControllerTest {
 
         when(jobService.publishJob(1L)).thenReturn(response);
 
-        mockMvc.perform(put("/api/jobs/publish").param("id", "1"))
+        mockMvc.perform(post("/api/jobs/publish")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":1}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("PUBLISHED"));
 
@@ -74,7 +76,9 @@ class JobControllerTest {
 
         when(jobService.closeJob(1L)).thenReturn(response);
 
-        mockMvc.perform(put("/api/jobs/close").param("id", "1"))
+        mockMvc.perform(post("/api/jobs/close")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":1}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("CLOSED"));
 
@@ -89,7 +93,9 @@ class JobControllerTest {
 
         when(jobService.reopenJob(1L)).thenReturn(response);
 
-        mockMvc.perform(put("/api/jobs/reopen").param("id", "1"))
+        mockMvc.perform(post("/api/jobs/reopen")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":1}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("PUBLISHED"));
 
@@ -129,7 +135,9 @@ class JobControllerTest {
 
         when(jobService.addJobRate(eq(100L), any(JobRateCmd.class))).thenReturn(response);
 
-        mockMvc.perform(post("/api/jobs/rates").param("jobId", "100")
+        request.setJobId(100L);
+
+        mockMvc.perform(post("/api/jobs/rates")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -151,7 +159,9 @@ class JobControllerTest {
 
         when(jobService.updateJobRate(eq(1L), any(JobRateCmd.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/jobs/rates").param("jobId", "100").param("rateId", "1")
+        request.setRateId(1L);
+
+        mockMvc.perform(post("/api/jobs/rates/update")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -160,7 +170,9 @@ class JobControllerTest {
 
     @Test
     void removeJobRate_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/jobs/rates").param("jobId", "100").param("rateId", "1"))
+        mockMvc.perform(post("/api/jobs/rates/delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"rateId\":1}"))
                 .andExpect(status().isOk());
 
         verify(jobService).removeJobRate(1L);
@@ -200,7 +212,9 @@ class JobControllerTest {
 
         when(jobService.addJobSchedule(eq(100L), any(JobScheduleCmd.class))).thenReturn(response);
 
-        mockMvc.perform(post("/api/jobs/schedules").param("jobId", "100")
+        request.setJobId(100L);
+
+        mockMvc.perform(post("/api/jobs/schedules")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -209,7 +223,9 @@ class JobControllerTest {
 
     @Test
     void removeJobSchedule_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/jobs/schedules").param("jobId", "100").param("scheduleId", "1"))
+        mockMvc.perform(post("/api/jobs/schedules/delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":1}"))
                 .andExpect(status().isOk());
 
         verify(jobService).removeJobSchedule(1L);

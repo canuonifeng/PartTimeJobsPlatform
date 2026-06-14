@@ -22,7 +22,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -69,10 +69,9 @@ class SystemConfigControllerTest {
 
         when(systemConfigService.updateConfig(eq("platform_fee_rate"), anyString())).thenReturn(response);
 
-        String json = "{\"value\":\"0.15\"}";
+        String json = "{\"key\":\"platform_fee_rate\",\"value\":\"0.15\"}";
 
-        mockMvc.perform(put("/api/admin/configs")
-                        .param("key", "platform_fee_rate")
+        mockMvc.perform(post("/api/admin/configs")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
@@ -87,10 +86,9 @@ class SystemConfigControllerTest {
         when(systemConfigService.updateConfig(eq("nonexistent"), anyString()))
                 .thenThrow(new BusinessException("Config not found: nonexistent"));
 
-        String json = "{\"value\":\"test\"}";
+        String json = "{\"key\":\"nonexistent\",\"value\":\"test\"}";
 
-        mockMvc.perform(put("/api/admin/configs")
-                        .param("key", "nonexistent")
+        mockMvc.perform(post("/api/admin/configs")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isBadRequest());

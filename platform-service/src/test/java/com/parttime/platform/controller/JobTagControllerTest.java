@@ -21,10 +21,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
@@ -96,8 +94,9 @@ class JobTagControllerTest {
 
         when(jobTagService.updateGroup(eq(1L), any(JobTagGroupCmd.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/admin/job-tag-groups")
-                        .param("id", "1")
+        cmd.setId(1L);
+
+        mockMvc.perform(post("/api/admin/job-tag-groups/update")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cmd)))
                 .andExpect(status().isOk())
@@ -106,7 +105,9 @@ class JobTagControllerTest {
 
     @Test
     void deleteGroup_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/admin/job-tag-groups").param("id", "1"))
+        mockMvc.perform(post("/api/admin/job-tag-groups/delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":1}"))
                 .andExpect(status().isOk());
 
         verify(jobTagService).deleteGroup(1L);
@@ -143,8 +144,9 @@ class JobTagControllerTest {
 
         when(jobTagService.updateTag(eq(2L), any(JobTagCmd.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/admin/job-tags")
-                        .param("id", "2")
+        cmd.setId(2L);
+
+        mockMvc.perform(post("/api/admin/job-tags/update")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cmd)))
                 .andExpect(status().isOk())
@@ -153,7 +155,9 @@ class JobTagControllerTest {
 
     @Test
     void deleteTag_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/admin/job-tags").param("id", "2"))
+        mockMvc.perform(post("/api/admin/job-tags/delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":2}"))
                 .andExpect(status().isOk());
 
         verify(jobTagService).deleteTag(2L);

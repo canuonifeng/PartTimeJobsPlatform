@@ -6,6 +6,7 @@ import com.parttime.cservice.service.impl.NotificationServiceImpl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -20,7 +21,7 @@ import java.util.List;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -77,7 +78,9 @@ class NotificationControllerTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("1", null, List.of()));
 
-        mockMvc.perform(put("/api/notifications/read").param("id", "10"))
+        mockMvc.perform(post("/api/notifications/read")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":10}"))
                 .andExpect(status().isOk());
 
         verify(notificationService).markAsRead(1L, 10L);

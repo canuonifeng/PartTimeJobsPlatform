@@ -8,6 +8,7 @@ import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.ApplicationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -22,7 +23,7 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -90,7 +91,9 @@ class ApplicationControllerTest {
 
         when(applicationService.acceptApplication(1L)).thenReturn(app);
 
-        mockMvc.perform(put("/api/applications/accept").param("applicationId", "1"))
+        mockMvc.perform(post("/api/applications/accept")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"applicationId\":1}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("ACCEPTED"));
     }
@@ -105,7 +108,9 @@ class ApplicationControllerTest {
 
         when(applicationService.rejectApplication(1L)).thenReturn(app);
 
-        mockMvc.perform(put("/api/applications/reject").param("applicationId", "1"))
+        mockMvc.perform(post("/api/applications/reject")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"applicationId\":1}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.status").value("REJECTED"));
     }
@@ -115,7 +120,9 @@ class ApplicationControllerTest {
         when(applicationService.acceptApplication(anyLong()))
                 .thenThrow(new BusinessException("岗位已录满"));
 
-        mockMvc.perform(put("/api/applications/accept").param("applicationId", "1"))
+        mockMvc.perform(post("/api/applications/accept")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"applicationId\":1}"))
                 .andExpect(status().isBadRequest());
     }
 }

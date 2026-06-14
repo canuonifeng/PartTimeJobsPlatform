@@ -10,6 +10,8 @@ public class EvaluationCmd {
     private Long companyId;
     @Schema(description = "岗位ID")
     private Long jobId;
+    @Schema(description = "工人ID")
+    private Long workerId;
     @Schema(description = "评分(1-5)")
     private Integer rating;
     @Schema(description = "评价内容")

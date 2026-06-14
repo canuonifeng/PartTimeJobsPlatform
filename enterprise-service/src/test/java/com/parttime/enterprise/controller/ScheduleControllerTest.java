@@ -22,7 +22,6 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -85,7 +84,7 @@ class ScheduleControllerTest {
         shift.setJobId(10L);
 
         PageVO<ScheduleShiftVO> result = new PageVO<>(List.of(shift), 1);
-        when(scheduleService.getShifts(1L, 10L, null, null, 1, 20)).thenReturn(result);
+        when(scheduleService.getShifts(1L, 10L, null, null, null, 1, 20)).thenReturn(result);
 
         mockMvc.perform(get("/api/schedule-shifts")
                         .param("jobId", "10"))
@@ -95,7 +94,9 @@ class ScheduleControllerTest {
 
     @Test
     void removeShift_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/schedule-shifts").param("id", "99"))
+        mockMvc.perform(post("/api/schedule-shifts/delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":99}"))
                 .andExpect(status().isOk());
         verify(scheduleService).removeShift(99L);
     }

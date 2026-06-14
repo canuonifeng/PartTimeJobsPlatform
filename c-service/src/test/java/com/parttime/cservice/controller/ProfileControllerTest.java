@@ -93,7 +93,7 @@ class ProfileControllerTest {
         request.setName("John Updated");
         request.setPhone("13900139000");
 
-        mockMvc.perform(put("/api/profile")
+        mockMvc.perform(post("/api/profile")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

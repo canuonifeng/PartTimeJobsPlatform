@@ -22,7 +22,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -90,10 +90,9 @@ class JobReportControllerTest {
 
         when(jobReportService.dismissReport(eq(1L), any(), any())).thenReturn(response);
 
-        String json = "{\"remark\":\"No violation\"}";
+        String json = "{\"id\":1,\"remark\":\"No violation\"}";
 
-        mockMvc.perform(put("/api/job-reports/dismiss")
-                        .param("id", "1")
+        mockMvc.perform(post("/api/job-reports/dismiss")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
@@ -111,10 +110,9 @@ class JobReportControllerTest {
 
         when(jobReportService.banJobReport(eq(1L), any(), any())).thenReturn(response);
 
-        String json = "{\"remark\":\"Violates terms\"}";
+        String json = "{\"id\":1,\"remark\":\"Violates terms\"}";
 
-        mockMvc.perform(put("/api/job-reports/ban")
-                        .param("id", "1")
+        mockMvc.perform(post("/api/job-reports/ban")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())

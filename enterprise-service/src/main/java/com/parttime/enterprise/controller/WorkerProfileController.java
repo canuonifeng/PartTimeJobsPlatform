@@ -31,10 +31,9 @@ public class WorkerProfileController {
 
     @Operation(summary = "评价工人", description = "企业对工人进行评价打分")
     @PostMapping("/evaluations")
-    public ApiResponse<EvaluationVO> evaluateWorker(@Parameter(description = "工人ID") @RequestParam Long workerId,
-                                        @RequestBody EvaluationCmd request) {
+    public ApiResponse<EvaluationVO> evaluateWorker(@RequestBody EvaluationCmd request) {
         return ApiResponse.success(workerProfileService.evaluateWorker(
-                request.getCompanyId(), request.getJobId(), workerId,
+                request.getCompanyId(), request.getJobId(), request.getWorkerId(),
                 request.getRating(), request.getComment()));
     }
 

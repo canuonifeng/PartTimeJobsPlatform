@@ -28,7 +28,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -84,7 +84,7 @@ class ReferralControllerTest {
 
         mockMvc.perform(get("/api/referral/poster"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.posterUrl").value("https://cdn.example.com/poster.jpg"));
+                .andExpect(jsonPath("$.data.posterUrl").value("https://cdn.example.com/poster.jpg"));
     }
 
     @Test
@@ -160,9 +160,9 @@ class ReferralControllerTest {
         config.setConfigValue("50");
         config.setDescription("奖励金额");
 
-        mockMvc.perform(put("/api/referral/config")
+        mockMvc.perform(post("/api/referral/config")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(List.of(config))))
+                        .content(objectMapper.writeValueAsString(java.util.Map.of("configs", List.of(config)))))
                 .andExpect(status().isOk());
 
         verify(referralService).updateConfig(List.of(config));
@@ -174,9 +174,9 @@ class ReferralControllerTest {
         config.setConfigKey("reward_amount");
         config.setConfigValue("50");
 
-        mockMvc.perform(put("/api/referral/config")
+        mockMvc.perform(post("/api/referral/config")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(List.of(config))))
+                        .content(objectMapper.writeValueAsString(java.util.Map.of("configs", List.of(config)))))
                 .andExpect(status().isOk());
     }
 }

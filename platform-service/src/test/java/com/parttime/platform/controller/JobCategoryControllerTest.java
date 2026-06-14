@@ -21,10 +21,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -85,6 +83,7 @@ class JobCategoryControllerTest {
     @WithMockUser(roles = "ADMIN")
     void updateCategory_shouldReturnOk() throws Exception {
         JobCategoryCmd cmd = new JobCategoryCmd();
+        cmd.setId(1L);
         cmd.setName("Updated Cat");
 
         JobCategoryVO response = new JobCategoryVO();
@@ -93,8 +92,7 @@ class JobCategoryControllerTest {
 
         when(jobCategoryService.updateCategory(eq(1L), any(JobCategoryCmd.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/admin/job-categories")
-                        .param("id", "1")
+        mockMvc.perform(post("/api/admin/job-categories/update")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(cmd)))
                 .andExpect(status().isOk())
@@ -104,7 +102,9 @@ class JobCategoryControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void deleteCategory_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/admin/job-categories").param("id", "1"))
+        mockMvc.perform(post("/api/admin/job-categories/delete")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":1}"))
                 .andExpect(status().isOk());
 
         verify(jobCategoryService).deleteCategory(1L);

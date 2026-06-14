@@ -24,7 +24,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -79,12 +78,13 @@ class WorkerProfileControllerTest {
                 {
                     "companyId": 1,
                     "jobId": 50,
+                    "workerId": 10,
                     "rating": 5,
                     "comment": "Great"
                 }
                 """;
 
-        mockMvc.perform(post("/api/workers/evaluations").param("workerId", "10")
+        mockMvc.perform(post("/api/workers/evaluations")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk())
@@ -112,11 +112,12 @@ class WorkerProfileControllerTest {
         String json = """
                 {
                     "companyId": 1,
+                    "workerId": 10,
                     "reason": "No-show"
                 }
                 """;
 
-        mockMvc.perform(post("/api/workers/blacklist").param("workerId", "10")
+        mockMvc.perform(post("/api/workers/blacklist")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk());
@@ -126,9 +127,9 @@ class WorkerProfileControllerTest {
 
     @Test
     void removeFromBlacklist_shouldReturnNoContent() throws Exception {
-        mockMvc.perform(delete("/api/workers/blacklist")
-                        .param("workerId", "10")
-                        .param("companyId", "1"))
+        mockMvc.perform(post("/api/workers/blacklist/remove")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"companyId\":1,\"workerId\":10}"))
                 .andExpect(status().isOk());
 
         verify(workerProfileService).removeFromBlacklist(1L, 10L);
@@ -157,11 +158,12 @@ class WorkerProfileControllerTest {
     void addToBlacklist_shouldIgnoreOptionalReason() throws Exception {
         String json = """
                 {
-                    "companyId": 1
+                    "companyId": 1,
+                    "workerId": 10
                 }
                 """;
 
-        mockMvc.perform(post("/api/workers/blacklist").param("workerId", "10")
+        mockMvc.perform(post("/api/workers/blacklist")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk());
@@ -180,11 +182,12 @@ class WorkerProfileControllerTest {
                 {
                     "companyId": 1,
                     "jobId": 50,
+                    "workerId": 10,
                     "rating": 3
                 }
                 """;
 
-        mockMvc.perform(post("/api/workers/evaluations").param("workerId", "10")
+        mockMvc.perform(post("/api/workers/evaluations")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isOk());
