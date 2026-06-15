@@ -25,17 +25,7 @@ npm install
 npm run build
 cd ../
 
-cd enterprise-uniapp
-npm install
-npm run build:h5
-cd ../
-
 cd platform-pc
 npm install
 npm run build
-cd ../
-
-cd worker-uniapp
-npm install
-npm run build:h5
 cd ../
