@@ -57,7 +57,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { getCategories, getJobs } from '@/api/jobs'
 import InviteFloat from '@/components/InviteFloat.vue'
 
@@ -228,11 +229,14 @@ function formatRates(rates?: JobRate[], fallbackMin?: number, fallbackMax?: numb
   return `${fallbackMin || fallbackMax || 0}元/小时`
 }
 
-onMounted(async () => {
+async function refreshJobs() {
   await loadCategories()
   await loadCurrentLocation()
+  page.value = 1
   fetchJobs(1)
-})
+}
+
+onShow(refreshJobs)
 </script>
 
 <style scoped>

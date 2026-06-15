@@ -64,7 +64,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { useAuthStore } from '@/store'
 import { getProfileDashboard } from '@/api/profile'
 import { getBankCard } from '@/api/bankCard'
@@ -202,7 +203,7 @@ function handleLogout() {
   })
 }
 
-onMounted(async () => {
+async function loadProfile() {
   try {
     const [dashboardRes, bankRes, realNameRes] = await Promise.allSettled([
       getProfileDashboard(),
@@ -226,7 +227,9 @@ onMounted(async () => {
     realNameAuth.value = {}
     uni.showToast({ title: '我的页面加载失败', icon: 'none' })
   }
-})
+}
+
+onShow(loadProfile)
 </script>
 
 <style scoped>

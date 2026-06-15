@@ -42,8 +42,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { onReachBottom } from '@dcloudio/uni-app'
+import { computed, ref } from 'vue'
+import { onReachBottom, onShow } from '@dcloudio/uni-app'
 import { getMyNotifications, markNotificationRead } from '@/api/notifications'
 import InviteFloat from '@/components/InviteFloat.vue'
 import { hasUnreadCategory } from '@/utils/notificationBadges.mjs'
@@ -165,7 +165,7 @@ async function readMessage(message: MessageItem) {
   }
 }
 
-onMounted(() => loadMessages(true))
+onShow(() => loadMessages(true))
 onReachBottom(() => loadMessages(false))
 </script>
 
