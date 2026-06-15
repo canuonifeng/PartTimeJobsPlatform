@@ -1,10 +1,11 @@
 import request from './request'
 
-export function getMyNotifications(params = {}) {
+export function getMyNotifications(params = {}, options = {}) {
   return request({
     url: '/notifications/my',
     method: 'GET',
-    data: params
+    data: params,
+    ...options
   })
 }
 

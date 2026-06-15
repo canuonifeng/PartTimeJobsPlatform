@@ -54,44 +54,23 @@
 import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { useAuthStore } from '@/store'
+import { appendRedirect, goAfterLogin, normalizeLoginRedirect } from '@/utils/loginRedirect'
 
 const authStore = useAuthStore()
 const wechatLoading = ref(false)
 const agreed = ref(false)
+const redirectUrl = ref('')
 
-const REGISTERED_PAGES = new Set([
-  '/pages/index/index',
-  '/pages/jobs/jobList',
-  '/pages/jobs/jobDetail',
-  '/pages/jobs/applyConfirm',
-  '/pages/message/message',
-  '/pages/profile/profile',
-  '/pages/profile/edit',
-  '/pages/settings/settings',
-  '/pages/auth/realName',
-  '/pages/bank/bankCard',
-  '/pages/schedule/schedule',
-  '/pages/attendance/clockIn',
-  '/pages/earnings/earnings',
-  '/pages/earnings/withdraw',
-  '/pages/login/login'
-])
-
-const TAB_PAGES = new Set([
-  '/pages/index/index',
-  '/pages/jobs/jobList',
-  '/pages/message/message',
-  '/pages/profile/profile'
-])
-
-onLoad(() => {})
+onLoad((params) => {
+  redirectUrl.value = normalizeLoginRedirect(params?.redirect)
+})
 
 function goProtocol(key: string) {
   uni.navigateTo({ url: `/pages/common/protocol?key=${key}` })
 }
 
 function goPhoneLogin() {
-  uni.navigateTo({ url: '/pages/login/phoneLogin' })
+  uni.navigateTo({ url: appendRedirect('/pages/login/phoneLogin', redirectUrl.value) })
 }
 
 async function handleWechatPhoneLogin(event) {
@@ -111,7 +90,7 @@ async function handleWechatPhoneLogin(event) {
   try {
     await authStore.wechatPhoneLogin({ phoneCode, encryptedData, iv })
     await authStore.loadWorkerInfo()
-    uni.switchTab({ url: '/pages/index/index' })
+    goAfterLogin(redirectUrl.value)
   } catch {
     uni.showToast({ title: '登录失败，请重试', icon: 'none' })
   } finally {

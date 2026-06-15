@@ -48,8 +48,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { onUnload } from '@dcloudio/uni-app'
+import { onLoad, onUnload } from '@dcloudio/uni-app'
 import { useAuthStore } from '@/store'
+import { goAfterLogin, normalizeLoginRedirect } from '@/utils/loginRedirect'
 
 const authStore = useAuthStore()
 const phoneLoading = ref(false)
@@ -58,7 +59,12 @@ const code = ref('')
 const agreed = ref(false)
 const codeSending = ref(false)
 const countdown = ref(0)
+const redirectUrl = ref('')
 let timer: ReturnType<typeof setInterval> | null = null
+
+onLoad((params) => {
+  redirectUrl.value = normalizeLoginRedirect(params?.redirect)
+})
 
 onUnload(() => {
   clearCountdownTimer()
@@ -120,7 +126,7 @@ async function handlePhoneLogin() {
   try {
     await authStore.phoneLogin(phone.value, code.value)
     await authStore.loadWorkerInfo()
-    uni.switchTab({ url: '/pages/index/index' })
+    goAfterLogin(redirectUrl.value)
   } catch {
     uni.showToast({ title: '登录失败，请重试', icon: 'none' })
   } finally {

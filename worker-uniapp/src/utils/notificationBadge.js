@@ -12,8 +12,14 @@ export function syncMessageTabBarBadge(messages) {
 }
 
 export async function refreshMessageTabBarBadge() {
+  const token = uni.getStorageSync('token')
+  if (!token) {
+    uni.hideTabBarRedDot({ index: MESSAGE_TAB_INDEX })
+    return
+  }
+
   try {
-    const res = await getMyNotifications({ page: 1, pageSize: 20 })
+    const res = await getMyNotifications({ page: 1, pageSize: 20 }, { authRedirect: false })
     const records = Array.isArray(res) ? res : (Array.isArray(res?.records) ? res.records : [])
     syncMessageTabBarBadge(records)
   } catch (e) {

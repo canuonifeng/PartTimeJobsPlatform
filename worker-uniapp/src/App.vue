@@ -5,9 +5,15 @@ import { refreshMessageTabBarBadge } from './utils/notificationBadge'
 
 const authStore = useAuthStore()
 
+async function routeBySession() {
+  await authStore.loadSession()
+  const target = authStore.token ? '/pages/index/index' : '/pages/jobs/jobList'
+  uni.switchTab({ url: target })
+}
+
 onLaunch(() => {
   console.log('App Launch')
-  authStore.loadSession()
+  routeBySession()
   refreshMessageTabBarBadge()
 })
 onShow(() => {

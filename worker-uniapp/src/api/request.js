@@ -1,3 +1,5 @@
+import { getCurrentPageRedirect, isLoginPage } from '@/utils/loginRedirect'
+
 const BASE_URL = `${import.meta.env.VITE_API_BASE_URL}/api/worker`
 
 function cleanParams(obj) {
@@ -13,6 +15,7 @@ function cleanParams(obj) {
 function request(config) {
   const token = uni.getStorageSync('token')
   const header = { 'Content-Type': 'application/json' }
+  const shouldRedirectAuth = config.authRedirect !== false
 
   if (token) {
     header.Authorization = 'Bearer ' + token
@@ -33,12 +36,8 @@ function request(config) {
           const pages = getCurrentPages()
           const currentPage = pages[pages.length - 1]
           const route = currentPage?.route ? `/${currentPage.route}` : ''
-          const options = currentPage?.options || {}
-          const query = Object.entries(options)
-            .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
-            .join('&')
-          const redirect = route ? `${route}${query ? `?${query}` : ''}` : '/pages/index/index'
-          if (route !== '/pages/login/login') {
+          const redirect = getCurrentPageRedirect()
+          if (shouldRedirectAuth && !isLoginPage(route)) {
             uni.reLaunch({ url: `/pages/login/login?redirect=${encodeURIComponent(redirect)}` })
           }
           reject(new Error('登录已过期'))
@@ -52,7 +51,13 @@ function request(config) {
             } else if (body.code === 401) {
               uni.removeStorageSync('token')
               uni.removeStorageSync('workerInfo')
-              uni.reLaunch({ url: '/pages/login/login' })
+              const pages = getCurrentPages()
+              const currentPage = pages[pages.length - 1]
+              const route = currentPage?.route ? `/${currentPage.route}` : ''
+              const redirect = getCurrentPageRedirect()
+              if (shouldRedirectAuth && !isLoginPage(route)) {
+                uni.reLaunch({ url: `/pages/login/login?redirect=${encodeURIComponent(redirect)}` })
+              }
               reject(new Error(body.message || '登录已过期'))
             } else {
               reject(new Error(body.message || '请求失败'))

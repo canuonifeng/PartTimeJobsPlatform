@@ -33,7 +33,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     if (storedToken) {
-      return await loadWorkerInfo()
+      return await loadWorkerInfo({ authRedirect: false })
     }
 
     return null
@@ -109,17 +109,22 @@ export const useAuthStore = defineStore('auth', () => {
     })
   }
 
-  async function loadWorkerInfo() {
+  async function loadWorkerInfo(options = {}) {
     if (!token.value) return null
     try {
       const data = await request({
         url: '/auth/profile',
-        method: 'GET'
+        method: 'GET',
+        authRedirect: options.authRedirect
       })
       workerInfo.value = data
       uni.setStorageSync('workerInfo', JSON.stringify(data))
       return data
     } catch {
+      if (options.authRedirect === false) {
+        token.value = ''
+        workerInfo.value = null
+      }
       return null
     }
   }
