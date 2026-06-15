@@ -1,14 +1,5 @@
 <template>
   <view class="detail-page">
-    <view class="top-nav">
-      <view class="nav-safe"></view>
-      <view class="nav-row">
-        <view class="nav-back" @click="handleBack">‹</view>
-        <text class="nav-title">职位详情</text>
-        <button class="share-btn" open-type="share">分享</button>
-      </view>
-    </view>
-
     <uni-load-more v-if="loading" status="loading" />
 
     <view v-if="!job && !loading" class="empty-state">
@@ -17,6 +8,7 @@
 
     <template v-if="job && !loading">
       <view class="banner-card">
+        <button class="banner-share-btn" open-type="share">分享</button>
         <image v-if="job.imageUrl" class="banner-image" :src="job.imageUrl" mode="aspectFill" />
         <view v-else class="banner-emoji">{{ heroEmoji }}</view>
         <view class="banner-info">
@@ -229,10 +221,6 @@ function normalizeCompanyAuthStatus(source: any) {
   return 'NONE'
 }
 
-function handleBack() {
-  uni.navigateBack({ delta: 1 })
-}
-
 function handlePhone() {
   const phone = job.value?.contactPhone || job.value?.phone || job.value?.mobile
   if (!phone) {
@@ -322,14 +310,9 @@ onShareAppMessage(() => ({
 
 <style scoped>
 .detail-page { min-height: 100vh; padding-bottom: 180rpx; background: #f6f7fb; }
-.top-nav { position: sticky; top: 0; z-index: 20; background: #fff; box-shadow: 0 4rpx 18rpx rgba(27, 37, 67, 0.06); }
-.nav-safe { height: 44rpx; }
-.nav-row { height: 88rpx; display: flex; align-items: center; justify-content: space-between; padding: 0 28rpx; }
-.nav-back { width: 68rpx; height: 68rpx; line-height: 62rpx; text-align: center; border-radius: 34rpx; background: #f1f5f9; color: #1f2937; font-size: 56rpx; }
-.nav-title { font-size: 34rpx; color: #111827; font-weight: 700; }
-.share-btn { width: 96rpx; height: 58rpx; line-height: 58rpx; padding: 0; margin: 0; border-radius: 29rpx; background: #ecfdf5; color: #0f9f5f; font-size: 26rpx; }
-.share-btn::after { border: none; }
-.banner-card { margin: 24rpx 24rpx 0; border-radius: 36rpx; background: linear-gradient(135deg, #16c784, #0ea66b); overflow: hidden; box-shadow: 0 18rpx 40rpx rgba(14, 166, 107, 0.22); }
+.banner-card { position: relative; margin: 24rpx 24rpx 0; border-radius: 36rpx; background: linear-gradient(135deg, #16c784, #0ea66b); overflow: hidden; box-shadow: 0 18rpx 40rpx rgba(14, 166, 107, 0.22); }
+.banner-share-btn { position: absolute; top: 22rpx; right: 22rpx; z-index: 2; width: 112rpx; height: 56rpx; line-height: 56rpx; padding: 0; margin: 0; border-radius: 28rpx; background: rgba(255, 255, 255, 0.92); color: #0f9f5f; font-size: 25rpx; font-weight: 700; box-shadow: 0 8rpx 20rpx rgba(15, 23, 42, 0.12); }
+.banner-share-btn::after { border: none; }
 .banner-image { display: block; width: 100%; height: 300rpx; border-radius: 36rpx 36rpx 0 0; }
 .banner-emoji { height: 210rpx; line-height: 210rpx; text-align: center; font-size: 118rpx; border-radius: 36rpx 36rpx 0 0; }
 .banner-info { margin-top: 0; padding: 30rpx 34rpx 36rpx; border-radius: 0 0 36rpx 36rpx; text-align: left; }

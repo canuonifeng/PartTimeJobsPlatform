@@ -110,7 +110,7 @@ async function handleConfirm() {
   try {
     await applyJob(jobId.value, { scheduleIds: selectedScheduleIds.value })
     uni.showToast({ title: '报名成功', icon: 'success' })
-    setTimeout(() => uni.navigateTo({ url: '/pages/schedule/schedule', fail: () => uni.navigateBack({ delta: 1 }) }), 600)
+    setTimeout(() => uni.redirectTo({ url: `/pages/jobs/applySuccess?jobId=${jobId.value}` }), 600)
   } catch (err: any) {
     uni.showToast({ title: err?.data?.error || err?.message || '报名失败', icon: 'none' })
     submitting.value = false

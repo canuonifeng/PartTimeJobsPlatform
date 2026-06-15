@@ -175,7 +175,7 @@ function normalizeShift(shift: any): Shift {
   return {
     id: Number(shift.id ?? shift.shiftId),
     jobTitle: shift.jobTitle || shift.title || shift.positionName || '排班',
-    location: shift.jobLocation || shift.location || shift.locationName || shift.address || '',
+    location: shift.locationName || shift.jobLocation || shift.location || shift.address || '',
     startTime: shift.startTime || '',
     endTime: shift.endTime || '',
     date: shift.date || shift.shiftDate || '',
@@ -210,7 +210,7 @@ function handleOpenLocation(shift: Shift) {
   uni.openLocation({
     latitude: shift.lat,
     longitude: shift.lng,
-    name: shift.jobTitle,
+    name: shift.location || shift.jobTitle,
     address: shift.location
   })
 }
@@ -512,7 +512,7 @@ function openMap(shift: Shift) {
     latitude: shift.lat,
     longitude: shift.lng,
     address: shift.location,
-    name: shift.jobTitle || '工作地点',
+    name: shift.location || shift.jobTitle || '工作地点',
     fail: () => uni.showToast({ title: '打开地图失败', icon: 'none' })
   })
 }

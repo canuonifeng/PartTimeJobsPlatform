@@ -25,6 +25,12 @@
       }
     },
     {
+      "path": "pages/jobs/applySuccess",
+      "style": {
+        "navigationBarTitleText": "报名成功"
+      }
+    },
+    {
       "path": "pages/message/message",
       "style": {
         "navigationBarTitleText": "消息"
