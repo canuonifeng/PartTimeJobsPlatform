@@ -7,10 +7,34 @@ const props = defineProps({
 })
 
 const tabs = [
-  { key: 'home', text: '工作台', icon: '⌂', url: '/pages/home/index' },
-  { key: 'process', text: '招聘', icon: '▣', url: '/pages/process/process' },
-  { key: 'messages', text: '消息', icon: '✉', url: '/pages/messages/messageList' },
-  { key: 'profile', text: '我的', icon: '○', url: '/pages/profile/profile' }
+  {
+    key: 'home',
+    text: '工作台',
+    icon: '/static/tab-home.png',
+    activeIcon: '/static/tab-home-active.png',
+    url: '/pages/home/index'
+  },
+  {
+    key: 'process',
+    text: '招聘',
+    icon: '/static/tab-jobs.png',
+    activeIcon: '/static/tab-jobs-active.png',
+    url: '/pages/process/process'
+  },
+  {
+    key: 'messages',
+    text: '消息',
+    icon: '/static/tab-message.png',
+    activeIcon: '/static/tab-message-active.png',
+    url: '/pages/messages/messageList'
+  },
+  {
+    key: 'profile',
+    text: '我的',
+    icon: '/static/tab-profile.png',
+    activeIcon: '/static/tab-profile-active.png',
+    url: '/pages/profile/profile'
+  }
 ]
 
 function switchTab(item) {
@@ -28,7 +52,11 @@ function switchTab(item) {
       :class="{ active: active === item.key }"
       @click="switchTab(item)"
     >
-      <view class="enterprise-tabbar-icon">{{ item.icon }}</view>
+      <image
+        class="enterprise-tabbar-icon"
+        :src="active === item.key ? item.activeIcon : item.icon"
+        mode="aspectFit"
+      />
       <text class="enterprise-tabbar-text">{{ item.text }}</text>
     </view>
   </view>
@@ -63,15 +91,6 @@ function switchTab(item) {
 .enterprise-tabbar-icon {
   width: 48rpx;
   height: 48rpx;
-  border: 2rpx solid currentColor;
-  border-radius: 18rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24rpx;
-  font-weight: 850;
-  line-height: 1;
-  box-sizing: border-box;
 }
 
 .enterprise-tabbar-text {
@@ -85,8 +104,4 @@ function switchTab(item) {
   color: #16a34a;
 }
 
-.enterprise-tabbar-item.active .enterprise-tabbar-icon {
-  background: #dcfce7;
-  border-color: #16a34a;
-}
 </style>

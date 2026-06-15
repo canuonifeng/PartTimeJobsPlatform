@@ -38,10 +38,30 @@
     "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
     "list": [
-      {"pagePath": "pages/home/index", "text": "工作台"},
-      {"pagePath": "pages/process/process", "text": "招聘"},
-      {"pagePath": "pages/messages/messageList", "text": "消息"},
-      {"pagePath": "pages/profile/profile", "text": "我的"}
+      {
+        "pagePath": "pages/home/index",
+        "text": "工作台",
+        "iconPath": "static/tab-home.png",
+        "selectedIconPath": "static/tab-home-active.png"
+      },
+      {
+        "pagePath": "pages/process/process",
+        "text": "招聘",
+        "iconPath": "static/tab-jobs.png",
+        "selectedIconPath": "static/tab-jobs-active.png"
+      },
+      {
+        "pagePath": "pages/messages/messageList",
+        "text": "消息",
+        "iconPath": "static/tab-message.png",
+        "selectedIconPath": "static/tab-message-active.png"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的",
+        "iconPath": "static/tab-profile.png",
+        "selectedIconPath": "static/tab-profile-active.png"
+      }
     ]
   }
 }
