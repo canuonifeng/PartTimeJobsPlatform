@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getEnterpriseInfo, updateCompanyLogo } from '../../api/enterprise'
+import { enterpriseUploadUrl, getUploadHeaders, getUploadUrl } from '../../api/upload'
 
 const loading = ref(false)
 const info = ref({ companyName: '', companyLogo: '' })
@@ -18,8 +19,9 @@ async function loadInfo() {
 }
 
 function handleUploadSuccess(response) {
-  if (response?.url) {
-    logoUrl.value = response.url
+  const url = getUploadUrl(response)
+  if (url) {
+    logoUrl.value = url
   }
 }
 
@@ -58,7 +60,8 @@ onMounted(loadInfo)
         <el-form-item label="企业Logo">
           <div style="display:flex;gap:12px;align-items:center">
             <el-upload
-              action="/api/files/upload"
+              :action="enterpriseUploadUrl"
+              :headers="getUploadHeaders()"
               :show-file-list="false"
               :on-success="handleUploadSuccess"
               :before-upload="beforeUpload"

@@ -44,7 +44,7 @@ class FileControllerTest {
                 new UsernamePasswordAuthenticationToken("1", null, List.of()));
 
         FileUploadVO vo = new FileUploadVO();
-        vo.setUrl("https://api.example.com/api/worker/uploads/worker/1/front.jpg");
+        vo.setUrl("https://api.example.com/uploads/worker/1/front.jpg");
         vo.setFileName("front.jpg");
         vo.setSize(10L);
         vo.setContentType("image/jpeg");
@@ -54,7 +54,7 @@ class FileControllerTest {
 
         mockMvc.perform(multipart("/api/worker/files/upload").file(file))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.url").value("https://api.example.com/api/worker/uploads/worker/1/front.jpg"))
+                .andExpect(jsonPath("$.data.url").value("https://api.example.com/uploads/worker/1/front.jpg"))
                 .andExpect(jsonPath("$.data.fileName").value("front.jpg"));
     }
 

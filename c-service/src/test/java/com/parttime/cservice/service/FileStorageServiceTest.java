@@ -25,7 +25,7 @@ class FileStorageServiceTest {
 
         FileUploadVO vo = service.uploadWorkerImage(1L, file, "https://api.example.com");
 
-        assertThat(vo.getUrl()).startsWith("https://api.example.com/api/worker/uploads/worker/1/");
+        assertThat(vo.getUrl()).startsWith("https://api.example.com/uploads/worker/1/");
         assertThat(vo.getFileName()).endsWith(".jpg");
         assertThat(vo.getSize()).isEqualTo(file.getSize());
         assertThat(tempDir.toFile().listFiles()).isNotEmpty();

@@ -6,6 +6,7 @@ import { Delete, SuccessFilled } from '@element-plus/icons-vue'
 import { getJob, createJob, updateJob, getJobTags } from '../../api/job'
 import { listLocations } from '../../api/location'
 import { listTemplates } from '../../api/template'
+import { enterpriseUploadUrl, getUploadHeaders, getUploadUrl } from '../../api/upload'
 import regions from '../../assets/regions.json'
 import LocationPicker from '../../components/LocationPicker.vue'
 
@@ -19,11 +20,12 @@ const tagGroups = ref([])
 const tagLoading = ref(false)
 const tagLoadFailed = ref(false)
 const formRef = ref(null)
-const uploadUrl = '/api/files/upload'
+const uploadUrl = enterpriseUploadUrl
 
 function handleImageSuccess(response) {
-  if (response?.url) {
-    form.value.imageUrl = response.url
+  const url = getUploadUrl(response)
+  if (url) {
+    form.value.imageUrl = url
   }
 }
 function beforeImageUpload(file) {
@@ -351,6 +353,7 @@ onMounted(async () => {
           <div style="display:flex;gap:12px;align-items:center">
             <el-upload
               :action="uploadUrl"
+              :headers="getUploadHeaders()"
               :show-file-list="false"
               :on-success="handleImageSuccess"
               :before-upload="beforeImageUpload"

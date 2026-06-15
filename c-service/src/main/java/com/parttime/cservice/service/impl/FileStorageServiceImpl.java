@@ -46,7 +46,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         vo.setFileName(fileName);
         vo.setSize(file.getSize());
         vo.setContentType(file.getContentType());
-        vo.setUrl(normalizeBaseUrl(publicBaseUrl) + "/api/worker/uploads/" + relativePath.toString().replace('\\', '/'));
+        vo.setUrl(normalizeBaseUrl(publicBaseUrl) + "/uploads/" + relativePath.toString().replace('\\', '/'));
         return vo;
     }
 
