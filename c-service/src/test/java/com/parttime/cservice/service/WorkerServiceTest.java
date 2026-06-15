@@ -140,6 +140,17 @@ class WorkerServiceTest {
     }
 
     @Test
+    void loginWithWechatPhone_shouldSupportPhoneCode() {
+        LoginVO response = workerService.loginWithWechatPhone(
+                new com.parttime.cservice.pojo.cmd.WeChatPhoneLoginCmd("wx_code", "mock_phone_13900139000", null, null));
+
+        assertThat(response).isNotNull();
+        assertThat(response.getToken()).isNotBlank();
+        assertThat(response.getWorkerId()).isNotNull();
+        assertThat(response.getPhone()).isEqualTo("13900139000");
+    }
+
+    @Test
     void getWorkerByOpenId_shouldReturnWorker() {
         LoginVO loginResponse = workerService.loginWithWechat("find_by_openid");
         WorkerVO worker = workerService.getWorkerByOpenId("openid_find_by_openid");

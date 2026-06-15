@@ -86,21 +86,14 @@ export const useAuthStore = defineStore('auth', () => {
     })
   }
 
-  async function wechatPhoneLogin() {
+  async function wechatPhoneLogin(phoneAuth = {}) {
     return new Promise((resolve, reject) => {
       uni.login({
         provider: 'weixin',
         success: async (loginRes) => {
           const code = loginRes.code
           try {
-            const phoneRes = await new Promise((res, rej) => {
-              uni.getPhoneNumber({
-                provider: 'weixin',
-                success: (r) => res(r),
-                fail: (e) => rej(e)
-              })
-            })
-            const data = await wechatPhoneLoginApi(code, phoneRes.encryptedData, phoneRes.iv)
+            const data = await wechatPhoneLoginApi(code, phoneAuth.phoneCode, phoneAuth.encryptedData, phoneAuth.iv)
             token.value = data.token
             uni.setStorageSync('token', data.token)
             workerInfo.value = null

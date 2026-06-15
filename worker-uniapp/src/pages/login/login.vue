@@ -12,7 +12,13 @@
     </view>
 
     <view class="login-card">
-      <button class="wechat-phone-btn" @click="handleWechatPhoneLogin" :loading="wechatLoading" :disabled="wechatLoading">
+      <button
+        class="wechat-phone-btn"
+        open-type="getPhoneNumber"
+        @getphonenumber="handleWechatPhoneLogin"
+        :loading="wechatLoading"
+        :disabled="wechatLoading"
+      >
         <text class="wechat-phone-text">微信一键登录</text>
       </button>
 
@@ -88,15 +94,22 @@ function goPhoneLogin() {
   uni.navigateTo({ url: '/pages/login/phoneLogin' })
 }
 
-async function handleWechatPhoneLogin() {
+async function handleWechatPhoneLogin(event) {
   if (!agreed.value) {
     uni.showToast({ title: '请先同意用户协议', icon: 'none' })
+    return
+  }
+  const phoneCode = event?.detail?.code
+  const encryptedData = event?.detail?.encryptedData
+  const iv = event?.detail?.iv
+  if (!phoneCode && (!encryptedData || !iv)) {
+    uni.showToast({ title: '请授权手机号登录', icon: 'none' })
     return
   }
   if (wechatLoading.value) return
   wechatLoading.value = true
   try {
-    await authStore.wechatPhoneLogin()
+    await authStore.wechatPhoneLogin({ phoneCode, encryptedData, iv })
     await authStore.loadWorkerInfo()
     uni.switchTab({ url: '/pages/index/index' })
   } catch {

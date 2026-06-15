@@ -1,6 +1,7 @@
 package com.parttime.cservice.service.impl;
 
 import com.parttime.cservice.config.JwtTokenProvider;
+import com.parttime.cservice.config.WeChatConfig;
 import com.parttime.cservice.mapper.WorkerMapper;
 import com.parttime.cservice.mapper.WorkerProfileMapper;
 import com.parttime.cservice.pojo.cmd.PhoneLoginCmd;
@@ -12,6 +13,8 @@ import com.parttime.cservice.pojo.vo.LoginVO;
 import com.parttime.cservice.pojo.vo.WorkerVO;
 import com.parttime.cservice.service.WorkerService;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.annotation.Resource;
 
@@ -33,6 +36,10 @@ public class WorkerServiceImpl implements WorkerService {
     private WorkerProfileMapper workerProfileMapper;
     @Resource
     private JwtTokenProvider jwtTokenProvider;
+    @Resource
+    private WeChatConfig weChatConfig;
+
+    private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
     public WorkerVO register(RegisterCmd request) {
@@ -96,15 +103,15 @@ public class WorkerServiceImpl implements WorkerService {
         if (request.code() == null || request.code().isEmpty()) {
             throw new RuntimeException("微信登录code不能为空");
         }
-        if (request.encryptedData() == null || request.encryptedData().isEmpty()) {
-            throw new RuntimeException("手机号加密数据不能为空");
-        }
-        if (request.iv() == null || request.iv().isEmpty()) {
-            throw new RuntimeException("加密向量不能为空");
+        boolean hasPhoneCode = request.phoneCode() != null && !request.phoneCode().isEmpty();
+        boolean hasEncryptedPhone = request.encryptedData() != null && !request.encryptedData().isEmpty()
+                && request.iv() != null && !request.iv().isEmpty();
+        if (!hasPhoneCode && !hasEncryptedPhone) {
+            throw new RuntimeException("手机号授权信息不能为空");
         }
 
         String openId = exchangeWechatCode(request.code());
-        String phone = decryptPhone(request.encryptedData(), request.iv());
+        String phone = hasPhoneCode ? getWechatPhoneNumber(request.phoneCode()) : decryptPhone(request.encryptedData(), request.iv());
 
         Worker worker = null;
 
@@ -208,7 +215,55 @@ public class WorkerServiceImpl implements WorkerService {
     }
 
     private String exchangeWechatCode(String code) {
-        return "openid_" + code;
+        if (isMockWechatConfig()) {
+            return "openid_" + code;
+        }
+        String url = UriComponentsBuilder.fromHttpUrl(weChatConfig.getLoginUrl())
+                .queryParam("appid", weChatConfig.getAppId())
+                .queryParam("secret", weChatConfig.getAppSecret())
+                .queryParam("js_code", code)
+                .queryParam("grant_type", "authorization_code")
+                .toUriString();
+        Map<?, ?> response = restTemplate.getForObject(url, Map.class);
+        if (response == null || response.get("openid") == null) {
+            throw new RuntimeException("微信登录失败");
+        }
+        return String.valueOf(response.get("openid"));
+    }
+
+    private String getWechatPhoneNumber(String phoneCode) {
+        if (phoneCode.startsWith("mock_phone_")) {
+            return phoneCode.substring("mock_phone_".length());
+        }
+        String accessToken = getWechatAccessToken();
+        String url = UriComponentsBuilder.fromHttpUrl(weChatConfig.getPhoneNumberUrl())
+                .queryParam("access_token", accessToken)
+                .toUriString();
+        Map<String, String> body = Map.of("code", phoneCode);
+        Map<?, ?> response = restTemplate.postForObject(url, body, Map.class);
+        Object phoneInfo = response == null ? null : response.get("phone_info");
+        if (!(phoneInfo instanceof Map<?, ?> phoneMap) || phoneMap.get("phoneNumber") == null) {
+            throw new RuntimeException("微信手机号获取失败");
+        }
+        return String.valueOf(phoneMap.get("phoneNumber"));
+    }
+
+    private String getWechatAccessToken() {
+        String url = UriComponentsBuilder.fromHttpUrl(weChatConfig.getAccessTokenUrl())
+                .queryParam("grant_type", "client_credential")
+                .queryParam("appid", weChatConfig.getAppId())
+                .queryParam("secret", weChatConfig.getAppSecret())
+                .toUriString();
+        Map<?, ?> response = restTemplate.getForObject(url, Map.class);
+        if (response == null || response.get("access_token") == null) {
+            throw new RuntimeException("微信access_token获取失败");
+        }
+        return String.valueOf(response.get("access_token"));
+    }
+
+    private boolean isMockWechatConfig() {
+        return weChatConfig == null || weChatConfig.getAppId() == null || weChatConfig.getAppSecret() == null
+                || weChatConfig.getAppId().startsWith("mock_") || weChatConfig.getAppSecret().startsWith("mock_");
     }
 
     private String decryptPhone(String encryptedData, String iv) {

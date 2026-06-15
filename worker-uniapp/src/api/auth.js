@@ -16,11 +16,11 @@ export function phoneLogin(phone, code) {
   })
 }
 
-export function wechatPhoneLogin(code, encryptedData, iv) {
+export function wechatPhoneLogin(code, phoneCode, encryptedData, iv) {
   return request({
     url: '/auth/wechat-phone-login',
     method: 'POST',
-    data: { code, encryptedData, iv }
+    data: { code, phoneCode, encryptedData, iv }
   })
 }
 
