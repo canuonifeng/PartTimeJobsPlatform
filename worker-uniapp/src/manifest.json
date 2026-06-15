@@ -1,6 +1,6 @@
 {
-  "name": "找零工",
-  "appid": "__UNI__94CBE19",
+  "name": "老登e站",
+  "appid": "wxb899cf6b333e2657",
   "description": "零工平台工人端",
   "versionName": "1.0.0",
   "versionCode": "1",
@@ -8,7 +8,7 @@
   "app-plus": {},
   "quickapp": {},
   "mp-weixin": {
-    "appid": "__UNI__94CBE19",
+    "appid": "wxb899cf6b333e2657",
     "setting": {
       "urlCheck": false
     },
@@ -21,7 +21,7 @@
     "requiredPrivateInfos": ["getLocation"]
   },
   "h5": {
-    "title": "找零工",
+    "title": "老登e站",
     "template": "index.html",
     "router": {
       "mode": "history",
