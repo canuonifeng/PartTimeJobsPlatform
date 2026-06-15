@@ -8,6 +8,10 @@ import java.time.LocalDateTime;
 public class AccountVO {
     @Schema(description = "账号ID")
     private Long id;
+    @Schema(description = "企业ID")
+    private Long enterpriseId;
+    @Schema(description = "企业名称")
+    private String companyName;
     @Schema(description = "用户名")
     private String username;
     @Schema(description = "显示名")

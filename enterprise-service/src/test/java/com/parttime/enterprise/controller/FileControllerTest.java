@@ -34,7 +34,7 @@ class FileControllerTest {
 
         mockMvc.perform(multipart("/api/enterprise/files/upload").file(file))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.url", startsWith("https://api.example.com/uploads/enterprise/")))
+                .andExpect(jsonPath("$.data.url", startsWith("https://api.example.com/api/enterprise/uploads/enterprise/")))
                 .andExpect(jsonPath("$.data.fileName").exists())
                 .andExpect(jsonPath("$.data.size").value(5));
     }

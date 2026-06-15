@@ -55,7 +55,7 @@ public class FileController {
             file.transferTo(target);
 
             FileUploadVO vo = new FileUploadVO();
-            vo.setUrl(normalizeBaseUrl(publicBaseUrl) + "/uploads/" + relativePath.toString().replace('\\', '/'));
+            vo.setUrl(normalizeBaseUrl(publicBaseUrl) + "/api/enterprise/uploads/" + relativePath.toString().replace('\\', '/'));
             vo.setFileName(filename);
             vo.setSize(file.getSize());
             vo.setContentType(file.getContentType());

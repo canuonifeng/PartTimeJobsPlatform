@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
 
@@ -8,6 +8,19 @@ const router = useRouter()
 const authStore = useAuthStore()
 
 const isLoginPage = computed(() => route.path === '/login')
+const displayName = computed(() => authStore.user?.displayName || authStore.user?.username || '管理员')
+const companyName = computed(() => authStore.user?.companyName || '企业管理后台')
+const roleName = computed(() => authStore.user?.role || 'ADMIN')
+
+watch(
+  () => route.path,
+  () => {
+    if (!isLoginPage.value && authStore.token && !authStore.user) {
+      authStore.loadCurrentUser().catch(() => authStore.logout())
+    }
+  },
+  { immediate: true }
+)
 
 function handleLogout() {
   authStore.logout()
@@ -92,7 +105,18 @@ function handleMenuSelect(index) {
       <el-header class="app-header">
         <span class="header-title">{{ route.meta.title || '企业管理后台' }}</span>
         <div class="header-right">
-          <span class="user-info">{{ authStore.user?.username || '管理员' }}</span>
+          <div class="enterprise-info">
+            <el-icon><OfficeBuilding /></el-icon>
+            <span>{{ companyName }}</span>
+          </div>
+          <el-divider direction="vertical" />
+          <div class="user-info">
+            <el-avatar :size="28">{{ displayName.slice(0, 1) }}</el-avatar>
+            <div class="user-text">
+              <span class="user-name">{{ displayName }}</span>
+              <span class="user-role">{{ roleName }}</span>
+            </div>
+          </div>
           <el-button type="danger" size="small" @click="handleLogout">退出登录</el-button>
         </div>
       </el-header>
@@ -153,8 +177,32 @@ html, body, #app {
   align-items: center;
   gap: 12px;
 }
+.enterprise-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #303133;
+  font-size: 14px;
+  font-weight: 500;
+}
 .user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: #606266;
+}
+.user-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.user-name {
+  color: #303133;
+  font-size: 14px;
+}
+.user-role {
+  color: #909399;
+  font-size: 12px;
 }
 .app-main {
   background: #f0f2f5;

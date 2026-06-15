@@ -2,6 +2,7 @@ package com.parttime.enterprise.service.impl;
 
 import com.parttime.enterprise.exception.BusinessException;
 import com.parttime.enterprise.mapper.EnterpriseAccountMapper;
+import com.parttime.enterprise.mapper.EnterpriseMapper;
 import com.parttime.enterprise.pojo.cmd.AccountCreateCmd;
 import com.parttime.enterprise.pojo.cmd.AccountPasswordUpdateCmd;
 import com.parttime.enterprise.pojo.cmd.AccountResetPasswordCmd;
@@ -23,6 +24,9 @@ public class AccountServiceImpl implements AccountService {
 
     @Resource
     private EnterpriseAccountMapper accountMapper;
+
+    @Resource
+    private EnterpriseMapper enterpriseMapper;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -102,6 +106,8 @@ public class AccountServiceImpl implements AccountService {
     private AccountVO toVO(EnterpriseAccount account) {
         AccountVO vo = new AccountVO();
         vo.setId(account.getId());
+        vo.setEnterpriseId(account.getEnterpriseId());
+        vo.setCompanyName(enterpriseMapper.findCompanyNameById(account.getEnterpriseId()));
         vo.setUsername(account.getUsername());
         vo.setDisplayName(account.getDisplayName());
         vo.setPhone(account.getPhone());

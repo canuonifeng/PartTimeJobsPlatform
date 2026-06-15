@@ -2,8 +2,10 @@ package com.parttime.enterprise.service;
 
 import com.parttime.enterprise.exception.BusinessException;
 import com.parttime.enterprise.mapper.EnterpriseAccountMapper;
+import com.parttime.enterprise.mapper.EnterpriseMapper;
 import com.parttime.enterprise.pojo.cmd.AccountUpdateCmd;
 import com.parttime.enterprise.pojo.entity.EnterpriseAccount;
+import com.parttime.enterprise.pojo.vo.AccountVO;
 import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.impl.AccountServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -26,6 +28,9 @@ class AccountServiceTest {
 
     @Mock
     private EnterpriseAccountMapper accountMapper;
+
+    @Mock
+    private EnterpriseMapper enterpriseMapper;
 
     @InjectMocks
     private AccountServiceImpl accountService;
@@ -76,5 +81,26 @@ class AccountServiceTest {
 
         assertThat(result.getStatus()).isEqualTo("DISABLED");
         verify(accountMapper).update(account);
+    }
+
+    @Test
+    void getCurrent_shouldReturnAccountAndCompanyInfo() {
+        EnterpriseAccount account = new EnterpriseAccount();
+        account.setId(1L);
+        account.setEnterpriseId(2L);
+        account.setUsername("admin");
+        account.setDisplayName("张三");
+        account.setPhone("13800000000");
+        account.setRole("ADMIN");
+        account.setStatus("ACTIVE");
+        when(accountMapper.findById(1L)).thenReturn(Optional.of(account));
+        when(enterpriseMapper.findCompanyNameById(2L)).thenReturn("老登E站");
+
+        AccountVO result = accountService.getCurrent(1L, 2L);
+
+        assertThat(result.getEnterpriseId()).isEqualTo(2L);
+        assertThat(result.getCompanyName()).isEqualTo("老登E站");
+        assertThat(result.getDisplayName()).isEqualTo("张三");
+        assertThat(result.getPhone()).isEqualTo("13800000000");
     }
 }

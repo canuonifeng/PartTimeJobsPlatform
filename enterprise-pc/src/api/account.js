@@ -20,6 +20,10 @@ export function updateCurrentPassword(data) {
   return request.post('/accounts/me/password', data)
 }
 
+export function getCurrentAccount() {
+  return request.get('/accounts/me')
+}
+
 export function deleteAccount(id) {
   return request.post('/accounts/delete', { id })
 }
