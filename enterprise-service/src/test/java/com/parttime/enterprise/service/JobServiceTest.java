@@ -377,6 +377,24 @@ class JobServiceTest {
     }
 
     @Test
+    void updateJob_shouldPublishClosedJobWhenStatusIsPublished() {
+        Job existing = new Job();
+        existing.setId(1L);
+        existing.setCompanyId(1L);
+        existing.setStatus("CLOSED");
+
+        UpdateJobCmd request = new UpdateJobCmd();
+        request.setStatus("PUBLISHED");
+
+        when(jobMapper.findById(1L)).thenReturn(Optional.of(existing));
+
+        JobVO response = jobService.updateJob(1L, request);
+
+        assertThat(response.getStatus()).isEqualTo(JobStatus.PUBLISHED);
+        verify(jobMapper).updateStatus(1L, "PUBLISHED");
+    }
+
+    @Test
     void publishJob_shouldTransitionFromDraftToPublished() {
         Job job = new Job();
         job.setId(1L);

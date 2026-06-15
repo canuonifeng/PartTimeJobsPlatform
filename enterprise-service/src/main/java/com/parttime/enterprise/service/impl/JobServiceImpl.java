@@ -130,6 +130,10 @@ public class JobServiceImpl implements JobService {
         if (request.getDeadline() != null) job.setDeadline(request.getDeadline());
         if (request.getImageUrl() != null) job.setImageUrl(request.getImageUrl());
         jobMapper.update(job);
+        if ("PUBLISHED".equals(request.getStatus()) && !"PUBLISHED".equals(job.getStatus())) {
+            publishJob(id);
+            job.setStatus("PUBLISHED");
+        }
         if (request.getTagIds() != null) {
             replaceJobTags(id, request.getTagIds());
         }

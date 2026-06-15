@@ -219,6 +219,7 @@ function buildPayload() {
     deadline: form.value.deadline ? `${form.value.deadline} 23:59:59` : null,
     imageUrl: form.value.imageUrl || null,
     autoApprove: form.value.autoApprove,
+    status: form.value.status,
     rates: form.value.salaryRates.filter((r) => r.type && r.rate).map((r) => ({ id: r.id, type: r.type, amount: Number(r.rate), currency: 'CNY' })),
     schedules: form.value.scheduleSlots.filter((s) => s.date && s.startTime && s.endTime).map((s) => ({ id: s.id, scheduleDate: s.date, startTime: s.startTime, endTime: s.endTime, slotsAvailable: 1 }))
   }

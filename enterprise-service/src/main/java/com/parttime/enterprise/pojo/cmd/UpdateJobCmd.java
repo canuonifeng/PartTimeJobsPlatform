@@ -51,4 +51,6 @@ public class UpdateJobCmd {
     private List<JobScheduleCmd> schedules;
     @Schema(description = "岗位图片URL")
     private String imageUrl;
+    @Schema(description = "岗位状态: DRAFT-草稿, PUBLISHED-发布")
+    private String status;
 }
