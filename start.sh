@@ -2,6 +2,11 @@ lsof -ti:8081 | xargs kill -9 2>/dev/null;
 lsof -ti:8082 | xargs kill -9 2>/dev/null;
 lsof -ti:8083 | xargs kill -9 2>/dev/null;
 
+BASE_DIR=$(cd "$(dirname "$0")" && pwd)
+export FILE_UPLOAD_DIR=${FILE_UPLOAD_DIR:-$BASE_DIR/uploads}
+export FILE_PUBLIC_BASE_URL=${FILE_PUBLIC_BASE_URL:-https://api.linggong.tech}
+mkdir -p "$FILE_UPLOAD_DIR"
+
 cd c-service 
 mvn clean package -Dmaven.test.skip=true
 cd target

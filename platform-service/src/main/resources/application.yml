@@ -12,6 +12,11 @@ jwt:
   secret: ${JWT_SECRET:parttime-platform-jwt-secret-key-must-be-at-least-256-bits-long-enough}
   expiration: ${JWT_EXPIRATION:86400000}
 
+file:
+  upload:
+    dir: ${FILE_UPLOAD_DIR:uploads}
+  public-base-url: ${FILE_PUBLIC_BASE_URL:}
+
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
   type-aliases-package: com.parttime.platform.pojo

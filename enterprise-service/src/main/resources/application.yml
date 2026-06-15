@@ -16,6 +16,11 @@ jwt:
   secret: ${JWT_SECRET:parttime-enterprise-jwt-secret-key-must-be-at-least-256-bits}
   expiration: ${JWT_EXPIRATION:86400000}
 
+file:
+  upload:
+    dir: ${FILE_UPLOAD_DIR:uploads}
+  public-base-url: ${FILE_PUBLIC_BASE_URL:}
+
 wechat:
   worker-app-id: ${WECHAT_WORKER_APP_ID:mock_worker_app_id}
   worker-app-secret: ${WECHAT_WORKER_APP_SECRET:mock_worker_app_secret}

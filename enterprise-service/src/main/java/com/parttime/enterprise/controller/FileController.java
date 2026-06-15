@@ -10,16 +10,28 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/enterprise/files")
 public class FileController {
 
-    @Value("${server.port:8081}")
-    private String port;
+    private static final long MAX_FILE_SIZE = 10L * 1024L * 1024L;
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(".jpg", ".jpeg", ".png", ".pdf");
+
+    @Value("${file.upload.dir:uploads}")
+    private String uploadDir;
+
+    @Value("${file.public-base-url:}")
+    private String publicBaseUrl;
 
     @Operation(summary = "上传文件")
     @PostMapping("/upload")
@@ -27,23 +39,43 @@ public class FileController {
         if (file.isEmpty()) {
             return ApiResponse.error("文件为空");
         }
+        if (file.getSize() > MAX_FILE_SIZE) {
+            return ApiResponse.error("文件不能超过10MB");
+        }
         try {
-            String dir = System.getProperty("user.dir") + "/uploads";
-            new File(dir).mkdirs();
-            String ext = "";
-            String name = file.getOriginalFilename();
-            if (name != null && name.contains(".")) {
-                ext = name.substring(name.lastIndexOf("."));
+            String extension = extensionOf(file.getOriginalFilename());
+            if (!ALLOWED_EXTENSIONS.contains(extension)) {
+                return ApiResponse.error("仅支持JPG、JPEG、PNG、PDF文件");
             }
-            String filename = UUID.randomUUID().toString() + ext;
-            File dest = new File(dir, filename);
-            file.transferTo(dest);
-            String url = "http://localhost:" + port + "/uploads/" + filename;
+            String datePath = LocalDate.now().format(DATE_FORMATTER);
+            String filename = UUID.randomUUID() + extension;
+            Path relativePath = Path.of("enterprise", datePath, filename);
+            Path target = Path.of(uploadDir).resolve(relativePath).normalize();
+            Files.createDirectories(target.getParent());
+            file.transferTo(target);
+
             FileUploadVO vo = new FileUploadVO();
-            vo.setUrl(url);
+            vo.setUrl(normalizeBaseUrl(publicBaseUrl) + "/uploads/" + relativePath.toString().replace('\\', '/'));
+            vo.setFileName(filename);
+            vo.setSize(file.getSize());
+            vo.setContentType(file.getContentType());
             return ApiResponse.success(vo);
         } catch (IOException e) {
             return ApiResponse.error(e.getMessage());
         }
+    }
+
+    private String extensionOf(String fileName) {
+        if (fileName == null || !fileName.contains(".")) {
+            return "";
+        }
+        return fileName.substring(fileName.lastIndexOf('.')).toLowerCase(Locale.ROOT);
+    }
+
+    private String normalizeBaseUrl(String publicBaseUrl) {
+        if (publicBaseUrl == null || publicBaseUrl.isBlank()) {
+            return "";
+        }
+        return publicBaseUrl.endsWith("/") ? publicBaseUrl.substring(0, publicBaseUrl.length() - 1) : publicBaseUrl;
     }
 }
