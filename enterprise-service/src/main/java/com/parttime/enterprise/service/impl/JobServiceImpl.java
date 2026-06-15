@@ -227,7 +227,7 @@ public class JobServiceImpl implements JobService {
     public JobVO publishJob(Long id) {
         Job job = jobMapper.findById(id)
                 .orElseThrow(() -> new RuntimeException("Job not found: " + id));
-        if (!"DRAFT".equals(job.getStatus())) {
+        if (!"DRAFT".equals(job.getStatus()) && !"CLOSED".equals(job.getStatus())) {
             throw new RuntimeException("Cannot publish job in status: " + job.getStatus());
         }
         jobMapper.updateStatus(id, "PUBLISHED");

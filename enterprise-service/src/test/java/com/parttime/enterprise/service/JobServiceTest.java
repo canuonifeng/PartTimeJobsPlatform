@@ -392,7 +392,22 @@ class JobServiceTest {
     }
 
     @Test
-    void publishJob_shouldThrowWhenNotDraft() {
+    void publishJob_shouldTransitionFromClosedToPublished() {
+        Job job = new Job();
+        job.setId(1L);
+        job.setCompanyId(1L);
+        job.setStatus("CLOSED");
+
+        when(jobMapper.findById(1L)).thenReturn(Optional.of(job));
+
+        JobVO response = jobService.publishJob(1L);
+
+        assertThat(response.getStatus()).isEqualTo(JobStatus.PUBLISHED);
+        verify(jobMapper).updateStatus(1L, "PUBLISHED");
+    }
+
+    @Test
+    void publishJob_shouldThrowWhenAlreadyPublished() {
         Job job = new Job();
         job.setId(1L);
         job.setStatus("PUBLISHED");
