@@ -139,7 +139,7 @@ export const useAuthStore = defineStore('auth', () => {
     workerInfo.value = null
     uni.removeStorageSync('token')
     uni.removeStorageSync('workerInfo')
-    uni.reLaunch({ url: '/pages/login/login' })
+    uni.switchTab({ url: '/pages/jobs/jobList' })
   }
 
   return {

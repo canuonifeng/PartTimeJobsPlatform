@@ -73,6 +73,7 @@
       </view>
     </template>
   </view>
+  <LoginSheet />
 </template>
 
 <script setup lang="ts">
@@ -80,7 +81,11 @@ import { ref, computed } from 'vue'
 import { onLoad, onShareAppMessage } from '@dcloudio/uni-app'
 import { getJobDetail } from '@/api/jobs'
 import { getProfileCompleteness } from '@/api/profile'
+import { useAuthStore } from '@/store'
+import LoginSheet from '@/components/LoginSheet.vue'
+import { openLoginSheet } from '@/utils/loginSheet'
 
+const authStore = useAuthStore()
 const job = ref<any>(null)
 const loading = ref(true)
 const jobId = ref(0)
@@ -244,6 +249,10 @@ function handleOpenLocation() {
 }
 
 async function handleApply() {
+  if (!authStore.token) {
+    openLoginSheet({ success: handleApply })
+    return
+  }
   if (pendingScheduleIds.value.length === 0) {
     uni.showToast({ title: '请先选择排班', icon: 'none' })
     return

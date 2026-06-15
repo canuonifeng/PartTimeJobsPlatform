@@ -19,8 +19,9 @@ public class WorkerRealNameAuthServiceImpl implements WorkerRealNameAuthService 
 
     @Override
     public WorkerRealNameAuthVO submit(Long workerId, WorkerRealNameSubmitCmd cmd) {
-        if (cmd == null || isBlank(cmd.getRealName()) || isBlank(cmd.getIdCardNo())) {
-            throw new RuntimeException("姓名和身份证号必填");
+        if (cmd == null || isBlank(cmd.getRealName()) || isBlank(cmd.getIdCardNo())
+                || isBlank(cmd.getIdCardFrontUrl()) || isBlank(cmd.getIdCardBackUrl())) {
+            throw new RuntimeException("姓名、身份证号和身份证照片必填");
         }
         Optional<WorkerRealNameAuth> existing = workerRealNameAuthMapper.findByWorkerId(workerId);
         if (existing.isPresent()) {
@@ -71,6 +72,8 @@ public class WorkerRealNameAuthServiceImpl implements WorkerRealNameAuthService 
         vo.setStatus(auth.getStatus());
         vo.setRealName(auth.getRealName());
         vo.setIdCardNoMasked(maskIdCard(auth.getIdCardNo()));
+        vo.setIdCardFrontUrl(auth.getIdCardFrontUrl());
+        vo.setIdCardBackUrl(auth.getIdCardBackUrl());
         vo.setRejectReason(auth.getRejectReason());
         vo.setSubmittedAt(auth.getSubmittedAt());
         vo.setReviewedAt(auth.getReviewedAt());

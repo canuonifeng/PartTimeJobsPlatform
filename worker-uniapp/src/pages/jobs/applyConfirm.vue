@@ -16,12 +16,14 @@
     </view>
     <view class="bar"><button class="cancel" @click="handleCancel">取消</button><button class="confirm" :class="{ disabled: !canSubmit }" :disabled="!canSubmit" @click="handleConfirm">{{ submitting ? '提交中...' : '确认报名' }}</button></view>
   </view>
+  <LoginSheet />
 </template>
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { applyJob, getJobDetail } from '@/api/jobs'
+import LoginSheet from '@/components/LoginSheet.vue'
 
 interface ScheduleItem { id: number; date?: string; startTime?: string; endTime?: string; remainingSlots?: number; slotsAvailable?: number }
 

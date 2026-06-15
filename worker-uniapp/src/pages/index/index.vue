@@ -25,7 +25,7 @@
       <view v-if="!authStore.token" class="card login-card">
         <text class="empty-title">请先登录</text>
         <text class="empty-desc">登录后可以看到今日排班和签到状态</text>
-        <view class="btn-primary" @click="navTo('/pages/login/login')">去登录</view>
+        <view class="btn-primary" @click="openLoginSheet({ success: refreshHome })">去登录</view>
       </view>
 
       <template v-else>
@@ -98,6 +98,7 @@
       </template>
     </view>
   </scroll-view>
+  <LoginSheet />
   <InviteFloat />
 </template>
 
@@ -109,6 +110,8 @@ import { getHomeStats, getHomeSchedules } from '@/api/home'
 import { checkIn, checkOut } from '@/api/attendance'
 import { getCheckInRadius } from '@/api/config'
 import InviteFloat from '@/components/InviteFloat.vue'
+import LoginSheet from '@/components/LoginSheet.vue'
+import { openLoginSheet } from '@/utils/loginSheet'
 
 const authStore = useAuthStore()
 const stats = ref({ monthHours: 0, monthIncome: 0, attendanceDays: 0 })
@@ -676,6 +679,20 @@ onUnload(stopCountdown)
 
 .login-card {
   text-align: center;
+}
+
+.btn-primary {
+  width: 360rpx;
+  height: 88rpx;
+  margin: 0 auto;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #19c876 0%, #08a657 100%);
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 88rpx;
+  text-align: center;
+  box-shadow: 0 14rpx 28rpx rgba(8, 166, 87, 0.24);
 }
 
 .section-title-row {

@@ -35,6 +35,8 @@ class WorkerRealNameAuthServiceTest {
         WorkerRealNameSubmitCmd cmd = new WorkerRealNameSubmitCmd();
         cmd.setRealName("张三");
         cmd.setIdCardNo("110101199001011234");
+        cmd.setIdCardFrontUrl("https://files/front.jpg");
+        cmd.setIdCardBackUrl("https://files/back.jpg");
 
         WorkerRealNameAuthVO vo = service.submit(1L, cmd);
 
@@ -48,6 +50,8 @@ class WorkerRealNameAuthServiceTest {
         WorkerRealNameSubmitCmd cmd = new WorkerRealNameSubmitCmd();
         cmd.setRealName("张三");
         cmd.setIdCardNo("110101199001011234");
+        cmd.setIdCardFrontUrl("https://files/front.jpg");
+        cmd.setIdCardBackUrl("https://files/back.jpg");
         service.submit(1L, cmd);
 
         assertThatThrownBy(() -> service.submit(1L, cmd))
@@ -60,6 +64,8 @@ class WorkerRealNameAuthServiceTest {
         WorkerRealNameSubmitCmd cmd = new WorkerRealNameSubmitCmd();
         cmd.setRealName("张三");
         cmd.setIdCardNo("110101199001011234");
+        cmd.setIdCardFrontUrl("https://files/front.jpg");
+        cmd.setIdCardBackUrl("https://files/back.jpg");
         service.submit(1L, cmd);
 
         WorkerRealNameAuth current = mapper.findByWorkerId(1L).get();
@@ -77,6 +83,8 @@ class WorkerRealNameAuthServiceTest {
         WorkerRealNameSubmitCmd cmd = new WorkerRealNameSubmitCmd();
         cmd.setRealName("张三");
         cmd.setIdCardNo("110101199001011234");
+        cmd.setIdCardFrontUrl("https://files/front.jpg");
+        cmd.setIdCardBackUrl("https://files/back.jpg");
         service.submit(1L, cmd);
 
         WorkerRealNameAuth current = mapper.findByWorkerId(1L).get();
@@ -87,6 +95,8 @@ class WorkerRealNameAuthServiceTest {
         WorkerRealNameSubmitCmd cmd2 = new WorkerRealNameSubmitCmd();
         cmd2.setRealName("张三");
         cmd2.setIdCardNo("110101199001015678");
+        cmd2.setIdCardFrontUrl("https://files/front2.jpg");
+        cmd2.setIdCardBackUrl("https://files/back2.jpg");
 
         WorkerRealNameAuthVO vo = service.submit(1L, cmd2);
 
@@ -105,6 +115,8 @@ class WorkerRealNameAuthServiceTest {
         WorkerRealNameSubmitCmd cmd = new WorkerRealNameSubmitCmd();
         cmd.setRealName("张三");
         cmd.setIdCardNo("110101199001011234");
+        cmd.setIdCardFrontUrl("https://files/front.jpg");
+        cmd.setIdCardBackUrl("https://files/back.jpg");
         service.submit(1L, cmd);
 
         WorkerRealNameAuthVO vo = service.getStatus(1L);

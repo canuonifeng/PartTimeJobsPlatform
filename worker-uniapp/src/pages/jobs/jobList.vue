@@ -53,6 +53,7 @@
       </view>
     </scroll-view>
   </view>
+  <LoginSheet />
   <InviteFloat />
 </template>
 
@@ -61,6 +62,7 @@ import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { getCategories, getJobs } from '@/api/jobs'
 import InviteFloat from '@/components/InviteFloat.vue'
+import LoginSheet from '@/components/LoginSheet.vue'
 
 type SearchEvent = { detail?: { value?: string }, value?: string }
 type JobCategory = { id?: number, name: string, key?: string, children?: JobCategory[] }

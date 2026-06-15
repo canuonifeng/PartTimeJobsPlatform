@@ -158,7 +158,12 @@ async function handleRegister() {
 }
 
 function goLogin() {
-  uni.navigateTo({ url: '/pages/login/login' })
+  const pages = getCurrentPages()
+  if (pages.length > 1) {
+    uni.navigateBack()
+    return
+  }
+  uni.switchTab({ url: '/pages/jobs/jobList' })
 }
 </script>
 

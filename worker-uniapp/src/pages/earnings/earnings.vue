@@ -68,6 +68,7 @@
       <uni-load-more v-if="transactions.length > 0" :status="moreStatus" />
     </view>
   </view>
+  <LoginSheet />
   <InviteFloat />
 </template>
 
@@ -77,6 +78,7 @@ import { onReachBottom } from '@dcloudio/uni-app'
 import { getMyAttendance } from '@/api/attendance'
 import { getEarningsSummary, getEarningsTransactions, getReferralRewards } from '@/api/earnings'
 import InviteFloat from '@/components/InviteFloat.vue'
+import LoginSheet from '@/components/LoginSheet.vue'
 
 interface Summary {
   totalEarnings: number

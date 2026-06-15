@@ -30,11 +30,13 @@
       <uni-load-more v-if="signups.length > 0" :status="moreStatus" />
     </scroll-view>
   </view>
+  <LoginSheet />
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { getMySignups } from '@/api/jobs'
+import LoginSheet from '@/components/LoginSheet.vue'
 
 type Signup = {
   applicationId?: number

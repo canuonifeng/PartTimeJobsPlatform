@@ -1,65 +1,75 @@
 <template>
   <view class="profile-page">
-    <view class="profile-header">
-      <view class="profile-top">
-        <image class="avatar" :src="profile?.avatar || '/static/default-avatar.png'" mode="aspectFill" />
-        <view class="user-info">
-          <view class="name-row">
-            <text class="nickname">{{ displayName }}</text>
-            <text class="auth-badge" @click="navTo('/pages/auth/realName')">{{ realNameStatus }}</text>
-          </view>
-          <text class="phone">{{ displayPhone }}</text>
-        </view>
-      </view>
-      <view class="stats-panel">
-        <view v-for="item in stats" :key="item.label" class="stat-item">
-          <text class="stat-value">{{ item.value }}</text>
-          <text class="stat-label">{{ item.label }}</text>
-        </view>
-      </view>
+    <view v-if="!authStore.token" class="login-empty">
+      <image class="login-avatar" src="/static/default-avatar.png" mode="aspectFill" />
+      <text class="empty-title">登录后查看我的</text>
+      <text class="empty-desc">管理资料、实名认证、银行卡和收入信息</text>
+      <button class="login-btn" @click="openLoginSheet({ success: loadProfile })">立即登录</button>
     </view>
 
-    <view class="income-card">
-      <view class="card-title-row">
-        <text class="card-title">本月收入</text>
-        <text class="card-link" @click="navTo('/pages/earnings/earnings')">查看明细</text>
+    <template v-else>
+      <view class="profile-header">
+        <view class="profile-top">
+          <image class="avatar" :src="profile?.avatar || '/static/default-avatar.png'" mode="aspectFill" />
+          <view class="user-info">
+            <view class="name-row">
+              <text class="nickname">{{ displayName }}</text>
+              <text class="auth-badge" @click="navTo('/pages/auth/realName')">{{ realNameStatus }}</text>
+            </view>
+            <text class="phone">{{ displayPhone }}</text>
+          </view>
+        </view>
+        <view class="stats-panel">
+          <view v-for="item in stats" :key="item.label" class="stat-item">
+            <text class="stat-value">{{ item.value }}</text>
+            <text class="stat-label">{{ item.label }}</text>
+          </view>
+        </view>
       </view>
-      <view class="income-main">
-        <text class="income-symbol">¥</text>
+
+      <view class="income-card">
+        <view class="card-title-row">
+          <text class="card-title">本月收入</text>
+          <text class="card-link" @click="navTo('/pages/earnings/earnings')">查看明细</text>
+        </view>
+        <view class="income-main">
+          <text class="income-symbol">¥</text>
           <text class="income-amount">{{ moneyText(monthIncome) }}</text>
-      </view>
-      <view class="income-sub-row">
-        <view class="income-sub-item">
-          <text class="income-sub-value">¥{{ moneyText(pendingAmount) }}</text>
-          <text class="income-sub-label">待结算</text>
         </view>
-        <view class="income-divider"></view>
-        <view class="income-sub-item">
-          <text class="income-sub-value">¥{{ moneyText(settledAmount) }}</text>
-          <text class="income-sub-label">已结算</text>
-        </view>
-      </view>
-    </view>
-
-    <view v-for="(group, groupIndex) in menuGroups" :key="groupIndex" class="menu-group">
-      <view v-for="item in group" :key="item.title" class="menu-item" @click="handleMenuClick(item)">
-        <view class="menu-left">
-          <view class="menu-icon" :class="item.iconClass">
-            <text>{{ item.icon }}</text>
+        <view class="income-sub-row">
+          <view class="income-sub-item">
+            <text class="income-sub-value">¥{{ moneyText(pendingAmount) }}</text>
+            <text class="income-sub-label">待结算</text>
           </view>
-          <text class="menu-text">{{ item.title }}</text>
-        </view>
-        <view class="menu-right">
-          <text v-if="item.value" class="menu-value">{{ typeof item.value === 'function' ? item.value() : item.value }}</text>
-          <text class="arrow">›</text>
+          <view class="income-divider"></view>
+          <view class="income-sub-item">
+            <text class="income-sub-value">¥{{ moneyText(settledAmount) }}</text>
+            <text class="income-sub-label">已结算</text>
+          </view>
         </view>
       </view>
-    </view>
 
-    <view class="logout-area">
-      <button class="logout-btn" @click="handleLogout">退出登录</button>
-    </view>
+      <view v-for="(group, groupIndex) in menuGroups" :key="groupIndex" class="menu-group">
+        <view v-for="item in group" :key="item.title" class="menu-item" @click="handleMenuClick(item)">
+          <view class="menu-left">
+            <view class="menu-icon" :class="item.iconClass">
+              <text>{{ item.icon }}</text>
+            </view>
+            <text class="menu-text">{{ item.title }}</text>
+          </view>
+          <view class="menu-right">
+            <text v-if="item.value" class="menu-value">{{ typeof item.value === 'function' ? item.value() : item.value }}</text>
+            <text class="arrow">›</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="logout-area">
+        <button class="logout-btn" @click="handleLogout">退出登录</button>
+      </view>
+    </template>
   </view>
+  <LoginSheet />
   <InviteFloat />
 </template>
 
@@ -71,6 +81,8 @@ import { getProfileDashboard } from '@/api/profile'
 import { getBankCard } from '@/api/bankCard'
 import { getRealNameStatus } from '@/api/realName'
 import InviteFloat from '@/components/InviteFloat.vue'
+import LoginSheet from '@/components/LoginSheet.vue'
+import { openLoginSheet } from '@/utils/loginSheet'
 
 const authStore = useAuthStore()
 const profile = ref<any>(null)
@@ -204,6 +216,14 @@ function handleLogout() {
 }
 
 async function loadProfile() {
+  if (!authStore.token) {
+    profile.value = null
+    dashboardStats.value = {}
+    earningsSummary.value = {}
+    realNameAuth.value = {}
+    bankCard.value = null
+    return
+  }
   try {
     const [dashboardRes, bankRes, realNameRes] = await Promise.allSettled([
       getProfileDashboard(),
@@ -239,6 +259,55 @@ onShow(loadProfile)
   padding: 24rpx 24rpx 40rpx;
   box-sizing: border-box;
 }
+
+.login-empty {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80rpx 40rpx;
+  box-sizing: border-box;
+}
+
+.login-avatar {
+  width: 132rpx;
+  height: 132rpx;
+  margin-bottom: 28rpx;
+  border-radius: 50%;
+}
+
+.empty-title {
+  font-size: 34rpx;
+  line-height: 48rpx;
+  font-weight: 700;
+  color: #1f2d25;
+}
+
+.empty-desc {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  line-height: 38rpx;
+  color: #7a8a82;
+}
+
+.login-btn {
+  width: 360rpx;
+  height: 88rpx;
+  margin-top: 40rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #19c876 0%, #08a657 100%);
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 88rpx;
+}
+
+.login-btn::after {
+  border: 0;
+}
+
 .profile-header {
   background: linear-gradient(135deg, #19c876 0%, #08a657 100%);
   border-radius: 0 0 36rpx 36rpx;

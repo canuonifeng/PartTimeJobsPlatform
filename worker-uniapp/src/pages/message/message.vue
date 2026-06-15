@@ -1,43 +1,52 @@
 <template>
   <view class="message-page">
-    <view class="msg-tabs">
-      <view
-        v-for="tab in tabs"
-        :key="tab.key"
-        class="msg-tab"
-        :class="{ active: activeTab === tab.key }"
-        @click="activeTab = tab.key"
-      >
-        <text>{{ tab.label }}</text>
-        <view v-if="hasUnreadCategory(messages, tab.key)" class="tab-unread"></view>
-      </view>
+    <view v-if="!authStore.token" class="login-empty">
+      <text class="empty-title">登录后查看消息</text>
+      <text class="empty-text">系统通知、报名反馈和收入提醒会展示在这里</text>
+      <button class="login-btn" @click="openLoginSheet({ success: () => loadMessages(true) })">立即登录</button>
     </view>
 
-    <uni-load-more v-if="loading" status="loading" />
-
-    <view v-else-if="filteredMessages.length === 0" class="empty-state">
-      <text class="empty-text">暂无消息</text>
-    </view>
-
-    <view v-else class="msg-list">
-      <view v-for="message in filteredMessages" :key="message.id" class="msg-item" @click="readMessage(message)">
-        <view class="msg-avatar" :class="message.category">
-          <text>{{ message.avatar }}</text>
-        </view>
-        <view class="msg-content">
-          <view class="msg-header">
-            <text class="msg-title">{{ message.title }}</text>
-            <text class="msg-time">{{ message.time }}</text>
-          </view>
-          <view class="msg-summary-row">
-            <text class="msg-summary">{{ message.summary }}</text>
-            <view v-if="!message.read" class="msg-unread"></view>
-          </view>
+    <template v-else>
+      <view class="msg-tabs">
+        <view
+          v-for="tab in tabs"
+          :key="tab.key"
+          class="msg-tab"
+          :class="{ active: activeTab === tab.key }"
+          @click="activeTab = tab.key"
+        >
+          <text>{{ tab.label }}</text>
+          <view v-if="hasUnreadCategory(messages, tab.key)" class="tab-unread"></view>
         </view>
       </view>
-      <uni-load-more v-if="loadingMore" status="loading" />
-    </view>
+
+      <uni-load-more v-if="loading" status="loading" />
+
+      <view v-else-if="filteredMessages.length === 0" class="empty-state">
+        <text class="empty-text">暂无消息</text>
+      </view>
+
+      <view v-else class="msg-list">
+        <view v-for="message in filteredMessages" :key="message.id" class="msg-item" @click="readMessage(message)">
+          <view class="msg-avatar" :class="message.category">
+            <text>{{ message.avatar }}</text>
+          </view>
+          <view class="msg-content">
+            <view class="msg-header">
+              <text class="msg-title">{{ message.title }}</text>
+              <text class="msg-time">{{ message.time }}</text>
+            </view>
+            <view class="msg-summary-row">
+              <text class="msg-summary">{{ message.summary }}</text>
+              <view v-if="!message.read" class="msg-unread"></view>
+            </view>
+          </view>
+        </view>
+        <uni-load-more v-if="loadingMore" status="loading" />
+      </view>
+    </template>
   </view>
+  <LoginSheet />
   <InviteFloat />
 </template>
 
@@ -45,9 +54,12 @@
 import { computed, ref } from 'vue'
 import { onReachBottom, onShow } from '@dcloudio/uni-app'
 import { getMyNotifications, markNotificationRead } from '@/api/notifications'
+import { useAuthStore } from '@/store'
 import InviteFloat from '@/components/InviteFloat.vue'
+import LoginSheet from '@/components/LoginSheet.vue'
 import { hasUnreadCategory } from '@/utils/notificationBadges.mjs'
 import { syncMessageTabBarBadge } from '@/utils/notificationBadge'
+import { openLoginSheet } from '@/utils/loginSheet'
 
 type TabKey = 'system' | 'application' | 'schedule' | 'finance'
 
@@ -68,6 +80,7 @@ const tabs: Array<{ key: TabKey; label: string }> = [
   { key: 'finance', label: '收入提现' }
 ]
 
+const authStore = useAuthStore()
 const activeTab = ref<TabKey>('system')
 const loading = ref(false)
 const loadingMore = ref(false)
@@ -127,6 +140,12 @@ function recordsOf(res: any) {
 }
 
 async function loadMessages(reset = true) {
+  if (!authStore.token) {
+    messages.value = []
+    total.value = 0
+    syncMessageTabBarBadge(messages.value)
+    return
+  }
   if (reset) {
     page.value = 1
     loading.value = true
@@ -175,6 +194,47 @@ onReachBottom(() => loadMessages(false))
   padding: 24rpx;
   background: #f6f7f8;
   box-sizing: border-box;
+}
+
+.login-empty {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80rpx 40rpx;
+  box-sizing: border-box;
+}
+
+.empty-title {
+  font-size: 34rpx;
+  line-height: 48rpx;
+  font-weight: 700;
+  color: #1f2d25;
+}
+
+.login-empty .empty-text {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  line-height: 38rpx;
+  color: #7a8a82;
+}
+
+.login-btn {
+  width: 360rpx;
+  height: 88rpx;
+  margin-top: 40rpx;
+  border-radius: 999rpx;
+  background: linear-gradient(135deg, #19c876 0%, #08a657 100%);
+  color: #ffffff;
+  font-size: 30rpx;
+  font-weight: 700;
+  line-height: 88rpx;
+}
+
+.login-btn::after {
+  border: 0;
 }
 
 .msg-tabs {

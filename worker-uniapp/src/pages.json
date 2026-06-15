@@ -103,18 +103,6 @@
       }
     },
     {
-      "path": "pages/login/login",
-      "style": {
-        "navigationStyle": "custom"
-      }
-    },
-    {
-      "path": "pages/login/phoneLogin",
-      "style": {
-        "navigationStyle": "custom"
-      }
-    },
-    {
       "path": "pages/common/protocol",
       "style": {
         "navigationStyle": "custom"

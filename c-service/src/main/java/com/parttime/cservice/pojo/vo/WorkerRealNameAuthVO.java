@@ -13,6 +13,10 @@ public class WorkerRealNameAuthVO {
     private String realName;
     @Schema(description = "身份证号(部分掩码)")
     private String idCardNoMasked;
+    @Schema(description = "身份证正面URL")
+    private String idCardFrontUrl;
+    @Schema(description = "身份证反面URL")
+    private String idCardBackUrl;
     @Schema(description = "拒绝原因")
     private String rejectReason;
     private LocalDateTime submittedAt;

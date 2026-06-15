@@ -16,6 +16,11 @@ jwt:
   secret: ${JWT_SECRET:parttime-cservice-jwt-secret-key-must-be-at-least-256-bits}
   expiration: ${JWT_EXPIRATION:86400000}
 
+file:
+  upload:
+    dir: ${FILE_UPLOAD_DIR:uploads}
+  public-base-url: ${FILE_PUBLIC_BASE_URL:}
+
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
   type-aliases-package: com.parttime.cservice.pojo.entity

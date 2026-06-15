@@ -49,12 +49,14 @@
     </scroll-view>
     <view v-if="correctionDialogVisible" class="overlay" @click="correctionDialogVisible = false"><view class="overlay-content" @click.stop><view class="dialog-title">补卡申请</view><view class="dialog-body"><text class="dialog-label">补卡原因</text><textarea v-model="correctionReason" placeholder="请填写补卡原因" class="dialog-textarea" maxlength="500" /><text class="dialog-hint">{{ correctionReason.length }}/500</text></view><view class="dialog-footer"><view class="dialog-btn cancel" @click="correctionDialogVisible = false">取消</view><view class="dialog-btn confirm" @click="handleSubmitCorrection">{{ submitting ? '提交中...' : '提交' }}</view></view></view></view>
   </view>
+  <LoginSheet />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { getMyShifts } from '@/api/schedule'
 import { submitCorrection } from '@/api/attendance'
+import LoginSheet from '@/components/LoginSheet.vue'
 
 interface DayInfo { name: string; date: string; fullDate: string; isToday: boolean; hasShift: boolean }
 interface Shift { id: number; jobTitle: string; location: string; startTime: string; endTime: string; date: string; status: string; correctionStatus?: string | null; canApplyCorrection: boolean; checkInTime?: string; checkOutTime?: string; workHours?: string }
