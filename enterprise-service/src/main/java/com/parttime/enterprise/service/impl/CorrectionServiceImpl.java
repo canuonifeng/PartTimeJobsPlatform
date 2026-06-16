@@ -134,6 +134,8 @@ public class CorrectionServiceImpl implements CorrectionService {
             record.setCheckOutTime(checkOut);
             record.setTotalHours(totalHours);
             record.setScheduledPay(scheduledPay);
+            record.setPayablePay(scheduledPay);
+            record.setStatus(ShiftStatus.COMPLETED.name());
             record.setRemark("补卡");
             attendanceRecordMapper.update(record);
         } else {
@@ -146,16 +148,15 @@ public class CorrectionServiceImpl implements CorrectionService {
             record.setCheckOutTime(checkOut);
             record.setTotalHours(totalHours);
             record.setScheduledPay(scheduledPay);
-            record.setStatus(ShiftStatus.ON_DUTY.name());
+            record.setPayablePay(scheduledPay);
+            record.setStatus(ShiftStatus.COMPLETED.name());
             record.setRemark("补卡");
             attendanceRecordMapper.insert(record);
         }
 
-        if (ShiftStatus.SCHEDULED.name().equals(shift.getStatus())) {
-            shift.setStatus(ShiftStatus.ON_DUTY.name());
-            shift.setUpdatedAt(LocalDateTime.now());
-            shiftMapper.update(shift);
-        }
+        shift.setStatus(ShiftStatus.COMPLETED.name());
+        shift.setUpdatedAt(LocalDateTime.now());
+        shiftMapper.update(shift);
 
         correction.setStatus(CorrectionStatus.APPROVED.name());
         correction.setProcessedAt(LocalDateTime.now());

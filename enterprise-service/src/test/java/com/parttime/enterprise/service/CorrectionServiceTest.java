@@ -107,6 +107,27 @@ public class CorrectionServiceTest {
     }
 
     @Test
+    void approve_shouldMarkAbnormalShiftCompleted() {
+        ScheduleShift shift = shiftMapper.findById(1L).orElseThrow();
+        shift.setStatus("LATE");
+
+        AttendanceRecord existing = new AttendanceRecord();
+        existing.setId(10L);
+        existing.setShiftId(1L);
+        existing.setCheckInTime(LocalDateTime.of(2026, 5, 21, 9, 5));
+        existing.setCheckOutTime(LocalDateTime.of(2026, 5, 21, 18, 0));
+        existing.setStatus("LATE");
+        recordMapper.store.put(10L, existing);
+
+        service.approve(1L, 100L);
+
+        AttendanceRecord updated = recordMapper.findByShiftId(1L).orElseThrow();
+        assertEquals("COMPLETED", shiftMapper.findById(1L).orElseThrow().getStatus());
+        assertEquals("COMPLETED", updated.getStatus());
+        assertEquals(LocalDateTime.of(2026, 5, 21, 9, 0), updated.getCheckInTime());
+    }
+
+    @Test
     void testReject() {
         service.reject(1L, 100L, "理由不充分");
 
