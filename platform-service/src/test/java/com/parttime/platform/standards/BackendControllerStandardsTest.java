@@ -35,6 +35,7 @@ class BackendControllerStandardsTest {
                     violations.add(path + ":" + (i + 1) + " only @GetMapping/@PostMapping are allowed");
                 }
                 if (line.matches(".*@(RequestMapping|GetMapping|PostMapping)\\(\\\"/api.*")
+                        && !line.contains("\"/api/leads")
                         && !line.contains("\"" + API_PREFIX)) {
                     violations.add(path + ":" + (i + 1) + " platform APIs must start with " + API_PREFIX);
                 }

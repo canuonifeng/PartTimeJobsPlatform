@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS leads (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  contact_name VARCHAR(64) NOT NULL COMMENT '联系人姓名',
+  company_name VARCHAR(128) NOT NULL COMMENT '公司名称',
+  phone VARCHAR(32) NOT NULL COMMENT '手机号',
+  demand VARCHAR(1000) NULL COMMENT '需求说明',
+  source_page VARCHAR(64) NOT NULL DEFAULT 'website' COMMENT '来源页面',
+  status VARCHAR(32) NOT NULL DEFAULT 'NEW' COMMENT '跟进状态',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_leads_status_created_at (status, created_at),
+  INDEX idx_leads_phone (phone)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='官网客户留资';

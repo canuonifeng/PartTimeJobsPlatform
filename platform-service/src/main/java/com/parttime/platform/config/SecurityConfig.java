@@ -50,6 +50,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/leads/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/admin/auth/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/admin/**")).authenticated()
                         .anyRequest().permitAll()
