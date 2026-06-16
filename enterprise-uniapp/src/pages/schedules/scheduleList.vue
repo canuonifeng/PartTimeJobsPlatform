@@ -12,7 +12,13 @@ const pageSize = 20
 const currentConfirmStatus = ref('')
 const confirmTabs = [
   { label: '全部', value: '' },
-  { label: '待确认', value: 'SCHEDULED' }
+  { label: '待确认', value: 'SCHEDULED' },
+  { label: '工作中', value: 'ON_DUTY' },
+  { label: '迟到', value: 'LATE' },
+  { label: '早退', value: 'EARLY_LEAVE' },
+  { label: '迟到并早退', value: 'LATE_EARLY_LEAVE' },
+  { label: '缺勤', value: 'ABSENT' },
+  { label: '已完成', value: 'COMPLETED' }
 ]
 
 onLoad((options = {}) => {

@@ -23,7 +23,8 @@ const form = ref({
 const searchForm = ref({
   jobId: '',
   workerName: '',
-  date: ''
+  date: '',
+  status: ''
 })
 
 async function fetchData() {
@@ -44,7 +45,7 @@ function handleSearch() {
 }
 
 function handleReset() {
-  searchForm.value = { jobId: '', workerName: '', date: '' }
+  searchForm.value = { jobId: '', workerName: '', date: '', status: '' }
   page.value = 1
   fetchData()
 }
@@ -190,6 +191,18 @@ onMounted(() => {
             </el-form-item>
             <el-form-item label="日期">
               <el-date-picker v-model="searchForm.date" type="date" placeholder="选择日期" value-format="YYYY-MM-DD" />
+            </el-form-item>
+            <el-form-item label="状态">
+              <el-select v-model="searchForm.status" clearable placeholder="全部" style="width: 150px">
+                <el-option label="待上岗" value="SCHEDULED" />
+                <el-option label="工作中" value="ON_DUTY" />
+                <el-option label="迟到" value="LATE" />
+                <el-option label="早退" value="EARLY_LEAVE" />
+                <el-option label="迟到并早退" value="LATE_EARLY_LEAVE" />
+                <el-option label="缺勤" value="ABSENT" />
+                <el-option label="已完成" value="COMPLETED" />
+                <el-option label="已取消" value="CANCELLED" />
+              </el-select>
             </el-form-item>
             <el-form-item>
               <el-button type="primary" @click="handleSearch">查询</el-button>
