@@ -44,8 +44,8 @@ const page = ref(1)
 const total = ref(0)
 const allShifts = ref<Shift[]>([])
 const weekDayNames = ['日', '一', '二', '三', '四', '五', '六']
-const checkedInStatuses = ['ON_DUTY', 'COMPLETED', 'LATE', 'EARLY_LEAVE']
-const checkedOutStatuses = ['COMPLETED', 'EARLY_LEAVE']
+const checkedInStatuses = ['ON_DUTY', 'COMPLETED', 'LATE', 'EARLY_LEAVE', 'LATE_EARLY_LEAVE']
+const checkedOutStatuses = ['COMPLETED', 'EARLY_LEAVE', 'LATE_EARLY_LEAVE']
 
 const todayDate = computed(() => {
   const d = new Date()
@@ -67,6 +67,12 @@ const stats = computed(() => {
 function isCheckedOutAfterShiftEnd(shift: Shift): boolean {
   if (!shift.checkOutTime || !shift.date || !shift.endTime) return false
   return parseDateTime(shift.date, shift.checkOutTime).getTime() >= parseDateTime(shift.date, shift.endTime).getTime()
+}
+
+function parseDateTime(date: string, time: string): Date {
+  const [year = 0, month = 1, day = 1] = String(date).split('-').map(Number)
+  const [hour = 0, minute = 0] = String(time).split(':').map(Number)
+  return new Date(year, month - 1, day, hour, minute)
 }
 
 function formatFullDate(d: Date): string { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
@@ -93,15 +99,16 @@ function normalizeShift(s: any, index: number): Shift {
 function hasCheckedIn(shift: Shift): boolean { return shift.checkedIn || checkedInStatuses.includes(shift.status) }
 function hasCheckedOut(shift: Shift): boolean { return shift.checkedOut || isCheckedOutAfterShiftEnd(shift) || checkedOutStatuses.includes(shift.status) }
 function statusText(status: string, shift?: Shift): string {
+  const map: Record<string, string> = { SCHEDULED: '待上岗', ON_DUTY: '工作中', COMPLETED: '已完成', LATE: '迟到', EARLY_LEAVE: '早退', LATE_EARLY_LEAVE: '迟到并早退', ABSENT: '缺勤' }
+  if (['LATE', 'EARLY_LEAVE', 'LATE_EARLY_LEAVE', 'ABSENT'].includes(status)) return map[status]
   if (shift && isCheckedOutAfterShiftEnd(shift)) return '已完成'
-  const map: Record<string, string> = { SCHEDULED: '待上岗', ON_DUTY: '工作中', COMPLETED: '已完成', LATE: '迟到', EARLY_LEAVE: '早退', ABSENT: '缺勤' }
   return map[status] || status || '待上岗'
 }
 function statusClass(status: string, shift?: Shift): string {
+  if (['LATE', 'EARLY_LEAVE', 'LATE_EARLY_LEAVE', 'ABSENT'].includes(status)) return 'warning'
   if (shift && isCheckedOutAfterShiftEnd(shift)) return 'completed'
   if (['COMPLETED'].includes(status)) return 'completed'
-  if (['ON_DUTY', 'LATE'].includes(status)) return 'active'
-  if (['EARLY_LEAVE', 'ABSENT'].includes(status)) return 'warning'
+  if (['ON_DUTY'].includes(status)) return 'active'
   return 'pending'
 }
 async function loadShifts(p: number) {

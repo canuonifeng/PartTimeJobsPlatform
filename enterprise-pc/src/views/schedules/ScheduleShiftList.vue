@@ -228,6 +228,7 @@ onMounted(() => {
                 <el-tag v-else-if="row.status === 'COMPLETED'" type="success" size="small">已完成</el-tag>
                 <el-tag v-else-if="row.status === 'ABSENT'" type="danger" size="small">缺勤</el-tag>
                 <el-tag v-else-if="row.status === 'LATE'" type="danger" size="small">迟到</el-tag>
+                <el-tag v-else-if="row.status === 'LATE_EARLY_LEAVE'" type="danger" size="small">迟到并早退</el-tag>
                 <el-tag v-else-if="row.status === 'EARLY_LEAVE' || row.status === 'EARLY'" type="danger" size="small">早退</el-tag>
                 <el-tag v-else-if="row.status === 'ON_DUTY'" type="warning" size="small">工作中</el-tag>
                 <el-tag v-else type="info" size="small">待上岗</el-tag>

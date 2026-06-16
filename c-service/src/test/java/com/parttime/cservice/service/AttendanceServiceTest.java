@@ -231,6 +231,21 @@ class AttendanceServiceTest {
     }
 
     @Test
+    void checkOut_shouldMarkLateEarlyLeaveWhenLateShiftLeavesEarly() {
+        LocalDateTime now = LocalDateTime.now();
+        Long shiftId = attendanceService.addShift(10L, 1L,
+                now.toLocalDate(), now.toLocalTime().minusMinutes(30), now.toLocalTime().plusMinutes(30),
+                null, null, null, null).getId();
+
+        attendanceService.checkIn(1L, shiftId, null, null);
+        AttendanceVO response = attendanceService.checkOut(1L, shiftId, null, null);
+        List<WorkerShiftVO> updatedShifts = attendanceService.getMyShifts(1L, null, null, null, null);
+
+        assertThat(response.getStatus()).isEqualTo("LATE_EARLY_LEAVE");
+        assertThat(updatedShifts.get(0).getStatus()).isEqualTo("LATE_EARLY_LEAVE");
+    }
+
+    @Test
     void checkOut_shouldThrowWhenLateShiftAlreadyCheckedOutAfterShiftEnd() {
         Long shiftId = attendanceService.addShift(10L, 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),

@@ -40,7 +40,7 @@ public class ScheduleShift {
     private Integer locationRadius;
     @Schema(description = "打卡地点名称")
     private String locationName;
-    @Schema(description = "班次状态: ASSIGNED-已分配, CHECKED_IN-已签到, CHECKED_OUT-已签退, COMPLETED-已完成, ABSENT-缺勤, CANCELLED-已取消")
+    @Schema(description = "班次状态: SCHEDULED-待上岗, ON_DUTY-工作中, COMPLETED-已完成, ABSENT-缺勤, LATE-迟到, EARLY_LEAVE-早退, LATE_EARLY_LEAVE-迟到并早退, CANCELLED-已取消")
     private String status;
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;

@@ -24,6 +24,16 @@ class BackendMapperStandardsTest {
         assertTrue(violations.isEmpty(), String.join(System.lineSeparator(), violations));
     }
 
+    @Test
+    void scheduleShiftUpdatePersistsStatus() throws IOException {
+        String xml = Files.readString(Path.of("src/main/resources/mapper/ScheduleShiftMapper.xml"));
+        int updateStart = xml.indexOf("<update id=\"update\">");
+        int updateEnd = xml.indexOf("</update>", updateStart);
+        assertTrue(updateStart >= 0 && updateEnd > updateStart, "ScheduleShiftMapper.update must exist");
+        String updateSql = xml.substring(updateStart, updateEnd);
+        assertTrue(updateSql.contains("status = #{status}"), "ScheduleShiftMapper.update must persist status");
+    }
+
     private void collectViolations(Path path, List<String> violations) {
         try {
             List<String> lines = Files.readAllLines(path);

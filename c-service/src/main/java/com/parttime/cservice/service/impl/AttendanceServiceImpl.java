@@ -219,7 +219,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         }
 
         // 只能从已上岗/迟到/早退状态签退
-        if (!ShiftStatus.ON_DUTY.name().equals(shift.getStatus()) && !ShiftStatus.LATE.name().equals(shift.getStatus()) && !ShiftStatus.EARLY_LEAVE.name().equals(shift.getStatus())) {
+        if (!ShiftStatus.ON_DUTY.name().equals(shift.getStatus()) && !ShiftStatus.LATE.name().equals(shift.getStatus()) && !ShiftStatus.EARLY_LEAVE.name().equals(shift.getStatus()) && !ShiftStatus.LATE_EARLY_LEAVE.name().equals(shift.getStatus())) {
             throw new RuntimeException("Cannot check out: shift status is " + shift.getStatus());
         }
 
@@ -349,8 +349,14 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     private ShiftStatus resolveCheckOutStatus(String currentStatus, long earlySeconds) {
+        if (earlySeconds > 0 && ShiftStatus.LATE.name().equals(currentStatus)) {
+            return ShiftStatus.LATE_EARLY_LEAVE;
+        }
         if (earlySeconds > 0) {
             return ShiftStatus.EARLY_LEAVE;
+        }
+        if (ShiftStatus.LATE_EARLY_LEAVE.name().equals(currentStatus)) {
+            return ShiftStatus.LATE;
         }
         if (ShiftStatus.LATE.name().equals(currentStatus)) {
             return ShiftStatus.LATE;

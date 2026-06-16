@@ -150,25 +150,25 @@ function isCheckedOutAfterShiftEnd(shift: Shift): boolean {
 function canApplyCorrection(shift: Shift): boolean {
   if (shift.id < 0) return false
   if (!isShiftEnded(shift)) return false
-  if (isCheckedOutAfterShiftEnd(shift)) return false
-  if (['COMPLETED', 'ABSENT', 'EARLY_LEAVE'].includes(shift.status)) return false
+  if (!['ABSENT', 'LATE', 'EARLY_LEAVE', 'LATE_EARLY_LEAVE'].includes(shift.status)) return false
   if (shift.correctionStatus) return false
   return true
 }
 
 function statusClass(shift: Shift): string {
+  if (['LATE', 'EARLY_LEAVE', 'LATE_EARLY_LEAVE', 'ABSENT'].includes(shift.status)) return 'warning'
   if (isCheckedOutAfterShiftEnd(shift)) return 'completed'
   if (['COMPLETED'].includes(shift.status)) return 'completed'
   if (shift.checkInTime && !shift.checkOutTime) return 'in-progress'
-  if (['ON_DUTY', 'LATE'].includes(shift.status)) return 'in-progress'
-  if (['ABSENT', 'EARLY_LEAVE'].includes(shift.status)) return 'warning'
+  if (['ON_DUTY'].includes(shift.status)) return 'in-progress'
   return 'pending'
 }
 
 function statusText(shift: Shift): string {
-  if (shift.checkOutTime) return '已完成'
+  const map: Record<string, string> = { SCHEDULED: '待上岗', CHECKED_IN: '已签到', ON_DUTY: '工作中', CHECKED_OUT: '已完成', COMPLETED: '已完成', OFF_DUTY: '已完成', ABSENT: '缺勤', LATE: '迟到', EARLY_LEAVE: '早退', LATE_EARLY_LEAVE: '迟到并早退' }
+  if (['LATE', 'EARLY_LEAVE', 'LATE_EARLY_LEAVE', 'ABSENT'].includes(shift.status)) return map[shift.status]
+  if (isCheckedOutAfterShiftEnd(shift)) return '已完成'
   if (shift.checkInTime) return '已签到'
-  const map: Record<string, string> = { SCHEDULED: '待上岗', CHECKED_IN: '已签到', ON_DUTY: '工作中', CHECKED_OUT: '已完成', COMPLETED: '已完成', OFF_DUTY: '已完成', ABSENT: '缺勤', LATE: '迟到', EARLY_LEAVE: '早退' }
   return map[shift.status] || shift.status || '待上岗'
 }
 
@@ -211,7 +211,7 @@ const selectedDayLabel = computed(() => {
 const scheduleStats = computed(() => {
   const completed = allShifts.value.filter((s) => ['CHECKED_OUT', 'COMPLETED', 'OFF_DUTY'].includes(s.status))
   const workHours = allShifts.value.reduce((total, shift) => total + (parseFloat(String(shift.workHours || '')) || (completed.includes(shift) ? calcWorkHours(shift) : 0)), 0)
-  return { attendanceDays: new Set(completed.map((s) => s.date)).size, workHours: Math.round(workHours * 10) / 10, lateCount: allShifts.value.filter((s) => s.status === 'LATE').length, absentCount: allShifts.value.filter((s) => s.status === 'ABSENT').length }
+  return { attendanceDays: new Set(completed.map((s) => s.date)).size, workHours: Math.round(workHours * 10) / 10, lateCount: allShifts.value.filter((s) => s.status === 'LATE' || s.status === 'LATE_EARLY_LEAVE').length, absentCount: allShifts.value.filter((s) => s.status === 'ABSENT').length }
 })
 
 async function loadShifts() {

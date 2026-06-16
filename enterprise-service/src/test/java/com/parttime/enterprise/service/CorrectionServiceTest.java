@@ -48,6 +48,7 @@ public class CorrectionServiceTest {
         Job job = new Job();
         job.setId(1L);
         job.setTitle("测试岗位");
+        job.setCompanyId(9L);
         jobMapper.store.put(1L, job);
 
         // Seed a shift
@@ -88,7 +89,26 @@ public class CorrectionServiceTest {
         assertEquals(100L, c.getProcessorId());
 
         assertTrue(recordMapper.findByShiftId(1L).isPresent());
-        assertEquals("补卡", recordMapper.findByShiftId(1L).get().getRemark());
+        AttendanceRecord record = recordMapper.findByShiftId(1L).orElseThrow();
+        assertEquals(1L, record.getShiftId());
+        assertEquals("补卡", record.getRemark());
+        assertEquals("PAID", record.getSettlementStatus());
+    }
+
+    @Test
+    void approve_shouldMarkPaidCorrectionRecordUnpaidWhenPayablePayExists() {
+        ScheduleShift shift = shiftMapper.findById(1L).orElseThrow();
+        shift.setStatus("ABSENT");
+        shift.setSalaryType("HOURLY");
+        shift.setSalaryAmount(new java.math.BigDecimal("20.00"));
+
+        service.approve(1L, 100L);
+
+        AttendanceRecord record = recordMapper.findByShiftId(1L).orElseThrow();
+        assertEquals("COMPLETED", shiftMapper.findById(1L).orElseThrow().getStatus());
+        assertEquals(1L, record.getShiftId());
+        assertEquals(new java.math.BigDecimal("180.00"), record.getPayablePay());
+        assertEquals("UNPAID", record.getSettlementStatus());
     }
 
     @Test
@@ -104,6 +124,8 @@ public class CorrectionServiceTest {
 
         AttendanceRecord updated = recordMapper.findByShiftId(1L).orElseThrow();
         assertEquals("补卡", updated.getRemark());
+        assertEquals(1L, updated.getShiftId());
+        assertEquals("PAID", updated.getSettlementStatus());
     }
 
     @Test
@@ -125,6 +147,7 @@ public class CorrectionServiceTest {
         assertEquals("COMPLETED", shiftMapper.findById(1L).orElseThrow().getStatus());
         assertEquals("COMPLETED", updated.getStatus());
         assertEquals(LocalDateTime.of(2026, 5, 21, 9, 0), updated.getCheckInTime());
+        assertEquals("PAID", updated.getSettlementStatus());
     }
 
     @Test

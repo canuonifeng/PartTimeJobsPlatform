@@ -71,6 +71,7 @@ function statusLabel(status) {
     LATE: '迟到',
     ABSENT: '缺勤',
     EARLY_LEAVE: '早退',
+    LATE_EARLY_LEAVE: '迟到并早退',
     EARLY: '早退',
     SCHEDULED: '待上岗'
   }
@@ -88,7 +89,7 @@ function statusClass(status) {
 }
 
 function isDangerStatus(status) {
-  return ['ABSENT', 'LATE', 'EARLY_LEAVE', 'EARLY', 'CANCELLED'].includes(status)
+  return ['ABSENT', 'LATE', 'EARLY_LEAVE', 'LATE_EARLY_LEAVE', 'EARLY', 'CANCELLED'].includes(status)
 }
 
 function genderLabel(gender) {

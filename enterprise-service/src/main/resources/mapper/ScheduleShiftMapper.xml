@@ -127,7 +127,8 @@
             worker_id = #{workerId},
             shift_date = #{shiftDate}, start_time = #{startTime}, end_time = #{endTime},
             location_lat = #{locationLat}, location_lng = #{locationLng},
-            location_radius = #{locationRadius}, location_name = #{locationName}
+            location_radius = #{locationRadius}, location_name = #{locationName},
+            status = #{status}
         WHERE id = #{id}
     </update>
 

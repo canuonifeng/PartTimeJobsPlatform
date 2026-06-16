@@ -51,7 +51,7 @@
             </view>
           </view>
             </view>
-            <view class="status-badge" :class="statusClass(shift.status)">{{ statusLabel(shift.status) }}</view>
+              <view class="status-badge" :class="displayStatusClass(shift)">{{ displayStatusLabel(shift) }}</view>
           </view>
           <view class="time-box">
             <view>
@@ -204,6 +204,11 @@ function parseShiftDateTime(date: string, time: string) {
   return new Date(y, m - 1, d, h, min)
 }
 
+function isCheckedOutAfterShiftEnd(shift: Shift) {
+  if (!shift.checkOutTime || !shift.date || !shift.endTime) return false
+  return parseShiftDateTime(shift.date, shift.checkOutTime).getTime() >= parseShiftDateTime(shift.date, shift.endTime).getTime()
+}
+
 
 function handleOpenLocation(shift: Shift) {
   if (!shift.lat || !shift.lng) {
@@ -224,24 +229,39 @@ function statusLabel(status?: string) {
   if (status === 'ABSENT') return '缺勤'
   if (status === 'LATE') return '迟到'
   if (status === 'EARLY_LEAVE') return '早退'
+  if (status === 'LATE_EARLY_LEAVE') return '迟到并早退'
   return '待上岗'
+}
+
+function displayStatusLabel(shift: Shift) {
+  if (isAbnormalStatus(shift.status)) return statusLabel(shift.status)
+  if (isCheckedOutAfterShiftEnd(shift)) return '已完成'
+  return statusLabel(shift.status)
+}
+
+function displayStatusClass(shift: Shift) {
+  if (isAbnormalStatus(shift.status)) return 'status-red'
+  if (isCheckedOutAfterShiftEnd(shift)) return 'status-gray'
+  return statusClass(shift.status)
 }
 
 function statusClass(status?: string) {
   if (status === 'ON_DUTY') return 'status-green'
   if (status === 'COMPLETED' || status === 'OFF_DUTY') return 'status-gray'
-  if (status === 'ABSENT' || status === 'LATE' || status === 'EARLY_LEAVE') return 'status-red'
+  if (isAbnormalStatus(status)) return 'status-red'
   return 'status-yellow'
 }
 
 function tipClass(shift: Shift) {
-  if (shift.status === 'ABSENT' || shift.status === 'LATE' || shift.status === 'EARLY_LEAVE') return 'tip-red'
+  if (isAbnormalStatus(shift.status)) return 'tip-red'
   if (shift.status === 'ON_DUTY') return 'tip-green'
   if (shift.status === 'COMPLETED' || shift.status === 'OFF_DUTY') return 'tip-gray'
   return 'tip-yellow'
 }
 
 function tipText(shift: Shift) {
+  if (shift.status === 'LATE_EARLY_LEAVE') return '已记录迟到并早退，请留意考勤规则'
+  if (isCheckedOutAfterShiftEnd(shift)) return isAbnormalStatus(shift.status) ? '已记录考勤异常，请留意考勤规则' : '本班次已完成，辛苦了'
   if (shift.status === 'ON_DUTY' || shift.status === 'LATE') return '已签到，完成工作后可在此签退'
   if (shift.status === 'COMPLETED' || shift.status === 'OFF_DUTY') return '本班次已完成，辛苦了'
   if (shift.status === 'EARLY_LEAVE') return '已记录早退，请留意考勤规则'
@@ -256,25 +276,31 @@ function tipText(shift: Shift) {
 }
 
 function canCheckIn(shift: Shift) {
-  return !['ON_DUTY', 'OFF_DUTY', 'COMPLETED', 'ABSENT', 'LATE', 'EARLY_LEAVE'].includes(shift.status)
+  return !['ON_DUTY', 'OFF_DUTY', 'COMPLETED', 'ABSENT', 'LATE', 'EARLY_LEAVE', 'LATE_EARLY_LEAVE'].includes(shift.status)
 }
 
 function canCheckOut(shift: Shift) {
-  return shift.status === 'ON_DUTY' || shift.status === 'LATE'
+  if (isCheckedOutAfterShiftEnd(shift)) return false
+  return shift.status === 'ON_DUTY' || shift.status === 'LATE' || shift.status === 'EARLY_LEAVE' || shift.status === 'LATE_EARLY_LEAVE'
 }
 
 function hasCheckedIn(shift: Shift) {
-  return ['ON_DUTY', 'OFF_DUTY', 'COMPLETED', 'LATE', 'EARLY_LEAVE'].includes(shift.status)
+  return ['ON_DUTY', 'OFF_DUTY', 'COMPLETED', 'LATE', 'EARLY_LEAVE', 'LATE_EARLY_LEAVE'].includes(shift.status)
 }
 
 function hasCheckedOut(shift: Shift) {
-  return ['COMPLETED', 'EARLY_LEAVE'].includes(shift.status)
+  if (isCheckedOutAfterShiftEnd(shift)) return true
+  return ['COMPLETED', 'EARLY_LEAVE', 'LATE_EARLY_LEAVE'].includes(shift.status)
+}
+
+function isAbnormalStatus(status?: string) {
+  return status === 'ABSENT' || status === 'LATE' || status === 'EARLY_LEAVE' || status === 'LATE_EARLY_LEAVE'
 }
 
 function isActionDisabled(shift: Shift, type: 'in' | 'out') {
   if (submittingKey.value) return true
   if (type === 'in') return hasCheckedIn(shift) || hasCheckedOut(shift) || shift.status === 'ABSENT'
-  return !hasCheckedIn(shift) || shift.status === 'ABSENT' || shift.status === 'OFF_DUTY' || shift.status === 'COMPLETED'
+  return !canCheckOut(shift) || !hasCheckedIn(shift) || shift.status === 'ABSENT' || shift.status === 'OFF_DUTY' || shift.status === 'COMPLETED'
 }
 
 const sortedShifts = computed(() => {
@@ -417,6 +443,9 @@ async function handleCheckOut(shift: Shift) {
       } else if (backendStatus === 'EARLY_LEAVE') {
         target.status = 'EARLY_LEAVE'
         finalStatus = 'EARLY_LEAVE'
+      } else if (backendStatus === 'LATE_EARLY_LEAVE') {
+        target.status = 'LATE_EARLY_LEAVE'
+        finalStatus = 'LATE_EARLY_LEAVE'
       } else if (backendStatus === 'LATE') {
         target.status = 'LATE'
         finalStatus = 'LATE'
@@ -428,7 +457,7 @@ async function handleCheckOut(shift: Shift) {
       target.checkOutTime = normalizeTime(res?.checkOutTime || new Date().toISOString())
     }
     const amount = Number(res?.payablePay || res?.scheduledPay || 0)
-    const isAbnormal = finalStatus === 'LATE' || finalStatus === 'EARLY_LEAVE'
+    const isAbnormal = isAbnormalStatus(finalStatus)
     if (amount <= 0) {
       uni.showToast({ title: '签退成功', icon: 'success' })
     } else if (res?.autoSettled) {
@@ -446,7 +475,7 @@ async function handleCheckOut(shift: Shift) {
     } else if (isAbnormal) {
       uni.showModal({
         title: '结算确认',
-        content: `本次${finalStatus === 'LATE' ? '迟到' : '早退'}，预计结算 ¥${amount.toFixed(2)}，请到收入明细确认`,
+        content: `本次${statusLabel(finalStatus)}，预计结算 ¥${amount.toFixed(2)}，请到收入明细确认`,
         confirmText: '去确认',
         cancelText: '知道了',
         success: (modalRes) => {

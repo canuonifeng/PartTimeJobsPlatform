@@ -128,13 +128,17 @@ public class CorrectionServiceImpl implements CorrectionService {
 
         if (existing.isPresent()) {
             AttendanceRecord record = existing.get();
+            record.setShiftId(correction.getShiftId());
             record.setJobId(shift.getJobId());
             record.setCompanyId(job.getCompanyId());
+            record.setWorkerId(correction.getWorkerId());
             record.setCheckInTime(checkIn);
             record.setCheckOutTime(checkOut);
             record.setTotalHours(totalHours);
             record.setScheduledPay(scheduledPay);
             record.setPayablePay(scheduledPay);
+            record.setSettlementStatus(resolveSettlementStatus(scheduledPay));
+            record.setCalculatedAt(LocalDateTime.now());
             record.setStatus(ShiftStatus.COMPLETED.name());
             record.setRemark("补卡");
             attendanceRecordMapper.update(record);
@@ -149,6 +153,8 @@ public class CorrectionServiceImpl implements CorrectionService {
             record.setTotalHours(totalHours);
             record.setScheduledPay(scheduledPay);
             record.setPayablePay(scheduledPay);
+            record.setSettlementStatus(resolveSettlementStatus(scheduledPay));
+            record.setCalculatedAt(LocalDateTime.now());
             record.setStatus(ShiftStatus.COMPLETED.name());
             record.setRemark("补卡");
             attendanceRecordMapper.insert(record);
@@ -162,6 +168,10 @@ public class CorrectionServiceImpl implements CorrectionService {
         correction.setProcessedAt(LocalDateTime.now());
         correction.setProcessorId(processorId);
         correctionMapper.update(correction);
+    }
+
+    private String resolveSettlementStatus(BigDecimal payablePay) {
+        return payablePay != null && payablePay.compareTo(BigDecimal.ZERO) > 0 ? "UNPAID" : "PAID";
     }
 
     @Override
