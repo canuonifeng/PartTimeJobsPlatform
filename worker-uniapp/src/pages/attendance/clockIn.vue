@@ -21,7 +21,7 @@
       <view v-for="shift in allShifts" :key="shift.id" class="shift-card">
         <view class="shift-header">
           <view class="job-left"><view class="job-icon"><text>岗</text></view><view class="job-info"><text class="shift-title">{{ shift.jobTitle }}</text><text class="shift-location">{{ shift.location }}</text></view></view>
-          <view class="status-badge" :class="statusClass(shift.status)">{{ statusText(shift.status) }}</view>
+          <view class="status-badge" :class="statusClass(shift.status, shift)">{{ statusText(shift.status, shift) }}</view>
         </view>
         <view class="time-box"><view><text class="time-label">工作时间</text><text class="time-value">{{ shift.startTime }} - {{ shift.endTime }}</text></view><view class="date-box"><text class="date-day">{{ shift.date.slice(8) }}</text><text class="date-month">{{ shift.date.slice(5, 7) }}月</text></view></view>
         <view class="record-row"><view class="record-item"><text class="record-label">签到</text><text class="record-value">{{ shift.checkInTime || '未签到' }}</text></view><view class="record-item"><text class="record-label">签退</text><text class="record-value">{{ shift.checkOutTime || '未签退' }}</text></view></view>
@@ -64,6 +64,11 @@ const stats = computed(() => {
   return { total: todayShifts.length, checkedIn: todayShifts.filter(hasCheckedIn).length, completed: todayShifts.filter(hasCheckedOut).length }
 })
 
+function isCheckedOutAfterShiftEnd(shift: Shift): boolean {
+  if (!shift.checkOutTime || !shift.date || !shift.endTime) return false
+  return parseDateTime(shift.date, shift.checkOutTime).getTime() >= parseDateTime(shift.date, shift.endTime).getTime()
+}
+
 function formatFullDate(d: Date): string { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 function normalizeTime(value: any): string {
   const str = String(value || '')
@@ -82,15 +87,18 @@ function normalizeDate(value: any): string {
 }
 function normalizeShift(s: any, index: number): Shift {
   const status = s.status || s.attendanceStatus || 'SCHEDULED'
-  return { id: Number(s.id ?? s.shiftId ?? index + 1), jobTitle: s.jobTitle || s.title || s.positionName || s.jobName || '临时岗位', location: s.location || s.locationName || s.jobLocation || s.address || '暂无地点', startTime: normalizeTime(s.startTime || s.beginTime) || '09:00', endTime: normalizeTime(s.endTime || s.finishTime) || '18:00', date: normalizeDate(s.date || s.shiftDate), status, checkedIn: checkedInStatuses.includes(status), checkedOut: checkedOutStatuses.includes(status), checkInTime: normalizeTime(s.checkInTime || s.clockInTime || s.signInTime), checkOutTime: normalizeTime(s.checkOutTime || s.clockOutTime || s.signOutTime), attendanceId: s.attendanceId }
+  const checkOutTime = normalizeTime(s.checkOutTime || s.clockOutTime || s.signOutTime)
+  return { id: Number(s.id ?? s.shiftId ?? index + 1), jobTitle: s.jobTitle || s.title || s.positionName || s.jobName || '临时岗位', location: s.location || s.locationName || s.jobLocation || s.address || '暂无地点', startTime: normalizeTime(s.startTime || s.beginTime) || '09:00', endTime: normalizeTime(s.endTime || s.finishTime) || '18:00', date: normalizeDate(s.date || s.shiftDate), status, checkedIn: checkedInStatuses.includes(status), checkedOut: checkedOutStatuses.includes(status), checkInTime: normalizeTime(s.checkInTime || s.clockInTime || s.signInTime), checkOutTime, attendanceId: s.attendanceId }
 }
 function hasCheckedIn(shift: Shift): boolean { return shift.checkedIn || checkedInStatuses.includes(shift.status) }
-function hasCheckedOut(shift: Shift): boolean { return shift.checkedOut || checkedOutStatuses.includes(shift.status) }
-function statusText(status: string): string {
+function hasCheckedOut(shift: Shift): boolean { return shift.checkedOut || isCheckedOutAfterShiftEnd(shift) || checkedOutStatuses.includes(shift.status) }
+function statusText(status: string, shift?: Shift): string {
+  if (shift && isCheckedOutAfterShiftEnd(shift)) return '已完成'
   const map: Record<string, string> = { SCHEDULED: '待上岗', ON_DUTY: '工作中', COMPLETED: '已完成', LATE: '迟到', EARLY_LEAVE: '早退', ABSENT: '缺勤' }
   return map[status] || status || '待上岗'
 }
-function statusClass(status: string): string {
+function statusClass(status: string, shift?: Shift): string {
+  if (shift && isCheckedOutAfterShiftEnd(shift)) return 'completed'
   if (['COMPLETED'].includes(status)) return 'completed'
   if (['ON_DUTY', 'LATE'].includes(status)) return 'active'
   if (['EARLY_LEAVE', 'ABSENT'].includes(status)) return 'warning'

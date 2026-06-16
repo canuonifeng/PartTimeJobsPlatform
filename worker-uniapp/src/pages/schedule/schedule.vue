@@ -142,15 +142,22 @@ function isShiftEnded(shift: Shift): boolean {
   return new Date() > parseDateTime(shift.date, shift.endTime)
 }
 
+function isCheckedOutAfterShiftEnd(shift: Shift): boolean {
+  if (!shift.checkOutTime || !shift.date || !shift.endTime) return false
+  return parseDateTime(shift.date, shift.checkOutTime).getTime() >= parseDateTime(shift.date, shift.endTime).getTime()
+}
+
 function canApplyCorrection(shift: Shift): boolean {
   if (shift.id < 0) return false
   if (!isShiftEnded(shift)) return false
+  if (isCheckedOutAfterShiftEnd(shift)) return false
   if (['COMPLETED', 'ABSENT', 'EARLY_LEAVE'].includes(shift.status)) return false
   if (shift.correctionStatus) return false
   return true
 }
 
 function statusClass(shift: Shift): string {
+  if (isCheckedOutAfterShiftEnd(shift)) return 'completed'
   if (['COMPLETED'].includes(shift.status)) return 'completed'
   if (shift.checkInTime && !shift.checkOutTime) return 'in-progress'
   if (['ON_DUTY', 'LATE'].includes(shift.status)) return 'in-progress'

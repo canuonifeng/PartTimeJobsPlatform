@@ -226,6 +226,11 @@ public class AttendanceServiceImpl implements AttendanceService {
         AttendanceRecordEntity record = attendanceRecordMapper.findByShiftId(shiftId)
                 .orElseThrow(() -> new RuntimeException("No check-in record found for this shift"));
 
+        LocalDateTime scheduledEnd = LocalDateTime.of(shift.getShiftDate(), shift.getEndTime());
+        if (record.getCheckOutTime() != null && !record.getCheckOutTime().isBefore(scheduledEnd)) {
+            throw new RuntimeException("Shift already checked out");
+        }
+
         if (shift.getLocationLat() != null && lat != null) {
             int radius = shift.getLocationRadius() != null ? shift.getLocationRadius() : getDefaultRadius();
             double distance = haversine(
@@ -237,7 +242,6 @@ public class AttendanceServiceImpl implements AttendanceService {
         }
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime scheduledEnd = LocalDateTime.of(shift.getShiftDate(), shift.getEndTime());
         long earlySeconds = now.isBefore(scheduledEnd) ? Duration.between(now, scheduledEnd).getSeconds() : 0;
 
         ShiftStatus newStatus = resolveCheckOutStatus(shift.getStatus(), earlySeconds);

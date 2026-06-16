@@ -231,6 +231,20 @@ class AttendanceServiceTest {
     }
 
     @Test
+    void checkOut_shouldThrowWhenLateShiftAlreadyCheckedOutAfterShiftEnd() {
+        Long shiftId = attendanceService.addShift(10L, 1L,
+                LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
+                null, null, null, null).getId();
+
+        attendanceService.checkIn(1L, shiftId, null, null);
+        attendanceService.checkOut(1L, shiftId, null, null);
+
+        assertThatThrownBy(() -> attendanceService.checkOut(1L, shiftId, null, null))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("already checked out");
+    }
+
+    @Test
     void checkOut_shouldThrowWhenNotCheckedIn() {
         Long shiftId = attendanceService.addShift(10L, 1L,
                 LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
