@@ -240,7 +240,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         LocalDateTime scheduledEnd = LocalDateTime.of(shift.getShiftDate(), shift.getEndTime());
         long earlySeconds = now.isBefore(scheduledEnd) ? Duration.between(now, scheduledEnd).getSeconds() : 0;
 
-        ShiftStatus newStatus = earlySeconds > 0 ? ShiftStatus.EARLY_LEAVE : ShiftStatus.COMPLETED;
+        ShiftStatus newStatus = resolveCheckOutStatus(shift.getStatus(), earlySeconds);
 
         // 追加签到记录（支持多次签退）
         AttendanceCheckIn checkIn = new AttendanceCheckIn();
@@ -342,6 +342,16 @@ public class AttendanceServiceImpl implements AttendanceService {
             return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
         }
         return BigDecimal.valueOf(minutes / 60.0).setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private ShiftStatus resolveCheckOutStatus(String currentStatus, long earlySeconds) {
+        if (earlySeconds > 0) {
+            return ShiftStatus.EARLY_LEAVE;
+        }
+        if (ShiftStatus.LATE.name().equals(currentStatus)) {
+            return ShiftStatus.LATE;
+        }
+        return ShiftStatus.COMPLETED;
     }
 
     private double haversine(double lat1, double lon1, double lat2, double lon2) {

@@ -2,6 +2,7 @@ package com.parttime.cservice.service;
 
 import com.parttime.cservice.mapper.AttendanceCorrectionMapper;
 import com.parttime.cservice.mapper.AttendanceRecordMapper;
+import com.parttime.cservice.mapper.ShiftMapper;
 import com.parttime.cservice.service.impl.AttendanceServiceImpl;
 import com.parttime.cservice.service.impl.WorkerShiftVOConverter;
 import com.parttime.cservice.pojo.vo.AttendanceVO;
@@ -24,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class AttendanceServiceTest {
 
     private AttendanceServiceImpl attendanceService;
+    private ShiftMapper shiftMapper;
 
     @BeforeEach
     void setUp() {
@@ -33,7 +35,8 @@ class AttendanceServiceTest {
         WorkerShiftVOConverter converter = new WorkerShiftVOConverter();
         ReflectionTestUtils.setField(converter, "attendanceRecordMapper", attendanceRecordMapper);
         ReflectionTestUtils.setField(converter, "correctionMapper", correctionMapper);
-        ReflectionTestUtils.setField(attendanceService, "shiftMapper", InMemoryMappers.createShiftMapper());
+        shiftMapper = InMemoryMappers.createShiftMapper();
+        ReflectionTestUtils.setField(attendanceService, "shiftMapper", shiftMapper);
         ReflectionTestUtils.setField(attendanceService, "jobMapper", InMemoryMappers.createJobMapper());
         ReflectionTestUtils.setField(attendanceService, "attendanceRecordMapper", attendanceRecordMapper);
         ReflectionTestUtils.setField(attendanceService, "correctionMapper", correctionMapper);
@@ -199,6 +202,7 @@ class AttendanceServiceTest {
                 null, null, null, null).getId();
 
         attendanceService.checkIn(1L, shiftId, null, null);
+        shiftMapper.findById(shiftId).orElseThrow().setStatus("ON_DUTY");
         AttendanceVO response = attendanceService.checkOut(1L, shiftId, null, null);
         List<WorkerShiftVO> updatedShifts = attendanceService.getMyShifts(1L, null, null, null, null);
 
@@ -207,6 +211,22 @@ class AttendanceServiceTest {
         assertThat(response.getTotalHours()).isNotNull();
         assertThat(updatedShifts.get(0).getStatus()).isEqualTo("COMPLETED");
         assertThat(updatedShifts.get(0).getCheckInTime()).isNotNull();
+        assertThat(updatedShifts.get(0).getCheckOutTime()).isNotNull();
+    }
+
+    @Test
+    void checkOut_shouldKeepLateStatusWhenLateShiftCompletes() {
+        Long shiftId = attendanceService.addShift(10L, 1L,
+                LocalDate.of(2026, 6, 1), LocalTime.of(9, 0), LocalTime.of(18, 0),
+                null, null, null, null).getId();
+
+        attendanceService.checkIn(1L, shiftId, null, null);
+        AttendanceVO response = attendanceService.checkOut(1L, shiftId, null, null);
+        List<WorkerShiftVO> updatedShifts = attendanceService.getMyShifts(1L, null, null, null, null);
+
+        assertThat(response.getStatus()).isEqualTo("LATE");
+        assertThat(response.getCheckOutTime()).isNotNull();
+        assertThat(updatedShifts.get(0).getStatus()).isEqualTo("LATE");
         assertThat(updatedShifts.get(0).getCheckOutTime()).isNotNull();
     }
 

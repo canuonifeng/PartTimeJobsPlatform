@@ -59,6 +59,7 @@
 import { onBeforeUnmount, ref } from 'vue'
 import { useAuthStore } from '@/store'
 import { closeLoginSheet, notifyLoginSuccess, onLoginSheetChange } from '@/utils/loginSheet'
+import { getWechatPhoneAuthFailureMessage, hasWechatPhoneAuth } from '@/utils/wechatPhoneAuth'
 
 const authStore = useAuthStore()
 const visible = ref(false)
@@ -123,8 +124,8 @@ async function handleWechatPhoneLogin(event) {
   const phoneCode = event?.detail?.code
   const encryptedData = event?.detail?.encryptedData
   const iv = event?.detail?.iv
-  if (!phoneCode && (!encryptedData || !iv)) {
-    uni.showToast({ title: '请授权手机号登录', icon: 'none' })
+  if (!hasWechatPhoneAuth(event)) {
+    uni.showToast({ title: getWechatPhoneAuthFailureMessage(event), icon: 'none' })
     return
   }
   if (wechatLoading.value) return
