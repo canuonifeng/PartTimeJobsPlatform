@@ -18,6 +18,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -63,5 +65,15 @@ class LeadControllerTest {
                 .andExpect(jsonPath("$.data.status").value("NEW"));
 
         verify(leadService).createLead(any(LeadCreateCmd.class));
+    }
+
+    @Test
+    void createLeadPreflight_shouldAllowApexWebsiteOrigin() throws Exception {
+        mockMvc.perform(options("/api/leads")
+                        .header("Origin", "https://linggong.tech")
+                        .header("Access-Control-Request-Method", "POST")
+                        .header("Access-Control-Request-Headers", "content-type"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "https://linggong.tech"));
     }
 }
