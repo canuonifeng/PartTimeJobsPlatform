@@ -6,6 +6,9 @@ import com.parttime.platform.pojo.cmd.LeadCreateCmd;
 import com.parttime.platform.pojo.entity.Lead;
 import com.parttime.platform.pojo.vo.LeadVO;
 import com.parttime.platform.service.LeadService;
+import com.parttime.platform.service.notification.LeadNotifier;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
@@ -13,11 +16,16 @@ import jakarta.annotation.Resource;
 @Service
 public class LeadServiceImpl implements LeadService {
 
+    private static final Logger log = LoggerFactory.getLogger(LeadServiceImpl.class);
+
     private static final String NEW_STATUS = "NEW";
     private static final String DEFAULT_SOURCE_PAGE = "website";
 
     @Resource
     private LeadMapper leadMapper;
+
+    @Resource
+    private LeadNotifier leadNotifier;
 
     @Override
     public LeadVO createLead(LeadCreateCmd cmd) {
@@ -29,7 +37,16 @@ public class LeadServiceImpl implements LeadService {
         lead.setSourcePage(defaultSourcePage(cmd.getSourcePage()));
         lead.setStatus(NEW_STATUS);
         leadMapper.insert(lead);
+        notifyLeadCreated(lead);
         return toVO(lead);
+    }
+
+    private void notifyLeadCreated(Lead lead) {
+        try {
+            leadNotifier.notifyLeadCreated(lead);
+        } catch (Exception ex) {
+            log.warn("Failed to notify lead created, leadId={}", lead.getId(), ex);
+        }
     }
 
     private String required(String value, String message) {

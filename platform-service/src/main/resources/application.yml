@@ -17,6 +17,12 @@ file:
     dir: ${FILE_UPLOAD_DIR:uploads}
   public-base-url: ${FILE_PUBLIC_BASE_URL:}
 
+feishu:
+  robot:
+    enabled: ${FEISHU_ROBOT_ENABLED:false}
+    webhook-url: ${FEISHU_ROBOT_WEBHOOK_URL:}
+    secret: ${FEISHU_ROBOT_SECRET:}
+
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
   type-aliases-package: com.parttime.platform.pojo
