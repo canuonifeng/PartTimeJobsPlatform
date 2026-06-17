@@ -6,3 +6,4 @@
 openspec
 config/*.yml
 docs/
+.deploy-md5/
