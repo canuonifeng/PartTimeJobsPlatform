@@ -4,6 +4,7 @@ import com.parttime.platform.config.FeishuRobotProperties;
 import com.parttime.platform.pojo.entity.Lead;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -28,6 +29,7 @@ public class FeishuRobotLeadNotifier implements LeadNotifier {
     private final FeishuRobotProperties properties;
     private final RestTemplate restTemplate;
 
+    @Autowired
     public FeishuRobotLeadNotifier(FeishuRobotProperties properties) {
         this(properties, new RestTemplate());
     }
