@@ -13,5 +13,7 @@ public class JobSchedule {
     private LocalTime startTime;
     private LocalTime endTime;
     private Integer slotsAvailable;
+    private String contactName;
+    private String contactPhone;
     private String status;
 }

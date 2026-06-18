@@ -46,6 +46,7 @@ const form = ref({
   title: '',
   description: '',
   requirements: '',
+  contactName: '',
   contactPhone: '',
   tagIds: [],
   location: '',
@@ -179,6 +180,7 @@ async function fetchDetail() {
       title: res.title || '',
       description: res.description || '',
       requirements: res.requirements || '',
+      contactName: res.contactName || '',
       contactPhone: res.contactPhone || '',
       tagIds: normalizeTagIds(res.tagIds || (Array.isArray(res.tags) ? res.tags.map(tag => tag?.id ?? tag?.tagId) : [])),
       location: res.location || '',
@@ -207,6 +209,7 @@ function buildPayload() {
     title: form.value.title,
     description: form.value.description,
     requirements: form.value.requirements,
+    contactName: form.value.contactName,
     contactPhone: form.value.contactPhone,
     tagIds: normalizeTagIds(form.value.tagIds),
     location: form.value.location,
@@ -223,7 +226,7 @@ function buildPayload() {
     autoApprove: form.value.autoApprove,
     status: form.value.status,
     rates: form.value.salaryRates.filter((r) => r.type && r.rate).map((r) => ({ id: r.id, type: r.type, amount: Number(r.rate), currency: 'CNY' })),
-    schedules: form.value.scheduleSlots.filter((s) => s.date && s.startTime && s.endTime).map((s) => ({ id: s.id, scheduleDate: s.date, startTime: s.startTime, endTime: s.endTime, slotsAvailable: 1 }))
+    schedules: form.value.scheduleSlots.filter((s) => s.date && s.startTime && s.endTime).map((s) => ({ id: s.id, scheduleDate: s.date, startTime: s.startTime, endTime: s.endTime }))
   }
 }
 
@@ -330,6 +333,9 @@ onMounted(async () => {
         </el-form-item>
         <el-form-item label="任职要求" prop="requirements">
           <el-input v-model="form.requirements" type="textarea" :rows="5" placeholder="请输入HTML富文本任职要求" />
+        </el-form-item>
+        <el-form-item label="联系人" prop="contactName">
+          <el-input v-model="form.contactName" placeholder="请输入联系人姓名" style="width: 260px" />
         </el-form-item>
         <el-form-item label="联系方式" prop="contactPhone">
           <el-input v-model="form.contactPhone" placeholder="请输入联系电话" style="width: 260px" />

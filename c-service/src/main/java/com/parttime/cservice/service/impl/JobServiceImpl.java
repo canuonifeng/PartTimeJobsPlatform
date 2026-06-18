@@ -241,10 +241,6 @@ public class JobServiceImpl implements JobService {
         if (job.getDeadline() != null && LocalDateTime.now().isAfter(job.getDeadline())) {
             throw new RuntimeException("报名已截止");
         }
-        if (job.getHeadcount() != null && job.getAcceptedCount() != null
-                && job.getAcceptedCount() >= job.getHeadcount()) {
-            throw new RuntimeException("该岗位已招满");
-        }
         List<Long> alreadyApplied = scheduleApplicationMapper.findScheduleIdsByWorkerIdAndJobId(workerId, jobId);
         List<Long> newIds = scheduleIds.stream()
                 .filter(id -> !alreadyApplied.contains(id))
@@ -255,6 +251,7 @@ public class JobServiceImpl implements JobService {
         LocalDateTime now = LocalDateTime.now();
         List<JobSchedule> scheds = jobScheduleMapper.findByIds(newIds);
         Map<Long, JobSchedule> schedMap = scheds.stream().collect(Collectors.toMap(JobSchedule::getId, s -> s));
+        Map<Long, Integer> acceptedCounts = scheduleApplicationMapper.countAcceptedByScheduleIds(newIds);
         for (Long sid : newIds) {
             JobSchedule sched = schedMap.get(sid);
             if (sched == null || !"ACTIVE".equals(sched.getStatus())) {
@@ -263,6 +260,10 @@ public class JobServiceImpl implements JobService {
             LocalDateTime scheduleStart = LocalDateTime.of(sched.getScheduleDate(), sched.getStartTime());
             if (now.isAfter(scheduleStart)) {
                 throw new RuntimeException("排班已开始，无法报名");
+            }
+            Integer capacity = sched.getSlotsAvailable();
+            if (capacity != null && capacity > 0 && acceptedCounts.getOrDefault(sid, 0) >= capacity) {
+                throw new RuntimeException("班次已满，无法报名");
             }
         }
         // Check auto-approve: job-level overrides platform-level
@@ -430,6 +431,8 @@ public class JobServiceImpl implements JobService {
             vo.setStartTime(e.getStartTime() != null ? e.getStartTime().toString() : null);
             vo.setEndTime(e.getEndTime() != null ? e.getEndTime().toString() : null);
             vo.setSlotsAvailable(e.getSlotsAvailable());
+            vo.setContactName(e.getContactName());
+            vo.setContactPhone(e.getContactPhone());
             Integer capacity = e.getSlotsAvailable();
             if (capacity != null) {
                 vo.setRemainingSlots(Math.max(0, capacity - countMap.getOrDefault(e.getId(), 0)));
@@ -445,6 +448,7 @@ public class JobServiceImpl implements JobService {
         detail.setTitle(job.getTitle());
         detail.setDescription(job.getDescription());
         detail.setRequirements(job.getRequirements());
+        detail.setContactName(job.getContactName());
         detail.setContactPhone(job.getContactPhone());
         detail.setTags(resolveTags(job, tags));
         detail.setLocation(job.getAddress() != null ? job.getAddress() : job.getLocation());
@@ -521,6 +525,8 @@ public class JobServiceImpl implements JobService {
         shift.setLocationLat(job.getLatitude());
         shift.setLocationLng(job.getLongitude());
         shift.setLocationName(job.getAddress());
+        shift.setContactName(sched.getContactName());
+        shift.setContactPhone(sched.getContactPhone());
         shift.setSalaryType(job.getRateType());
         shift.setSalaryAmount(job.getRateAmount());
         shift.setStatus("SCHEDULED");

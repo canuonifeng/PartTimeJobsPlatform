@@ -8,6 +8,7 @@
         <result property="title" column="title"/>
         <result property="description" column="description"/>
         <result property="requirements" column="requirements"/>
+        <result property="contactName" column="contact_name"/>
         <result property="contactPhone" column="contact_phone"/>
         <result property="location" column="location"/>
         <result property="province" column="province"/>
@@ -26,8 +27,8 @@
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO jobs (company_id, title, description, requirements, contact_phone, location, province, city, district, address, latitude, longitude, category_id, headcount, status, deadline, image_url)
-        VALUES (#{companyId}, #{title}, #{description}, #{requirements}, #{contactPhone}, #{location}, #{province}, #{city}, #{district}, #{address}, #{latitude}, #{longitude}, #{categoryId}, #{headcount}, #{status}, #{deadline}, #{imageUrl})
+        INSERT INTO jobs (company_id, title, description, requirements, contact_name, contact_phone, location, province, city, district, address, latitude, longitude, category_id, headcount, status, deadline, image_url)
+        VALUES (#{companyId}, #{title}, #{description}, #{requirements}, #{contactName}, #{contactPhone}, #{location}, #{province}, #{city}, #{district}, #{address}, #{latitude}, #{longitude}, #{categoryId}, #{headcount}, #{status}, #{deadline}, #{imageUrl})
     </insert>
 
     <select id="findById" resultMap="JobResultMap">
@@ -56,7 +57,7 @@
 
     <update id="update">
         UPDATE jobs
-        SET title = #{title}, description = #{description}, requirements = #{requirements}, contact_phone = #{contactPhone}, location = #{location},
+        SET title = #{title}, description = #{description}, requirements = #{requirements}, contact_name = #{contactName}, contact_phone = #{contactPhone}, location = #{location},
             province = #{province}, city = #{city}, district = #{district}, address = #{address},
             latitude = #{latitude}, longitude = #{longitude},
             category_id = #{categoryId}, headcount = #{headcount}, deadline = #{deadline},

@@ -21,6 +21,7 @@ const formData = ref({
   title: '',
   description: '',
   requirements: '',
+  contactName: '',
   contactPhone: '',
   categoryId: '',
   headcount: 1,
@@ -295,6 +296,7 @@ async function loadJobDetail() {
       title: job.title || '',
       description: job.description || '',
       requirements: job.requirements || '',
+      contactName: job.contactName || '',
       contactPhone: job.contactPhone || '',
       location: job.location || '',
       province: job.province || '',
@@ -344,6 +346,7 @@ function buildPayload() {
     title: formData.value.title,
     description: formData.value.description,
     requirements: formData.value.requirements,
+    contactName: formData.value.contactName,
     contactPhone: formData.value.contactPhone,
     tagIds: normalizeTagIds(selectedTagIds.value),
     location: formData.value.location,
@@ -370,8 +373,7 @@ function buildPayload() {
         id: sched.id,
         scheduleDate: sched.date,
         startTime: sched.startTime,
-        endTime: sched.endTime,
-        slotsAvailable: 1
+        endTime: sched.endTime
       }))
   }
 }
@@ -536,6 +538,11 @@ async function handleSave() {
             @ready="onRequirementEditorReady"
             @input="onRequirementEditorInput"
           />
+        </view>
+
+        <view class="form-item e-form-row">
+          <text class="label e-form-label">联系人</text>
+          <input v-model="formData.contactName" class="input e-input" placeholder="请输入联系人姓名" />
         </view>
 
         <view class="form-item e-form-row">

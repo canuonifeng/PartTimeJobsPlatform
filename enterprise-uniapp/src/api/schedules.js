@@ -26,3 +26,31 @@ export function deleteShift(id) {
 export function cancelShift(id) {
   return request('POST', '/schedule-shifts/cancel', { id })
 }
+
+export function listManagedSchedules(params = {}) {
+  const query = []
+  Object.keys(params).forEach(key => {
+    if (params[key] !== undefined && params[key] !== null && params[key] !== '') query.push(`${key}=${encodeURIComponent(params[key])}`)
+  })
+  return request('GET', `/schedules${query.length ? `?${query.join('&')}` : ''}`)
+}
+
+export function listScheduleApplicants(scheduleId, params = {}) {
+  const query = []
+  Object.keys(params).forEach(key => {
+    if (params[key] !== undefined && params[key] !== null && params[key] !== '') query.push(`${key}=${encodeURIComponent(params[key])}`)
+  })
+  return request('GET', `/schedules/${scheduleId}/applicants${query.length ? `?${query.join('&')}` : ''}`)
+}
+
+export function updateManagedSchedule(data) {
+  return request('POST', '/schedules/update', data)
+}
+
+export function copyManagedSchedule(data) {
+  return request('POST', '/schedules/copy', data)
+}
+
+export function batchCreateManagedSchedules(data) {
+  return request('POST', '/schedules/batch-create', data)
+}

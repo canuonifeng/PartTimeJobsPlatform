@@ -25,7 +25,7 @@ import { onLoad } from '@dcloudio/uni-app'
 import { applyJob, getJobDetail } from '@/api/jobs'
 import LoginSheet from '@/components/LoginSheet.vue'
 
-interface ScheduleItem { id: number; date?: string; startTime?: string; endTime?: string; remainingSlots?: number; slotsAvailable?: number }
+interface ScheduleItem { id: number; date?: string; startTime?: string; endTime?: string; remainingSlots?: number; slotsAvailable?: number; contactName?: string; contactPhone?: string }
 
 const fallbackJob = { title: '待确认岗位', companyName: '招聘企业', location: '工作地点待确认', rates: [] }
 const jobId = ref(0)
@@ -39,11 +39,13 @@ const notices = ['请确认报名日期和工作时段，提交后将同步给�
 const title = computed(() => job.value?.title || fallbackJob.title)
 const companyName = computed(() => job.value?.companyName || fallbackJob.companyName)
 const locationText = computed(() => job.value?.location || job.value?.locationName || fallbackJob.location)
-const contactPhone = computed(() => job.value?.phone || job.value?.contactPhone || job.value?.mobile || '')
-const phoneText = computed(() => contactPhone.value ? String(contactPhone.value) : '暂无联系电话')
+const primaryContact = computed(() => selectedSchedules.value.find((item: ScheduleItem) => item.contactPhone || item.contactName) || {})
+const contactName = computed(() => primaryContact.value?.contactName || job.value?.contactName || '')
+const contactPhone = computed(() => primaryContact.value?.contactPhone || job.value?.phone || job.value?.contactPhone || job.value?.mobile || '')
+const phoneText = computed(() => contactPhone.value ? `${contactName.value ? contactName.value + ' ' : ''}${contactPhone.value}` : '暂无联系电话')
 const companyInitial = computed(() => companyName.value.slice(0, 1))
 const appliedScheduleIds = computed(() => Array.isArray(job.value?.appliedScheduleIds) ? job.value.appliedScheduleIds.map(Number) : [])
-const schedules = computed<ScheduleItem[]>(() => (Array.isArray(job.value?.schedules) ? job.value.schedules : []).map((item: any) => ({ id: Number(item.id), date: item.date, startTime: item.startTime, endTime: item.endTime, remainingSlots: Number(item.remainingSlots), slotsAvailable: Number(item.slotsAvailable) })).filter((item: ScheduleItem) => Number.isInteger(item.id) && item.id > 0))
+const schedules = computed<ScheduleItem[]>(() => (Array.isArray(job.value?.schedules) ? job.value.schedules : []).map((item: any) => ({ id: Number(item.id), date: item.date, startTime: item.startTime, endTime: item.endTime, remainingSlots: Number(item.remainingSlots), slotsAvailable: Number(item.slotsAvailable), contactName: item.contactName, contactPhone: item.contactPhone })).filter((item: ScheduleItem) => Number.isInteger(item.id) && item.id > 0))
 const selectedSchedules = computed(() => {
   const known = schedules.value.filter((item) => selectedScheduleIds.value.includes(item.id))
   return known.length ? known : selectedScheduleIds.value.map((id) => ({ id }))

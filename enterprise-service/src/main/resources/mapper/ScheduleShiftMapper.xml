@@ -18,6 +18,8 @@
         <result property="locationLng" column="location_lng"/>
         <result property="locationRadius" column="location_radius"/>
         <result property="locationName" column="location_name"/>
+        <result property="contactName" column="contact_name"/>
+        <result property="contactPhone" column="contact_phone"/>
         <result property="status" column="status"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
@@ -26,10 +28,10 @@
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO schedule_shifts (job_id, company_id, application_id, salary_type, salary_amount, salary_currency,
                                      worker_id, shift_date, start_time, end_time,
-                                     location_lat, location_lng, location_radius, location_name, status)
+                                     location_lat, location_lng, location_radius, location_name, contact_name, contact_phone, status)
         VALUES (#{jobId}, #{companyId}, #{applicationId}, #{salaryType}, #{salaryAmount}, #{salaryCurrency},
                 #{workerId}, #{shiftDate}, #{startTime}, #{endTime},
-                #{locationLat}, #{locationLng}, #{locationRadius}, #{locationName}, 'SCHEDULED')
+                #{locationLat}, #{locationLng}, #{locationRadius}, #{locationName}, #{contactName}, #{contactPhone}, 'SCHEDULED')
     </insert>
 
     <select id="findById" resultMap="ShiftResultMap">
@@ -128,6 +130,7 @@
             shift_date = #{shiftDate}, start_time = #{startTime}, end_time = #{endTime},
             location_lat = #{locationLat}, location_lng = #{locationLng},
             location_radius = #{locationRadius}, location_name = #{locationName},
+            contact_name = #{contactName}, contact_phone = #{contactPhone},
             status = #{status}
         WHERE id = #{id}
     </update>

@@ -21,6 +21,9 @@ public interface ScheduleApplicationMapper {
     int countByScheduleId(Long scheduleId);
     @MapKey("scheduleId")
     Map<Long, Integer> countByScheduleIds(@Param("scheduleIds") List<Long> scheduleIds);
+    int countAcceptedByScheduleId(Long scheduleId);
+    @MapKey("scheduleId")
+    Map<Long, Integer> countAcceptedByScheduleIds(@Param("scheduleIds") List<Long> scheduleIds);
     List<ScheduleApplication> findByIds(@Param("ids") List<Long> ids);
     int batchInsert(@Param("list") List<ScheduleApplication> list);
 }

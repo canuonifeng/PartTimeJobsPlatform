@@ -33,6 +33,10 @@ public class ShiftEntity {
     private Integer locationRadius;
     @Schema(description = "打卡地点名称")
     private String locationName;
+    @Schema(description = "联系人姓名快照")
+    private String contactName;
+    @Schema(description = "联系人电话快照")
+    private String contactPhone;
     @Schema(description = "薪资快照类型(HOURLY/DAILY)")
     private String salaryType;
     @Schema(description = "薪资快照金额")

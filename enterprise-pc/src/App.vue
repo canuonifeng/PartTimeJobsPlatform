@@ -59,6 +59,10 @@ function handleMenuSelect(index) {
           <el-icon><Document /></el-icon>
           <span>应聘管理</span>
         </el-menu-item>
+        <el-menu-item index="/schedules">
+          <el-icon><Calendar /></el-icon>
+          <span>班次管理</span>
+        </el-menu-item>
         <el-menu-item index="/schedules/shifts">
           <el-icon><Calendar /></el-icon>
           <span>排班考勤</span>

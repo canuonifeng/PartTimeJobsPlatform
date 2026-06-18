@@ -56,10 +56,6 @@ function navigateToDetail(id) {
   uni.navigateTo({ url: `/pages/jobs/jobDetail?id=${id}` })
 }
 
-function navigateToApplications(job) {
-  uni.navigateTo({ url: `/pages/jobs/applicationList?jobId=${job.id}&jobTitle=${encodeURIComponent(job.title || '')}` })
-}
-
 async function handleShare(job) {
   if (job.status !== 'PUBLISHED') {
     uni.showToast({ title: '仅已发布职位可邀请', icon: 'none' })
@@ -184,7 +180,6 @@ function statusClass(s) {
           </view>
 
           <view class="action-row" @click.stop>
-            <view class="action-btn light" @click.stop="navigateToApplications(job)">报名</view>
             <view v-if="job.status === 'PUBLISHED'" class="action-btn light" @click.stop="handleShare(job)">邀请</view>
             <view class="action-btn light" @click.stop="navigateToEdit(job.id)">编辑</view>
             <view v-if="job.status === 'DRAFT'" class="action-btn primary" @click.stop="handlePublish(job.id)">发布</view>

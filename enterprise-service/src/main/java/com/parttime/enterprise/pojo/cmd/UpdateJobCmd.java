@@ -20,6 +20,8 @@ public class UpdateJobCmd {
     private String description;
     @Schema(description = "任职要求")
     private String requirements;
+    @Schema(description = "岗位联系人姓名")
+    private String contactName;
     @Schema(description = "岗位联系方式")
     private String contactPhone;
     @Schema(description = "岗位标签ID列表")

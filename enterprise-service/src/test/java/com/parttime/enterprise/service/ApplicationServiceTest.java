@@ -157,7 +157,7 @@ class ApplicationServiceTest {
         when(applicationMapper.findById(1L)).thenReturn(Optional.of(app));
         when(jobScheduleMapper.findById(11L)).thenReturn(Optional.of(schedule));
         when(jobMapper.findById(100L)).thenReturn(Optional.of(job));
-        when(applicationMapper.countByJobIdAndStatus(100L, "ACCEPTED")).thenReturn(2);
+        when(applicationMapper.countByScheduleIdAndStatus(11L, "ACCEPTED")).thenReturn(2);
         when(jobRateMapper.findByJobId(100L)).thenReturn(List.of(rate));
         when(shiftMapper.findByApplicationId(1L)).thenReturn(List.of());
         when(workerSyncMapper.findWorkerNameById(10L)).thenReturn("张三");
@@ -197,7 +197,7 @@ class ApplicationServiceTest {
         when(applicationMapper.findById(1L)).thenReturn(Optional.of(app));
         when(jobScheduleMapper.findById(11L)).thenReturn(Optional.of(schedule));
         when(jobMapper.findById(100L)).thenReturn(Optional.of(job));
-        when(applicationMapper.countByJobIdAndStatus(100L, "ACCEPTED")).thenReturn(0);
+        when(applicationMapper.countByScheduleIdAndStatus(11L, "ACCEPTED")).thenReturn(0);
         when(jobRateMapper.findByJobId(100L)).thenReturn(List.of(rate));
         when(shiftMapper.findByApplicationId(1L)).thenReturn(List.of());
 
@@ -214,6 +214,8 @@ class ApplicationServiceTest {
         assertThat(shift.getShiftDate()).isEqualTo(LocalDate.of(2026, 6, 1));
         assertThat(shift.getStartTime()).isEqualTo(LocalTime.of(9, 0));
         assertThat(shift.getEndTime()).isEqualTo(LocalTime.of(18, 0));
+        assertThat(shift.getContactName()).isEqualTo("李主管");
+        assertThat(shift.getContactPhone()).isEqualTo("13900000000");
         assertThat(shift.getSalaryType()).isEqualTo("HOURLY");
         assertThat(shift.getSalaryAmount()).isEqualByComparingTo("25.00");
         assertThat(shift.getSalaryCurrency()).isEqualTo("CNY");
@@ -233,7 +235,7 @@ class ApplicationServiceTest {
         when(applicationMapper.findById(1L)).thenReturn(Optional.of(app));
         when(jobScheduleMapper.findById(11L)).thenReturn(Optional.of(schedule));
         when(jobMapper.findById(100L)).thenReturn(Optional.of(job));
-        when(applicationMapper.countByJobIdAndStatus(100L, "ACCEPTED")).thenReturn(0);
+        when(applicationMapper.countByScheduleIdAndStatus(11L, "ACCEPTED")).thenReturn(0);
         when(jobRateMapper.findByJobId(100L)).thenReturn(List.of(firstRate, secondRate));
         when(shiftMapper.findByApplicationId(1L)).thenReturn(List.of());
 
@@ -257,7 +259,7 @@ class ApplicationServiceTest {
         when(applicationMapper.findById(1L)).thenReturn(Optional.of(app));
         when(jobScheduleMapper.findById(11L)).thenReturn(Optional.of(schedule));
         when(jobMapper.findById(100L)).thenReturn(Optional.of(job));
-        when(applicationMapper.countByJobIdAndStatus(100L, "ACCEPTED")).thenReturn(0);
+        when(applicationMapper.countByScheduleIdAndStatus(11L, "ACCEPTED")).thenReturn(0);
         when(jobRateMapper.findByJobId(100L)).thenReturn(List.of());
         when(shiftMapper.findByApplicationId(1L)).thenReturn(List.of());
 
@@ -324,20 +326,21 @@ class ApplicationServiceTest {
     }
 
     @Test
-    void acceptApplication_shouldThrowWhenJobIsFull() {
+    void acceptApplication_shouldThrowWhenScheduleIsFull() {
         ScheduleApplication app = pendingApplication();
         Job job = job();
         job.setHeadcount(5);
         JobSchedule schedule = schedule();
+        schedule.setSlotsAvailable(1);
 
         when(applicationMapper.findById(1L)).thenReturn(Optional.of(app));
         when(jobScheduleMapper.findById(11L)).thenReturn(Optional.of(schedule));
         when(jobMapper.findById(100L)).thenReturn(Optional.of(job));
-        when(applicationMapper.countByJobIdAndStatus(100L, "ACCEPTED")).thenReturn(5);
+        when(applicationMapper.countByScheduleIdAndStatus(11L, "ACCEPTED")).thenReturn(1);
 
         assertThatThrownBy(() -> applicationService.acceptApplication(1L))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage("岗位已录满");
+                .hasMessage("班次已满");
     }
 
     private ScheduleApplication pendingApplication() {
@@ -365,6 +368,9 @@ class ApplicationServiceTest {
         schedule.setScheduleDate(LocalDate.of(2026, 6, 1));
         schedule.setStartTime(LocalTime.of(9, 0));
         schedule.setEndTime(LocalTime.of(18, 0));
+        schedule.setContactName("李主管");
+        schedule.setContactPhone("13900000000");
+        schedule.setSlotsAvailable(5);
         return schedule;
     }
 

@@ -54,6 +54,8 @@ public class WorkerShiftVOConverter {
         resp.setLocationLng(shift.getLocationLng());
         resp.setLocationRadius(shift.getLocationRadius());
         resp.setLocationName(shift.getLocationName());
+        resp.setContactName(shift.getContactName());
+        resp.setContactPhone(shift.getContactPhone());
 
         AttendanceRecordEntity record = recordMap.get(shift.getId());
         if (record != null) {

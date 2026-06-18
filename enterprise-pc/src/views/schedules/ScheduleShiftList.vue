@@ -90,6 +90,21 @@ function formatTime(t) {
   return `${h}:${m}`
 }
 
+function shiftStatusText(status) {
+  const map = { SCHEDULED: '待上岗', ON_DUTY: '工作中', COMPLETED: '已完成', ABSENT: '缺勤', LATE: '迟到', EARLY_LEAVE: '早退', EARLY: '早退', LATE_EARLY_LEAVE: '迟到并早退', CANCELLED: '已取消' }
+  return map[status] || '待上岗'
+}
+
+function attendanceStatusText(status) {
+  const map = { CHECKED_IN: '已签到', CHECKED_OUT: '已签退', NORMAL: '正常', COMPLETED: '已完成', ABSENT: '缺勤', LATE: '迟到', EARLY_LEAVE: '早退', LATE_EARLY_LEAVE: '迟到并早退', PENDING: '待确认', CONFIRMED: '已确认', CANCELLED: '已取消' }
+  return map[status] || '未签到'
+}
+
+function correctionStatusText(status) {
+  const map = { PENDING: '待审批', APPROVED: '已通过', REJECTED: '已拒绝' }
+  return map[status] || '-'
+}
+
 function handlePageChange(val) {
   page.value = val
   fetchData()
@@ -226,25 +241,18 @@ onMounted(() => {
             <el-table-column label="签到" width="160">
               <template #default="{ row }">
                 <template v-if="row.attendanceStatus === 'CHECKED_OUT'">
-                  <div class="att-row">签退 {{ formatTime(row.checkOutTime) }}</div>
+                  <div class="att-row">{{ attendanceStatusText(row.attendanceStatus) }} {{ formatTime(row.checkOutTime) }}</div>
                   <div class="att-row att-sub">签到 {{ formatTime(row.checkInTime) }}</div>
                 </template>
                 <template v-else-if="row.attendanceStatus === 'CHECKED_IN'">
-                  <div class="att-row">签到 {{ formatTime(row.checkInTime) }}</div>
+                  <div class="att-row">{{ attendanceStatusText(row.attendanceStatus) }} {{ formatTime(row.checkInTime) }}</div>
                 </template>
-                <span v-else class="att-none">未签到</span>
+                <span v-else class="att-none">{{ attendanceStatusText(row.attendanceStatus) }}</span>
               </template>
             </el-table-column>
             <el-table-column label="排班状态" width="100">
               <template #default="{ row }">
-                <el-tag v-if="row.status === 'CANCELLED'" type="danger" size="small">已取消</el-tag>
-                <el-tag v-else-if="row.status === 'COMPLETED'" type="success" size="small">已完成</el-tag>
-                <el-tag v-else-if="row.status === 'ABSENT'" type="danger" size="small">缺勤</el-tag>
-                <el-tag v-else-if="row.status === 'LATE'" type="danger" size="small">迟到</el-tag>
-                <el-tag v-else-if="row.status === 'LATE_EARLY_LEAVE'" type="danger" size="small">迟到并早退</el-tag>
-                <el-tag v-else-if="row.status === 'EARLY_LEAVE' || row.status === 'EARLY'" type="danger" size="small">早退</el-tag>
-                <el-tag v-else-if="row.status === 'ON_DUTY'" type="warning" size="small">工作中</el-tag>
-                <el-tag v-else type="info" size="small">待上岗</el-tag>
+                <el-tag :type="['ABSENT','LATE','EARLY_LEAVE','EARLY','LATE_EARLY_LEAVE','CANCELLED'].includes(row.status) ? 'danger' : row.status === 'COMPLETED' ? 'success' : row.status === 'ON_DUTY' ? 'warning' : 'info'" size="small">{{ shiftStatusText(row.status) }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column label="操作" width="120" fixed="right">
@@ -298,9 +306,7 @@ onMounted(() => {
             <el-table-column prop="reason" label="补卡原因" min-width="200" show-overflow-tooltip />
             <el-table-column label="状态" width="100">
               <template #default="{ row }">
-                <el-tag v-if="row.status === 'PENDING'" type="warning" size="small">待审批</el-tag>
-                <el-tag v-else-if="row.status === 'APPROVED'" type="success" size="small">已通过</el-tag>
-                <el-tag v-else type="danger" size="small">已拒绝</el-tag>
+                <el-tag :type="row.status === 'PENDING' ? 'warning' : row.status === 'APPROVED' ? 'success' : 'danger'" size="small">{{ correctionStatusText(row.status) }}</el-tag>
               </template>
             </el-table-column>
             <el-table-column label="操作" width="180" fixed="right">

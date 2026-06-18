@@ -21,4 +21,8 @@ public class JobScheduleInfoVO {
     private Integer slotsAvailable;
     @Schema(description = "剩余可报名人数")
     private Integer remainingSlots;
+    @Schema(description = "联系人姓名快照")
+    private String contactName;
+    @Schema(description = "联系人电话快照")
+    private String contactPhone;
 }

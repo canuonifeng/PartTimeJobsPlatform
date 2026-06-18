@@ -24,6 +24,30 @@ export function getAttendanceReport(params) {
   return request.get('/attendance/report', { params })
 }
 
+export function listManagedSchedules(params) {
+  return request.get('/schedules', { params })
+}
+
+export function listScheduleApplicants(scheduleId, params) {
+  return request.get(`/schedules/${scheduleId}/applicants`, { params })
+}
+
+export function exportScheduleApplicants(scheduleId, params) {
+  return request.get(`/schedules/${scheduleId}/export`, { params })
+}
+
+export function updateManagedSchedule(data) {
+  return request.post('/schedules/update', data)
+}
+
+export function copyManagedSchedule(data) {
+  return request.post('/schedules/copy', data)
+}
+
+export function batchCreateManagedSchedules(data) {
+  return request.post('/schedules/batch-create', data)
+}
+
 export function listCorrections(params) {
   return request.get('/schedules/corrections', { params })
 }

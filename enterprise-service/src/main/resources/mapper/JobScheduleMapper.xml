@@ -8,15 +8,59 @@
         <result property="scheduleDate" column="schedule_date"/>
         <result property="startTime" column="start_time"/>
         <result property="endTime" column="end_time"/>
+        <result property="scheduleName" column="schedule_name"/>
         <result property="slotsAvailable" column="slots_available"/>
+        <result property="contactName" column="contact_name"/>
+        <result property="contactPhone" column="contact_phone"/>
         <result property="status" column="status"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
+    <resultMap id="ScheduleManagementResultMap" type="com.parttime.enterprise.pojo.vo.ScheduleManagementVO">
+        <id property="id" column="id"/>
+        <result property="jobId" column="job_id"/>
+        <result property="jobTitle" column="job_title"/>
+        <result property="scheduleName" column="schedule_name"/>
+        <result property="scheduleDate" column="schedule_date"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="location" column="location"/>
+        <result property="contactName" column="contact_name"/>
+        <result property="contactPhone" column="contact_phone"/>
+        <result property="slotsAvailable" column="slots_available"/>
+        <result property="applicationCount" column="application_count"/>
+        <result property="pendingCount" column="pending_count"/>
+        <result property="acceptedCount" column="accepted_count"/>
+        <result property="rejectedCount" column="rejected_count"/>
+        <result property="remainingSlots" column="remaining_slots"/>
+        <result property="shiftCount" column="shift_count"/>
+        <result property="exceptionCount" column="exception_count"/>
+        <result property="settledCount" column="settled_count"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <resultMap id="ScheduleApplicantResultMap" type="com.parttime.enterprise.pojo.vo.ScheduleApplicantVO">
+        <id property="applicationId" column="application_id"/>
+        <result property="workerId" column="worker_id"/>
+        <result property="workerName" column="worker_name"/>
+        <result property="workerPhone" column="worker_phone"/>
+        <result property="realNamed" column="real_named"/>
+        <result property="applicationStatus" column="application_status"/>
+        <result property="appliedAt" column="applied_at"/>
+        <result property="shiftId" column="shift_id"/>
+        <result property="shiftStatus" column="shift_status"/>
+        <result property="checkInTime" column="check_in_time"/>
+        <result property="checkOutTime" column="check_out_time"/>
+        <result property="attendanceStatus" column="attendance_status"/>
+        <result property="correctionStatus" column="correction_status"/>
+        <result property="settlementStatus" column="settlement_status"/>
+    </resultMap>
+
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO job_schedules (job_id, schedule_date, start_time, end_time, slots_available, status)
-        VALUES (#{jobId}, #{scheduleDate}, #{startTime}, #{endTime}, #{slotsAvailable}, #{status})
+        INSERT INTO job_schedules (job_id, schedule_date, start_time, end_time, schedule_name, slots_available, contact_name, contact_phone, status)
+        VALUES (#{jobId}, #{scheduleDate}, #{startTime}, #{endTime}, #{scheduleName}, #{slotsAvailable}, #{contactName}, #{contactPhone}, #{status})
     </insert>
 
     <select id="findById" resultMap="JobScheduleResultMap">
@@ -38,7 +82,8 @@
     <update id="update">
         UPDATE job_schedules
         SET schedule_date = #{scheduleDate}, start_time = #{startTime},
-            end_time = #{endTime}, slots_available = #{slotsAvailable}
+            end_time = #{endTime}, schedule_name = #{scheduleName}, slots_available = #{slotsAvailable},
+            contact_name = #{contactName}, contact_phone = #{contactPhone}
         WHERE id = #{id}
     </update>
 
@@ -57,5 +102,84 @@
     <delete id="deleteByJobId">
         DELETE FROM job_schedules WHERE job_id = #{jobId}
     </delete>
+
+    <sql id="managementWhere">
+        FROM job_schedules js
+        JOIN jobs j ON js.job_id = j.id
+        LEFT JOIN (
+            SELECT schedule_id,
+                   COUNT(*) application_count,
+                   SUM(status = 'PENDING') pending_count,
+                   SUM(status = 'ACCEPTED') accepted_count,
+                   SUM(status = 'REJECTED') rejected_count
+            FROM schedule_applications
+            GROUP BY schedule_id
+        ) app ON app.schedule_id = js.id
+        LEFT JOIN (
+            SELECT ss.job_id, ss.shift_date, ss.start_time, ss.end_time,
+                   COUNT(*) shift_count,
+                   SUM(ss.status IN ('ABSENT','LATE','EARLY_LEAVE','LATE_EARLY_LEAVE')) exception_count,
+                   SUM(ar.settlement_status = 'SETTLED') settled_count
+            FROM schedule_shifts ss
+            LEFT JOIN attendance_records ar ON ar.shift_id = ss.id
+            GROUP BY ss.job_id, ss.shift_date, ss.start_time, ss.end_time
+        ) sh ON sh.job_id = js.job_id AND sh.shift_date = js.schedule_date AND sh.start_time = js.start_time AND sh.end_time = js.end_time
+        WHERE j.company_id = #{companyId}
+        <if test="jobId != null">AND js.job_id = #{jobId}</if>
+        <if test="keyword != null and keyword != ''">AND (j.title LIKE CONCAT('%', #{keyword}, '%') OR js.schedule_name LIKE CONCAT('%', #{keyword}, '%'))</if>
+        <if test="status != null and status != ''">AND js.status = #{status}</if>
+        <if test="startDate != null">AND js.schedule_date &gt;= #{startDate}</if>
+        <if test="endDate != null">AND js.schedule_date &lt;= #{endDate}</if>
+    </sql>
+
+    <select id="findManagementPage" resultMap="ScheduleManagementResultMap">
+        SELECT js.id, js.job_id, j.title job_title,
+               COALESCE(js.schedule_name, j.title) schedule_name,
+               js.schedule_date, js.start_time, js.end_time,
+               COALESCE(j.address, j.location) location,
+               js.contact_name, js.contact_phone, js.slots_available,
+               COALESCE(app.application_count, 0) application_count,
+               COALESCE(app.pending_count, 0) pending_count,
+               COALESCE(app.accepted_count, 0) accepted_count,
+               COALESCE(app.rejected_count, 0) rejected_count,
+               GREATEST(COALESCE(js.slots_available, 0) - COALESCE(app.accepted_count, 0), 0) remaining_slots,
+               COALESCE(sh.shift_count, 0) shift_count,
+               COALESCE(sh.exception_count, 0) exception_count,
+               COALESCE(sh.settled_count, 0) settled_count,
+               js.status, js.created_at
+        <include refid="managementWhere"/>
+        ORDER BY js.schedule_date DESC, js.start_time DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countManagementPage" resultType="long">
+        SELECT COUNT(*)
+        <include refid="managementWhere"/>
+    </select>
+
+    <select id="findApplicants" resultMap="ScheduleApplicantResultMap">
+        SELECT sa.id application_id, sa.worker_id, w.name worker_name, w.phone worker_phone,
+               CASE WHEN wr.status = 'APPROVED' THEN TRUE ELSE FALSE END real_named,
+               sa.status application_status, sa.applied_at,
+               ss.id shift_id, ss.status shift_status,
+               ar.check_in_time, ar.check_out_time, ar.status attendance_status, ar.settlement_status,
+               ac.status correction_status
+        FROM schedule_applications sa
+        LEFT JOIN c_worker w ON w.id = sa.worker_id
+        LEFT JOIN worker_real_name_auth wr ON wr.worker_id = sa.worker_id
+        LEFT JOIN schedule_shifts ss ON ss.application_id = sa.id
+        LEFT JOIN attendance_records ar ON ar.shift_id = ss.id
+        LEFT JOIN attendance_corrections ac ON ac.shift_id = ss.id
+        WHERE sa.schedule_id = #{scheduleId}
+        <if test="status != null and status != ''">AND sa.status = #{status}</if>
+        ORDER BY sa.applied_at DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countApplicants" resultType="long">
+        SELECT COUNT(*) FROM schedule_applications sa
+        WHERE sa.schedule_id = #{scheduleId}
+        <if test="status != null and status != ''">AND sa.status = #{status}</if>
+    </select>
 
 </mapper>

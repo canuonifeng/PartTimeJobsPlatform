@@ -3,13 +3,21 @@ package com.parttime.enterprise.service;
 import com.parttime.enterprise.mapper.AttendanceRecordMapper;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.JobMapper;
+import com.parttime.enterprise.mapper.JobScheduleMapper;
+import com.parttime.enterprise.mapper.ScheduleApplicationMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
 import com.parttime.enterprise.mapper.WorkerNotificationMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
+import com.parttime.enterprise.pojo.cmd.ScheduleExportCmd;
+import com.parttime.enterprise.pojo.cmd.ScheduleManageUpdateCmd;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
 import com.parttime.enterprise.pojo.entity.Job;
+import com.parttime.enterprise.pojo.entity.JobSchedule;
 import com.parttime.enterprise.pojo.entity.ScheduleShift;
+import com.parttime.enterprise.pojo.vo.ScheduleManagementVO;
+import com.parttime.enterprise.pojo.vo.ScheduleApplicantVO;
+import com.parttime.enterprise.pojo.vo.ScheduleExportVO;
 import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
 import com.parttime.enterprise.pojo.vo.AttendanceRecordVO;
 import com.parttime.enterprise.pojo.vo.ScheduleShiftVO;
@@ -48,6 +56,12 @@ class ScheduleServiceTest {
     private JobMapper jobMapper;
 
     @Mock
+    private JobScheduleMapper jobScheduleMapper;
+
+    @Mock
+    private ScheduleApplicationMapper scheduleApplicationMapper;
+
+    @Mock
     private CompanyWorkerMapper companyWorkerMapper;
 
     @Mock
@@ -61,6 +75,92 @@ class ScheduleServiceTest {
 
     @InjectMocks
     private ScheduleServiceImpl scheduleService;
+
+    @Test
+    void updateManagedSchedule_shouldCancelFutureSchedule() {
+        JobSchedule schedule = new JobSchedule();
+        schedule.setId(1L);
+        schedule.setJobId(10L);
+        schedule.setScheduleDate(LocalDate.now().plusDays(1));
+        schedule.setStartTime(LocalTime.of(9, 0));
+        schedule.setEndTime(LocalTime.of(18, 0));
+        schedule.setSlotsAvailable(3);
+        schedule.setStatus("ACTIVE");
+        Job job = new Job();
+        job.setId(10L);
+        job.setCompanyId(30L);
+        ScheduleManagementVO managed = new ScheduleManagementVO();
+        managed.setId(1L);
+        managed.setStatus("CANCELLED");
+
+        ScheduleManageUpdateCmd request = new ScheduleManageUpdateCmd();
+        request.setId(1L);
+        request.setStatus("CANCELLED");
+        when(jobScheduleMapper.findById(1L)).thenReturn(Optional.of(schedule));
+        when(scheduleApplicationMapper.countByScheduleIdAndStatus(1L, "ACCEPTED")).thenReturn(0);
+        when(jobMapper.findById(10L)).thenReturn(Optional.of(job));
+        when(jobScheduleMapper.findManagementPage(30L, 10L, null, null, schedule.getScheduleDate(), schedule.getScheduleDate(), 0, 1000))
+                .thenReturn(List.of(managed));
+
+        ScheduleManagementVO result = scheduleService.updateManagedSchedule(request);
+
+        assertThat(result.getStatus()).isEqualTo("CANCELLED");
+        assertThat(schedule.getStatus()).isEqualTo("CANCELLED");
+        verify(jobScheduleMapper).update(schedule);
+    }
+
+    @Test
+    void updateManagedSchedule_shouldRejectCancelStartedSchedule() {
+        JobSchedule schedule = new JobSchedule();
+        schedule.setId(1L);
+        schedule.setJobId(10L);
+        schedule.setScheduleDate(LocalDate.now().minusDays(1));
+        schedule.setStartTime(LocalTime.of(9, 0));
+        schedule.setEndTime(LocalTime.of(18, 0));
+        schedule.setSlotsAvailable(3);
+        schedule.setStatus("ACTIVE");
+
+        ScheduleManageUpdateCmd request = new ScheduleManageUpdateCmd();
+        request.setId(1L);
+        request.setStatus("CANCELLED");
+        when(jobScheduleMapper.findById(1L)).thenReturn(Optional.of(schedule));
+        when(scheduleApplicationMapper.countByScheduleIdAndStatus(1L, "ACCEPTED")).thenReturn(0);
+
+        assertThatThrownBy(() -> scheduleService.updateManagedSchedule(request))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("只能取消未开始的班次");
+        verify(jobScheduleMapper, never()).update(any(JobSchedule.class));
+    }
+
+    @Test
+    void exportScheduleApplicants_shouldReturnChineseCsv() {
+        JobSchedule schedule = new JobSchedule();
+        schedule.setId(1L);
+        schedule.setJobId(10L);
+        ScheduleApplicantVO applicant = new ScheduleApplicantVO();
+        applicant.setWorkerName("张三");
+        applicant.setWorkerPhone("13800000000");
+        applicant.setRealNamed(true);
+        applicant.setAppliedAt(LocalDateTime.of(2026, 6, 18, 10, 30));
+        applicant.setApplicationStatus("ACCEPTED");
+        applicant.setShiftStatus("LATE_EARLY_LEAVE");
+        applicant.setCheckInTime(LocalDateTime.of(2026, 6, 18, 9, 5));
+        applicant.setCheckOutTime(LocalDateTime.of(2026, 6, 18, 17, 50));
+        applicant.setAttendanceStatus("CHECKED_OUT");
+        applicant.setCorrectionStatus("APPROVED");
+        applicant.setSettlementStatus("SETTLED");
+        ScheduleExportCmd request = new ScheduleExportCmd();
+        request.setScheduleId(1L);
+        request.setStatus("accepted");
+        when(jobScheduleMapper.findById(1L)).thenReturn(Optional.of(schedule));
+        when(jobScheduleMapper.findApplicants(1L, "ACCEPTED", 0, 10000)).thenReturn(List.of(applicant));
+
+        ScheduleExportVO result = scheduleService.exportScheduleApplicants(request);
+
+        assertThat(result.getFilename()).isEqualTo("schedule-1-applicants.csv");
+        assertThat(result.getContent()).contains("姓名,手机号,实名状态,报名时间,报名状态,排班状态,签到时间,签退时间,考勤状态,补卡状态,结算状态");
+        assertThat(result.getContent()).contains("张三,13800000000,已实名,2026-06-18T10:30,已通过,迟到并早退,2026-06-18T09:05,2026-06-18T17:50,已签退,已通过,已结算");
+    }
 
     @Test
     void assignShift_shouldCreateAndReturnResponse() {

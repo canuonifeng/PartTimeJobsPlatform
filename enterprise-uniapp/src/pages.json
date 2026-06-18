@@ -15,6 +15,7 @@
     {"path": "pages/templates/templateList", "style": {"navigationBarTitleText": "职位模版", "enablePullDownRefresh": true}},
     {"path": "pages/templates/templateForm", "style": {"navigationBarTitleText": "模版表单"}},
     {"path": "pages/applications/applicationList", "style": {"navigationBarTitleText": "应聘管理", "enablePullDownRefresh": true}},
+    {"path": "pages/schedules/manageList", "style": {"navigationBarTitleText": "班次管理", "enablePullDownRefresh": true}},
     {"path": "pages/schedules/scheduleList", "style": {"navigationBarTitleText": "排班考勤", "enablePullDownRefresh": true}},
     {"path": "pages/attendance/attendanceList", "style": {"navigationBarTitleText": "薪资管理", "enablePullDownRefresh": true}},
     {"path": "pages/workers/workerList", "style": {"navigationBarTitleText": "兼职管理", "enablePullDownRefresh": true}},

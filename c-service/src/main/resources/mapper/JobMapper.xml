@@ -3,12 +3,12 @@
 <mapper namespace="com.parttime.cservice.mapper.JobMapper">
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO jobs (company_id, title, description, requirements, contact_phone,
+        INSERT INTO jobs (company_id, title, description, requirements, contact_name, contact_phone,
                            location, province, city, district, address, latitude, longitude,
                            category_id, rate_type, rate_amount, status, published_at,
                            headcount, deadline, image_url, auto_approve,
                            created_at, updated_at)
-        VALUES (#{companyId}, #{title}, #{description}, #{requirements}, #{contactPhone},
+        VALUES (#{companyId}, #{title}, #{description}, #{requirements}, #{contactName}, #{contactPhone},
                 #{location}, #{province}, #{city}, #{district}, #{address}, #{latitude}, #{longitude},
                 #{categoryId}, #{rateType}, #{rateAmount}, #{status}, #{publishedAt},
                 #{headcount}, #{deadline}, #{imageUrl}, #{autoApprove},
@@ -17,12 +17,13 @@
 
     <resultMap id="jobResultMap" type="com.parttime.cservice.pojo.entity.Job" autoMapping="true">
         <id property="id" column="id"/>
+        <result property="contactName" column="contact_name"/>
         <result property="contactPhone" column="contact_phone"/>
         <result property="autoApprove" column="auto_approve"/>
     </resultMap>
 
     <sql id="jobSelect">
-        SELECT id, company_id, title, description, requirements, contact_phone,
+        SELECT id, company_id, title, description, requirements, contact_name, contact_phone,
                location, province, city, district, address, latitude, longitude,
                category_id, rate_type, rate_amount, status, published_at,
                headcount, accepted_count, deadline, created_at, updated_at,
@@ -70,7 +71,7 @@
     <update id="update">
         UPDATE jobs
         SET title = #{title}, description = #{description}, requirements = #{requirements},
-            contact_phone = #{contactPhone},
+            contact_name = #{contactName}, contact_phone = #{contactPhone},
             location = #{location},
             province = #{province}, city = #{city}, district = #{district}, address = #{address},
             latitude = #{latitude}, longitude = #{longitude},

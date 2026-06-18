@@ -58,6 +58,7 @@ public class JobServiceImpl implements JobService {
         job.setTitle(request.getTitle());
         job.setDescription(request.getDescription());
         job.setRequirements(request.getRequirements());
+        job.setContactName(request.getContactName());
         job.setContactPhone(request.getContactPhone());
         job.setLocation(request.getLocation());
         job.setProvince(request.getProvince());
@@ -103,6 +104,7 @@ public class JobServiceImpl implements JobService {
                 schedule.setStartTime(scheduleReq.getStartTime());
                 schedule.setEndTime(scheduleReq.getEndTime());
                 schedule.setSlotsAvailable(job.getHeadcount());
+                syncScheduleSnapshot(schedule, job);
                 jobScheduleMapper.insert(schedule);
             }
         }
@@ -117,6 +119,7 @@ public class JobServiceImpl implements JobService {
         if (request.getTitle() != null) job.setTitle(request.getTitle());
         if (request.getDescription() != null) job.setDescription(request.getDescription());
         if (request.getRequirements() != null) job.setRequirements(request.getRequirements());
+        if (request.getContactName() != null) job.setContactName(request.getContactName());
         if (request.getContactPhone() != null) job.setContactPhone(request.getContactPhone());
         if (request.getLocation() != null) job.setLocation(request.getLocation());
         if (request.getProvince() != null) job.setProvince(request.getProvince());
@@ -180,6 +183,7 @@ public class JobServiceImpl implements JobService {
                     schedule.setEndTime(scheduleReq.getEndTime());
                     schedule.setSlotsAvailable(job.getHeadcount());
                     schedule.setStatus("ACTIVE");
+                    syncScheduleSnapshot(schedule, job);
                     jobScheduleMapper.insert(schedule);
                 } else {
                     JobSchedule schedule = new JobSchedule();
@@ -189,6 +193,7 @@ public class JobServiceImpl implements JobService {
                     schedule.setStartTime(scheduleReq.getStartTime());
                     schedule.setEndTime(scheduleReq.getEndTime());
                     schedule.setSlotsAvailable(job.getHeadcount());
+                    syncScheduleSnapshot(schedule, job);
                     jobScheduleMapper.update(schedule);
                 }
             }
@@ -330,9 +335,10 @@ public class JobServiceImpl implements JobService {
         schedule.setScheduleDate(request.getScheduleDate());
         schedule.setStartTime(request.getStartTime());
         schedule.setEndTime(request.getEndTime());
-                schedule.setSlotsAvailable(job.getHeadcount());
-                schedule.setStatus("ACTIVE");
-                jobScheduleMapper.insert(schedule);
+        schedule.setSlotsAvailable(job.getHeadcount());
+        schedule.setStatus("ACTIVE");
+        syncScheduleSnapshot(schedule, job);
+        jobScheduleMapper.insert(schedule);
         return toScheduleResponse(schedule);
     }
 
@@ -346,6 +352,7 @@ public class JobServiceImpl implements JobService {
         schedule.setStartTime(request.getStartTime());
         schedule.setEndTime(request.getEndTime());
         schedule.setSlotsAvailable(job.getHeadcount());
+        syncScheduleSnapshot(schedule, job);
         jobScheduleMapper.update(schedule);
         return toScheduleResponse(schedule);
     }
@@ -420,7 +427,10 @@ public class JobServiceImpl implements JobService {
         response.setScheduleDate(schedule.getScheduleDate());
         response.setStartTime(schedule.getStartTime());
         response.setEndTime(schedule.getEndTime());
+        response.setScheduleName(schedule.getScheduleName());
         response.setSlotsAvailable(schedule.getSlotsAvailable());
+        response.setContactName(schedule.getContactName());
+        response.setContactPhone(schedule.getContactPhone());
         response.setStatus(schedule.getStatus());
         response.setCreatedAt(schedule.getCreatedAt());
         response.setUpdatedAt(schedule.getUpdatedAt());
@@ -434,6 +444,7 @@ public class JobServiceImpl implements JobService {
         response.setTitle(job.getTitle());
         response.setDescription(job.getDescription());
         response.setRequirements(job.getRequirements());
+        response.setContactName(job.getContactName());
         response.setContactPhone(job.getContactPhone());
         List<JobTag> tags = jobTagRelationMapper.findTagsByJobId(job.getId());
         List<Long> tagIds = tags == null ? List.of() : tags.stream().map(JobTag::getId).collect(Collectors.toList());
@@ -462,5 +473,15 @@ public class JobServiceImpl implements JobService {
         response.setCreatedAt(job.getCreatedAt());
         response.setUpdatedAt(job.getUpdatedAt());
         return response;
+    }
+
+    private void syncScheduleSnapshot(JobSchedule schedule, Job job) {
+        schedule.setScheduleName(buildScheduleName(job, schedule));
+        schedule.setContactName(job.getContactName());
+        schedule.setContactPhone(job.getContactPhone());
+    }
+
+    private String buildScheduleName(Job job, JobSchedule schedule) {
+        return job == null ? null : job.getTitle();
     }
 }

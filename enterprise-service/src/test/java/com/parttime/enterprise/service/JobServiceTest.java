@@ -234,6 +234,7 @@ class JobServiceTest {
         request.setTitle("Software Engineer");
         request.setDescription("<p>岗位职责</p>");
         request.setRequirements("<p>任职要求</p>");
+        request.setContactName("李经理");
         request.setContactPhone("13800138000");
         request.setCategoryId(10L);
         request.setHeadcount(3);
@@ -257,12 +258,42 @@ class JobServiceTest {
         Job savedJob = jobCaptor.getValue();
         assertThat(savedJob.getDescription()).isEqualTo("<p>岗位职责</p>");
         assertThat(savedJob.getRequirements()).isEqualTo("<p>任职要求</p>");
+        assertThat(savedJob.getContactName()).isEqualTo("李经理");
         assertThat(savedJob.getContactPhone()).isEqualTo("13800138000");
         verify(jobTagRelationMapper).deleteByJobId(100L);
         verify(jobTagRelationMapper).batchInsert(100L, List.of(2L, 1L));
         assertThat(response.getRequirements()).isEqualTo("<p>任职要求</p>");
+        assertThat(response.getContactName()).isEqualTo("李经理");
         assertThat(response.getContactPhone()).isEqualTo("13800138000");
         assertThat(response.getTagIds()).containsExactly(2L, 1L);
+    }
+
+    @Test
+    void createJob_shouldCopyJobContactSnapshotToSchedules() {
+        JobScheduleCmd scheduleRequest = new JobScheduleCmd();
+        scheduleRequest.setScheduleDate(LocalDate.of(2026, 6, 1));
+        scheduleRequest.setStartTime(LocalTime.of(9, 0));
+        scheduleRequest.setEndTime(LocalTime.of(18, 0));
+
+        JobCreateCmd request = new JobCreateCmd();
+        request.setCompanyId(1L);
+        request.setTitle("Software Engineer");
+        request.setContactName("李经理");
+        request.setContactPhone("13800138000");
+        request.setHeadcount(3);
+        request.setSchedules(List.of(scheduleRequest));
+
+        doAnswer(invocation -> {
+            Job job = invocation.getArgument(0);
+            job.setId(100L);
+            return 1;
+        }).when(jobMapper).insert(any(Job.class));
+
+        jobService.createJob(request);
+
+        verify(jobScheduleMapper).insert(scheduleCaptor.capture());
+        assertThat(scheduleCaptor.getValue().getContactName()).isEqualTo("李经理");
+        assertThat(scheduleCaptor.getValue().getContactPhone()).isEqualTo("13800138000");
     }
 
     @Test

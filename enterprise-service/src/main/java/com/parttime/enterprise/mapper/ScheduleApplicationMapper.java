@@ -31,6 +31,8 @@ public interface ScheduleApplicationMapper {
 
     int countByJobIdAndStatus(@Param("jobId") Long jobId, @Param("status") String status);
 
+    int countByScheduleIdAndStatus(@Param("scheduleId") Long scheduleId, @Param("status") String status);
+
     int updateStatus(@Param("id") Long id, @Param("status") String status);
 
     // VO methods with JOINs

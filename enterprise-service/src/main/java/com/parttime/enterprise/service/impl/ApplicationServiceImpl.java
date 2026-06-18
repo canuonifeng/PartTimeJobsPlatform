@@ -79,9 +79,10 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .orElseThrow(() -> new RuntimeException("Job not found: " + schedule.getJobId()));
 
         if (!"ACCEPTED".equals(app.getStatus())) {
-            int acceptedCount = applicationMapper.countByJobIdAndStatus(schedule.getJobId(), "ACCEPTED");
-            if (acceptedCount >= job.getHeadcount()) {
-                throw new BusinessException("岗位已录满");
+            int acceptedCount = applicationMapper.countByScheduleIdAndStatus(schedule.getId(), "ACCEPTED");
+            Integer capacity = schedule.getSlotsAvailable();
+            if (capacity != null && capacity > 0 && acceptedCount >= capacity) {
+                throw new BusinessException("班次已满");
             }
 
             applicationMapper.updateStatus(applicationId, "ACCEPTED");
@@ -123,6 +124,8 @@ public class ApplicationServiceImpl implements ApplicationService {
             shift.setLocationLat(job.getLatitude());
             shift.setLocationLng(job.getLongitude());
             shift.setLocationName(job.getAddress());
+            shift.setContactName(schedule.getContactName());
+            shift.setContactPhone(schedule.getContactPhone());
             if (rate != null) {
                 shift.setSalaryType(rate.getType());
                 shift.setSalaryAmount(rate.getAmount());

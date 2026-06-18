@@ -146,6 +146,18 @@ public class InMemoryMappers {
                         id -> (int) store.values().stream().filter(a -> id.equals(a.getScheduleId())).count()
                 ));
             }
+            @Override public int countAcceptedByScheduleId(Long scheduleId) {
+                return (int) store.values().stream()
+                        .filter(a -> scheduleId.equals(a.getScheduleId()))
+                        .filter(a -> "ACCEPTED".equals(a.getStatus()))
+                        .count();
+            }
+            @Override public java.util.Map<Long, Integer> countAcceptedByScheduleIds(List<Long> scheduleIds) {
+                return scheduleIds.stream().collect(Collectors.toMap(
+                        id -> id,
+                        this::countAcceptedByScheduleId
+                ));
+            }
             @Override public List<ScheduleApplication> findByIds(List<Long> ids) {
                 return store.values().stream().filter(a -> ids.contains(a.getId())).collect(Collectors.toList());
             }

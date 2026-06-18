@@ -24,6 +24,7 @@
           <view class="status-badge" :class="statusClass(shift.status, shift)">{{ statusText(shift.status, shift) }}</view>
         </view>
         <view class="time-box"><view><text class="time-label">工作时间</text><text class="time-value">{{ shift.startTime }} - {{ shift.endTime }}</text></view><view class="date-box"><text class="date-day">{{ shift.date.slice(8) }}</text><text class="date-month">{{ shift.date.slice(5, 7) }}月</text></view></view>
+        <view v-if="shift.contactName || shift.contactPhone" class="contact-row"><text>联系人</text><text>{{ [shift.contactName, shift.contactPhone].filter(Boolean).join(' ') }}</text></view>
         <view class="record-row"><view class="record-item"><text class="record-label">签到</text><text class="record-value">{{ shift.checkInTime || '未签到' }}</text></view><view class="record-item"><text class="record-label">签退</text><text class="record-value">{{ shift.checkOutTime || '未签退' }}</text></view></view>
       </view>
       <uni-load-more v-if="allShifts.length > 0" :status="moreStatus" />
@@ -35,7 +36,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { getMyShifts } from '@/api/schedule'
 
-interface Shift { id: number; jobTitle: string; location: string; startTime: string; endTime: string; date: string; status: string; checkedIn: boolean; checkedOut: boolean; checkInTime?: string; checkOutTime?: string; attendanceId?: number }
+interface Shift { id: number; jobTitle: string; location: string; startTime: string; endTime: string; date: string; status: string; checkedIn: boolean; checkedOut: boolean; checkInTime?: string; checkOutTime?: string; attendanceId?: number; contactName?: string; contactPhone?: string }
 
 const PAGE_SIZE = 20
 const loading = ref(false)
@@ -94,7 +95,7 @@ function normalizeDate(value: any): string {
 function normalizeShift(s: any, index: number): Shift {
   const status = s.status || s.attendanceStatus || 'SCHEDULED'
   const checkOutTime = normalizeTime(s.checkOutTime || s.clockOutTime || s.signOutTime)
-  return { id: Number(s.id ?? s.shiftId ?? index + 1), jobTitle: s.jobTitle || s.title || s.positionName || s.jobName || '临时岗位', location: s.location || s.locationName || s.jobLocation || s.address || '暂无地点', startTime: normalizeTime(s.startTime || s.beginTime) || '09:00', endTime: normalizeTime(s.endTime || s.finishTime) || '18:00', date: normalizeDate(s.date || s.shiftDate), status, checkedIn: checkedInStatuses.includes(status), checkedOut: checkedOutStatuses.includes(status), checkInTime: normalizeTime(s.checkInTime || s.clockInTime || s.signInTime), checkOutTime, attendanceId: s.attendanceId }
+  return { id: Number(s.id ?? s.shiftId ?? index + 1), jobTitle: s.jobTitle || s.title || s.positionName || s.jobName || '临时岗位', location: s.location || s.locationName || s.jobLocation || s.address || '暂无地点', startTime: normalizeTime(s.startTime || s.beginTime) || '09:00', endTime: normalizeTime(s.endTime || s.finishTime) || '18:00', date: normalizeDate(s.date || s.shiftDate), status, checkedIn: checkedInStatuses.includes(status), checkedOut: checkedOutStatuses.includes(status), checkInTime: normalizeTime(s.checkInTime || s.clockInTime || s.signInTime), checkOutTime, attendanceId: s.attendanceId, contactName: s.contactName || '', contactPhone: s.contactPhone || '' }
 }
 function hasCheckedIn(shift: Shift): boolean { return shift.checkedIn || checkedInStatuses.includes(shift.status) }
 function hasCheckedOut(shift: Shift): boolean { return shift.checkedOut || isCheckedOutAfterShiftEnd(shift) || checkedOutStatuses.includes(shift.status) }
@@ -176,6 +177,7 @@ onMounted(() => loadShifts(1))
 .time-box { display: flex; align-items: center; justify-content: space-between; margin-top: 24rpx; padding: 22rpx 24rpx; border-radius: 18rpx; background: #f7fafc; }
 .time-label { display: block; font-size: 22rpx; color: #8b98a7; }
 .time-value { display: block; margin-top: 8rpx; font-size: 34rpx; line-height: 42rpx; font-weight: 700; color: #07c160; }
+.contact-row { display: flex; justify-content: space-between; margin: 18rpx 0 0; padding: 14rpx 18rpx; border-radius: 16rpx; background: #f8fafc; font-size: 24rpx; color: #64748b; }
 .date-box { width: 86rpx; height: 86rpx; border-radius: 22rpx; background: #eafaf1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .date-day { font-size: 32rpx; line-height: 36rpx; color: #08a857; font-weight: 800; }
 .date-month { font-size: 22rpx; color: #58b987; }

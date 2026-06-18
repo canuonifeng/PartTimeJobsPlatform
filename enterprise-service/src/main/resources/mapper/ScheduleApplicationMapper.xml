@@ -73,6 +73,11 @@
         WHERE js.job_id = #{jobId} AND sa.status = #{status}
     </select>
 
+    <select id="countByScheduleIdAndStatus" resultType="int">
+        SELECT COUNT(*) FROM schedule_applications
+        WHERE schedule_id = #{scheduleId} AND status = #{status}
+    </select>
+
     <update id="updateStatus">
         UPDATE schedule_applications SET status = #{status} WHERE id = #{id}
     </update>

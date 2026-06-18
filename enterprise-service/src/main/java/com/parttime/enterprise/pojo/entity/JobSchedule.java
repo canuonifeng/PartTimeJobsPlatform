@@ -19,8 +19,14 @@ public class JobSchedule {
     private LocalTime startTime;
     @Schema(description = "结束时间")
     private LocalTime endTime;
+    @Schema(description = "班次名称")
+    private String scheduleName;
     @Schema(description = "可报名人数")
     private Integer slotsAvailable;
+    @Schema(description = "联系人姓名快照")
+    private String contactName;
+    @Schema(description = "联系人电话快照")
+    private String contactPhone;
     @Schema(description = "状态 ACTIVE/CANCELLED")
     private String status;
     @Schema(description = "创建时间")

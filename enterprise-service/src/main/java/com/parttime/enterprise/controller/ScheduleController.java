@@ -2,12 +2,19 @@ package com.parttime.enterprise.controller;
 
 import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.pojo.cmd.IdCmd;
+import com.parttime.enterprise.pojo.cmd.ScheduleBatchCreateCmd;
+import com.parttime.enterprise.pojo.cmd.ScheduleCopyCmd;
+import com.parttime.enterprise.pojo.cmd.ScheduleExportCmd;
+import com.parttime.enterprise.pojo.cmd.ScheduleManageUpdateCmd;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
 import com.parttime.enterprise.pojo.cmd.CorrectionRejectCmd;
 import com.parttime.enterprise.pojo.vo.ApiResponse;
 import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
 import com.parttime.enterprise.pojo.vo.CorrectionVO;
 import com.parttime.enterprise.pojo.vo.PageVO;
+import com.parttime.enterprise.pojo.vo.ScheduleApplicantVO;
+import com.parttime.enterprise.pojo.vo.ScheduleExportVO;
+import com.parttime.enterprise.pojo.vo.ScheduleManagementVO;
 import com.parttime.enterprise.pojo.vo.ScheduleShiftVO;
 import com.parttime.enterprise.service.CorrectionService;
 import com.parttime.enterprise.service.ScheduleService;
@@ -50,6 +57,58 @@ public class ScheduleController {
         if (shiftDate == null && date != null) shiftDate = date;
         Long resolvedCompanyId = companyId != null ? companyId : SecurityUtil.getCurrentCompanyId();
         return ApiResponse.success(scheduleService.getShifts(resolvedCompanyId, jobId, workerId, shiftDate, status, page, pageSize));
+    }
+
+    @Operation(summary = "班次管理列表", description = "按可报名班次聚合报名、容量和考勤概览")
+    @GetMapping("/schedules")
+    public ApiResponse<PageVO<ScheduleManagementVO>> getManagedSchedules(
+            @RequestParam(required = false) Long jobId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "20") Integer pageSize) {
+        return ApiResponse.success(scheduleService.getManagedSchedules(SecurityUtil.getCurrentCompanyId(), jobId, keyword, status, startDate, endDate, page, pageSize));
+    }
+
+    @Operation(summary = "班次报名人列表", description = "查看某个班次的报名人及考勤情况")
+    @GetMapping("/schedules/{scheduleId}/applicants")
+    public ApiResponse<PageVO<ScheduleApplicantVO>> getScheduleApplicants(
+            @PathVariable Long scheduleId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false, defaultValue = "1") Integer page,
+            @RequestParam(required = false, defaultValue = "20") Integer pageSize) {
+        return ApiResponse.success(scheduleService.getScheduleApplicants(scheduleId, status, page, pageSize));
+    }
+
+    @Operation(summary = "修改班次信息", description = "修改只影响后续报名和后续生成排班")
+    @PostMapping("/schedules/update")
+    public ApiResponse<ScheduleManagementVO> updateManagedSchedule(@RequestBody ScheduleManageUpdateCmd request) {
+        return ApiResponse.success(scheduleService.updateManagedSchedule(request));
+    }
+
+    @Operation(summary = "复制班次", description = "复制已有班次到新日期或时间")
+    @PostMapping("/schedules/copy")
+    public ApiResponse<ScheduleManagementVO> copyManagedSchedule(@RequestBody ScheduleCopyCmd request) {
+        return ApiResponse.success(scheduleService.copyManagedSchedule(request));
+    }
+
+    @Operation(summary = "批量创建班次", description = "按日期范围和周几批量创建班次")
+    @PostMapping("/schedules/batch-create")
+    public ApiResponse<List<ScheduleManagementVO>> batchCreateManagedSchedules(@RequestBody ScheduleBatchCreateCmd request) {
+        return ApiResponse.success(scheduleService.batchCreateManagedSchedules(request));
+    }
+
+    @Operation(summary = "导出班次报名和考勤", description = "导出某个班次的报名人、考勤、补卡和结算状态")
+    @GetMapping("/schedules/{scheduleId}/export")
+    public ApiResponse<ScheduleExportVO> exportScheduleApplicants(
+            @PathVariable Long scheduleId,
+            @RequestParam(required = false) String status) {
+        ScheduleExportCmd request = new ScheduleExportCmd();
+        request.setScheduleId(scheduleId);
+        request.setStatus(status);
+        return ApiResponse.success(scheduleService.exportScheduleApplicants(request));
     }
 
     @Operation(summary = "更新班次", description = "更新指定的班次信息")

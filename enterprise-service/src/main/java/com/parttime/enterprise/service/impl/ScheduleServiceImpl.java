@@ -4,15 +4,25 @@ import com.parttime.enterprise.enums.ShiftStatus;
 import com.parttime.enterprise.mapper.AttendanceRecordMapper;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.JobMapper;
+import com.parttime.enterprise.mapper.JobScheduleMapper;
+import com.parttime.enterprise.mapper.ScheduleApplicationMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
 import com.parttime.enterprise.mapper.WorkerNotificationMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
+import com.parttime.enterprise.pojo.cmd.ScheduleBatchCreateCmd;
+import com.parttime.enterprise.pojo.cmd.ScheduleCopyCmd;
+import com.parttime.enterprise.pojo.cmd.ScheduleExportCmd;
+import com.parttime.enterprise.pojo.cmd.ScheduleManageUpdateCmd;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
 import com.parttime.enterprise.pojo.entity.Job;
+import com.parttime.enterprise.pojo.entity.JobSchedule;
 import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
 import com.parttime.enterprise.pojo.vo.PageVO;
+import com.parttime.enterprise.pojo.vo.ScheduleApplicantVO;
+import com.parttime.enterprise.pojo.vo.ScheduleExportVO;
+import com.parttime.enterprise.pojo.vo.ScheduleManagementVO;
 import com.parttime.enterprise.pojo.vo.ScheduleShiftVO;
 import com.parttime.enterprise.service.ScheduleService;
 import org.springframework.stereotype.Service;
@@ -33,6 +43,10 @@ public class ScheduleServiceImpl implements ScheduleService {
     private AttendanceRecordMapper attendanceRecordMapper;
     @Resource
     private JobMapper jobMapper;
+    @Resource
+    private JobScheduleMapper jobScheduleMapper;
+    @Resource
+    private ScheduleApplicationMapper scheduleApplicationMapper;
     @Resource
     private CompanyWorkerMapper companyWorkerMapper;
     @Resource
@@ -264,6 +278,209 @@ public class ScheduleServiceImpl implements ScheduleService {
 
             return report;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public PageVO<ScheduleManagementVO> getManagedSchedules(Long companyId, Long jobId, String keyword, String status,
+                                                            LocalDate startDate, LocalDate endDate, Integer page, Integer pageSize) {
+        int currentPage = Math.max(page == null ? 1 : page, 1);
+        int size = pageSize == null || pageSize <= 0 ? 20 : pageSize;
+        int offset = (currentPage - 1) * size;
+        String normalizedStatus = status == null || status.isBlank() ? null : status.trim().toUpperCase();
+        List<ScheduleManagementVO> records = jobScheduleMapper.findManagementPage(companyId, jobId, keyword, normalizedStatus, startDate, endDate, offset, size);
+        long total = jobScheduleMapper.countManagementPage(companyId, jobId, keyword, normalizedStatus, startDate, endDate);
+        return new PageVO<>(records, total);
+    }
+
+    @Override
+    public PageVO<ScheduleApplicantVO> getScheduleApplicants(Long scheduleId, String status, Integer page, Integer pageSize) {
+        int currentPage = Math.max(page == null ? 1 : page, 1);
+        int size = pageSize == null || pageSize <= 0 ? 20 : pageSize;
+        int offset = (currentPage - 1) * size;
+        String normalizedStatus = status == null || status.isBlank() ? null : status.trim().toUpperCase();
+        return new PageVO<>(
+                jobScheduleMapper.findApplicants(scheduleId, normalizedStatus, offset, size),
+                jobScheduleMapper.countApplicants(scheduleId, normalizedStatus)
+        );
+    }
+
+    @Override
+    public ScheduleManagementVO updateManagedSchedule(ScheduleManageUpdateCmd request) {
+        JobSchedule schedule = jobScheduleMapper.findById(request.getId())
+                .orElseThrow(() -> new RuntimeException("JobSchedule not found: " + request.getId()));
+        int acceptedCount = scheduleApplicationMapper.countByScheduleIdAndStatus(schedule.getId(), "ACCEPTED");
+        Integer newCapacity = request.getSlotsAvailable() == null ? schedule.getSlotsAvailable() : request.getSlotsAvailable();
+        if (newCapacity != null && newCapacity < acceptedCount) {
+            throw new RuntimeException("招聘人数不能低于已通过人数");
+        }
+        boolean started = schedule.getScheduleDate() != null && schedule.getStartTime() != null
+                && LocalDateTime.of(schedule.getScheduleDate(), schedule.getStartTime()).isBefore(LocalDateTime.now());
+        if (started && "CANCELLED".equals(request.getStatus())) {
+            throw new RuntimeException("只能取消未开始的班次");
+        }
+        if (!started) {
+            if (request.getScheduleDate() != null) schedule.setScheduleDate(request.getScheduleDate());
+            if (request.getStartTime() != null) schedule.setStartTime(request.getStartTime());
+            if (request.getEndTime() != null) schedule.setEndTime(request.getEndTime());
+            schedule.setSlotsAvailable(newCapacity);
+        }
+        if (request.getScheduleName() != null) schedule.setScheduleName(request.getScheduleName());
+        if (request.getContactName() != null) schedule.setContactName(request.getContactName());
+        if (request.getContactPhone() != null) schedule.setContactPhone(request.getContactPhone());
+        if (request.getStatus() != null) schedule.setStatus(request.getStatus());
+        jobScheduleMapper.update(schedule);
+        return findManagedSchedule(schedule.getId());
+    }
+
+    @Override
+    public ScheduleManagementVO copyManagedSchedule(ScheduleCopyCmd request) {
+        JobSchedule source = jobScheduleMapper.findById(request.getSourceScheduleId())
+                .orElseThrow(() -> new RuntimeException("JobSchedule not found: " + request.getSourceScheduleId()));
+        JobSchedule target = new JobSchedule();
+        target.setJobId(source.getJobId());
+        target.setScheduleDate(request.getScheduleDate());
+        target.setStartTime(request.getStartTime() == null ? source.getStartTime() : request.getStartTime());
+        target.setEndTime(request.getEndTime() == null ? source.getEndTime() : request.getEndTime());
+        target.setScheduleName(source.getScheduleName());
+        target.setSlotsAvailable(source.getSlotsAvailable());
+        target.setContactName(source.getContactName());
+        target.setContactPhone(source.getContactPhone());
+        target.setStatus("ACTIVE");
+        jobScheduleMapper.insert(target);
+        return findManagedSchedule(target.getId());
+    }
+
+    @Override
+    public List<ScheduleManagementVO> batchCreateManagedSchedules(ScheduleBatchCreateCmd request) {
+        Job job = jobMapper.findById(request.getJobId())
+                .orElseThrow(() -> new RuntimeException("Job not found: " + request.getJobId()));
+        List<ScheduleManagementVO> result = new ArrayList<>();
+        LocalDate cursor = request.getStartDate();
+        while (cursor != null && !cursor.isAfter(request.getEndDate())) {
+            int weekday = cursor.getDayOfWeek().getValue();
+            if (request.getWeekdays() == null || request.getWeekdays().isEmpty() || request.getWeekdays().contains(weekday)) {
+                JobSchedule schedule = new JobSchedule();
+                schedule.setJobId(job.getId());
+                schedule.setScheduleDate(cursor);
+                schedule.setStartTime(request.getStartTime());
+                schedule.setEndTime(request.getEndTime());
+                schedule.setScheduleName(job.getTitle());
+                schedule.setSlotsAvailable(job.getHeadcount());
+                schedule.setContactName(job.getContactName());
+                schedule.setContactPhone(job.getContactPhone());
+                schedule.setStatus("ACTIVE");
+                jobScheduleMapper.insert(schedule);
+                result.add(findManagedSchedule(schedule.getId()));
+            }
+            cursor = cursor.plusDays(1);
+        }
+        return result;
+    }
+
+    @Override
+    public ScheduleExportVO exportScheduleApplicants(ScheduleExportCmd request) {
+        JobSchedule schedule = jobScheduleMapper.findById(request.getScheduleId())
+                .orElseThrow(() -> new RuntimeException("JobSchedule not found: " + request.getScheduleId()));
+        String normalizedStatus = request.getStatus() == null || request.getStatus().isBlank() ? null : request.getStatus().trim().toUpperCase();
+        List<ScheduleApplicantVO> applicants = jobScheduleMapper.findApplicants(schedule.getId(), normalizedStatus, 0, 10000);
+        StringBuilder content = new StringBuilder("姓名,手机号,实名状态,报名时间,报名状态,排班状态,签到时间,签退时间,考勤状态,补卡状态,结算状态\n");
+        for (ScheduleApplicantVO applicant : applicants) {
+            appendCsvRow(content,
+                    applicant.getWorkerName(),
+                    applicant.getWorkerPhone(),
+                    Boolean.TRUE.equals(applicant.getRealNamed()) ? "已实名" : "未实名",
+                    formatValue(applicant.getAppliedAt()),
+                    applicationStatusText(applicant.getApplicationStatus()),
+                    shiftStatusText(applicant.getShiftStatus()),
+                    formatValue(applicant.getCheckInTime()),
+                    formatValue(applicant.getCheckOutTime()),
+                    attendanceStatusText(applicant.getAttendanceStatus()),
+                    correctionStatusText(applicant.getCorrectionStatus()),
+                    settlementStatusText(applicant.getSettlementStatus()));
+        }
+        ScheduleExportVO result = new ScheduleExportVO();
+        result.setFilename("schedule-" + schedule.getId() + "-applicants.csv");
+        result.setContent('\ufeff' + content.toString());
+        return result;
+    }
+
+    private void appendCsvRow(StringBuilder content, String... values) {
+        for (int index = 0; index < values.length; index++) {
+            if (index > 0) content.append(',');
+            content.append(escapeCsv(values[index]));
+        }
+        content.append('\n');
+    }
+
+    private String escapeCsv(String value) {
+        if (value == null) return "";
+        String escaped = value.replace("\"", "\"\"");
+        if (escaped.contains(",") || escaped.contains("\n") || escaped.contains("\r") || escaped.contains("\"")) {
+            return "\"" + escaped + "\"";
+        }
+        return escaped;
+    }
+
+    private String formatValue(Object value) {
+        return value == null ? "" : value.toString();
+    }
+
+    private String applicationStatusText(String status) {
+        if ("PENDING".equals(status)) return "待审核";
+        if ("ACCEPTED".equals(status)) return "已通过";
+        if ("REJECTED".equals(status)) return "已拒绝";
+        return formatValue(status);
+    }
+
+    private String shiftStatusText(String status) {
+        if ("SCHEDULED".equals(status)) return "待上岗";
+        if ("ON_DUTY".equals(status)) return "工作中";
+        if ("COMPLETED".equals(status)) return "已完成";
+        if ("ABSENT".equals(status)) return "缺勤";
+        if ("LATE".equals(status)) return "迟到";
+        if ("EARLY_LEAVE".equals(status) || "EARLY".equals(status)) return "早退";
+        if ("LATE_EARLY_LEAVE".equals(status)) return "迟到并早退";
+        if ("CANCELLED".equals(status)) return "已取消";
+        return formatValue(status);
+    }
+
+    private String attendanceStatusText(String status) {
+        if ("CHECKED_IN".equals(status)) return "已签到";
+        if ("CHECKED_OUT".equals(status)) return "已签退";
+        if ("NORMAL".equals(status) || "COMPLETED".equals(status)) return "正常";
+        if ("ABSENT".equals(status)) return "缺勤";
+        if ("LATE".equals(status)) return "迟到";
+        if ("EARLY_LEAVE".equals(status) || "EARLY".equals(status)) return "早退";
+        if ("LATE_EARLY_LEAVE".equals(status)) return "迟到并早退";
+        return formatValue(status);
+    }
+
+    private String correctionStatusText(String status) {
+        if ("PENDING".equals(status)) return "审批中";
+        if ("APPROVED".equals(status)) return "已通过";
+        if ("REJECTED".equals(status)) return "已拒绝";
+        return formatValue(status);
+    }
+
+    private String settlementStatusText(String status) {
+        if ("UNSETTLED".equals(status) || "UNPAID".equals(status)) return "未结算";
+        if ("PAYING".equals(status)) return "结算中";
+        if ("PENDING".equals(status)) return "待结算";
+        if ("SETTLED".equals(status) || "PAID".equals(status)) return "已结算";
+        return formatValue(status);
+    }
+
+    private ScheduleManagementVO findManagedSchedule(Long scheduleId) {
+        JobSchedule schedule = jobScheduleMapper.findById(scheduleId)
+                .orElseThrow(() -> new RuntimeException("JobSchedule not found: " + scheduleId));
+        Job job = jobMapper.findById(schedule.getJobId())
+                .orElseThrow(() -> new RuntimeException("Job not found: " + schedule.getJobId()));
+        return jobScheduleMapper.findManagementPage(job.getCompanyId(), schedule.getJobId(), null, null,
+                        schedule.getScheduleDate(), schedule.getScheduleDate(), 0, 1000)
+                .stream()
+                .filter(item -> scheduleId.equals(item.getId()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("JobSchedule not found: " + scheduleId));
     }
 
     private ScheduleShiftVO toShiftResponse(ScheduleShift shift) {
