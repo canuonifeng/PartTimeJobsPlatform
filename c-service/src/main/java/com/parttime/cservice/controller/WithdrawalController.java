@@ -97,14 +97,15 @@ public class WithdrawalController {
         return ApiResponse.success(withdrawalService.getTransactions(workerId, page, pageSize));
     }
 
-    @Operation(summary = "获取提现记录", description = "获取当前工人的提现历史记录")
+    @Operation(summary = "获取提现记录", description = "获取当前工人的提现历史记录，分页返回")
     @GetMapping("/api/worker/withdrawals/my")
-    public ApiResponse<List<WithdrawalVO>> getWithdrawalHistory() {
+    public ApiResponse<PageVO<WithdrawalVO>> getWithdrawalHistory(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int pageSize) {
         Long workerId = getCurrentWorkerId();
         if (workerId == null) {
             return ApiResponse.error(401, "未登录");
         }
-        List<WithdrawalVO> records = withdrawalService.getWithdrawalHistory(workerId);
-        return ApiResponse.success(records);
+        return ApiResponse.success(withdrawalService.getWithdrawalHistory(workerId, page, pageSize));
     }
 }

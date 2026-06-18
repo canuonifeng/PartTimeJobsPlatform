@@ -366,6 +366,19 @@ public class InMemoryMappers {
                         .filter(r -> r.getCreatedAt() != null && r.getCreatedAt().toLocalDate().equals(date))
                         .count();
             }
+            @Override public List<WithdrawalRecord> findByWorkerIdPage(Long workerId, int offset, int pageSize) {
+                return store.values().stream()
+                        .filter(r -> workerId.equals(r.getWorkerId()))
+                        .sorted((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()))
+                        .skip(offset)
+                        .limit(pageSize)
+                        .collect(Collectors.toList());
+            }
+            @Override public long countByWorkerId(Long workerId) {
+                return store.values().stream()
+                        .filter(r -> workerId.equals(r.getWorkerId()))
+                        .count();
+            }
         };
     }
 

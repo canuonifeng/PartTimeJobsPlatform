@@ -12,7 +12,7 @@
         <view class="stat-line"></view>
         <view class="stat-item"><text class="stat-value">{{ stats.completed }}</text><text class="stat-label">已完成</text></view>
       </view>
-      <view class="notice-card"><text class="notice-dot"></text><text class="notice-text">请在岗位地点附近完成签到签退，系统将获取当前位置用于打卡校验。</text></view>
+      <view class="notice-card"><text class="notice-dot"></text><text class="notice-text">请在班次工作地点附近完成签到签退，系统将获取当前位置用于打卡校验。</text></view>
     </view>
     <uni-load-more v-if="loading && page === 1" status="loading" />
     <scroll-view class="shift-scroll" scroll-y @scrolltolower="loadMore">

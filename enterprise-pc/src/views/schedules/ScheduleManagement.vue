@@ -1,13 +1,22 @@
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { ArrowDown } from '@element-plus/icons-vue'
 import { listJobs } from '../../api/job'
 import { listManagedSchedules, listScheduleApplicants, updateManagedSchedule, copyManagedSchedule, batchCreateManagedSchedules, exportScheduleApplicants } from '../../api/schedule'
+const router = useRouter()
 
 const loading = ref(false)
 const rows = ref([])
 const total = ref(0)
 const query = reactive({ keyword: '', status: '', startDate: '', endDate: '', page: 1, pageSize: 20 })
+
+function today() { const d = new Date(); return d.toISOString().split('T')[0] }
+function tomorrow() { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0] }
+function weekStart() { const d = new Date(); const day = d.getDay(); const diff = d.getDate() - day + (day === 0 ? -6 : 1); d.setDate(diff); return d.toISOString().split('T')[0] }
+function weekEnd() { const d = new Date(); const day = d.getDay(); const diff = d.getDate() + (7 - day) - (day === 0 ? 0 : 1) + (day === 0 ? 0 : 0); d.setDate(d.getDate() + (7 - day) % 7 || 7); return d.toISOString().split('T')[0] }
+function setDateRange(start, end) { query.startDate = start; query.endDate = end; resetPage() }
 const applicantVisible = ref(false)
 const applicantLoading = ref(false)
 const applicants = ref([])
@@ -162,6 +171,15 @@ async function cancelSchedule(row) {
   ElMessage.success('班次已取消')
   loadData()
 }
+function navigateRelated(cmd, row) {
+  const base = { scheduleId: row.id, jobId: row.jobId, jobTitle: row.jobTitle }
+  const paths = {
+    applications: `/applications?scheduleId=${base.scheduleId}`,
+    shifts: `/schedules/shifts?scheduleId=${base.scheduleId}`,
+    hours: `/attendance/hours?scheduleId=${base.scheduleId}`
+  }
+  router.push(paths[cmd])
+}
 
 onMounted(loadData)
 </script>
@@ -173,11 +191,18 @@ onMounted(loadData)
       <el-button type="primary" @click="openBatch">批量创建班次</el-button>
     </div>
     <el-card shadow="never" class="filter-card">
-      <el-input v-model="query.keyword" clearable placeholder="搜索岗位/班次" style="width: 220px" @keyup.enter="resetPage" />
-      <el-date-picker v-model="query.startDate" value-format="YYYY-MM-DD" placeholder="开始日期" style="width: 150px" @change="resetPage" />
-      <el-date-picker v-model="query.endDate" value-format="YYYY-MM-DD" placeholder="结束日期" style="width: 150px" @change="resetPage" />
-      <el-select v-model="query.status" clearable placeholder="班次状态" style="width: 150px" @change="resetPage">
+      <el-input v-model="query.keyword" clearable placeholder="搜索岗位/班次" style="width: 200px" @keyup.enter="resetPage" />
+      <div class="date-quick-btns">
+        <el-button :type="query.startDate === today() && query.endDate === today() ? 'primary' : 'default'" size="small" @click="setDateRange(today(), today())">今天</el-button>
+        <el-button :type="query.startDate === tomorrow() && query.endDate === tomorrow() ? 'primary' : 'default'" size="small" @click="setDateRange(tomorrow(), tomorrow())">明天</el-button>
+        <el-button :type="query.startDate === weekStart() && query.endDate === weekEnd() ? 'primary' : 'default'" size="small" @click="setDateRange(weekStart(), weekEnd())">本周</el-button>
+      </div>
+      <el-date-picker v-model="query.startDate" value-format="YYYY-MM-DD" placeholder="开始日期" style="width: 140px" @change="resetPage" />
+      <el-date-picker v-model="query.endDate" value-format="YYYY-MM-DD" placeholder="结束日期" style="width: 140px" @change="resetPage" />
+      <el-select v-model="query.status" clearable placeholder="班次状态" style="width: 130px" @change="resetPage">
         <el-option label="可报名" value="ACTIVE" />
+        <el-option label="已满员" value="FULL" />
+        <el-option label="已过期" value="EXPIRED" />
         <el-option label="已取消" value="CANCELLED" />
       </el-select>
       <el-button type="primary" @click="resetPage">查询</el-button>
@@ -192,7 +217,7 @@ onMounted(loadData)
         <el-table-column label="名额" width="130"><template #default="{ row }">{{ row.acceptedCount || 0 }}/{{ row.slotsAvailable || 0 }}<div class="muted">剩余 {{ row.remainingSlots || 0 }}</div></template></el-table-column>
         <el-table-column label="考勤概览" width="140"><template #default="{ row }">排班 {{ row.shiftCount || 0 }}<div class="muted danger">异常 {{ row.exceptionCount || 0 }}</div></template></el-table-column>
         <el-table-column label="状态" width="100"><template #default="{ row }"><el-tag :type="scheduleStatusTagType(row)">{{ scheduleStatusText(row) }}</el-tag></template></el-table-column>
-        <el-table-column label="操作" width="230" fixed="right"><template #default="{ row }"><el-button link type="primary" @click="openEdit(row)">编辑</el-button><el-button link @click="openCopy(row)">复制</el-button><el-button link @click="exportSchedule(row)">导出</el-button><el-button v-if="canCancel(row)" link type="danger" @click="cancelSchedule(row)">取消</el-button></template></el-table-column>
+        <el-table-column label="操作" width="330" fixed="right"><template #default="{ row }"><el-button link type="primary" @click="openEdit(row)">编辑</el-button><el-button link @click="openCopy(row)">复制</el-button><el-button link @click="exportSchedule(row)">导出</el-button><el-button v-if="canCancel(row)" link type="danger" @click="cancelSchedule(row)">取消</el-button><el-dropdown trigger="click" @command="(cmd) => navigateRelated(cmd, row)"><el-button link type="primary" style="margin-left:4px">相关 <el-icon><ArrowDown /></el-icon></el-button><template #dropdown><el-dropdown-menu><el-dropdown-item command="applications">报名审核</el-dropdown-item><el-dropdown-item command="shifts">考勤确认</el-dropdown-item><el-dropdown-item command="hours">薪资结算</el-dropdown-item></el-dropdown-menu></template></el-dropdown></template></el-table-column>
       </el-table>
       <el-pagination v-model:current-page="query.page" v-model:page-size="query.pageSize" :total="total" layout="total, prev, pager, next" @current-change="loadData" />
     </el-card>
@@ -238,7 +263,8 @@ onMounted(loadData)
 h2 { margin: 0; font-size: 24px; }
 p { margin: 6px 0 0; color: #6b7280; }
 .filter-card { margin-bottom: 16px; }
-.filter-card :deep(.el-card__body) { display: flex; gap: 12px; align-items: center; }
+.filter-card :deep(.el-card__body) { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.date-quick-btns { display: flex; gap: 4px; }
 .muted { color: #8a94a6; font-size: 12px; line-height: 20px; }
 .danger { color: #ef4444; }
 </style>

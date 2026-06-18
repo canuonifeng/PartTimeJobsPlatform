@@ -14,6 +14,8 @@ public interface WithdrawalRecordMapper {
     int insert(WithdrawalRecord record);
     Optional<WithdrawalRecord> findById(Long id);
     List<WithdrawalRecord> findByWorkerId(Long workerId);
+    List<WithdrawalRecord> findByWorkerIdPage(@Param("workerId") Long workerId, @Param("offset") int offset, @Param("pageSize") int pageSize);
+    long countByWorkerId(@Param("workerId") Long workerId);
     int updateStatus(@Param("id") Long id, @Param("status") String status);
     int updateCompletion(@Param("id") Long id,
                          @Param("status") String status,

@@ -33,18 +33,20 @@ public class JobController {
     @Resource
     private ProfileService profileService;
 
-    @Operation(summary = "搜索岗位", description = "根据关键词、分类、地点和薪资范围搜索岗位")
+    @Operation(summary = "搜索岗位", description = "根据关键词、分类、地点和薪资范围搜索岗位，分页返回")
     @GetMapping
-    public ApiResponse<List<JobSummaryVO>> searchJobs(
+    public ApiResponse<PageVO<JobSummaryVO>> searchJobs(
             @Parameter(description = "搜索关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "岗位分类ID") @RequestParam(required = false) Long categoryId,
             @Parameter(description = "工作地点") @RequestParam(required = false) String location,
             @Parameter(description = "最低薪资") @RequestParam(required = false) BigDecimal minRate,
             @Parameter(description = "最高薪资") @RequestParam(required = false) BigDecimal maxRate,
             @Parameter(description = "当前位置纬度") @RequestParam(required = false) BigDecimal latitude,
-            @Parameter(description = "当前位置经度") @RequestParam(required = false) BigDecimal longitude) {
+            @Parameter(description = "当前位置经度") @RequestParam(required = false) BigDecimal longitude,
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
+            @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize) {
         log.info("job");
-        List<JobSummaryVO> results = jobService.searchJobs(keyword, categoryId, location, minRate, maxRate, latitude, longitude);
+        PageVO<JobSummaryVO> results = jobService.searchJobs(keyword, categoryId, location, minRate, maxRate, latitude, longitude, page, pageSize);
         return ApiResponse.success(results);
     }
 

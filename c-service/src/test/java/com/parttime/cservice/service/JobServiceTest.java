@@ -19,6 +19,7 @@ import com.parttime.cservice.pojo.entity.ScheduleApplication;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
 import com.parttime.cservice.pojo.vo.JobTagVO;
+import com.parttime.cservice.pojo.vo.PageVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -101,57 +102,58 @@ class JobServiceTest {
 
     @Test
     void searchJobs_withoutFilters_returnsAllPublishedJobs() {
-        List<JobSummaryVO> results = jobService.searchJobs(null, null, null, null, null, null, null);
+        PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, null, null, null, null, null, 1, 10);
 
-        assertThat(results).hasSize(3);
+        assertThat(page.getRecords()).hasSize(3);
+        assertThat(page.getTotal()).isEqualTo(3);
     }
 
     @Test
     void searchJobs_withKeyword_filtersCorrectly() {
-        List<JobSummaryVO> results = jobService.searchJobs("engineer", null, null, null, null, null, null);
+        PageVO<JobSummaryVO> page = jobService.searchJobs("engineer", null, null, null, null, null, null, 1, 10);
 
-        assertThat(results).hasSize(1);
-        assertThat(results.get(0).getTitle()).contains("Engineer");
+        assertThat(page.getRecords()).hasSize(1);
+        assertThat(page.getRecords().get(0).getTitle()).contains("Engineer");
     }
 
     @Test
     void searchJobs_withCategoryId_filtersCorrectly() {
-        List<JobSummaryVO> results = jobService.searchJobs(null, 2L, null, null, null, null, null);
+        PageVO<JobSummaryVO> page = jobService.searchJobs(null, 2L, null, null, null, null, null, 1, 10);
 
-        assertThat(results).hasSize(1);
-        assertThat(results.get(0).getCategoryName()).isEqualTo("Marketing");
+        assertThat(page.getRecords()).hasSize(1);
+        assertThat(page.getRecords().get(0).getCategoryName()).isEqualTo("Marketing");
     }
 
     @Test
     void searchJobs_withLocation_filtersCorrectly() {
-        List<JobSummaryVO> results = jobService.searchJobs(null, null, "Shanghai", null, null, null, null);
+        PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, "Shanghai", null, null, null, null, 1, 10);
 
-        assertThat(results).hasSize(1);
-        assertThat(results.get(0).getLocation()).isEqualTo("Shanghai");
+        assertThat(page.getRecords()).hasSize(1);
+        assertThat(page.getRecords().get(0).getLocation()).isEqualTo("Shanghai");
     }
 
     @Test
     void searchJobs_withMinRate_filtersCorrectly() {
-        List<JobSummaryVO> results = jobService.searchJobs(null, null, null, new BigDecimal("500.00"), null, null, null);
+        PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, null, new BigDecimal("500.00"), null, null, null, 1, 10);
 
-        assertThat(results).hasSize(1);
+        assertThat(page.getRecords()).hasSize(1);
     }
 
     @Test
     void searchJobs_withMaxRate_filtersCorrectly() {
-        List<JobSummaryVO> results = jobService.searchJobs(null, null, null, null, new BigDecimal("100.00"), null, null);
+        PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, null, null, new BigDecimal("100.00"), null, null, 1, 10);
 
-        assertThat(results).hasSize(2);
+        assertThat(page.getRecords()).hasSize(2);
     }
 
     @Test
     void searchJobs_withCoordinates_sortsByDistance() {
-        List<JobSummaryVO> results = jobService.searchJobs(null, null, null, null, null,
-                new BigDecimal("39.9"), new BigDecimal("116.4"));
+        PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, null, null, null,
+                new BigDecimal("39.9"), new BigDecimal("116.4"), 1, 10);
 
-        assertThat(results).hasSize(3);
-        assertThat(results.get(0).getId()).isEqualTo(1L);
-        assertThat(results.get(0).getDistanceKm()).isNotNull();
+        assertThat(page.getRecords()).hasSize(3);
+        assertThat(page.getRecords().get(0).getId()).isEqualTo(1L);
+        assertThat(page.getRecords().get(0).getDistanceKm()).isNotNull();
     }
 
     @Test
@@ -200,11 +202,11 @@ class JobServiceTest {
         jobTagRelationMapper.addTag(1L, "日结");
         jobTagRelationMapper.addTag(2L, "按时");
 
-        List<JobSummaryVO> results = jobService.searchJobs(null, null, null, null, null, null, null);
+        PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, null, null, null, null, null, 1, 10);
 
-        assertThat(results).hasSize(3);
-        assertThat(results.get(0).getTags()).extracting(JobTagVO::getName).containsExactly("日结");
-        assertThat(results.get(1).getTags()).extracting(JobTagVO::getName).containsExactly("按时");
+        assertThat(page.getRecords()).hasSize(3);
+        assertThat(page.getRecords().get(0).getTags()).extracting(JobTagVO::getName).containsExactly("日结");
+        assertThat(page.getRecords().get(1).getTags()).extracting(JobTagVO::getName).containsExactly("按时");
         assertThat(jobTagRelationMapper.batchFetchCount).isEqualTo(1);
         assertThat(jobTagRelationMapper.singleFetchCount).isZero();
         assertThat(jobTagRelationMapper.lastBatchJobIds).containsExactlyInAnyOrder(1L, 2L, 3L);
@@ -212,9 +214,9 @@ class JobServiceTest {
 
     @Test
     void searchJobs_doesNotFetchTagsWhenNoJobsMatch() {
-        List<JobSummaryVO> results = jobService.searchJobs("missing", null, null, null, null, null, null);
+        PageVO<JobSummaryVO> page = jobService.searchJobs("missing", null, null, null, null, null, null, 1, 10);
 
-        assertThat(results).isEmpty();
+        assertThat(page.getRecords()).isEmpty();
         assertThat(jobTagRelationMapper.batchFetchCount).isZero();
         assertThat(jobTagRelationMapper.singleFetchCount).isZero();
     }

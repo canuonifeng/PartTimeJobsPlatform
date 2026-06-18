@@ -15,9 +15,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface JobService {
-    List<JobSummaryVO> searchJobs(String keyword, Long categoryId, String location,
-                                   BigDecimal minRate, BigDecimal maxRate,
-                                   BigDecimal latitude, BigDecimal longitude);
+    PageVO<JobSummaryVO> searchJobs(String keyword, Long categoryId, String location,
+                                     BigDecimal minRate, BigDecimal maxRate,
+                                     BigDecimal latitude, BigDecimal longitude,
+                                     int page, int pageSize);
     void addJob(Long id, String title, String description, String location, Long categoryId, String categoryName,
                 List<JobRateInfoVO> rates, List<JobScheduleInfoVO> schedules,
                 Integer headcount, Integer acceptedCount, LocalDateTime deadline, String status);

@@ -30,7 +30,7 @@
         </view>
 
         <view class="card">
-          <view class="card-title"><text class="card-icon">📅</text><text>选择排班</text></view>
+          <view class="card-title"><text class="card-icon">📅</text><text>选择班次报名</text></view>
           <view v-if="schedules.length" class="schedule-grid">
             <view v-for="slot in schedules" :key="slot.id" class="schedule-block" :class="scheduleBlockClass(slot)" @click="toggleSchedule(slot)">
               <text v-if="isScheduleApplied(slot.id)" class="block-badge">已报名</text>
@@ -69,7 +69,7 @@
       <view class="action-bar">
         <button class="phone-btn" @click="handlePhone">电话</button>
         <button v-if="job.status === 'CLOSED'" class="apply-btn disabled" disabled>已关闭</button>
-        <button v-else class="apply-btn" @click="handleApply">立即报名</button>
+        <button v-else class="apply-btn" @click="handleApply">报名班次</button>
       </view>
     </template>
   </view>

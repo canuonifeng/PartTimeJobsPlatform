@@ -118,12 +118,12 @@ class WithdrawalControllerTest {
         record.setAmount(new BigDecimal("100.00"));
         record.setStatus("PENDING");
 
-        when(withdrawalService.getWithdrawalHistory(1L)).thenReturn(List.of(record));
+        when(withdrawalService.getWithdrawalHistory(1L, 1, 20)).thenReturn(new PageVO<>(List.of(record), 1));
 
         mockMvc.perform(get("/api/worker/withdrawals/my"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.length()").value(1))
-                .andExpect(jsonPath("$.data[0].status").value("PENDING"));
+                .andExpect(jsonPath("$.data.records.length()").value(1))
+                .andExpect(jsonPath("$.data.records[0].status").value("PENDING"));
     }
 
     @Test

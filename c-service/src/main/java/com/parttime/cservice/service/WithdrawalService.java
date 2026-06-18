@@ -39,9 +39,11 @@ public interface WithdrawalService {
     /**
      * 获取提现历史记录
      * @param workerId 工人ID
-     * @return 提现记录列表
+     * @param page 页码
+     * @param pageSize 每页大小
+     * @return 提现记录分页
      */
-    List<WithdrawalVO> getWithdrawalHistory(Long workerId);
+    PageVO<WithdrawalVO> getWithdrawalHistory(Long workerId, int page, int pageSize);
 
     /**
      * 获取收益汇总

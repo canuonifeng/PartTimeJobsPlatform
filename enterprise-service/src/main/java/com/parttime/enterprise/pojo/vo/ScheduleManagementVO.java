@@ -47,6 +47,8 @@ public class ScheduleManagementVO {
     private Integer exceptionCount;
     @Schema(description = "已结算数")
     private Integer settledCount;
+    @Schema(description = "待补卡数")
+    private Integer correctionPendingCount;
     @Schema(description = "状态")
     private String status;
     @Schema(description = "创建时间")

@@ -6,7 +6,7 @@
     {"path": "pages/messages/messageList", "style": {"navigationBarTitleText": "消息", "enablePullDownRefresh": true}},
     {"path": "pages/todos/todoList", "style": {"navigationBarTitleText": "待办", "enablePullDownRefresh": true}},
     {"path": "pages/profile/profile", "style": {"navigationBarTitleText": "我的"}},
-    {"path": "pages/jobs/jobList", "style": {"navigationBarTitleText": "职位管理", "enablePullDownRefresh": true}},
+    {"path": "pages/jobs/jobList", "style": {"navigationBarTitleText": "招聘计划（职位）", "enablePullDownRefresh": true}},
     {"path": "pages/jobs/jobForm", "style": {"navigationBarTitleText": "发布职位"}},
     {"path": "pages/jobs/jobDetail", "style": {"navigationBarTitleText": "职位详情"}},
     {"path": "pages/jobs/applicationList", "style": {"navigationBarTitleText": "报名记录", "enablePullDownRefresh": true}},

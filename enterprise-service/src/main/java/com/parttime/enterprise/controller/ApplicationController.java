@@ -29,11 +29,12 @@ public class ApplicationController {
     public ApiResponse<PageVO<ScheduleApplicationVO>> getApplicationsByJob(
             @Parameter(description = "岗位ID") @RequestParam(required = false) Long jobId,
             @Parameter(description = "岗位标题") @RequestParam(required = false) String jobTitle,
+            @Parameter(description = "班次ID") @RequestParam(required = false) Long scheduleId,
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "页码") @RequestParam(required = false, defaultValue = "1") Integer page,
             @Parameter(description = "每页数量") @RequestParam(required = false, defaultValue = "20") Integer pageSize) {
         Long companyId = SecurityUtil.getCurrentCompanyId();
-        return ApiResponse.success(applicationService.getApplicationsByJob(companyId, jobId, jobTitle, status, page, pageSize));
+        return ApiResponse.success(applicationService.getApplicationsByJob(companyId, jobId, jobTitle, scheduleId, status, page, pageSize));
     }
 
     @Operation(summary = "通过申请", description = "通过工人的岗位申请")

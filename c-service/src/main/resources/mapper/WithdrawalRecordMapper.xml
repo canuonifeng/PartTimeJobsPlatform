@@ -34,6 +34,15 @@
         SELECT * FROM c_withdrawal_record WHERE worker_id = #{workerId} ORDER BY created_at DESC
     </select>
 
+    <select id="findByWorkerIdPage" resultMap="WithdrawalRecordMap">
+        SELECT * FROM c_withdrawal_record WHERE worker_id = #{workerId} ORDER BY created_at DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countByWorkerId" resultType="long">
+        SELECT COUNT(*) FROM c_withdrawal_record WHERE worker_id = #{workerId}
+    </select>
+
     <update id="updateStatus">
         UPDATE c_withdrawal_record SET status = #{status} WHERE id = #{id}
     </update>

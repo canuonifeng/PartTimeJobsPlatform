@@ -37,6 +37,7 @@
         <result property="shiftCount" column="shift_count"/>
         <result property="exceptionCount" column="exception_count"/>
         <result property="settledCount" column="settled_count"/>
+        <result property="correctionPendingCount" column="correction_pending_count"/>
         <result property="status" column="status"/>
         <result property="createdAt" column="created_at"/>
     </resultMap>
@@ -119,9 +120,11 @@
             SELECT ss.job_id, ss.shift_date, ss.start_time, ss.end_time,
                    COUNT(*) shift_count,
                    SUM(ss.status IN ('ABSENT','LATE','EARLY_LEAVE','LATE_EARLY_LEAVE')) exception_count,
-                   SUM(ar.settlement_status = 'SETTLED') settled_count
+                   SUM(ar.settlement_status = 'SETTLED') settled_count,
+                   SUM(ac.status = 'PENDING') correction_pending_count
             FROM schedule_shifts ss
             LEFT JOIN attendance_records ar ON ar.shift_id = ss.id
+            LEFT JOIN attendance_corrections ac ON ac.shift_id = ss.id
             GROUP BY ss.job_id, ss.shift_date, ss.start_time, ss.end_time
         ) sh ON sh.job_id = js.job_id AND sh.shift_date = js.schedule_date AND sh.start_time = js.start_time AND sh.end_time = js.end_time
         WHERE j.company_id = #{companyId}
@@ -146,6 +149,7 @@
                COALESCE(sh.shift_count, 0) shift_count,
                COALESCE(sh.exception_count, 0) exception_count,
                COALESCE(sh.settled_count, 0) settled_count,
+               COALESCE(sh.correction_pending_count, 0) correction_pending_count,
                js.status, js.created_at
         <include refid="managementWhere"/>
         ORDER BY js.schedule_date DESC, js.start_time DESC

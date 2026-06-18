@@ -7,10 +7,10 @@ import java.util.List;
 public interface ApplicationService {
 
     default PageVO<ScheduleApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, String status) {
-        return getApplicationsByJob(companyId, jobId, jobTitle, status, null, null);
+        return getApplicationsByJob(companyId, jobId, jobTitle, null, status, null, null);
     }
 
-    PageVO<ScheduleApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, String status, Integer page, Integer pageSize);
+    PageVO<ScheduleApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, Long scheduleId, String status, Integer page, Integer pageSize);
 
     List<ScheduleApplicationVO> getApplicationsByWorker(Long workerId);
 

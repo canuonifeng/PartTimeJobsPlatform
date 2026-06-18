@@ -47,6 +47,7 @@ public interface ScheduleApplicationMapper {
     List<ScheduleApplicationVO> findVOPage(@Param("companyId") Long companyId,
                                            @Param("jobId") Long jobId,
                                            @Param("jobTitle") String jobTitle,
+                                           @Param("scheduleId") Long scheduleId,
                                            @Param("status") String status,
                                            @Param("offset") int offset,
                                            @Param("pageSize") int pageSize);
@@ -54,5 +55,6 @@ public interface ScheduleApplicationMapper {
     long countVO(@Param("companyId") Long companyId,
                  @Param("jobId") Long jobId,
                  @Param("jobTitle") String jobTitle,
+                 @Param("scheduleId") Long scheduleId,
                  @Param("status") String status);
 }

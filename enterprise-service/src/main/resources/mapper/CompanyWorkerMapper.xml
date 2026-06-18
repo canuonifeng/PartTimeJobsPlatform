@@ -30,6 +30,28 @@
         ORDER BY cw.last_contact_at DESC
     </select>
 
+    <select id="findByCompanyIdPage" resultMap="CompanyWorkerResultMap">
+        SELECT cw.*
+        FROM company_workers cw
+        LEFT JOIN c_worker w ON cw.worker_id = w.id
+        WHERE cw.company_id = #{companyId}
+        <if test="keyword != null and keyword != ''">
+            AND (w.name LIKE CONCAT('%', #{keyword}, '%') OR w.phone LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY cw.last_contact_at DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countByCompanyId" resultType="long">
+        SELECT COUNT(*)
+        FROM company_workers cw
+        LEFT JOIN c_worker w ON cw.worker_id = w.id
+        WHERE cw.company_id = #{companyId}
+        <if test="keyword != null and keyword != ''">
+            AND (w.name LIKE CONCAT('%', #{keyword}, '%') OR w.phone LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+    </select>
+
     <select id="findById" resultMap="CompanyWorkerResultMap">
         SELECT * FROM company_workers WHERE id = #{id}
     </select>

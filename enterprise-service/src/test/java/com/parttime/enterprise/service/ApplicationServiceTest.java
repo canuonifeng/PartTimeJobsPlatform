@@ -86,10 +86,10 @@ class ApplicationServiceTest {
         app.setStatus(ApplicationStatus.PENDING);
         app.setAppliedAt(LocalDateTime.of(2026, 5, 1, 10, 0));
 
-        when(applicationMapper.countVO(1L, 100L, null, null)).thenReturn(1L);
-        when(applicationMapper.findVOPage(1L, 100L, null, null, 0, 20)).thenReturn(List.of(app));
+        when(applicationMapper.countVO(1L, 100L, null, null, null)).thenReturn(1L);
+        when(applicationMapper.findVOPage(1L, 100L, null, null, null, 0, 20)).thenReturn(List.of(app));
 
-        PageVO<ScheduleApplicationVO> result = applicationService.getApplicationsByJob(1L, 100L, null, null, 1, 20);
+        PageVO<ScheduleApplicationVO> result = applicationService.getApplicationsByJob(1L, 100L, null, null, null, 1, 20);
 
         assertThat(result.getTotal()).isEqualTo(1);
         assertThat(result.getRecords()).hasSize(1);
@@ -118,10 +118,10 @@ class ApplicationServiceTest {
         second.setStatus(ApplicationStatus.PENDING);
         second.setAppliedAt(LocalDateTime.of(2026, 5, 1, 9, 0));
 
-        when(applicationMapper.countVO(1L, 100L, null, null)).thenReturn(2L);
-        when(applicationMapper.findVOPage(1L, 100L, null, null, 0, 1)).thenReturn(List.of(first));
+        when(applicationMapper.countVO(1L, 100L, null, null, null)).thenReturn(2L);
+        when(applicationMapper.findVOPage(1L, 100L, null, null, null, 0, 1)).thenReturn(List.of(first));
 
-        PageVO<ScheduleApplicationVO> result = applicationService.getApplicationsByJob(1L, 100L, null, null, 1, 1);
+        PageVO<ScheduleApplicationVO> result = applicationService.getApplicationsByJob(1L, 100L, null, null, null, 1, 1);
 
         assertThat(result.getTotal()).isEqualTo(2);
         assertThat(result.getRecords()).hasSize(1);
@@ -135,15 +135,15 @@ class ApplicationServiceTest {
         pending.setJobId(100L);
         pending.setStatus(ApplicationStatus.PENDING);
 
-        when(applicationMapper.countVO(1L, null, null, "PENDING")).thenReturn(1L);
-        when(applicationMapper.findVOPage(1L, null, null, "PENDING", 0, 20)).thenReturn(List.of(pending));
+        when(applicationMapper.countVO(1L, null, null, null, "PENDING")).thenReturn(1L);
+        when(applicationMapper.findVOPage(1L, null, null, null, "PENDING", 0, 20)).thenReturn(List.of(pending));
 
-        PageVO<ScheduleApplicationVO> result = applicationService.getApplicationsByJob(1L, null, null, "PENDING", 1, 20);
+        PageVO<ScheduleApplicationVO> result = applicationService.getApplicationsByJob(1L, null, null, null, "PENDING", 1, 20);
 
         assertThat(result.getTotal()).isEqualTo(1);
         assertThat(result.getRecords()).hasSize(1);
         assertThat(result.getRecords().get(0).getStatus()).isEqualTo(ApplicationStatus.PENDING);
-        verify(applicationMapper).findVOPage(1L, null, null, "PENDING", 0, 20);
+        verify(applicationMapper).findVOPage(1L, null, null, null, "PENDING", 0, 20);
         verify(applicationMapper, never()).findVOByCompanyId(1L);
     }
 

@@ -8,6 +8,7 @@ import com.parttime.cservice.mapper.WithdrawalRecordMapper;
 import com.parttime.cservice.pojo.entity.BalanceTransaction;
 import com.parttime.cservice.pojo.entity.WorkerBankCard;
 import com.parttime.cservice.pojo.entity.WorkerRealNameAuth;
+import com.parttime.cservice.pojo.vo.PageVO;
 import com.parttime.cservice.pojo.vo.WithdrawalVO;
 import com.parttime.cservice.service.impl.WithdrawalServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -152,10 +153,10 @@ class WithdrawalServiceIntegrationTest {
 
         withdrawalService.requestWithdrawal(workerId, BigDecimal.valueOf(100), "WECHAT", null);
 
-        List<WithdrawalVO> history = withdrawalService.getWithdrawalHistory(workerId);
-        assertThat(history).hasSize(1);
-        assertThat(history.get(0).getAmount()).isEqualByComparingTo(BigDecimal.valueOf(100));
-        assertThat(history.get(0).getStatus()).isEqualTo("COMPLETED");
+        PageVO<WithdrawalVO> history = withdrawalService.getWithdrawalHistory(workerId, 1, 20);
+        assertThat(history.getRecords()).hasSize(1);
+        assertThat(history.getRecords().get(0).getAmount()).isEqualByComparingTo(BigDecimal.valueOf(100));
+        assertThat(history.getRecords().get(0).getStatus()).isEqualTo("COMPLETED");
     }
 
     @Test
@@ -168,8 +169,8 @@ class WithdrawalServiceIntegrationTest {
         withdrawalService.requestWithdrawal(workerId, BigDecimal.valueOf(200), "WECHAT", null);
         withdrawalService.requestWithdrawal(workerId, BigDecimal.valueOf(300), "WECHAT", null);
 
-        List<WithdrawalVO> history = withdrawalService.getWithdrawalHistory(workerId);
-        assertThat(history).hasSize(3);
+        PageVO<WithdrawalVO> history = withdrawalService.getWithdrawalHistory(workerId, 1, 20);
+        assertThat(history.getRecords()).hasSize(3);
 
         var balance = workerBalanceMapper.findByWorkerId(workerId);
         assertThat(balance.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(400));
@@ -291,7 +292,7 @@ class WithdrawalServiceIntegrationTest {
 
     @Test
     void getWithdrawalHistory_noRecords_shouldReturnEmpty() {
-        List<WithdrawalVO> history = withdrawalService.getWithdrawalHistory(999L);
-        assertThat(history).isEmpty();
+        PageVO<WithdrawalVO> page = withdrawalService.getWithdrawalHistory(999L, 1, 20);
+        assertThat(page.getRecords()).isEmpty();
     }
 }

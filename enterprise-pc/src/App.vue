@@ -51,25 +51,25 @@ function handleMenuSelect(index) {
           <el-icon><House /></el-icon>
           <span>首页</span>
         </el-menu-item>
-        <el-menu-item index="/jobs">
-          <el-icon><Briefcase /></el-icon>
-          <span>职位管理</span>
-        </el-menu-item>
-        <el-menu-item index="/applications">
-          <el-icon><Document /></el-icon>
-          <span>应聘管理</span>
-        </el-menu-item>
         <el-menu-item index="/schedules">
           <el-icon><Calendar /></el-icon>
           <span>班次管理</span>
         </el-menu-item>
+        <el-menu-item index="/jobs">
+          <el-icon><Briefcase /></el-icon>
+          <span>招聘计划</span>
+        </el-menu-item>
+        <el-menu-item index="/applications">
+          <el-icon><Document /></el-icon>
+          <span>报名审核</span>
+        </el-menu-item>
         <el-menu-item index="/schedules/shifts">
           <el-icon><Calendar /></el-icon>
-          <span>排班考勤</span>
+          <span>考勤确认</span>
         </el-menu-item>
         <el-menu-item index="/attendance/hours">
           <el-icon><Money /></el-icon>
-          <span>薪资管理</span>
+          <span>薪资结算</span>
         </el-menu-item>
         <el-menu-item index="/workers">
           <el-icon><User /></el-icon>
@@ -89,7 +89,7 @@ function handleMenuSelect(index) {
         </el-menu-item>
         <el-menu-item index="/templates">
           <el-icon><CopyDocument /></el-icon>
-          <span>职位模版</span>
+          <span>招聘模板</span>
         </el-menu-item>
         <el-menu-item index="/balance">
           <el-icon><Wallet /></el-icon>

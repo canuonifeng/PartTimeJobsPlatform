@@ -186,6 +186,9 @@
         <if test="jobTitle != null and jobTitle != ''">
             AND j.title LIKE CONCAT('%', #{jobTitle}, '%')
         </if>
+        <if test="scheduleId != null">
+            AND sa.schedule_id = #{scheduleId}
+        </if>
         <if test="status != null and status != ''">
             AND sa.status = #{status}
         </if>
@@ -204,6 +207,9 @@
         </if>
         <if test="jobTitle != null and jobTitle != ''">
             AND j.title LIKE CONCAT('%', #{jobTitle}, '%')
+        </if>
+        <if test="scheduleId != null">
+            AND sa.schedule_id = #{scheduleId}
         </if>
         <if test="status != null and status != ''">
             AND sa.status = #{status}

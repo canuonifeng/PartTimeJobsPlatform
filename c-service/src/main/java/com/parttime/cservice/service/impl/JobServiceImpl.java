@@ -74,9 +74,10 @@ public class JobServiceImpl implements JobService {
     private NotificationMapper notificationMapper;
 
     @Override
-    public List<JobSummaryVO> searchJobs(String keyword, Long categoryId, String location,
-                                         BigDecimal minRate, BigDecimal maxRate,
-                                         BigDecimal latitude, BigDecimal longitude) {
+    public PageVO<JobSummaryVO> searchJobs(String keyword, Long categoryId, String location,
+                                            BigDecimal minRate, BigDecimal maxRate,
+                                            BigDecimal latitude, BigDecimal longitude,
+                                            int page, int pageSize) {
         List<Job> jobs = jobMapper.search(keyword, location, categoryId);
         LocalDateTime now = LocalDateTime.now();
         // 自动关闭已过报名截止的岗位
@@ -129,11 +130,18 @@ public class JobServiceImpl implements JobService {
                     return jobRate.compareTo(maxRate) <= 0;
                 })
                 .toList();
-        return jobs.stream()
+        List<JobSummaryVO> allResults = jobs.stream()
                 .map(job -> toSummary(job, latitude, longitude, companyMap.get(job.getCompanyId()),
                         categoryMap.get(job.getCategoryId()), ratesMap.get(job.getId()),
                         tagsByJobId.get(job.getId())))
                 .toList();
+        long total = allResults.size();
+        int currentPage = page < 1 ? 1 : page;
+        int currentPageSize = pageSize < 1 ? 10 : Math.min(pageSize, 50);
+        int fromIndex = Math.min((currentPage - 1) * currentPageSize, (int) total);
+        int toIndex = Math.min(fromIndex + currentPageSize, (int) total);
+        List<JobSummaryVO> pageList = allResults.subList(fromIndex, toIndex);
+        return new PageVO<>(pageList, total);
     }
 
     @Override

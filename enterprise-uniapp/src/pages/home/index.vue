@@ -46,9 +46,9 @@ const todos = computed(() => (dashboard.value?.todoSummary || [])
   })))
 
 const quickActions = [
-  { name: '发布职位', icon: '+岗', path: '/pages/jobs/jobForm' },
-  { name: '审核报名', icon: '审', path: '/pages/applications/applicationList' },
   { name: '班次管理', icon: '班', path: '/pages/schedules/manageList' },
+  { name: '招聘计划', icon: '岗', path: '/pages/jobs/jobList' },
+  { name: '报名审核', icon: '审', path: '/pages/applications/applicationList' },
   { name: '考勤确认', icon: '勤', path: '/pages/schedules/scheduleList?status=SCHEDULED' },
   { name: '薪资结算', icon: '¥', path: '/pages/attendance/attendanceList?settlementStatus=UNPAID' }
 ]

@@ -1,10 +1,10 @@
 package com.parttime.enterprise.service;
 
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.pojo.vo.WorkerListVO;
-import java.util.List;
 
 public interface CompanyWorkerService {
-    List<WorkerListVO> list(Long companyId, String keyword);
+    PageVO<WorkerListVO> list(Long companyId, String keyword, int page, int pageSize);
     WorkerListVO detail(Long id);
     void addWorker(Long companyId, Long workerId);
     void blacklist(Long id);

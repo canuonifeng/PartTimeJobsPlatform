@@ -21,32 +21,32 @@ const routes = [
     path: '/jobs',
     name: 'JobList',
     component: () => import('../views/jobs/JobList.vue'),
-    meta: { requiresAuth: true, title: '职位管理' }
+    meta: { requiresAuth: true, title: '招聘计划' }
   },
   {
     path: '/jobs/create',
     name: 'JobCreate',
     component: () => import('../views/jobs/JobForm.vue'),
-    meta: { requiresAuth: true, title: '新建职位' }
+    meta: { requiresAuth: true, title: '新建招聘计划' }
   },
   {
     path: '/jobs/:id/edit',
     name: 'JobEdit',
     component: () => import('../views/jobs/JobForm.vue'),
-    meta: { requiresAuth: true, title: '编辑职位' },
+    meta: { requiresAuth: true, title: '编辑招聘计划' },
     props: true
   },
   {
     path: '/applications',
     name: 'ApplicationList',
     component: () => import('../views/applications/ApplicationList.vue'),
-    meta: { requiresAuth: true, title: '应聘管理' }
+    meta: { requiresAuth: true, title: '报名审核' }
   },
   {
     path: '/schedules/shifts',
     name: 'ScheduleShiftList',
     component: () => import('../views/schedules/ScheduleShiftList.vue'),
-    meta: { requiresAuth: true, title: '排班考勤' }
+    meta: { requiresAuth: true, title: '考勤确认' }
   },
   {
     path: '/schedules',
@@ -58,7 +58,7 @@ const routes = [
     path: '/attendance/hours',
     name: 'AttendanceHoursList',
     component: () => import('../views/attendance/AttendanceHoursList.vue'),
-    meta: { requiresAuth: true, title: '薪资管理' }
+    meta: { requiresAuth: true, title: '薪资结算' }
   },
   {
     path: '/workers',
@@ -82,7 +82,7 @@ const routes = [
     path: '/templates',
     name: 'TemplateList',
     component: () => import('../views/templates/TemplateList.vue'),
-    meta: { requiresAuth: true, title: '职位模版' }
+    meta: { requiresAuth: true, title: '招聘模板' }
   },
   {
     path: '/locations',

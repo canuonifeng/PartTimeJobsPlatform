@@ -14,6 +14,7 @@ const hasMore = ref(true)
 const searchForm = ref({
   jobId: undefined,
   jobTitle: '',
+  scheduleId: undefined,
   status: ''
 })
 
@@ -89,6 +90,7 @@ async function handleReject(row) {
 onMounted(() => {
   searchForm.value.jobId = route.query.jobId ? Number(route.query.jobId) : undefined
   searchForm.value.jobTitle = route.query.jobTitle ? String(route.query.jobTitle) : ''
+  searchForm.value.scheduleId = route.query.scheduleId ? Number(route.query.scheduleId) : undefined
   jobTitleHint.value = searchForm.value.jobTitle
   fetchData()
 })

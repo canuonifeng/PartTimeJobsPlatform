@@ -3,6 +3,7 @@ package com.parttime.enterprise.service;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.entity.CompanyWorker;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.pojo.vo.WorkerListVO;
 import com.parttime.enterprise.service.impl.CompanyWorkerServiceImpl;
 import org.junit.jupiter.api.Test;
@@ -39,16 +40,18 @@ class CompanyWorkerServiceTest {
         worker.setWorkerId(10L);
         worker.setStatus("ACTIVE");
 
-        when(companyWorkerMapper.findByCompanyId(2L, "张")).thenReturn(List.of(worker));
+        when(companyWorkerMapper.findByCompanyIdPage(2L, "张", 0, 20)).thenReturn(List.of(worker));
+        when(companyWorkerMapper.countByCompanyId(2L, "张")).thenReturn(1L);
         when(workerSyncMapper.findWorkerNamesByIds(List.of(10L))).thenReturn(List.of(Map.of("id", 10L, "name", "张三")));
         when(workerSyncMapper.findWorkerPhonesByIds(List.of(10L))).thenReturn(List.of(Map.of("id", 10L, "phone", "13800000000")));
         when(workerSyncMapper.findWorkerGendersByIds(List.of(10L))).thenReturn(List.of(Map.of("worker_id", 10L, "gender", "MALE")));
         when(workerSyncMapper.findWorkerBirthdaysByIds(List.of(10L))).thenReturn(List.of(Map.of("worker_id", 10L, "birthday", Date.valueOf(LocalDate.now().minusYears(25)))));
         when(workerSyncMapper.findWorkerRealNameStatusesByIds(List.of(10L))).thenReturn(List.of(Map.of("worker_id", 10L, "status", "APPROVED")));
 
-        List<WorkerListVO> result = companyWorkerService.list(2L, "张");
+        PageVO<WorkerListVO> result = companyWorkerService.list(2L, "张", 1, 20);
 
-        assertThat(result).singleElement().satisfies(vo -> {
+        assertThat(result.getTotal()).isEqualTo(1);
+        assertThat(result.getRecords()).singleElement().satisfies(vo -> {
             assertThat(vo.getName()).isEqualTo("张三");
             assertThat(vo.getPhone()).isEqualTo("13800000000");
             assertThat(vo.getWorkerGender()).isEqualTo("MALE");

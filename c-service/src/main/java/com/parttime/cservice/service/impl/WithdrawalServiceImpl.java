@@ -236,10 +236,15 @@ public class WithdrawalServiceImpl implements WithdrawalService {
     }
 
     @Override
-    public List<WithdrawalVO> getWithdrawalHistory(Long workerId) {
-        return withdrawalRecordMapper.findByWorkerId(workerId).stream()
+    public PageVO<WithdrawalVO> getWithdrawalHistory(Long workerId, int page, int pageSize) {
+        int currentPage = page < 1 ? 1 : page;
+        int currentPageSize = pageSize < 1 ? 20 : Math.min(pageSize, 100);
+        int offset = (currentPage - 1) * currentPageSize;
+        List<WithdrawalVO> list = withdrawalRecordMapper.findByWorkerIdPage(workerId, offset, currentPageSize).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+        long total = withdrawalRecordMapper.countByWorkerId(workerId);
+        return new PageVO<>(list, total);
     }
 
     @Override

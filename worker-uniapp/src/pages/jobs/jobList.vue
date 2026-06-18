@@ -142,7 +142,7 @@ async function fetchJobs(p: number, append: boolean = false) {
       latitude: currentLocation.value?.latitude,
       longitude: currentLocation.value?.longitude
     })
-    const list = Array.isArray(res) ? res : (res?.list || [])
+    const list = Array.isArray(res) ? res : (res?.records || res?.list || [])
     applyJobs(list, append)
   } catch {
     if (!append) jobList.value = []

@@ -15,6 +15,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import com.parttime.cservice.pojo.vo.PageVO;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -118,7 +119,8 @@ class WithdrawalServiceTest {
 
     @Test
     void getWithdrawalHistory_shouldReturnEmptyForNoRecords() {
-        List<WithdrawalVO> history = withdrawalService.getWithdrawalHistory(999L);
-        assertThat(history).isEmpty();
+        PageVO<WithdrawalVO> page = withdrawalService.getWithdrawalHistory(999L, 1, 20);
+        assertThat(page.getRecords()).isEmpty();
+        assertThat(page.getTotal()).isZero();
     }
 }

@@ -3,7 +3,7 @@
     <view class="success-card">
       <view class="success-icon">✓</view>
       <text class="success-title">报名成功</text>
-      <text class="success-desc">报名信息已提交给招聘方，请保持手机畅通，等待企业审核或联系。</text>
+      <text class="success-desc">已报名所选班次，信息已提交给招聘方，请保持手机畅通，等待企业审核。</text>
       <button class="primary-btn" @click="backToDetail">返回职位详情</button>
       <button class="secondary-btn" @click="goSchedule">查看我的排班</button>
     </view>

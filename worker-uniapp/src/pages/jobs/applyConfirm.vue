@@ -1,14 +1,14 @@
 <template>
   <view class="page">
     <view class="steps">
-      <view class="step on"><text class="dot">1</text><text>选择岗位</text></view><view class="line on"></view>
+      <view class="step on"><text class="dot">1</text><text>选择班次</text></view><view class="line on"></view>
       <view class="step on"><text class="dot">2</text><text>确认报名</text></view><view class="line"></view>
       <view class="step"><text class="dot">3</text><text>等待联系</text></view>
     </view>
     <uni-load-more v-if="loading" status="loading" />
     <view class="body">
       <view class="hero"><view class="logo">{{ companyInitial }}</view><view class="hero-main"><text class="title">{{ title }}</text><text class="company">{{ companyName }}</text></view><text class="salary">{{ salaryText }}</text></view>
-      <view class="card"><view class="card-title">岗位摘要</view><view class="row"><text class="label">工作地点</text><text class="value">{{ locationText }}</text></view><view class="row"><text class="label">报名时段</text><text class="value">{{ selectedScheduleIds.length }}个</text></view></view>
+      <view class="card"><view class="card-title">班次摘要</view><view class="row"><text class="label">工作地点</text><text class="value">{{ locationText }}</text></view><view class="row"><text class="label">所选班次</text><text class="value">{{ selectedScheduleIds.length }}个</text></view></view>
       <view class="card"><view class="card-title">工作日期选择</view><view v-if="dateOptions.length" class="chips"><view v-for="item in dateOptions" :key="item.date" class="chip" :class="{ active: item.selected }" @click="toggleDate(item.date)"><text class="main">{{ item.text }}</text><text class="sub">{{ item.count }}个时段</text></view></view><view v-else class="empty">暂无有效工作日期</view></view>
       <view class="card"><view class="card-title">工作时段选择</view><view v-if="displaySchedules.length"><view v-for="slot in displaySchedules" :key="slot.id" class="time" :class="{ active: selectedScheduleIds.includes(slot.id), disabled: isScheduleDisabled(slot) }" @click="toggleSchedule(slot)"><view class="time-main"><text class="main">{{ formatDate(slot.date) }}</text><text class="sub">{{ formatTime(slot) }}</text></view><text class="status" :class="{ full: isScheduleFull(slot) }">{{ scheduleStatusText(slot) }}</text></view></view><view v-else class="empty">暂无有效工作时段</view></view>
       <view class="card"><view class="card-title">报名须知</view><view v-for="item in notices" :key="item" class="notice"><text class="notice-dot"></text><text class="notice-text">{{ item }}</text></view></view>

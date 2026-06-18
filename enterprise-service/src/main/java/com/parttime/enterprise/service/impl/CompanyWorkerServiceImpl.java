@@ -4,6 +4,7 @@ import com.parttime.enterprise.exception.BusinessException;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.entity.CompanyWorker;
+import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.pojo.vo.WorkerListVO;
 import com.parttime.enterprise.service.CompanyWorkerService;
 import jakarta.annotation.Resource;
@@ -25,8 +26,11 @@ public class CompanyWorkerServiceImpl implements CompanyWorkerService {
     private WorkerSyncMapper workerSyncMapper;
 
     @Override
-    public List<WorkerListVO> list(Long companyId, String keyword) {
-        List<CompanyWorker> list = companyWorkerMapper.findByCompanyId(companyId, keyword);
+    public PageVO<WorkerListVO> list(Long companyId, String keyword, int page, int pageSize) {
+        int currentPage = page < 1 ? 1 : page;
+        int currentPageSize = pageSize < 1 ? 20 : Math.min(pageSize, 100);
+        int offset = (currentPage - 1) * currentPageSize;
+        List<CompanyWorker> list = companyWorkerMapper.findByCompanyIdPage(companyId, keyword, offset, currentPageSize);
         List<Long> workerIds = list.stream().map(CompanyWorker::getWorkerId).filter(Objects::nonNull).distinct().toList();
         Map<Long, String> nameMap = new HashMap<>();
         Map<Long, String> phoneMap = new HashMap<>();
@@ -44,7 +48,9 @@ public class CompanyWorkerServiceImpl implements CompanyWorkerService {
                 if (birthday != null) ageMap.put(workerId, LocalDate.now().getYear() - birthday.getYear());
             });
         }
-        return list.stream().map(cw -> toVO(cw, nameMap, phoneMap, genderMap, ageMap, realNameStatusMap)).collect(Collectors.toList());
+        List<WorkerListVO> voList = list.stream().map(cw -> toVO(cw, nameMap, phoneMap, genderMap, ageMap, realNameStatusMap)).collect(Collectors.toList());
+        long total = companyWorkerMapper.countByCompanyId(companyId, keyword);
+        return new PageVO<>(voList, total);
     }
 
     @Override

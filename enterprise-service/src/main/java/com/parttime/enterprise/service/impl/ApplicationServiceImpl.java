@@ -51,12 +51,12 @@ public class ApplicationServiceImpl implements ApplicationService {
     private WorkerNotificationMapper workerNotificationMapper;
 
     @Override
-    public PageVO<ScheduleApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, String status, Integer page, Integer pageSize) {
+    public PageVO<ScheduleApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, Long scheduleId, String status, Integer page, Integer pageSize) {
         int safePage = page == null || page < 1 ? 1 : page;
         int safePageSize = pageSize == null || pageSize < 1 ? 20 : Math.min(pageSize, 100);
         int offset = (safePage - 1) * safePageSize;
-        long total = scheduleApplicationMapper.countVO(companyId, jobId, jobTitle, status);
-        List<ScheduleApplicationVO> apps = total == 0 ? List.of() : scheduleApplicationMapper.findVOPage(companyId, jobId, jobTitle, status, offset, safePageSize);
+        long total = scheduleApplicationMapper.countVO(companyId, jobId, jobTitle, scheduleId, status);
+        List<ScheduleApplicationVO> apps = total == 0 ? List.of() : scheduleApplicationMapper.findVOPage(companyId, jobId, jobTitle, scheduleId, status, offset, safePageSize);
         return new PageVO<>(apps, total);
     }
 

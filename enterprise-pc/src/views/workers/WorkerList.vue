@@ -2,7 +2,7 @@
   <el-card>
     <template #header>
       <span class="card-title">兼职管理</span>
-      <el-input v-model="keyword" placeholder="搜索姓名/电话" size="small" style="float:right;width:200px;margin-right:8px" clearable @clear="fetchData" @keyup.enter="fetchData" />
+      <el-input v-model="keyword" placeholder="搜索姓名/电话" size="small" style="float:right;width:200px;margin-right:8px" clearable @clear="onSearch" @keyup.enter="onSearch" />
     </template>
     <el-table :data="workers" v-loading="loading" stripe style="width:100%">
       <el-table-column prop="name" label="姓名" width="120" />
@@ -35,6 +35,17 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-pagination
+      v-if="total > 0"
+      v-model:current-page="page"
+      v-model:page-size="pageSize"
+      :total="total"
+      :page-sizes="[10, 20, 50, 100]"
+      layout="total, sizes, prev, pager, next"
+      style="margin-top:16px;justify-content:flex-end"
+      @current-change="fetchData"
+      @size-change="fetchData"
+    />
   </el-card>
 </template>
 
@@ -46,12 +57,26 @@ import { listWorkers, blacklistWorker, unblacklistWorker } from '../../api/worke
 const loading = ref(false)
 const workers = ref([])
 const keyword = ref('')
+const page = ref(1)
+const pageSize = ref(20)
+const total = ref(0)
+
+function onSearch() {
+  page.value = 1
+  fetchData()
+}
 
 async function fetchData() {
   loading.value = true
   try {
-    const data = await listWorkers({ keyword: keyword.value || undefined })
-    workers.value = Array.isArray(data) ? data : (data.records || [])
+    const data = await listWorkers({
+      keyword: keyword.value || undefined,
+      page: page.value,
+      pageSize: pageSize.value
+    })
+    const list = Array.isArray(data) ? data : (data.records || [])
+    workers.value = list
+    total.value = data?.total ?? list.length
   } finally {
     loading.value = false
   }
