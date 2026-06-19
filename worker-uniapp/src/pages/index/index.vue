@@ -608,9 +608,12 @@ async function doCheckOut(shift: Shift) {
     const amount = Number(res?.payablePay || res?.scheduledPay || 0)
     if (amount > 0) {
       setTimeout(() => {
+        const settled = res?.autoSettled === true
         uni.showModal({
-          title: '薪资已结算',
-          content: `本次预计 ¥${amount.toFixed(2)}，请到收入明细查看`,
+          title: settled ? '薪资已结算' : '薪资已计算',
+          content: settled
+            ? `本次 ¥${amount.toFixed(2)} 已到账，请到收入明细查看`
+            : `本次预计 ¥${amount.toFixed(2)}，待企业结算后到账`,
           confirmText: '去查看',
           cancelText: '知道了',
           success: (modalRes) => {

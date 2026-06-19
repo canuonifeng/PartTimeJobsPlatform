@@ -4,6 +4,7 @@ import com.parttime.enterprise.enums.ShiftStatus;
 import com.parttime.enterprise.mapper.AttendanceRecordMapper;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.JobMapper;
+import com.parttime.enterprise.mapper.JobRateMapper;
 import com.parttime.enterprise.mapper.JobScheduleMapper;
 import com.parttime.enterprise.mapper.ScheduleApplicationMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
@@ -16,6 +17,7 @@ import com.parttime.enterprise.pojo.cmd.ScheduleManageUpdateCmd;
 import com.parttime.enterprise.pojo.cmd.ScheduleShiftCmd;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
 import com.parttime.enterprise.pojo.entity.Job;
+import com.parttime.enterprise.pojo.entity.JobRate;
 import com.parttime.enterprise.pojo.entity.JobSchedule;
 import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.vo.AttendanceReportVO;
@@ -44,6 +46,8 @@ public class ScheduleServiceImpl implements ScheduleService {
     @Resource
     private JobMapper jobMapper;
     @Resource
+    private JobRateMapper jobRateMapper;
+    @Resource
     private JobScheduleMapper jobScheduleMapper;
     @Resource
     private ScheduleApplicationMapper scheduleApplicationMapper;
@@ -69,6 +73,13 @@ public class ScheduleServiceImpl implements ScheduleService {
         shift.setLocationLng(request.getLocationLng());
         shift.setLocationRadius(request.getLocationRadius());
         shift.setLocationName(request.getLocationName());
+        JobRate rate = jobRateMapper.findByJobId(request.getJobId()).stream()
+                .findFirst().orElse(null);
+        if (rate != null) {
+            shift.setSalaryType(rate.getType());
+            shift.setSalaryAmount(rate.getAmount());
+            shift.setSalaryCurrency(rate.getCurrency());
+        }
         shift.setStatus(ShiftStatus.SCHEDULED.name());
         shiftMapper.insert(shift);
         Long shiftId = shift.getId();
@@ -173,6 +184,13 @@ public class ScheduleServiceImpl implements ScheduleService {
         shift.setLocationLng(request.getLocationLng());
         shift.setLocationRadius(request.getLocationRadius());
         shift.setLocationName(request.getLocationName());
+        JobRate rate = jobRateMapper.findByJobId(shift.getJobId()).stream()
+                .findFirst().orElse(null);
+        if (rate != null) {
+            shift.setSalaryType(rate.getType());
+            shift.setSalaryAmount(rate.getAmount());
+            shift.setSalaryCurrency(rate.getCurrency());
+        }
         shiftMapper.update(shift);
         shift = shiftMapper.findById(id)
                 .orElseThrow(() -> new RuntimeException("ScheduleShift not found: " + id));

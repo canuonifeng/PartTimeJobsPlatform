@@ -3,6 +3,7 @@ package com.parttime.enterprise.service;
 import com.parttime.enterprise.mapper.AttendanceRecordMapper;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.JobMapper;
+import com.parttime.enterprise.mapper.JobRateMapper;
 import com.parttime.enterprise.mapper.JobScheduleMapper;
 import com.parttime.enterprise.mapper.ScheduleApplicationMapper;
 import com.parttime.enterprise.mapper.ScheduleShiftMapper;
@@ -13,6 +14,7 @@ import com.parttime.enterprise.pojo.cmd.ScheduleExportCmd;
 import com.parttime.enterprise.pojo.cmd.ScheduleManageUpdateCmd;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
 import com.parttime.enterprise.pojo.entity.Job;
+import com.parttime.enterprise.pojo.entity.JobRate;
 import com.parttime.enterprise.pojo.entity.JobSchedule;
 import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.vo.ScheduleManagementVO;
@@ -55,6 +57,8 @@ class ScheduleServiceTest {
     @Mock
     private JobMapper jobMapper;
 
+    @Mock
+    private JobRateMapper jobRateMapper;
     @Mock
     private JobScheduleMapper jobScheduleMapper;
 
@@ -193,6 +197,11 @@ class ScheduleServiceTest {
         job.setId(10L);
         job.setCompanyId(30L);
         when(jobMapper.findById(10L)).thenReturn(Optional.of(job));
+        JobRate rate = new JobRate();
+        rate.setType("HOURLY");
+        rate.setAmount(new BigDecimal("25.50"));
+        rate.setCurrency("CNY");
+        when(jobRateMapper.findByJobId(10L)).thenReturn(List.of(rate));
         when(workerSyncMapper.findWorkerNameById(20L)).thenReturn("TestWorker");
 
         ScheduleShiftVO response = scheduleService.assignShift(request);
@@ -209,7 +218,11 @@ class ScheduleServiceTest {
         assertThat(response.getStatus()).isEqualTo("SCHEDULED");
 
         verify(shiftMapper).insert(shiftCaptor.capture());
-        assertThat(shiftCaptor.getValue().getStatus()).isEqualTo("SCHEDULED");
+        ScheduleShift captured = shiftCaptor.getValue();
+        assertThat(captured.getStatus()).isEqualTo("SCHEDULED");
+        assertThat(captured.getSalaryType()).isEqualTo("HOURLY");
+        assertThat(captured.getSalaryAmount()).isEqualByComparingTo(new BigDecimal("25.50"));
+        assertThat(captured.getSalaryCurrency()).isEqualTo("CNY");
         verify(workerNotificationMapper).insertWorkerNotification(
                 eq(20L),
                 eq("SCHEDULE_ASSIGNED"),
@@ -327,6 +340,7 @@ class ScheduleServiceTest {
         request.setEndTime(LocalTime.of(19, 0));
 
         when(shiftMapper.findById(99L)).thenReturn(Optional.of(existing), Optional.of(existing));
+        when(jobRateMapper.findByJobId(10L)).thenReturn(List.of());
         when(workerSyncMapper.findWorkerNameById(20L)).thenReturn("TestWorker");
 
         scheduleService.updateShift(99L, request);
