@@ -153,6 +153,9 @@ function handleSecondary() {
   border: none;
   box-shadow: 0 10rpx 32rpx rgba(16, 185, 129, 0.4);
   margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-primary::after {
@@ -170,6 +173,9 @@ function handleSecondary() {
   font-weight: 500;
   border: none;
   margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-secondary::after {

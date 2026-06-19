@@ -72,6 +72,7 @@
               </view>
               <text class="company-name">{{ job.companyName || '优选企业' }}</text>
             </view>
+            <view class="job-apply-btn" @click.stop="goApply(job.id)">去报名</view>
           </view>
         </view>
 
@@ -276,6 +277,10 @@ function onRefresh() {
 }
 
 function goDetail(id: number) {
+  uni.navigateTo({ url: `/pages/jobs/jobDetail?id=${id}` })
+}
+
+function goApply(id: number) {
   uni.navigateTo({ url: `/pages/jobs/jobDetail?id=${id}` })
 }
 
@@ -698,5 +703,23 @@ onMounted(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 260rpx;
+}
+
+.job-apply-btn {
+  flex-shrink: 0;
+  height: 56rpx;
+  line-height: 56rpx;
+  padding: 0 24rpx;
+  border-radius: 28rpx;
+  background: linear-gradient(135deg, #2ad879 0%, #20c26b 40%, #1aab5a 100%);
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 600;
+  box-shadow: 0 4rpx 12rpx rgba(32, 194, 107, 0.3);
+}
+
+.job-apply-btn:active {
+  transform: scale(0.95);
+  opacity: 0.85;
 }
 </style>
