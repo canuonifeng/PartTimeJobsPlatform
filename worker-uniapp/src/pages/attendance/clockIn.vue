@@ -283,14 +283,14 @@ onMounted(() => loadShifts(1))
 .clockin-page {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 60vh;
   background: #f5f6fa;
 }
 
 .page-header {
   position: relative;
   background: linear-gradient(135deg, #20c26b 0%, #1aab5a 55%, #169950 100%);
-  padding: 100rpx 32rpx 100rpx;
+  padding: 60rpx 32rpx 160rpx;
   color: #fff;
   overflow: hidden;
 }
