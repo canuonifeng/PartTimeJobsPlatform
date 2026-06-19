@@ -15,6 +15,7 @@ import com.parttime.cservice.pojo.vo.ReferralStatsVO;
 import com.parttime.cservice.pojo.vo.RefereeVO;
 import com.parttime.cservice.pojo.vo.PageVO;
 import com.parttime.cservice.pojo.vo.ReferralRewardVO;
+import com.parttime.cservice.pojo.vo.InviteInfoVO;
 import com.parttime.cservice.service.ReferralService;
 import com.parttime.cservice.service.WeChatSchemeService;
 import org.slf4j.Logger;
@@ -243,6 +244,34 @@ public class ReferralServiceImpl implements ReferralService {
     @Override
     public List<ReferralConfig> getConfig() {
         return referralConfigMapper.findAll();
+    }
+
+    @Override
+    public InviteInfoVO getInviteInfo(String code) {
+        ReferralCode referralCode = referralCodeMapper.findByCode(code);
+        InviteInfoVO vo = new InviteInfoVO();
+        if (referralCode == null) {
+            vo.setCode(code);
+            vo.setInviterName("零工平台");
+            vo.setInviterAvatar("");
+            vo.setMiniProgramScheme("");
+            return vo;
+        }
+        Worker worker = workerMapper.findById(referralCode.getWorkerId()).orElse(null);
+        vo.setCode(code);
+        vo.setInviterName(worker != null ? worker.getName() : "零工平台用户");
+        vo.setInviterAvatar(worker != null && worker.getAvatarUrl() != null ? worker.getAvatarUrl() : "");
+        try {
+            String scheme = weChatSchemeService.generateScheme(
+                    "pages/index/index",
+                    "inviteCode=" + code
+            );
+            vo.setMiniProgramScheme(scheme);
+        } catch (Exception e) {
+            log.warn("生成小程序Scheme失败: " + e.getMessage());
+            vo.setMiniProgramScheme("");
+        }
+        return vo;
     }
 
     @Override

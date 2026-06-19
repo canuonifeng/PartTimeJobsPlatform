@@ -7,82 +7,207 @@
     </view>
 
     <template v-if="job && !loading">
-      <view class="banner-card">
-        <button class="banner-share-btn" open-type="share">分享</button>
-        <image v-if="job.imageUrl" class="banner-image" :src="job.imageUrl" mode="aspectFill" />
-        <view v-else class="banner-emoji">{{ heroEmoji }}</view>
+      <view class="detail-banner">
         <view class="banner-info">
+          <view class="pay-badge">
+            <text>💰 {{ salaryText }}</text>
+          </view>
           <text class="banner-title">{{ title }}</text>
+          <view class="banner-tags">
+            <text v-for="(tag, idx) in bannerTags" :key="idx" class="banner-tag">{{ tag }}</text>
+          </view>
+        </view>
+        <view class="banner-illustration">
+          <text>{{ heroEmoji }}</text>
         </view>
       </view>
 
-      <view class="content">
-        <view class="salary-card">
-          <text class="salary-label">薪资待遇</text>
-          <text class="salary-value">{{ salaryText }}</text>
-        </view>
+      <scroll-view class="detail-content" scroll-y>
+        <view class="detail-card">
+          <view class="card-title">
+            <view class="title-icon"><text>📅</text></view>
+            <text class="title-text">选择班次报名</text>
+          </view>
 
-        <view class="card">
-          <view class="card-title"><text class="card-icon">💼</text><text>基本信息</text></view>
-          <view class="info-row"><text class="info-label">工作地点</text><view class="info-value-row" @click="handleOpenLocation"><text class="info-value">{{ locationText }}</text><text class="map-link">导航</text></view></view>
-          <view class="info-row"><text class="info-label">招聘人数</text><text class="info-value">{{ headcountText }}</text></view>
-          <view class="info-row"><text class="info-label">截止日期</text><text class="info-value">{{ deadlineText }}</text></view>
-        </view>
+          <scroll-view class="date-filter" scroll-x :show-scrollbar="false">
+            <view class="date-chips">
+              <view
+                v-for="(d, idx) in dateFilterOptions"
+                :key="idx"
+                class="date-chip"
+                :class="{ active: activeDateFilter === d.key }"
+                @click="setDateFilter(d.key)"
+              >
+                <text>{{ d.label }}</text>
+              </view>
+            </view>
+          </scroll-view>
 
-        <view class="card">
-          <view class="card-title"><text class="card-icon">📅</text><text>选择班次报名</text></view>
-          <view v-if="schedules.length" class="schedule-grid">
-            <view v-for="slot in schedules" :key="slot.id" class="schedule-block" :class="scheduleBlockClass(slot)" @click="toggleSchedule(slot)">
-              <text v-if="isScheduleApplied(slot.id)" class="block-badge">已报名</text>
-              <text v-else-if="isScheduleFull(slot)" class="block-badge full">已报满</text>
-              <text v-else-if="pendingScheduleIds.includes(Number(slot.id))" class="block-badge selected">已选</text>
-              <text class="block-date">{{ scheduleDate(slot) }}</text>
-              <text class="block-time">{{ scheduleTime(slot) }}</text>
-              <text class="block-duration">{{ scheduleDuration(slot) }}</text>
+          <view class="schedule-grid">
+            <view
+              v-for="slot in filteredSchedules"
+              :key="slot.id"
+              class="schedule-card"
+              :class="scheduleCardClass(slot)"
+              @click="toggleSchedule(slot)"
+            >
+              <text v-if="isScheduleApplied(slot.id)" class="sch-status applied">已报名</text>
+              <text v-else-if="isScheduleFull(slot)" class="sch-status full">已报满</text>
+              <text v-else-if="pendingScheduleIds.includes(Number(slot.id))" class="sch-status selected">已选</text>
+              <text v-else class="sch-status">选择</text>
+              <text class="sch-date">{{ scheduleDate(slot) }}</text>
+              <text class="sch-time">{{ scheduleTime(slot) }}</text>
+              <text class="sch-pay">{{ schedulePay(slot) }}</text>
             </view>
           </view>
-          <view v-else class="empty-hint">暂无可用排班</view>
+
+          <view v-if="filteredSchedules.length === 0" class="empty-hint">
+            <text>暂无可用班次</text>
+          </view>
+
+
         </view>
 
-        <view class="card">
-          <view class="card-title"><text class="card-icon">🧾</text><text>岗位职责</text></view>
-          <rich-text v-if="responsibilitiesHtml" class="rich-content" :nodes="responsibilitiesHtml" />
-          <view v-else v-for="(item, index) in duties" :key="index" class="list-row"><text class="list-dot"></text><text class="list-text">{{ item }}</text></view>
-        </view>
-
-        <view class="card">
-          <view class="card-title"><text class="card-icon">✅</text><text>任职要求</text></view>
-          <rich-text v-if="requirementsHtml" class="rich-content" :nodes="requirementsHtml" />
-          <view v-else v-for="(item, index) in needs" :key="index" class="list-row"><text class="list-dot green"></text><text class="list-text">{{ item }}</text></view>
-        </view>
-
-        <view class="company-card">
-          <view class="company-logo">{{ companyInitial }}</view>
-          <view class="company-info">
-            <text class="company-name">{{ companyName }}</text>
-            <text class="company-desc">企业认证，岗位信息真实有效</text>
-            <text class="company-location">{{ locationText }}</text>
+        <view class="detail-card location-card" @click="handleOpenLocation">
+          <view class="loc-header">
+            <view class="loc-icon">📍</view>
+            <view class="loc-info">
+              <text class="loc-label">工作地点</text>
+              <text class="loc-address">{{ locationText }}</text>
+            </view>
+            <text class="loc-arrow">导航 ›</text>
           </view>
         </view>
-      </view>
+
+        <view class="info-grid">
+          <view class="info-grid-item">
+            <text class="grid-label">招聘人数</text>
+            <text class="grid-value">{{ headcountText }}</text>
+          </view>
+          <view class="info-grid-item">
+            <text class="grid-label">结算方式</text>
+            <text class="grid-value">{{ settlementBadgeText }}</text>
+          </view>
+          <view class="info-grid-item">
+            <text class="grid-label">报名截止</text>
+            <text class="grid-value">{{ deadlineText }}</text>
+          </view>
+        </view>
+
+        <view v-if="jobTags.length > 0" class="detail-card">
+          <view class="card-title">
+            <view class="title-icon"><text>🎁</text></view>
+            <text class="title-text">岗位福利</text>
+          </view>
+          <view class="tag-cloud">
+            <text v-for="(tag, idx) in jobTags" :key="idx" class="cloud-tag">{{ tag }}</text>
+          </view>
+        </view>
+
+        <view class="detail-card">
+          <view class="card-title">
+            <view class="title-icon"><text>📋</text></view>
+            <text class="title-text">岗位职责</text>
+          </view>
+          <rich-text v-if="responsibilitiesHtml" class="rich-content" :nodes="responsibilitiesHtml" />
+          <view v-else class="duty-list">
+            <view v-for="(item, index) in duties" :key="index" class="duty-item">
+              <view class="duty-dot"></view>
+              <text class="duty-text">{{ item }}</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="detail-card">
+          <view class="card-title">
+            <view class="title-icon"><text>✅</text></view>
+            <text class="title-text">任职要求</text>
+          </view>
+          <rich-text v-if="requirementsHtml" class="rich-content" :nodes="requirementsHtml" />
+          <view v-else class="duty-list">
+            <view v-for="(item, index) in needs" :key="index" class="duty-item">
+              <view class="duty-dot blue"></view>
+              <text class="duty-text">{{ item }}</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="detail-card company-card">
+          <view class="card-title">
+            <view class="title-icon"><text>🏢</text></view>
+            <text class="title-text">企业信息</text>
+          </view>
+          <view class="company-row">
+            <view class="company-big-logo">{{ companyInitial }}</view>
+            <view class="company-info-col">
+              <text class="company-name">{{ companyName }}</text>
+              <view class="company-auth-row">
+                <text class="auth-badge" :class="companyAuthClass">{{ companyAuthText }}</text>
+                <text class="company-desc">在招职位 {{ job.jobCount || '多个' }}</text>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <view class="bottom-safe"></view>
+      </scroll-view>
 
       <view class="action-bar">
-        <button class="phone-btn" @click="handlePhone">电话</button>
-        <button v-if="job.status === 'CLOSED'" class="apply-btn disabled" disabled>已关闭</button>
-        <button v-else class="apply-btn" @click="handleApply">报名班次</button>
+        <view class="action-icon-btn" @click="handlePhone">
+          <text class="action-icon">📞</text>
+          <text class="action-label">电话</text>
+        </view>
+        <view class="action-icon-btn" @click="toggleFavorite">
+          <text class="action-icon">{{ isFavorited ? '♥' : '♡' }}</text>
+          <text class="action-label">收藏</text>
+        </view>
+        <button
+          class="apply-btn-main"
+          :class="{ disabled: !canApply }"
+          :disabled="!canApply"
+          @click="handleApply"
+        >
+          {{ applyButtonText }}
+        </button>
       </view>
     </template>
+
+    <ApplyConfirmSheet
+      :visible="showApplySheet"
+      :job-title="title"
+      :location="locationText"
+      :schedules="selectedScheduleList"
+      :total-text="`${pendingScheduleIds.length}个班次`"
+      :total-amount="`¥${selectedTotalAmount}`"
+      :submitting="applying"
+      @close="showApplySheet = false"
+      @confirm="confirmApply"
+    />
+
+    <SuccessOverlay
+      :visible="showSuccess"
+      title="报名成功！"
+      description="请按时前往工作地点，企业会尽快与你联系确认"
+      primary-text="查看我的排班"
+      secondary-text="继续找活"
+      icon="🎉"
+      @primary="goToSchedule"
+      @secondary="closeSuccessAndBack"
+    />
+
+    <LoginSheet />
   </view>
-  <LoginSheet />
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { onLoad, onShareAppMessage } from '@dcloudio/uni-app'
-import { getJobDetail } from '@/api/jobs'
+import { getJobDetail, applyJob } from '@/api/jobs'
 import { getProfileCompleteness } from '@/api/profile'
 import { useAuthStore } from '@/store'
 import LoginSheet from '@/components/LoginSheet.vue'
+import ApplyConfirmSheet from '@/components/ApplyConfirmSheet.vue'
+import SuccessOverlay from '@/components/SuccessOverlay.vue'
 import { openLoginSheet } from '@/utils/loginSheet'
 
 const authStore = useAuthStore()
@@ -91,6 +216,11 @@ const loading = ref(true)
 const jobId = ref(0)
 const pendingScheduleIds = ref<number[]>([])
 const appliedScheduleIds = ref<number[]>([])
+const isFavorited = ref(false)
+const activeDateFilter = ref<string>('all')
+const showApplySheet = ref(false)
+const showSuccess = ref(false)
+const applying = ref(false)
 
 const title = computed(() => job.value?.title || '')
 const companyName = computed(() => job.value?.companyName || '')
@@ -98,14 +228,56 @@ const locationText = computed(() => job.value?.location || '暂无地点')
 const headcountText = computed(() => job.value?.headcount ? `${job.value.headcount}人` : '不限')
 const deadlineText = computed(() => formatDateText(job.value?.deadline) || '长期有效')
 const schedules = computed(() => Array.isArray(job.value?.schedules) ? job.value.schedules : [])
-const heroEmoji = computed(() => title.value.indexOf('外卖') >= 0 || title.value.indexOf('配送') >= 0 ? '🛵' : '💼')
+const heroEmoji = computed(() => {
+  const t = title.value
+  if (t.indexOf('外卖') >= 0 || t.indexOf('配送') >= 0) return '🛵'
+  if (t.indexOf('餐饮') >= 0 || t.indexOf('服务') >= 0) return '🍽️'
+  if (t.indexOf('快递') >= 0 || t.indexOf('分拣') >= 0) return '📦'
+  if (t.indexOf('仓') >= 0) return '🏭'
+  return '💼'
+})
+
+const bannerTags = computed(() => {
+  const tags: string[] = []
+  const rates = Array.isArray(job.value?.rates) ? job.value.rates : []
+  if (rates.length > 0) {
+    const type = rates[0]?.type
+    const map: Record<string, string> = { HOURLY: '时结', DAILY: '日结', PIECEWORK: '计件', MONTHLY: '月结' }
+    if (map[type]) tags.push(map[type])
+  }
+  if (job.value?.settlement?.length) {
+    tags.push(...job.value.settlement.slice(0, 1))
+  }
+  if (Array.isArray(job.value?.tags) && job.value.tags.length > 0) {
+    const tagNames = job.value.tags
+      .filter((t: any) => t?.name)
+      .map((t: any) => t.name)
+      .slice(0, 2 - tags.length)
+    tags.push(...tagNames)
+  }
+  return tags.slice(0, 3)
+})
+
+const jobTags = computed(() => {
+  const tags: string[] = []
+  if (Array.isArray(job.value?.tags) && job.value.tags.length > 0) {
+    tags.push(...job.value.tags.filter((t: any) => t?.name).map((t: any) => t.name))
+  }
+  if (Array.isArray(job.value?.settlement) && job.value.settlement.length > 0) {
+    tags.push(...job.value.settlement)
+  }
+  if (job.value?.jobType) tags.push(job.value.jobType)
+  if (job.value?.experience) tags.push(job.value.experience)
+  if (tags.length === 0) tags.push('日结', '包吃', '无需经验')
+  return [...new Set(tags)].slice(0, 8)
+})
 const companyAuthStatus = computed(() => normalizeCompanyAuthStatus(job.value))
 const companyAuthText = computed(() => {
-  const map: Record<string, string> = { APPROVED: '已实名', PENDING: '认证中', REJECTED: '未实名', NONE: '未实名' }
-  return map[companyAuthStatus.value] || '未实名'
+  const map: Record<string, string> = { APPROVED: '已认证', PENDING: '认证中', REJECTED: '未认证', NONE: '未认证' }
+  return map[companyAuthStatus.value] || '未认证'
 })
 const companyAuthClass = computed(() => companyAuthStatus.value === 'APPROVED' ? 'approved' : (companyAuthStatus.value === 'PENDING' ? 'pending' : ''))
-const companyInitial = computed(() => companyName.value.slice(0, 1))
+const companyInitial = computed(() => companyName.value.slice(0, 1) || '企')
 const salaryText = computed(() => {
   const rates = Array.isArray(job.value?.rates) ? job.value.rates : []
   const rate = rates[0]
@@ -114,10 +286,93 @@ const salaryText = computed(() => {
   if (job.value?.minRate) return `${job.value.minRate}元起/小时`
   return '薪资面议'
 })
+const settlementBadgeText = computed(() => {
+  const rates = Array.isArray(job.value?.rates) ? job.value.rates : []
+  const type = rates[0]?.type
+  const map: Record<string, string> = { HOURLY: '时结工资', DAILY: '日结工资', PIECEWORK: '计件工资', MONTHLY: '月结工资' }
+  return map[type] || '薪资面议'
+})
 const responsibilitiesHtml = computed(() => htmlContent(job.value?.responsibilities || job.value?.description))
 const requirementsHtml = computed(() => htmlContent(job.value?.requirements))
 const duties = computed(() => splitItems(job.value?.responsibilities || job.value?.description, ['按排班时间准时到岗，完成岗位工作', '服从现场安排，保障服务质量', '及时沟通异常情况']))
 const needs = computed(() => splitItems(job.value?.requirements, ['身体健康，能适应岗位节奏', '责任心强，时间观念好', '会使用智能手机，沟通顺畅']))
+
+const canApply = computed(() => {
+  if (!job.value || job.value.status === 'CLOSED') return false
+  return pendingScheduleIds.value.length > 0
+})
+
+const applyButtonText = computed(() => {
+  if (!job.value) return '加载中'
+  if (job.value.status === 'CLOSED') return '已关闭'
+  if (pendingScheduleIds.value.length === 0) return '请先选择班次'
+  return `立即报名（${pendingScheduleIds.value.length}班）`
+})
+
+const dateFilterOptions = computed(() => {
+  const today = new Date()
+  const options = [
+    { key: 'all', label: '全部' },
+    { key: formatDateKey(today), label: '今天' },
+  ]
+  const tomorrow = new Date(today)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  options.push({ key: formatDateKey(tomorrow), label: '明天' })
+  for (let i = 2; i <= 6; i++) {
+    const d = new Date(today)
+    d.setDate(d.getDate() + i)
+    const weekNames = ['日', '一', '二', '三', '四', '五', '六']
+    options.push({ key: formatDateKey(d), label: `周${weekNames[d.getDay()]}` })
+  }
+  return options
+})
+
+const filteredSchedules = computed(() => {
+  if (activeDateFilter.value === 'all') return schedules.value
+  return schedules.value.filter((slot: any) => {
+    const date = String(slot.date || '').slice(0, 10)
+    return date === activeDateFilter.value
+  })
+})
+
+const selectedScheduleList = computed(() => {
+  return pendingScheduleIds.value.map((id) => {
+    const slot = schedules.value.find((s: any) => Number(s.id) === id)
+    return {
+      id,
+      date: scheduleDate(slot || {}),
+      time: scheduleTime(slot || {}),
+      pay: schedulePay(slot || {})
+    }
+  })
+})
+
+const selectedTotalAmount = computed(() => {
+  let total = 0
+  pendingScheduleIds.value.forEach((id) => {
+    const slot = schedules.value.find((s: any) => Number(s.id) === id)
+    if (slot) {
+      const rates = Array.isArray(slot.rates) ? slot.rates : (job.value?.rates || [])
+      const rate = rates[0]
+      if (rate?.amount) {
+        total += Number(rate.amount)
+      } else if (slot.daySalary || slot.dailySalary) {
+        total += Number(slot.daySalary || slot.dailySalary)
+      }
+    }
+  })
+  return total > 0 ? total : '--'
+})
+
+function formatDateKey(d: Date) {
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${m}-${day}`
+}
+
+function setDateFilter(key: string) {
+  activeDateFilter.value = key
+}
 
 function htmlContent(value: any) {
   if (!value) return ''
@@ -144,11 +399,11 @@ function splitItems(value: any, fallback: string[]) {
   return list.length ? list : fallback
 }
 
-function scheduleBlockClass(slot: any) {
+function scheduleCardClass(slot: any) {
   const id = Number(slot?.id)
-  if (appliedScheduleIds.value.includes(id)) return 'block-applied'
-  if (isScheduleFull(slot)) return 'block-full'
-  if (pendingScheduleIds.value.includes(id)) return 'block-selected'
+  if (appliedScheduleIds.value.includes(id)) return 'applied'
+  if (isScheduleFull(slot)) return 'full'
+  if (pendingScheduleIds.value.includes(id)) return 'selected'
   return ''
 }
 
@@ -178,17 +433,6 @@ function toggleSchedule(slot: any) {
   }
 }
 
-function rateUnit(type: string) {
-  const map: Record<string, string> = { HOURLY: '小时', DAILY: '日', PIECEWORK: '件', PIECE: '单', MONTHLY: '月' }
-  return map[type] || '小时'
-}
-
-function formatDateText(value: any) {
-  if (!value) return ''
-  const date = String(value)
-  return date.length >= 10 ? date.slice(0, 10) : date
-}
-
 function scheduleDate(slot: any) {
   if (!slot?.date) return '日期待定'
   const date = String(slot.date)
@@ -200,21 +444,23 @@ function scheduleTime(slot: any) {
   return '时间待定'
 }
 
-function scheduleDuration(slot: any) {
-  const minutes = diffMinutes(slot?.startTime, slot?.endTime)
-  if (!minutes) return '工时待定'
-  const hours = minutes / 60
-  return `${Number.isInteger(hours) ? hours : hours.toFixed(1)}小时`
+function schedulePay(slot: any) {
+  const rates = Array.isArray(slot?.rates) ? slot.rates : (job.value?.rates || [])
+  const rate = rates[0]
+  if (rate?.amount) return `¥${rate.amount}/${rateUnit(rate.type)}`
+  if (slot.daySalary || slot.dailySalary) return `¥${slot.daySalary || slot.dailySalary}/天`
+  return salaryText.value
 }
 
-function diffMinutes(start?: string, end?: string) {
-  if (!start || !end) return 0
-  const startParts = String(start).split(':').map(Number)
-  const endParts = String(end).split(':').map(Number)
-  if (startParts.length < 2 || endParts.length < 2 || startParts.some(Number.isNaN) || endParts.some(Number.isNaN)) return 0
-  const startMinutes = startParts[0] * 60 + startParts[1]
-  const endMinutes = endParts[0] * 60 + endParts[1]
-  return endMinutes > startMinutes ? endMinutes - startMinutes : 0
+function rateUnit(type: string) {
+  const map: Record<string, string> = { HOURLY: '小时', DAILY: '日', PIECEWORK: '件', PIECE: '单', MONTHLY: '月' }
+  return map[type] || '小时'
+}
+
+function formatDateText(value: any) {
+  if (!value) return ''
+  const date = String(value)
+  return date.length >= 10 ? date.slice(0, 10) : date
 }
 
 function normalizeCompanyAuthStatus(source: any) {
@@ -248,13 +494,22 @@ function handleOpenLocation() {
   })
 }
 
+function toggleFavorite() {
+  if (!authStore.token) {
+    openLoginSheet({ success: toggleFavorite })
+    return
+  }
+  isFavorited.value = !isFavorited.value
+  uni.showToast({ title: isFavorited.value ? '已收藏' : '已取消收藏', icon: 'none' })
+}
+
 async function handleApply() {
   if (!authStore.token) {
     openLoginSheet({ success: handleApply })
     return
   }
   if (pendingScheduleIds.value.length === 0) {
-    uni.showToast({ title: '请先选择排班', icon: 'none' })
+    uni.showToast({ title: '请先选择班次', icon: 'none' })
     return
   }
   if (jobId.value <= 0 || !job.value?.id) {
@@ -278,8 +533,32 @@ async function handleApply() {
     uni.showToast({ title: '资料校验失败，请稍后重试', icon: 'none' })
     return
   }
-  const scheduleIds = encodeURIComponent(pendingScheduleIds.value.join(','))
-  uni.navigateTo({ url: `/pages/jobs/applyConfirm?jobId=${jobId.value}&scheduleIds=${scheduleIds}` })
+  showApplySheet.value = true
+}
+
+async function confirmApply() {
+  if (applying.value) return
+  applying.value = true
+  try {
+    await applyJob(jobId.value, { scheduleIds: pendingScheduleIds.value })
+    showApplySheet.value = false
+    showSuccess.value = true
+    appliedScheduleIds.value = [...appliedScheduleIds.value, ...pendingScheduleIds.value]
+    pendingScheduleIds.value = []
+  } catch (err: any) {
+    uni.showToast({ title: err?.data?.error || err?.message || '报名失败', icon: 'none' })
+  } finally {
+    applying.value = false
+  }
+}
+
+function goToSchedule() {
+  showSuccess.value = false
+  uni.switchTab({ url: '/pages/index/index' })
+}
+
+function closeSuccessAndBack() {
+  showSuccess.value = false
 }
 
 async function loadJob() {
@@ -318,59 +597,576 @@ onShareAppMessage(() => ({
 </script>
 
 <style scoped>
-.detail-page { min-height: 100vh; padding-bottom: 180rpx; background: #f6f7fb; }
-.banner-card { position: relative; margin: 24rpx 24rpx 0; border-radius: 36rpx; background: linear-gradient(135deg, #16c784, #0ea66b); overflow: hidden; box-shadow: 0 18rpx 40rpx rgba(14, 166, 107, 0.22); }
-.banner-share-btn { position: absolute; top: 22rpx; right: 22rpx; z-index: 2; width: 112rpx; height: 56rpx; line-height: 56rpx; padding: 0; margin: 0; border-radius: 28rpx; background: rgba(255, 255, 255, 0.92); color: #0f9f5f; font-size: 25rpx; font-weight: 700; box-shadow: 0 8rpx 20rpx rgba(15, 23, 42, 0.12); }
-.banner-share-btn::after { border: none; }
-.banner-image { display: block; width: 100%; height: 300rpx; border-radius: 36rpx 36rpx 0 0; }
-.banner-emoji { height: 210rpx; line-height: 210rpx; text-align: center; font-size: 118rpx; border-radius: 36rpx 36rpx 0 0; }
-.banner-info { margin-top: 0; padding: 30rpx 34rpx 36rpx; border-radius: 0 0 36rpx 36rpx; text-align: left; }
-.banner-title { display: block; color: #fff; font-size: 46rpx; line-height: 58rpx; font-weight: 800; text-align: left; }
-.content { padding: 24rpx; }
-.empty-state { display: flex; justify-content: center; padding: 160rpx 32rpx; }
-.empty-text { color: #9ca3af; font-size: 30rpx; }
-.salary-card, .card, .company-card { margin-bottom: 22rpx; padding: 30rpx; border-radius: 28rpx; background: #fff; box-shadow: 0 8rpx 30rpx rgba(31, 41, 55, 0.06); }
-.salary-card { background: #fff8ef; border: 2rpx solid #ffe4bd; }
-.salary-label { display: block; color: #9a5b12; font-size: 26rpx; }
-.salary-value { display: block; margin-top: 8rpx; color: #ff6b00; font-size: 48rpx; font-weight: 800; }
-.tag-row { margin-top: 22rpx; }
-.salary-tag { display: inline-block; margin-right: 14rpx; padding: 8rpx 18rpx; border-radius: 22rpx; background: #fff; color: #9a5b12; font-size: 24rpx; }
-.card-title { display: flex; align-items: center; margin-bottom: 24rpx; color: #111827; font-size: 34rpx; font-weight: 700; }
-.card-icon { margin-right: 12rpx; font-size: 34rpx; }
-.info-row { display: flex; padding: 20rpx 0; border-top: 2rpx solid #f1f5f9; }
-.info-label { width: 150rpx; color: #8a94a6; font-size: 28rpx; }
-.info-value { flex: 1; color: #1f2937; font-size: 29rpx; line-height: 42rpx; }
-.info-value-row { flex: 1; display: flex; align-items: center; }
-.map-link { margin-left: 12rpx; padding: 6rpx 16rpx; border-radius: 20rpx; background: #ecfdf5; color: #0f9f5f; font-size: 24rpx; }
-.auth-badge { flex-shrink: 0; margin-left: 12rpx; padding: 6rpx 16rpx; border-radius: 20rpx; background: #f1f5f9; color: #64748b; font-size: 24rpx; }
-.auth-badge.approved { background: #ecfdf5; color: #0f9f5f; }
-.auth-badge.pending { background: #fff7ed; color: #f97316; }
-.schedule-grid { display: flex; flex-wrap: wrap; }
-.schedule-block { position: relative; width: 284rpx; margin-right: 18rpx; margin-bottom: 18rpx; padding: 28rpx 12rpx; border-radius: 20rpx; border: 2rpx solid #e5e7eb; background: #f8fafc; text-align: center; }
-.schedule-block:nth-child(2n) { margin-right: 0; }
-.block-selected { border-color: #11b981; background: #ecfdf5; }
-.block-applied, .block-full { border-color: #d1d5db; background: #f3f4f6; opacity: 0.72; }
-.block-badge { position: absolute; top: 0; right: 0; padding: 6rpx 14rpx; border-radius: 0 18rpx 0 14rpx; background: #9ca3af; color: #fff; font-size: 22rpx; }
-.block-badge.selected { background: #10b981; }
-.block-badge.full { background: #ef4444; }
-.block-date { display: block; color: #111827; font-size: 30rpx; font-weight: 700; }
-.block-time { display: block; margin-top: 10rpx; color: #64748b; font-size: 26rpx; }
-.block-duration { display: block; margin-top: 8rpx; color: #0f9f5f; font-size: 24rpx; font-weight: 700; }
-.empty-hint { padding: 36rpx 0; text-align: center; color: #9ca3af; font-size: 28rpx; }
-.list-row { display: flex; margin-bottom: 18rpx; }
-.list-dot { width: 12rpx; height: 12rpx; margin-top: 14rpx; margin-right: 16rpx; border-radius: 6rpx; background: #ff8a00; }
-.list-dot.green { background: #10b981; }
-.list-text { flex: 1; color: #475569; font-size: 29rpx; line-height: 44rpx; }
-.rich-content { display: block; color: #475569; font-size: 29rpx; line-height: 44rpx; }
-.company-card { display: flex; align-items: center; }
-.company-logo { width: 96rpx; height: 96rpx; line-height: 96rpx; margin-right: 22rpx; border-radius: 48rpx; text-align: center; background: #ecfdf5; color: #0f9f5f; font-size: 42rpx; font-weight: 800; }
-.company-info { flex: 1; }
-.company-name { display: block; color: #111827; font-size: 32rpx; font-weight: 700; }
-.company-desc { display: block; margin-top: 10rpx; color: #64748b; font-size: 26rpx; }
-.company-location { display: block; margin-top: 8rpx; color: #94a3b8; font-size: 24rpx; }
-.action-bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; display: flex; padding: 18rpx 28rpx 38rpx; background: #fff; box-shadow: 0 -8rpx 28rpx rgba(31, 41, 55, 0.08); }
-.phone-btn { width: 180rpx; height: 92rpx; line-height: 92rpx; margin: 0 18rpx 0 0; padding: 0; border-radius: 46rpx; background: #f1f5f9; color: #0f172a; font-size: 32rpx; font-weight: 700; }
-.apply-btn { flex: 1; height: 92rpx; line-height: 92rpx; margin: 0; padding: 0; border-radius: 46rpx; background: linear-gradient(135deg, #16c784, #0ea66b); color: #fff; font-size: 34rpx; font-weight: 800; }
-.disabled { background: #d1d5db; color: #fff; }
-.phone-btn::after, .apply-btn::after { border: none; }
+.detail-page {
+  min-height: 100vh;
+  background: #f5f6fa;
+  position: relative;
+}
+
+.detail-banner {
+  position: relative;
+  height: 320rpx;
+  background: linear-gradient(135deg, #20c26b 0%, #1aab5a 55%, #169950 100%);
+  padding: 60rpx 32rpx 32rpx;
+  color: #fff;
+  overflow: hidden;
+}
+
+.detail-banner::before {
+  content: '';
+  position: absolute;
+  top: -80rpx;
+  right: -40rpx;
+  width: 280rpx;
+  height: 280rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+
+
+.banner-info {
+  position: relative;
+  z-index: 5;
+  padding-top: 20rpx;
+}
+
+.pay-badge {
+  display: inline-block;
+  padding: 8rpx 20rpx;
+  border-radius: 24rpx;
+  background: rgba(255, 255, 255, 0.25);
+  font-size: 24rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+
+.banner-title {
+  display: block;
+  font-size: 44rpx;
+  font-weight: 800;
+  line-height: 1.3;
+  margin-bottom: 8rpx;
+}
+
+.banner-tags {
+  display: flex;
+  gap: 12rpx;
+  flex-wrap: wrap;
+  margin-top: 12rpx;
+}
+
+.banner-tag {
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.25);
+  font-size: 22rpx;
+  font-weight: 500;
+}
+
+.banner-location {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  font-size: 26rpx;
+  opacity: 0.9;
+}
+
+.location-link {
+  text-decoration: underline;
+  font-size: 24rpx;
+}
+
+.banner-illustration {
+  position: absolute;
+  right: 32rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 28rpx;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 64rpx;
+}
+
+.detail-content {
+  height: calc(100vh - 320rpx - 140rpx);
+}
+
+.detail-card {
+  margin: 20rpx 24rpx;
+  padding: 28rpx;
+  background: #fff;
+  border-radius: 20rpx;
+  box-shadow: 0 6rpx 24rpx rgba(0, 0, 0, 0.05), 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 20rpx;
+}
+
+.title-icon {
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 12rpx;
+  background: linear-gradient(135deg, #e6f8ee, #c6f0d8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26rpx;
+}
+
+.title-text {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.date-filter {
+  white-space: nowrap;
+  margin-bottom: 20rpx;
+}
+
+.date-chips {
+  display: inline-flex;
+  gap: 12rpx;
+}
+
+.date-chip {
+  flex-shrink: 0;
+  padding: 10rpx 24rpx;
+  border-radius: 24rpx;
+  background: #f5f6fa;
+  font-size: 24rpx;
+  color: #666;
+}
+
+.date-chip.active {
+  background: linear-gradient(135deg, #20c26b, #1aab5a);
+  color: #fff;
+  font-weight: 600;
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+  margin-bottom: 20rpx;
+}
+
+.schedule-card {
+  position: relative;
+  padding: 20rpx;
+  border: 2rpx solid #f0f0f0;
+  border-radius: 16rpx;
+  background: #fafbff;
+}
+
+.schedule-card.selected {
+  border-color: #20c26b;
+  background: linear-gradient(135deg, #eefbf3, #e8f8ee);
+  box-shadow: 0 6rpx 18rpx rgba(16, 185, 129, 0.15);
+}
+
+.schedule-card.full {
+  opacity: 0.5;
+}
+
+.sch-status {
+  position: absolute;
+  top: 12rpx;
+  right: 12rpx;
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 16rpx;
+  background: #e5e7eb;
+  color: #6b7280;
+}
+
+.sch-status.selected {
+  background: #20c26b;
+  color: #fff;
+}
+
+.sch-status.full {
+  background: #ef4444;
+  color: #fff;
+}
+
+.sch-status.applied {
+  background: #20c26b;
+  color: #fff;
+}
+
+.sch-date {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 8rpx;
+}
+
+.sch-time {
+  display: block;
+  font-size: 24rpx;
+  color: #666;
+  margin-bottom: 12rpx;
+}
+
+.sch-pay {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #20c26b;
+}
+
+.schedule-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx;
+  background: linear-gradient(135deg, #eefbf3, #e8f8ee);
+  border-radius: 12rpx;
+  font-size: 26rpx;
+}
+
+.summary-left {
+  color: #666;
+}
+
+.sum-num {
+  color: #20c26b;
+  font-weight: 700;
+  font-size: 28rpx;
+}
+
+.summary-right {
+  color: #666;
+}
+
+.sum-amount {
+  color: #20c26b;
+  font-weight: 800;
+  font-size: 32rpx;
+}
+
+.empty-hint {
+  text-align: center;
+  padding: 40rpx 0;
+  color: #999;
+  font-size: 26rpx;
+}
+
+.location-card {
+  cursor: pointer;
+}
+
+.loc-header {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.loc-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 16rpx;
+  background: linear-gradient(135deg, #e6f8ee, #c6f0d8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  flex-shrink: 0;
+}
+
+.loc-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.loc-label {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.loc-address {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1a1a2e;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.loc-arrow {
+  font-size: 26rpx;
+  color: #20c26b;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.info-grid {
+  display: flex;
+  gap: 16rpx;
+  margin: 0 24rpx 20rpx;
+}
+
+.info-grid-item {
+  flex: 1;
+  background: #fff;
+  border-radius: 14rpx;
+  padding: 20rpx 12rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.03);
+}
+
+.grid-label {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.grid-value {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+}
+
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+}
+
+.cloud-tag {
+  padding: 10rpx 20rpx;
+  border-radius: 10rpx;
+  background: linear-gradient(135deg, #e6f8ee, #f0fdf4);
+  font-size: 24rpx;
+  color: #20c26b;
+  font-weight: 500;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+  font-size: 26rpx;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-label {
+  color: #888;
+}
+
+.info-value {
+  color: #333;
+  font-weight: 500;
+  max-width: 400rpx;
+  text-align: right;
+}
+
+.duty-list {
+  padding: 0;
+}
+
+.duty-item {
+  display: flex;
+  gap: 16rpx;
+  padding: 10rpx 0;
+  font-size: 26rpx;
+  color: #555;
+  line-height: 1.6;
+}
+
+.duty-dot {
+  width: 10rpx;
+  height: 10rpx;
+  border-radius: 50%;
+  background: #20c26b;
+  flex-shrink: 0;
+  margin-top: 16rpx;
+}
+
+.duty-dot.green {
+  background: #20c26b;
+}
+
+.duty-dot.blue {
+  background: #3b82f6;
+}
+
+.duty-text {
+  flex: 1;
+}
+
+.rich-content {
+  font-size: 26rpx;
+  color: #555;
+  line-height: 1.7;
+}
+
+.company-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+}
+
+.company-big-logo {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 20rpx;
+  background: linear-gradient(135deg, #20c26b, #1aab5a);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34rpx;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.company-info-col {
+  flex: 1;
+  min-width: 0;
+}
+
+.company-name {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 8rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.company-auth-row {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.auth-badge {
+  font-size: 22rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  background: #f0f0f0;
+  color: #999;
+}
+
+.auth-badge.approved {
+  background: #e6f8ee;
+  color: #20c26b;
+}
+
+.auth-badge.pending {
+  background: #fff3e8;
+  color: #f59e0b;
+}
+
+.company-desc {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.bottom-safe {
+  height: 40rpx;
+}
+
+.action-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 140rpx;
+  padding: 20rpx 24rpx 40rpx;
+  background: #fff;
+  border-top: 1rpx solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  z-index: 50;
+}
+
+.action-icon-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 80rpx;
+  gap: 4rpx;
+}
+
+.action-icon {
+  font-size: 36rpx;
+  line-height: 1;
+}
+
+.action-label {
+  font-size: 20rpx;
+  color: #888;
+}
+
+.apply-btn-main {
+  flex: 1;
+  height: 88rpx;
+  line-height: 88rpx;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 44rpx;
+  background: linear-gradient(135deg, #2ad879 0%, #20c26b 40%, #1aab5a 100%);
+  color: #fff;
+  font-size: 30rpx;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 10rpx 28rpx rgba(32, 194, 107, 0.45);
+  margin: 0;
+}
+
+.apply-btn-main:active {
+  transform: scale(0.98);
+  box-shadow: 0 4rpx 12rpx rgba(32, 194, 107, 0.3);
+}
+
+.apply-btn-main::after {
+  border: none;
+}
+
+.apply-btn-main.disabled {
+  background: #d1d5db;
+  color: #9ca3af;
+  box-shadow: none;
+}
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  padding: 200rpx 0;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
+}
 </style>

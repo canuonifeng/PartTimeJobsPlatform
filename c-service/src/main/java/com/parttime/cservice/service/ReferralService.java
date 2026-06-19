@@ -6,6 +6,7 @@ import com.parttime.cservice.pojo.vo.RefereeVO;
 import com.parttime.cservice.pojo.vo.PageVO;
 import com.parttime.cservice.pojo.vo.ReferralRewardVO;
 import com.parttime.cservice.pojo.entity.ReferralConfig;
+import com.parttime.cservice.pojo.vo.InviteInfoVO;
 
 import java.util.List;
 
@@ -26,6 +27,8 @@ public interface ReferralService {
     PageVO<ReferralRewardVO> getReferralRewards(Long workerId, int page, int pageSize);
 
     List<ReferralConfig> getConfig();
+
+    InviteInfoVO getInviteInfo(String code);
 
     void updateConfig(List<ReferralConfig> configs);
 }

@@ -1,46 +1,73 @@
 <template>
   <view class="job-list-page">
-    <view class="search-section">
+    <view class="jobs-header">
+      <view class="greeting-row">
+        <view class="greeting-col">
+          <text class="greeting-text">{{ greetingText }}</text>
+          <text class="greeting-sub">{{ subGreetingText }}</text>
+        </view>
+        <view class="avatar-box" @click="goProfile">
+          <text class="avatar-emoji">👷</text>
+        </view>
+      </view>
       <view class="search-box">
-        <text class="search-icon">搜</text>
-        <input class="search-input" v-model="keyword" placeholder="搜索职位、公司" confirm-type="search" @confirm="onSearch" />
-        <text v-if="keyword" class="search-clear" @click="onSearch('')">×</text>
+        <text class="search-icon">🔍</text>
+        <input
+          class="search-input"
+          v-model="keyword"
+          placeholder="搜职位、公司或地点"
+          confirm-type="search"
+          @confirm="onSearch"
+        />
+        <text v-if="keyword" class="search-clear" @click.stop="clearSearch">×</text>
       </view>
     </view>
 
     <scroll-view class="category-scroll" scroll-x :show-scrollbar="false">
-      <view class="category-tabs">
-        <view v-for="cat in categories" :key="cat.key" class="category-tab" :class="{ active: categoryId === cat.id }" @click="onCategoryChange(cat.id)">
-          <text class="category-name">{{ cat.name }}</text>
+      <view class="category-chips">
+        <view
+          v-for="cat in categories"
+          :key="cat.key"
+          class="category-chip"
+          :class="{ active: categoryId === cat.id }"
+          @click="onCategoryChange(cat.id)"
+        >
+          <text class="chip-text">{{ cat.name }}</text>
         </view>
       </view>
     </scroll-view>
 
     <uni-load-more v-if="loading && page === 1" status="loading" />
 
-    <scroll-view class="job-scroll" scroll-y @scrolltolower="loadMore" :refresher-enabled="true" :refresher-triggered="refreshing" @refresherrefresh="onRefresh">
+    <scroll-view
+      class="job-scroll"
+      scroll-y
+      @scrolltolower="loadMore"
+      :refresher-enabled="true"
+      :refresher-triggered="refreshing"
+      @refresherrefresh="onRefresh"
+    >
       <view class="job-list-inner">
         <view v-for="job in jobList" :key="job.id" class="job-card" @click="goDetail(job.id)">
-          <view class="job-media">
-            <image v-if="job.imageUrl" class="job-image" :src="job.imageUrl" mode="aspectFill" />
-            <image v-else-if="job.companyLogo" class="job-image" :src="job.companyLogo" mode="aspectFill" />
-            <view v-else class="job-image placeholder">
-              <text>{{ job.iconText || (job.companyName || '?').slice(0, 1) }}</text>
-            </view>
+          <view class="job-card-top">
+            <text class="job-pay">{{ formatRates(job.rates, job.minRate, job.maxRate) }}</text>
+            <text v-if="hotTagText(job)" class="job-hot-tag">{{ hotTagText(job) }}</text>
           </view>
-          <view class="job-content">
-            <view class="job-card-header">
-              <text class="job-title">{{ job.title }}</text>
-              <text class="job-pay">{{ formatRates(job.rates, job.minRate, job.maxRate) }}</text>
+          <text class="job-title">{{ job.title }}</text>
+          <view class="job-meta">
+            <text class="job-meta-item">📍 {{ job.location || '附近' }}</text>
+            <text v-if="job.distanceKm != null" class="job-meta-item">📏 {{ job.distanceKm }}km</text>
+          </view>
+          <view class="job-tags">
+            <text v-for="(tag, idx) in getDisplayTags(job)" :key="idx" class="job-tag" :class="tagClass(tag)">{{ tag }}</text>
+          </view>
+          <view class="job-card-footer">
+            <view class="job-company">
+              <view class="company-logo">
+                <text>{{ (job.companyName || '企').slice(0, 1) }}</text>
+              </view>
+              <text class="company-name">{{ job.companyName || '优选企业' }}</text>
             </view>
-            <view class="job-meta">
-              <text class="job-location">{{ job.location || '附近' }}</text>
-              <text v-if="job.distanceKm != null" class="job-distance">距 {{ job.distanceKm }}km</text>
-            </view>
-            <view class="job-tags">
-              <text v-for="tag in getSettlementTags(job)" :key="tag" class="tag">{{ tag }}</text>
-            </view>
-            <text class="job-company">{{ job.companyName || '优选企业' }}</text>
           </view>
         </view>
 
@@ -58,8 +85,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
+import { ref, computed } from 'vue'
+import { onMounted } from 'vue'
 import { getCategories, getJobs } from '@/api/jobs'
 import InviteFloat from '@/components/InviteFloat.vue'
 import LoginSheet from '@/components/LoginSheet.vue'
@@ -84,6 +111,9 @@ type JobItem = {
   tags?: ({ id: number, name?: string | null, groupName?: string } | null)[]
   jobType?: string
   experience?: string
+  applyCount?: number
+  urgent?: boolean
+  newlyPosted?: boolean
 }
 
 const keyword = ref('')
@@ -99,6 +129,22 @@ const currentLocation = ref<{ latitude: number; longitude: number } | null>(null
 
 const allCategory = { id: undefined, name: '全部', key: 'all' }
 const categories = ref<JobCategory[]>([allCategory])
+
+const greetingText = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 6) return '夜深了'
+  if (hour < 9) return '早上好'
+  if (hour < 12) return '上午好'
+  if (hour < 14) return '中午好'
+  if (hour < 18) return '下午好'
+  return '晚上好'
+})
+
+const subGreetingText = computed(() => {
+  const count = jobList.value.length
+  if (count === 0) return '发现附近的好活'
+  return `附近有 ${count} 个热门职位`
+})
 
 function flattenCategories(list: JobCategory[], parentName?: string): JobCategory[] {
   return list.reduce((result: JobCategory[], item) => {
@@ -182,6 +228,12 @@ function onSearch(val?: string | SearchEvent) {
   fetchJobs(1)
 }
 
+function clearSearch() {
+  keyword.value = ''
+  page.value = 1
+  fetchJobs(1)
+}
+
 function onCategoryChange(id: number | undefined) {
   categoryId.value = id
   page.value = 1
@@ -204,6 +256,10 @@ function goDetail(id: number) {
   uni.navigateTo({ url: `/pages/jobs/jobDetail?id=${id}` })
 }
 
+function goProfile() {
+  uni.switchTab({ url: '/pages/profile/profile' })
+}
+
 function getSettlementTags(job: JobItem): string[] {
   if (Array.isArray(job.tags) && job.tags.length > 0) {
     const tagNames = job.tags.map((tag) => tag?.name?.trim()).filter(Boolean) as string[]
@@ -214,6 +270,28 @@ function getSettlementTags(job: JobItem): string[] {
   if (job.jobType) tags.push(job.jobType)
   if (job.experience) tags.push(job.experience)
   return tags.length > 0 ? tags : ['日结']
+}
+
+function getDisplayTags(job: JobItem): string[] {
+  return getSettlementTags(job).slice(0, 4)
+}
+
+function hotTagText(job: JobItem): string {
+  if (job.urgent) return '🔥 急招'
+  if (job.newlyPosted) return '✨ 新上'
+  return ''
+}
+
+function tagClass(tag: string): string {
+  const greenTags = ['日结', '包吃', '包住', '包三餐', '环境好', '免费培训', '轻松']
+  const orangeTags = ['周结', '月结', '周结工资', '月结工资']
+  const blueTags = ['无需经验', '时间自由', '灵活排班', '电动车提供']
+  const redTags = ['名额紧张', '快满了']
+  if (greenTags.some(t => tag.includes(t))) return 'tag-green'
+  if (orangeTags.some(t => tag.includes(t))) return 'tag-orange'
+  if (blueTags.some(t => tag.includes(t))) return 'tag-blue'
+  if (redTags.some(t => tag.includes(t))) return 'tag-red'
+  return 'tag-green'
 }
 
 function rateUnit(type: string): string {
@@ -238,7 +316,11 @@ async function refreshJobs() {
   fetchJobs(1)
 }
 
-onShow(refreshJobs)
+onMounted(() => {
+  if (jobList.value.length === 0) {
+    refreshJobs()
+  }
+})
 </script>
 
 <style scoped>
@@ -246,198 +328,319 @@ onShow(refreshJobs)
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #f6f7fb;
+  background: #f5f6fa;
 }
-.search-section {
-  padding: 24rpx 28rpx 18rpx;
-  background: linear-gradient(180deg, #ecfdf5 0%, #ffffff 100%);
+
+.jobs-header {
+  position: relative;
+  background: linear-gradient(135deg, #20c26b 0%, #1aab5a 55%, #169950 100%);
+  padding: 100rpx 32rpx 32rpx;
+  color: #fff;
+  overflow: hidden;
 }
+
+.jobs-header::before {
+  content: '';
+  position: absolute;
+  top: -100rpx;
+  right: -80rpx;
+  width: 300rpx;
+  height: 300rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.jobs-header::after {
+  content: '';
+  position: absolute;
+  bottom: -60rpx;
+  left: -40rpx;
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.greeting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28rpx;
+}
+
+.greeting-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.greeting-text {
+  font-size: 40rpx;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.greeting-sub {
+  font-size: 26rpx;
+  opacity: 0.85;
+  margin-top: 6rpx;
+}
+
+.avatar-box {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx solid rgba(255, 255, 255, 0.4);
+}
+
+.avatar-emoji {
+  font-size: 36rpx;
+}
+
 .search-box {
   display: flex;
   align-items: center;
-  height: 76rpx;
-  padding: 0 24rpx;
-  border-radius: 38rpx;
-  background: #f3f4f6;
+  height: 88rpx;
+  padding: 0 28rpx;
+  border-radius: 44rpx;
+  background: #fff;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
 }
+
 .search-icon {
-  width: 42rpx;
-  font-size: 24rpx;
-  color: #9ca3af;
+  font-size: 30rpx;
+  margin-right: 14rpx;
+  flex-shrink: 0;
 }
+
 .search-input {
   flex: 1;
-  height: 76rpx;
+  height: 88rpx;
   font-size: 28rpx;
-  color: #222;
+  color: #333;
 }
+
+.search-input::placeholder {
+  color: #bbb;
+}
+
 .search-clear {
   width: 48rpx;
+  height: 48rpx;
+  line-height: 44rpx;
   text-align: center;
-  font-size: 36rpx;
-  color: #9ca3af;
-}
-.category-scroll {
-  white-space: nowrap;
-  background: #fff;
-  border-bottom: 2rpx solid #f1f2f4;
-}
-.category-tabs {
-  display: inline-flex;
-  padding: 0 28rpx;
-}
-.category-tab {
-  display: inline-flex;
-  position: relative;
+  font-size: 40rpx;
+  color: #999;
   flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  max-width: 180rpx;
-  height: 86rpx;
-  margin-right: 42rpx;
-  font-size: 28rpx;
-  color: #6b7280;
 }
-.category-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
+
+.category-scroll {
+  background: #f5f6fa;
   white-space: nowrap;
+  padding: 24rpx 0 16rpx;
 }
-.category-tab.active {
-  color: #111827;
-  font-weight: 700;
+
+.category-chips {
+  display: inline-flex;
+  padding: 0 24rpx;
 }
-.category-tab.active::after {
-  position: absolute;
-  left: 50%;
-  bottom: 12rpx;
-  width: 34rpx;
-  height: 8rpx;
-  border-radius: 8rpx;
-  background: #07c160;
-  transform: translateX(-50%);
-  content: '';
+
+.category-chip {
+  flex-shrink: 0;
+  padding: 14rpx 32rpx;
+  margin-right: 16rpx;
+  border-radius: 36rpx;
+  background: #fff;
+  border: 1rpx solid #eee;
+  transition: all 0.2s ease;
 }
+
+.category-chip.active {
+  background: linear-gradient(135deg, #20c26b 0%, #1aab5a 100%);
+  border-color: transparent;
+  box-shadow: 0 6rpx 18rpx rgba(16, 185, 129, 0.35);
+}
+
+.chip-text {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.category-chip.active .chip-text {
+  color: #fff;
+  font-weight: 600;
+}
+
 .job-scroll {
   flex: 1;
   padding: 0;
 }
+
 .job-list-inner {
-  padding: 24rpx 28rpx 32rpx;
+  padding: 8rpx 24rpx 40rpx;
 }
+
 .empty-state {
   display: flex;
   justify-content: center;
-  padding: 120rpx 0;
+  padding: 200rpx 0;
 }
+
 .empty-text {
-  font-size: 32rpx;
+  font-size: 28rpx;
   color: #999;
 }
+
 .job-card {
-  display: flex;
-  padding: 24rpx;
-  margin-bottom: 22rpx;
-  border-radius: 24rpx;
-  background: #fff;
-  box-shadow: 0 10rpx 30rpx rgba(17, 24, 39, 0.06);
-}
-.job-card:active {
-  transform: scale(0.99);
-}
-.job-media {
-  flex-shrink: 0;
-  margin-right: 22rpx;
-}
-.job-image {
-  width: 132rpx;
-  height: 132rpx;
+  position: relative;
+  padding: 32rpx;
+  padding-left: 36rpx;
+  margin-bottom: 24rpx;
   border-radius: 20rpx;
-  background: #f5f5f5;
+  background: #fff;
+  box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.05), 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-.job-image.placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 42rpx;
-  font-weight: 700;
-  color: #07c160;
-  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+
+.job-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 6rpx;
+  background: linear-gradient(180deg, #20c26b 0%, #1aab5a 100%);
+  border-radius: 0 4rpx 4rpx 0;
 }
-.job-content {
-  flex: 1;
-  min-width: 0;
+
+.job-card:active {
+  transform: translateY(2rpx) scale(0.99);
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
 }
-.job-card-header {
+
+.job-card-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 14rpx;
+  margin-bottom: 12rpx;
 }
+
+.job-pay {
+  font-size: 48rpx;
+  font-weight: 800;
+  color: #20c26b;
+  line-height: 1.2;
+  letter-spacing: -1rpx;
+}
+
+.job-hot-tag {
+  flex-shrink: 0;
+  padding: 6rpx 18rpx;
+  border-radius: 20rpx;
+  font-size: 22rpx;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+}
+
 .job-title {
-  flex: 1;
-  min-width: 0;
+  display: block;
   font-size: 32rpx;
   font-weight: 700;
-  color: #111827;
-  line-height: 42rpx;
-}
-.job-pay {
-  flex-shrink: 0;
-  max-width: 260rpx;
-  margin-left: 16rpx;
-  font-size: 30rpx;
-  font-weight: 800;
-  color: #ff6a00;
-  line-height: 40rpx;
+  color: #1a1a2e;
+  line-height: 1.4;
+  margin-bottom: 16rpx;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
 .job-meta {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16rpx;
+  flex-wrap: wrap;
+  gap: 20rpx;
+  margin-bottom: 18rpx;
 }
-.job-location {
-  flex: 1;
-  min-width: 0;
-  font-size: 25rpx;
-  color: #6b7280;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.job-distance {
+
+.job-meta-item {
+  font-size: 24rpx;
+  color: #888;
   flex-shrink: 0;
-  margin-left: auto;
-  padding-left: 18rpx;
-  font-size: 26rpx;
-  font-weight: 700;
-  color: #07c160;
-  white-space: nowrap;
 }
+
 .job-tags {
   display: flex;
   flex-wrap: wrap;
-  margin-bottom: 16rpx;
+  gap: 12rpx;
+  margin-bottom: 24rpx;
 }
-.tag {
-  padding: 6rpx 14rpx;
-  margin-right: 12rpx;
-  margin-bottom: 8rpx;
+
+.job-tag {
+  padding: 6rpx 16rpx;
   border-radius: 8rpx;
-  background: #ecfdf5;
   font-size: 22rpx;
-  color: #07c160;
+  font-weight: 500;
+  flex-shrink: 0;
 }
+
+.job-tag.tag-green {
+  background: #e6f8ee;
+  color: #20c26b;
+}
+
+.job-tag.tag-orange {
+  background: #fff3e8;
+  color: #f59e0b;
+}
+
+.job-tag.tag-blue {
+  background: #eff6ff;
+  color: #3b82f6;
+}
+
+.job-tag.tag-red {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.job-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 20rpx;
+  border-top: 1rpx dashed #f0f0f0;
+}
+
 .job-company {
-  display: block;
-  font-size: 25rpx;
-  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.company-logo {
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: 10rpx;
+  background: linear-gradient(135deg, #20c26b 0%, #1aab5a 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22rpx;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.company-name {
+  font-size: 24rpx;
+  color: #999;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 300rpx;
 }
 </style>

@@ -3,6 +3,7 @@ package com.parttime.cservice.controller;
 import com.parttime.cservice.pojo.cmd.ReferralConfigUpdateCmd;
 import com.parttime.cservice.pojo.vo.ApiResponse;
 import com.parttime.cservice.pojo.vo.ReferralLinkVO;
+import com.parttime.cservice.pojo.vo.InviteInfoVO;
 import com.parttime.cservice.pojo.vo.ReferralPosterVO;
 import com.parttime.cservice.pojo.vo.ReferralStatsVO;
 import com.parttime.cservice.pojo.vo.RefereeVO;
@@ -31,6 +32,12 @@ public class ReferralController {
             return null;
         }
         return Long.valueOf(auth.getName());
+    }
+
+    @Operation(summary = "邀请落地页信息（公开）")
+    @GetMapping("/invite")
+    public InviteInfoVO getInviteInfo(@RequestParam("code") String code) {
+        return referralService.getInviteInfo(code);
     }
 
     @Operation(summary = "获取邀请链接")

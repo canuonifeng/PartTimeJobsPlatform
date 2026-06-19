@@ -2,6 +2,7 @@ package com.parttime.cservice.controller;
 
 import com.parttime.cservice.pojo.entity.ReferralConfig;
 import com.parttime.cservice.pojo.vo.ReferralLinkVO;
+import com.parttime.cservice.pojo.vo.InviteInfoVO;
 import com.parttime.cservice.pojo.vo.ReferralStatsVO;
 import com.parttime.cservice.pojo.vo.RefereeVO;
 import com.parttime.cservice.pojo.vo.PageVO;
@@ -178,5 +179,35 @@ class ReferralControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(java.util.Map.of("configs", List.of(config)))))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void getInviteInfo_withValidCode_shouldReturnInfo() throws Exception {
+        InviteInfoVO vo = new InviteInfoVO();
+        vo.setCode("ABC12345");
+        vo.setInviterName("测试用户");
+        vo.setInviterAvatar("https://example.com/avatar.jpg");
+        vo.setMiniProgramScheme("weixin://dl/business/?t=xxx");
+        when(referralService.getInviteInfo("ABC12345")).thenReturn(vo);
+
+        mockMvc.perform(get("/api/worker/referral/invite")
+                        .param("code", "ABC12345"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("ABC12345"))
+                .andExpect(jsonPath("$.inviterName").value("测试用户"))
+                .andExpect(jsonPath("$.miniProgramScheme").isNotEmpty());
+    }
+
+    @Test
+    void getInviteInfo_noAuthRequired_shouldReturn200() throws Exception {
+        InviteInfoVO vo = new InviteInfoVO();
+        vo.setCode("INVALID");
+        vo.setInviterName("零工平台");
+        when(referralService.getInviteInfo("INVALID")).thenReturn(vo);
+
+        mockMvc.perform(get("/api/worker/referral/invite")
+                        .param("code", "INVALID"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.inviterName").value("零工平台"));
     }
 }

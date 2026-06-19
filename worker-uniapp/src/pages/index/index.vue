@@ -1,105 +1,159 @@
 <template>
-  <scroll-view scroll-y class="home-page">
-    <view class="header">
-      <view class="greeting-row">
-        <view>
-          <text class="greeting">{{ greeting }}，{{ authStore.workerInfo?.name || '工人' }}</text>
-          <text class="date-line">{{ todayDate }} {{ todayWeekday }}</text>
+  <scroll-view class="home-page" scroll-y>
+    <view class="header-section">
+      <view class="greeting-bar">
+        <view class="greeting-col">
+          <text class="greeting-text">{{ greeting }}，{{ authStore.workerInfo?.name || '工人' }}</text>
+          <text class="greeting-sub">{{ todayDate }} {{ todayWeekday }} · 今日 {{ todayShifts.length }} 个班次</text>
         </view>
-        <view class="shift-count">
-          <text class="shift-count-num">{{ todayShifts.length }}</text>
-          <text class="shift-count-text">今日班次</text>
+        <view class="msg-icon" @click="goMessage">
+          <text>💬</text>
         </view>
+      </view>
+
+      <view v-if="!authStore.token" class="login-hint">
+        <text class="hint-title">登录后查看排班</text>
+        <button class="hint-btn" @click="openLoginSheet({ success: refreshHome })">去登录</button>
       </view>
     </view>
 
-    <view class="content">
-      <view class="stats-card">
-        <view class="stat-item"><text class="stat-value">{{ formatNumber(stats.monthHours) }}</text><text class="stat-label">本月工时</text></view>
-        <view class="stat-line"></view>
-        <view class="stat-item"><text class="stat-value">{{ formatNumber(stats.monthIncome) }}</text><text class="stat-label">本月收入</text></view>
-        <view class="stat-line"></view>
-        <view class="stat-item"><text class="stat-value">{{ stats.attendanceDays }}</text><text class="stat-label">出勤天数</text></view>
+    <view class="content-section">
+      <view v-if="authStore.token && currentShift" class="today-shift-card" @click="openShiftDetail(currentShift)">
+        <view class="shift-card-time">
+          <text class="shift-time-text">{{ currentShift.startTime }} - {{ currentShift.endTime }}</text>
+          <text class="shift-badge working">进行中</text>
+        </view>
+        <text class="shift-card-title">{{ currentShift.jobTitle }}</text>
+        <view class="shift-card-loc">
+          <text class="shift-loc-text">📍 {{ currentShift.location || '暂无地点' }}</text>
+          <text v-if="currentShiftDistance" class="shift-dist-tag">{{ currentShiftDistance }}</text>
+        </view>
       </view>
 
-      <view v-if="!authStore.token" class="card login-card">
-        <text class="empty-title">请先登录</text>
-        <text class="empty-desc">登录后可以看到今日排班和签到状态</text>
-        <view class="btn-primary" @click="openLoginSheet({ success: refreshHome })">去登录</view>
+      <view v-if="authStore.token && currentShift" class="clock-btn-wrap">
+        <view
+          class="big-clock-btn"
+          :class="buttonState.type"
+          @click="handleClockAction"
+        >
+          <view class="btn-pulse-ring"></view>
+          <text class="btn-main-text">{{ buttonState.mainText }}</text>
+          <text class="btn-sub-text">{{ buttonState.subText }}</text>
+          <view class="btn-dist-tag">
+            <text>📍 {{ buttonState.distText }}</text>
+          </view>
+        </view>
       </view>
 
-      <template v-else>
-        <view class="section-title-row">
-          <text class="section-title">今日排班</text>
-          <text class="section-subtitle">{{ todayShifts.length }} 个班次待处理</text>
+      <view v-if="authStore.token && currentShift" class="status-tips">
+        <text class="status-tip">
+          <text class="tip-dot" :class="positionOk ? 'ok' : 'warn'"></text>
+          {{ positionOk ? '位置正常' : '位置异常' }}
+        </text>
+        <text class="status-tip">
+          <text class="tip-dot ok"></text>
+          网络良好
+        </text>
+        <text class="status-tip">
+          <text class="tip-dot" :class="buttonState.timeStatus"></text>
+          {{ buttonState.timeTip }}
+        </text>
+      </view>
+
+      <view v-if="!authStore.token" class="clock-btn-wrap">
+        <view class="big-clock-btn disabled-btn" @click="openLoginSheet({ success: refreshHome })">
+          <text class="btn-main-text">登录</text>
+          <text class="btn-sub-text">查看今日排班</text>
+        </view>
+      </view>
+
+      <view class="stats-row">
+        <view class="stat-card">
+          <text class="stat-num">{{ formatNumber(stats.monthHours) }}</text>
+          <text class="stat-label">本月工时</text>
+        </view>
+        <view class="stat-card">
+          <text class="stat-num">¥{{ formatNumber(stats.monthIncome) }}</text>
+          <text class="stat-label">本月收入</text>
+        </view>
+        <view class="stat-card">
+          <text class="stat-num">{{ stats.attendanceDays }}</text>
+          <text class="stat-label">出勤天数</text>
+        </view>
+      </view>
+
+      <view class="section-card">
+        <view class="section-header">
+          <text class="section-title">今日班次</text>
+          <text class="section-more" @click="goSchedule">全部排班 →</text>
         </view>
 
-        <view v-if="todayShifts.length === 0" class="card login-card">
-          <text class="empty-title">今日暂无排班</text>
+        <view v-if="todayShifts.length === 0" class="empty-shifts">
+          <text class="empty-text">今日暂无排班</text>
           <text class="empty-desc">有新的排班会在这里显示</text>
         </view>
 
-        <view v-for="shift in todayShifts" :key="shift.id" class="card shift-card">
-          <view class="shift-header">
-            <view class="job-left">
-              <view class="job-icon"><text>岗</text></view>
-          <view class="job-info">
-            <text class="job-title">{{ shift.jobTitle }}</text>
-            <view v-if="shift.location" class="location-row" @click="handleOpenLocation(shift)">
-              <text class="job-location">{{ shift.location }}</text>
-              <text class="map-link">导航</text>
+        <view v-else class="shift-list">
+          <view
+            v-for="(shift, idx) in todayShifts"
+            :key="shift.id"
+            class="shift-item"
+            :class="{ 'shift-current': isCurrentShift(shift), 'shift-done': isShiftDone(shift) }"
+            @click="openShiftDetail(shift)"
+          >
+            <view class="shift-indicator" :class="shiftIndicatorClass(shift)"></view>
+            <view class="shift-main">
+              <view class="shift-top-row">
+                <text class="shift-time">{{ shift.startTime }} - {{ shift.endTime }}</text>
+                <text class="shift-status" :class="shiftStatusClass(shift)">{{ shiftStatusLabel(shift) }}</text>
+              </view>
+              <text class="shift-name">{{ shift.jobTitle }}</text>
+              <view class="shift-bottom">
+                <text class="shift-loc">📍 {{ shift.location || '暂无地点' }}</text>
+                <text v-if="distanceLabel(shift)" class="shift-dist">{{ distanceLabel(shift) }}</text>
+              </view>
             </view>
-          </view>
-            </view>
-              <view class="status-badge" :class="displayStatusClass(shift)">{{ displayStatusLabel(shift) }}</view>
-          </view>
-          <view class="time-box">
-            <view>
-              <text class="time-label">工作时间</text>
-              <text class="time-value">{{ shift.startTime }} - {{ shift.endTime }}</text>
-            </view>
-            <view class="date-box">
-              <text class="date-day">{{ shift.date?.slice(8) }}</text>
-              <text class="date-month">{{ shift.date?.slice(5, 7) }}月</text>
-            </view>
-          </view>
-          <view class="record-row">
-            <view class="record-item">
-              <text class="record-label">签到</text>
-              <text class="record-value">{{ shift.checkInTime || '未签到' }}</text>
-            </view>
-            <view class="record-item">
-              <text class="record-label">签退</text>
-              <text class="record-value">{{ shift.checkOutTime || '未签退' }}</text>
-            </view>
-          </view>
-          <view class="shift-actions">
-            <button class="action-btn check-in" :class="{ disabled: isActionDisabled(shift, 'in') }" :disabled="isActionDisabled(shift, 'in')" @click="handleCheckIn(shift)">签到</button>
-            <button class="action-btn check-out" :class="{ disabled: isActionDisabled(shift, 'out') }" :disabled="isActionDisabled(shift, 'out')" @click="handleCheckOut(shift)">签退</button>
           </view>
         </view>
+      </view>
 
-        <view class="card future-card">
-          <view class="card-header">
-            <text class="section-title">未来排班</text>
-            <text class="more" @click="navTo('/pages/schedule/schedule')">全部</text>
-          </view>
-          <view class="future-list">
-            <view v-if="futureShifts.length === 0" class="future-item">
-              <text class="empty-desc">暂无未来排班</text>
-            </view>
-            <view v-for="shift in futureShifts.slice(0, 5)" :key="shift.id" class="future-item">
-              <view class="future-date-box"><text class="future-day">{{ shift.date?.slice(8) }}</text><text class="future-month">{{ shift.date?.slice(5, 7) }}月</text></view>
-              <view class="future-left"><text class="future-job">{{ shift.jobTitle }}</text><text class="future-location">{{ formatAddress(shift.location) }}</text></view>
-              <view class="future-right"><text class="future-time">{{ shift.startTime }}</text><text class="future-time">{{ shift.endTime }}</text></view>
-            </view>
+      <view class="entry-card" @click="goClockInRecord">
+        <view class="entry-left">
+          <view class="entry-icon">📋</view>
+          <text class="entry-text">打卡记录</text>
+        </view>
+        <text class="entry-arrow">›</text>
+      </view>
+
+      <view v-if="authStore.token && futureShifts.length > 0" class="section-card">
+        <view class="section-header">
+          <text class="section-title">未来排班</text>
+          <text class="section-more" @click="goSchedule">全部 →</text>
+        </view>
+        <view class="future-list">
+          <view v-for="shift in futureShifts.slice(0, 3)" :key="shift.id" class="future-item">
+            <text class="future-date">{{ formatShortDate(shift.date) }}</text>
+            <text class="future-name">{{ shift.jobTitle }}</text>
+            <text class="future-time">{{ shift.startTime }}</text>
           </view>
         </view>
-      </template>
+      </view>
+
+      <view class="bottom-pad"></view>
     </view>
+
+    <SuccessOverlay
+      :visible="showSuccess"
+      :title="successTitle"
+      :description="successDesc"
+      primary-text="知道了"
+      icon="✅"
+      @primary="showSuccess = false"
+    />
+
+    <LoginSheet />
+    <InviteFloat />
   </scroll-view>
-  <LoginSheet />
-  <InviteFloat />
 </template>
 
 <script setup lang="ts">
@@ -111,6 +165,7 @@ import { checkIn, checkOut } from '@/api/attendance'
 import { getCheckInRadius } from '@/api/config'
 import InviteFloat from '@/components/InviteFloat.vue'
 import LoginSheet from '@/components/LoginSheet.vue'
+import SuccessOverlay from '@/components/SuccessOverlay.vue'
 import { openLoginSheet } from '@/utils/loginSheet'
 
 const authStore = useAuthStore()
@@ -121,6 +176,9 @@ const submittingKey = ref('')
 const countdown = ref('')
 let countdownTimer: any = null
 const currentLocation = ref<{ lat: number; lng: number } | null>(null)
+const showSuccess = ref(false)
+const successTitle = ref('')
+const successDesc = ref('')
 
 type Shift = {
   id: number
@@ -155,7 +213,140 @@ const todayDate = computed(() => {
 })
 
 const todayWeekday = computed(() => {
-  return ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'][new Date().getDay()]
+  return ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][new Date().getDay()]
+})
+
+const positionOk = computed(() => {
+  if (!currentShift.value) return true
+  if (!currentLocation.value) return true
+  return true
+})
+
+const currentShift = computed<Shift | null>(() => {
+  if (todayShifts.value.length === 0) return null
+  const now = new Date()
+  const onDuty = todayShifts.value.find(s => s.status === 'ON_DUTY' || s.status === 'LATE')
+  if (onDuty) return onDuty
+  const next = todayShifts.value.find(s => {
+    if (s.status !== 'SCHEDULED') return false
+    const end = parseShiftDateTime(s.date, s.endTime)
+    return now < end
+  })
+  if (next) return next
+  return todayShifts.value[0]
+})
+
+const currentShiftDistance = computed(() => {
+  if (!currentShift.value) return ''
+  return distanceLabel(currentShift.value)
+})
+
+const buttonState = computed(() => {
+  const shift = currentShift.value
+  if (!shift) {
+    return { type: 'idle', mainText: '今日无班', subText: '好好休息', distText: '--', timeStatus: 'ok', timeTip: '休息中' }
+  }
+  const now = new Date()
+  const start = parseShiftDateTime(shift.date, shift.startTime)
+  const end = parseShiftDateTime(shift.date, shift.endTime)
+  const status = shift.status
+
+  if (status === 'ON_DUTY' || status === 'LATE') {
+    const actualStart = shift.checkInTime
+      ? parseShiftDateTime(shift.date, shift.checkInTime)
+      : start
+    const workedMs = now.getTime() - actualStart.getTime()
+    const safeMs = Math.max(0, workedMs)
+    const workedH = Math.floor(safeMs / 3600000)
+    const workedM = Math.floor((safeMs % 3600000) / 60000)
+    return {
+      type: 'working',
+      mainText: '签退',
+      subText: `已工作 ${workedH}小时${workedM}分`,
+      distText: currentShiftDistance.value || '位置正常',
+      timeStatus: 'ok',
+      timeTip: '工作中'
+    }
+  }
+
+  if (status === 'COMPLETED' || status === 'OFF_DUTY' || isCheckedOutAfterShiftEnd(shift)) {
+    return {
+      type: 'done',
+      mainText: '已完成 ✓',
+      subText: '辛苦了',
+      distText: '本班次已结束',
+      timeStatus: 'ok',
+      timeTip: '已完成'
+    }
+  }
+
+  if (status === 'ABSENT') {
+    return {
+      type: 'absent',
+      mainText: '缺勤',
+      subText: '本班次已记录缺勤',
+      distText: '--',
+      timeStatus: 'warn',
+      timeTip: '缺勤'
+    }
+  }
+
+  const diffMs = start.getTime() - now.getTime()
+  const dist = currentShiftDistance.value || '获取中'
+
+  if (diffMs > 0) {
+    const mins = Math.floor(diffMs / 60000)
+    const hours = Math.floor(mins / 60)
+    const remainText = hours > 0 ? `距上班还有${hours}小时${mins % 60}分` : `距上班还有${mins}分钟`
+    return {
+      type: 'ready',
+      mainText: '签到',
+      subText: remainText,
+      distText: dist,
+      timeStatus: 'info',
+      timeTip: '提前打卡'
+    }
+  }
+
+  const lateMs = now.getTime() - start.getTime()
+  const lateMins = Math.floor(lateMs / 60000)
+  if (lateMins > 0 && now < end) {
+    return {
+      type: 'late',
+      mainText: '迟到签到',
+      subText: `已迟到${lateMins}分钟`,
+      distText: dist,
+      timeStatus: 'warn',
+      timeTip: '迟到'
+    }
+  }
+
+  return {
+    type: 'ready',
+    mainText: '签到',
+    subText: '已到签到时间',
+    distText: dist,
+    timeStatus: 'ok',
+    timeTip: '准时打卡'
+  }
+})
+
+const sortedShifts = computed(() => {
+  return [...shifts.value].sort((a, b) => {
+    const dateDiff = String(a.date).localeCompare(String(b.date))
+    if (dateDiff !== 0) return dateDiff
+    return String(a.startTime).localeCompare(String(b.startTime))
+  })
+})
+
+const todayShifts = computed(() => {
+  const today = formatDateKey(new Date())
+  return sortedShifts.value.filter((shift) => shift.date === today)
+})
+
+const futureShifts = computed(() => {
+  const today = formatDateKey(new Date())
+  return sortedShifts.value.filter((shift) => shift.date > today)
 })
 
 function formatDateKey(date: Date) {
@@ -163,6 +354,12 @@ function formatDateKey(date: Date) {
   const m = String(date.getMonth() + 1).padStart(2, '0')
   const d = String(date.getDate()).padStart(2, '0')
   return `${y}-${m}-${d}`
+}
+
+function formatShortDate(dateStr: string) {
+  if (!dateStr) return ''
+  const d = String(dateStr)
+  return d.length > 5 ? d.slice(5) : d
 }
 
 function formatNumber(value: number) {
@@ -209,18 +406,30 @@ function isCheckedOutAfterShiftEnd(shift: Shift) {
   return parseShiftDateTime(shift.date, shift.checkOutTime).getTime() >= parseShiftDateTime(shift.date, shift.endTime).getTime()
 }
 
+function isCurrentShift(shift: Shift) {
+  return currentShift.value?.id === shift.id
+}
 
-function handleOpenLocation(shift: Shift) {
-  if (!shift.lat || !shift.lng) {
-    uni.showToast({ title: '暂无经纬度，无法导航', icon: 'none' })
-    return
-  }
-  uni.openLocation({
-    latitude: shift.lat,
-    longitude: shift.lng,
-    name: shift.location || shift.jobTitle,
-    address: shift.location
-  })
+function isShiftDone(shift: Shift) {
+  return shift.status === 'COMPLETED' || shift.status === 'OFF_DUTY' || isCheckedOutAfterShiftEnd(shift)
+}
+
+function shiftIndicatorClass(shift: Shift) {
+  if (isShiftDone(shift)) return 'done'
+  if (isCurrentShift(shift)) return 'current'
+  return 'pending'
+}
+
+function shiftStatusLabel(shift: Shift) {
+  if (isCheckedOutAfterShiftEnd(shift)) return '已完成'
+  return statusLabel(shift.status)
+}
+
+function shiftStatusClass(shift: Shift) {
+  if (isShiftDone(shift)) return 'done'
+  if (isAbnormalStatus(shift.status)) return 'abnormal'
+  if (shift.status === 'ON_DUTY' || shift.status === 'LATE') return 'active'
+  return 'pending'
 }
 
 function statusLabel(status?: string) {
@@ -229,59 +438,12 @@ function statusLabel(status?: string) {
   if (status === 'ABSENT') return '缺勤'
   if (status === 'LATE') return '迟到'
   if (status === 'EARLY_LEAVE') return '早退'
-  if (status === 'LATE_EARLY_LEAVE') return '迟到并早退'
+  if (status === 'LATE_EARLY_LEAVE') return '迟到早退'
   return '待上岗'
 }
 
-function displayStatusLabel(shift: Shift) {
-  if (isAbnormalStatus(shift.status)) return statusLabel(shift.status)
-  if (isCheckedOutAfterShiftEnd(shift)) return '已完成'
-  return statusLabel(shift.status)
-}
-
-function displayStatusClass(shift: Shift) {
-  if (isAbnormalStatus(shift.status)) return 'status-red'
-  if (isCheckedOutAfterShiftEnd(shift)) return 'status-gray'
-  return statusClass(shift.status)
-}
-
-function statusClass(status?: string) {
-  if (status === 'ON_DUTY') return 'status-green'
-  if (status === 'COMPLETED' || status === 'OFF_DUTY') return 'status-gray'
-  if (isAbnormalStatus(status)) return 'status-red'
-  return 'status-yellow'
-}
-
-function tipClass(shift: Shift) {
-  if (isAbnormalStatus(shift.status)) return 'tip-red'
-  if (shift.status === 'ON_DUTY') return 'tip-green'
-  if (shift.status === 'COMPLETED' || shift.status === 'OFF_DUTY') return 'tip-gray'
-  return 'tip-yellow'
-}
-
-function tipText(shift: Shift) {
-  if (shift.status === 'LATE_EARLY_LEAVE') return '已记录迟到并早退，请留意考勤规则'
-  if (isCheckedOutAfterShiftEnd(shift)) return isAbnormalStatus(shift.status) ? '已记录考勤异常，请留意考勤规则' : '本班次已完成，辛苦了'
-  if (shift.status === 'ON_DUTY' || shift.status === 'LATE') return '已签到，完成工作后可在此签退'
-  if (shift.status === 'COMPLETED' || shift.status === 'OFF_DUTY') return '本班次已完成，辛苦了'
-  if (shift.status === 'EARLY_LEAVE') return '已记录早退，请留意考勤规则'
-  if (shift.status === 'ABSENT') return '本班次已记录缺勤'
-  const now = new Date()
-  const start = parseShiftDateTime(shift.date, shift.startTime)
-  const diffMs = start.getTime() - now.getTime()
-  if (diffMs > 3600000) return '还未到签到时间，请提前规划路线'
-  if (diffMs > 0) return `距离签到还有${countdown.value || '00:00:00'}`
-  const lateMins = Math.max(0, Math.floor((now.getTime() - start.getTime()) / 60000))
-  return lateMins > 0 ? `迟到${lateMins}分钟，点击签到` : '已到签到时间，请及时签到'
-}
-
-function canCheckIn(shift: Shift) {
-  return !['ON_DUTY', 'OFF_DUTY', 'COMPLETED', 'ABSENT', 'LATE', 'EARLY_LEAVE', 'LATE_EARLY_LEAVE'].includes(shift.status)
-}
-
-function canCheckOut(shift: Shift) {
-  if (isCheckedOutAfterShiftEnd(shift)) return false
-  return shift.status === 'ON_DUTY' || shift.status === 'LATE' || shift.status === 'EARLY_LEAVE' || shift.status === 'LATE_EARLY_LEAVE'
+function isAbnormalStatus(status?: string) {
+  return status === 'ABSENT' || status === 'LATE' || status === 'EARLY_LEAVE' || status === 'LATE_EARLY_LEAVE'
 }
 
 function hasCheckedIn(shift: Shift) {
@@ -293,53 +455,13 @@ function hasCheckedOut(shift: Shift) {
   return ['COMPLETED', 'EARLY_LEAVE', 'LATE_EARLY_LEAVE'].includes(shift.status)
 }
 
-function isAbnormalStatus(status?: string) {
-  return status === 'ABSENT' || status === 'LATE' || status === 'EARLY_LEAVE' || status === 'LATE_EARLY_LEAVE'
+function canCheckIn(shift: Shift) {
+  return !['ON_DUTY', 'OFF_DUTY', 'COMPLETED', 'ABSENT', 'LATE', 'EARLY_LEAVE', 'LATE_EARLY_LEAVE'].includes(shift.status)
 }
 
-function isActionDisabled(shift: Shift, type: 'in' | 'out') {
-  if (submittingKey.value) return true
-  if (type === 'in') return hasCheckedIn(shift) || hasCheckedOut(shift) || shift.status === 'ABSENT'
-  return !canCheckOut(shift) || !hasCheckedIn(shift) || shift.status === 'ABSENT' || shift.status === 'OFF_DUTY' || shift.status === 'COMPLETED'
-}
-
-const sortedShifts = computed(() => {
-  return [...shifts.value].sort((a, b) => {
-    const dateDiff = String(a.date).localeCompare(String(b.date))
-    if (dateDiff !== 0) return dateDiff
-    return String(a.startTime).localeCompare(String(b.startTime))
-  })
-})
-
-const todayShifts = computed(() => {
-  const today = formatDateKey(new Date())
-  return sortedShifts.value.filter((shift) => shift.date === today)
-})
-
-const futureShifts = computed(() => {
-  const today = formatDateKey(new Date())
-  return sortedShifts.value.filter((shift) => shift.date > today)
-})
-
-function startCountdown() {
-  clearInterval(countdownTimer)
-  countdownTimer = setInterval(() => {
-    const nextShift = todayShifts.value.find((shift) => shift.id > 0 && shift.status === 'SCHEDULED')
-    if (!nextShift) {
-      countdown.value = ''
-      return
-    }
-    const start = parseShiftDateTime(nextShift.date, nextShift.startTime)
-    const diff = start.getTime() - Date.now()
-    if (diff <= 0) {
-      countdown.value = ''
-      return
-    }
-    const h = Math.floor(diff / 3600000)
-    const m = Math.floor((diff % 3600000) / 60000)
-    const s = Math.floor((diff % 60000) / 1000)
-    countdown.value = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
-  }, 1000)
+function canCheckOut(shift: Shift) {
+  if (isCheckedOutAfterShiftEnd(shift)) return false
+  return shift.status === 'ON_DUTY' || shift.status === 'LATE' || shift.status === 'EARLY_LEAVE' || shift.status === 'LATE_EARLY_LEAVE'
 }
 
 function calcDistance(lat1: number, lng1: number, lat2: number, lng2: number) {
@@ -355,6 +477,14 @@ function calcDistance(lat1: number, lng1: number, lat2: number, lng2: number) {
 function formatDistance(meters: number) {
   if (meters < 1000) return `${Math.round(meters)}米`
   return `${(meters / 1000).toFixed(meters < 10000 ? 1 : 0)}km`
+}
+
+function distanceLabel(shift: Shift) {
+  if (shift.distance) return shift.distance
+  if (shift.lat && shift.lng && currentLocation.value) {
+    return formatDistance(calcDistance(currentLocation.value.lat, currentLocation.value.lng, shift.lat, shift.lng))
+  }
+  return ''
 }
 
 async function getLocation(showError = true): Promise<{ lat: number; lng: number } | null> {
@@ -388,45 +518,58 @@ async function checkDistance(shift: Shift): Promise<boolean> {
   return true
 }
 
-async function handleCheckIn(shift: Shift) {
-  if (isActionDisabled(shift, 'in')) return
+async function handleClockAction() {
+  const shift = currentShift.value
+  if (!shift) return
+  if (!authStore.token) {
+    openLoginSheet({ success: refreshHome })
+    return
+  }
+  if (buttonState.value.type === 'working') {
+    await doCheckOut(shift)
+  } else if (buttonState.value.type === 'done' || buttonState.value.type === 'absent') {
+    return
+  } else {
+    await doCheckIn(shift)
+  }
+}
+
+async function doCheckIn(shift: Shift) {
+  if (hasCheckedIn(shift)) return
   const ok = await checkDistance(shift)
   if (!ok) return
-  submittingKey.value = `${shift.id}:in`
-  const now = new Date()
-  const start = parseShiftDateTime(shift.date, shift.startTime)
-  const isLate = now > start
+  checking.value = true
   try {
-    await checkIn({
+    const res: any = await checkIn({
       shiftId: shift.id,
       lat: currentLocation.value?.lat,
       lng: currentLocation.value?.lng
     })
     const target = shifts.value.find(s => s.id === shift.id)
     if (target) {
-      target.status = isLate ? 'LATE' : 'ON_DUTY'
-      target.checkInTime = normalizeTime(new Date().toTimeString())
+      const status = res?.status || ''
+      target.status = status && status !== 'SCHEDULED' ? status : 'ON_DUTY'
+      target.checkInTime = normalizeTime(res?.checkInTime || new Date().toTimeString())
     }
-    if (isLate) {
-      const lateMins = Math.round((now.getTime() - start.getTime()) / 60000)
-      uni.showModal({ title: '提示', content: `已迟到${lateMins}分钟，签到成功`, showCancel: false })
-    } else {
-      uni.showToast({ title: '签到成功', icon: 'success' })
-    }
+    successTitle.value = '签到成功'
+    const checkInTime = res?.checkInTime ? normalizeTime(res.checkInTime) : normalizeTime(new Date().toTimeString())
+    const late = statusLabel(res?.status) === '迟到'
+    successDesc.value = late
+      ? `签到时间 ${checkInTime}（迟到）\n开始工作，加油！`
+      : `签到时间 ${checkInTime}\n开始工作，加油！`
+    showSuccess.value = true
   } catch (e: any) {
     uni.showToast({ title: e?.message || '签到失败', icon: 'none' })
   } finally {
-    submittingKey.value = ''
+    checking.value = false
   }
 }
 
-async function handleCheckOut(shift: Shift) {
-  if (isActionDisabled(shift, 'out')) return
+async function doCheckOut(shift: Shift) {
+  if (!canCheckOut(shift)) return
   const ok = await checkDistance(shift)
   if (!ok) return
-  submittingKey.value = `${shift.id}:out`
-  const now = new Date()
-  const end = parseShiftDateTime(shift.date, shift.endTime)
+  checking.value = true
   try {
     const res: any = await checkOut({
       shiftId: shift.id,
@@ -434,64 +577,81 @@ async function handleCheckOut(shift: Shift) {
       lng: currentLocation.value?.lng
     })
     const target = shifts.value.find(s => s.id === shift.id)
-    let finalStatus = ''
     if (target) {
       const backendStatus = res?.status || ''
-      if (backendStatus === 'COMPLETED') {
-        target.status = 'OFF_DUTY'
-        finalStatus = 'OFF_DUTY'
-      } else if (backendStatus === 'EARLY_LEAVE') {
-        target.status = 'EARLY_LEAVE'
-        finalStatus = 'EARLY_LEAVE'
-      } else if (backendStatus === 'LATE_EARLY_LEAVE') {
-        target.status = 'LATE_EARLY_LEAVE'
-        finalStatus = 'LATE_EARLY_LEAVE'
-      } else if (backendStatus === 'LATE') {
-        target.status = 'LATE'
-        finalStatus = 'LATE'
-      } else {
-        const fallback = now < end ? 'EARLY_LEAVE' : 'OFF_DUTY'
-        target.status = fallback
-        finalStatus = fallback
-      }
+      if (backendStatus === 'COMPLETED') target.status = 'OFF_DUTY'
+      else if (backendStatus === 'EARLY_LEAVE') target.status = 'EARLY_LEAVE'
+      else if (backendStatus === 'LATE_EARLY_LEAVE') target.status = 'LATE_EARLY_LEAVE'
+      else target.status = backendStatus || 'OFF_DUTY'
       target.checkOutTime = normalizeTime(res?.checkOutTime || new Date().toISOString())
     }
+    successTitle.value = '签退成功'
+    const checkOutTime = res?.checkOutTime ? normalizeTime(res.checkOutTime) : normalizeTime(new Date().toTimeString())
+    successDesc.value = `签退时间 ${checkOutTime}\n辛苦了，今天干得不错！`
+    showSuccess.value = true
     const amount = Number(res?.payablePay || res?.scheduledPay || 0)
-    const isAbnormal = isAbnormalStatus(finalStatus)
-    if (amount <= 0) {
-      uni.showToast({ title: '签退成功', icon: 'success' })
-    } else if (res?.autoSettled) {
-      uni.showModal({
-        title: '薪资已到账',
-        content: `已收到 ¥${amount.toFixed(2)} 薪资，去提现？`,
-        confirmText: '去提现',
-        cancelText: '不了',
-        success: (modalRes) => {
-          if (modalRes.confirm) {
-            uni.navigateTo({ url: '/pages/earnings/earnings' })
+    if (amount > 0) {
+      setTimeout(() => {
+        uni.showModal({
+          title: '薪资已结算',
+          content: `本次预计 ¥${amount.toFixed(2)}，请到收入明细查看`,
+          confirmText: '去查看',
+          cancelText: '知道了',
+          success: (modalRes) => {
+            if (modalRes.confirm) {
+              uni.navigateTo({ url: '/pages/earnings/earnings' })
+            }
           }
-        }
-      })
-    } else if (isAbnormal) {
-      uni.showModal({
-        title: '结算确认',
-        content: `本次${statusLabel(finalStatus)}，预计结算 ¥${amount.toFixed(2)}，请到收入明细确认`,
-        confirmText: '去确认',
-        cancelText: '知道了',
-        success: (modalRes) => {
-          if (modalRes.confirm) {
-            uni.navigateTo({ url: '/pages/earnings/earnings' })
-          }
-        }
-      })
-    } else {
-      uni.showToast({ title: '签退成功', icon: 'success' })
+        })
+      }, 500)
     }
   } catch (e: any) {
     uni.showToast({ title: e?.message || '签退失败', icon: 'none' })
   } finally {
-    submittingKey.value = ''
+    checking.value = false
   }
+}
+
+function openShiftDetail(shift: Shift) {
+  uni.navigateTo({ url: `/pages/attendance/clockIn?shiftId=${shift.id}` })
+}
+
+function goSchedule() {
+  uni.navigateTo({ url: '/pages/schedule/schedule' })
+}
+
+function goClockInRecord() {
+  uni.navigateTo({ url: '/pages/attendance/clockIn' })
+}
+
+function goMessage() {
+  uni.switchTab({ url: '/pages/message/message' })
+}
+
+function startCountdown() {
+  clearInterval(countdownTimer)
+  countdownTimer = setInterval(() => {
+    const nextShift = todayShifts.value.find((shift) => shift.id > 0 && shift.status === 'SCHEDULED')
+    if (!nextShift) {
+      countdown.value = ''
+      return
+    }
+    const start = parseShiftDateTime(nextShift.date, nextShift.startTime)
+    const diff = start.getTime() - Date.now()
+    if (diff <= 0) {
+      countdown.value = ''
+      return
+    }
+    const h = Math.floor(diff / 3600000)
+    const m = Math.floor((diff % 3600000) / 60000)
+    const s = Math.floor((diff % 60000) / 1000)
+    countdown.value = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+  }, 1000)
+}
+
+function stopCountdown() {
+  clearInterval(countdownTimer)
+  countdownTimer = null
 }
 
 async function loadShifts() {
@@ -526,41 +686,6 @@ async function loadStats() {
   }
 }
 
-function navTo(url: string) {
-  uni.navigateTo({ url })
-}
-
-function formatAddress(addr: string) {
-  if (!addr) return '暂无地点'
-  return addr.replace(/^(北京市|上海市|天津市|重庆市|.*?省|.*?市|.*?区|.*?县)/, '')
-}
-
-function openMap(shift: Shift) {
-  if (!shift.lat || !shift.lng) {
-    uni.showToast({ title: '暂无可导航坐标', icon: 'none' })
-    return
-  }
-  uni.openLocation({
-    latitude: shift.lat,
-    longitude: shift.lng,
-    address: shift.location,
-    name: shift.location || shift.jobTitle || '工作地点',
-    fail: () => uni.showToast({ title: '打开地图失败', icon: 'none' })
-  })
-}
-
-function distanceLabel(shift: Shift) {
-  if (shift.distance) return shift.distance
-
-  if (shift.lat && shift.lng && currentLocation.value) return formatDistance(calcDistance(currentLocation.value.lat, currentLocation.value.lng, shift.lat, shift.lng))
-  return ''
-}
-
-function stopCountdown() {
-  clearInterval(countdownTimer)
-  countdownTimer = null
-}
-
 async function refreshHome() {
   await authStore.loadSession()
   if (!authStore.token) {
@@ -581,472 +706,626 @@ onUnload(stopCountdown)
 
 <style scoped>
 .home-page {
-  min-height: 100vh;
-  background: #f6f8f7;
+  height: 100vh;
+  background: #f5f6fa;
 }
 
-.header {
-  background: linear-gradient(135deg, #18c86b 0%, #08a95a 56%, #078a49 100%);
-  padding: 56rpx 32rpx 150rpx;
+.header-section {
+  position: relative;
+  background: linear-gradient(135deg, #20c26b 0%, #1aab5a 55%, #169950 100%);
+  padding: 80rpx 32rpx 80rpx;
   color: #fff;
-  border-bottom-left-radius: 36rpx;
-  border-bottom-right-radius: 36rpx;
+  overflow: hidden;
 }
 
-.greeting-row,
-.job-row,
-.job-left,
-.meta-item,
-.card-header,
-.future-item {
+.header-section::before {
+  content: '';
+  position: absolute;
+  top: -120rpx;
+  right: -60rpx;
+  width: 340rpx;
+  height: 340rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.header-section::after {
+  content: '';
+  position: absolute;
+  bottom: 40rpx;
+  left: -80rpx;
+  width: 240rpx;
+  height: 240rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.greeting-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 28rpx;
+}
+
+.greeting-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.greeting-text {
+  font-size: 40rpx;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.greeting-sub {
+  font-size: 26rpx;
+  opacity: 0.85;
+  margin-top: 6rpx;
+}
+
+.msg-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
   display: flex;
   align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  position: relative;
 }
 
-.greeting-row,
-.job-row,
-.card-header,
-.future-item {
-  justify-content: space-between;
+.shift-glass-card {
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 24rpx;
+  padding: 24rpx 28rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.08);
 }
 
-.greeting {
+.glass-time {
   display: block;
   font-size: 44rpx;
   font-weight: 800;
-  margin-bottom: 16rpx;
+  text-align: center;
+  margin-bottom: 8rpx;
 }
 
-.date-line {
+.glass-title {
   display: block;
   font-size: 28rpx;
+  text-align: center;
+  margin-bottom: 8rpx;
+  font-weight: 500;
+}
+
+.glass-loc {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16rpx;
+  font-size: 24rpx;
   opacity: 0.9;
 }
 
-.shift-count {
-  width: 130rpx;
-  height: 130rpx;
-  border-radius: 36rpx;
-  background: rgba(255, 255, 255, 0.22);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.shift-count-num {
-  font-size: 46rpx;
-  font-weight: 800;
-  line-height: 54rpx;
-}
-
-.shift-count-text {
+.glass-dist {
+  padding: 2rpx 12rpx;
+  border-radius: 12rpx;
+  background: rgba(255, 255, 255, 0.25);
   font-size: 22rpx;
 }
 
-.content {
-  padding: 0 28rpx 36rpx;
-  margin-top: -96rpx;
-}
-
-.card,
-.stats-card {
-  background: #fff;
-  border-radius: 24rpx;
-  box-shadow: 0 12rpx 34rpx rgba(23, 83, 53, 0.08);
-}
-
-.stats-card {
-  display: flex;
-  align-items: center;
-  padding: 32rpx 12rpx;
-  margin-bottom: 30rpx;
-}
-
-.stat-item {
-  flex: 1;
+.login-hint {
   text-align: center;
+  padding: 40rpx 0;
 }
 
-.stat-value,
-.stat-label,
-.empty-title,
-.empty-desc,
-.job-title,
-.job-desc,
-.meta-text,
-.future-job,
-.future-location,
-.future-day,
-.future-month,
-.future-time {
-  display: block;
-}
-
-.stat-value {
-  font-size: 38rpx;
-  color: #14231b;
-  font-weight: 800;
-  margin-bottom: 8rpx;
-}
-
-.stat-label {
-  font-size: 24rpx;
-  color: #8a9690;
-}
-
-.stat-line {
-  width: 1rpx;
-  height: 46rpx;
-  background: #edf1ef;
-}
-
-.card {
-  padding: 30rpx;
-  margin-bottom: 28rpx;
-}
-
-.login-card {
-  text-align: center;
-}
-
-.btn-primary {
-  width: 360rpx;
-  height: 88rpx;
-  margin: 0 auto;
-  border-radius: 999rpx;
-  background: linear-gradient(135deg, #19c876 0%, #08a657 100%);
-  color: #ffffff;
-  font-size: 30rpx;
-  font-weight: 700;
-  line-height: 88rpx;
-  text-align: center;
-  box-shadow: 0 14rpx 28rpx rgba(8, 166, 87, 0.24);
-}
-
-.section-title-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin: 8rpx 4rpx 20rpx;
-}
-
-.section-title {
-  font-size: 36rpx;
-  color: #15231b;
-  font-weight: 800;
-}
-
-.section-subtitle {
-  font-size: 24rpx;
-  color: #8c9892;
-}
-
-.shift-card {
-  border: none;
-  padding: 28rpx;
-}
-
-.shift-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.job-left {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  min-width: 0;
-}
-
-.job-icon {
-  width: 64rpx;
-  height: 64rpx;
-  line-height: 64rpx;
-  text-align: center;
-  border-radius: 20rpx;
-  background: #07c160;
-  color: #fff;
-  font-size: 26rpx;
-  font-weight: 700;
-  margin-right: 18rpx;
-}
-
-.job-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.shift-title {
+.hint-title {
   display: block;
   font-size: 32rpx;
-  line-height: 42rpx;
-  font-weight: 700;
-  color: #1f2d3d;
-}
-
-.shift-location {
-  display: block;
-  margin-top: 8rpx;
-  font-size: 24rpx;
-  line-height: 32rpx;
-  color: #7b8794;
-}
-
-.location-row {
-  display: flex;
-  align-items: center;
-  margin-top: 8rpx;
-}
-
-.job-location {
-  font-size: 24rpx;
-  line-height: 32rpx;
-  color: #7b8794;
-}
-
-.map-link {
-  margin-left: 12rpx;
-  padding: 6rpx 16rpx;
-  border-radius: 20rpx;
-  background: #ecfdf5;
-  color: #0f9f5f;
-  font-size: 24rpx;
-}
-
-.status-badge {
-  margin-left: 18rpx;
-  padding: 8rpx 18rpx;
-  border-radius: 24rpx;
-  font-size: 22rpx;
-  line-height: 28rpx;
-  white-space: nowrap;
-}
-
-.status-badge.status-yellow {
-  background: #fff7e6;
-  color: #fa8c16;
-}
-
-.status-badge.status-green {
-  background: #e6f7ff;
-  color: #1890ff;
-}
-
-.status-badge.status-gray {
-  background: #f0fbf4;
-  color: #07c160;
-}
-
-.status-badge.status-red {
-  background: #fff1f0;
-  color: #f5222d;
-}
-
-.time-box {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 24rpx;
-  padding: 22rpx 24rpx;
-  border-radius: 18rpx;
-  background: #f7fafc;
-}
-
-.time-label {
-  display: block;
-  font-size: 22rpx;
-  color: #8b98a7;
-}
-
-.time-value {
-  display: block;
-  margin-top: 8rpx;
-  font-size: 34rpx;
-  line-height: 42rpx;
-  font-weight: 700;
-  color: #07c160;
-}
-
-.date-box {
-  width: 86rpx;
-  height: 86rpx;
-  border-radius: 22rpx;
-  background: #eafaf1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.date-day {
-  font-size: 32rpx;
-  line-height: 36rpx;
-  color: #08a857;
-  font-weight: 800;
-}
-
-.date-month {
-  font-size: 22rpx;
-  color: #58b987;
-}
-
-.record-row {
-  display: flex;
-  margin-top: 22rpx;
-}
-
-.record-item {
-  flex: 1;
-  padding: 18rpx 20rpx;
-  border-radius: 16rpx;
-  background: #fbfcfe;
-}
-
-.record-item:first-child {
-  margin-right: 18rpx;
-}
-
-.record-label {
-  display: block;
-  font-size: 22rpx;
-  color: #8b98a7;
-}
-
-.record-value {
-  display: block;
-  margin-top: 8rpx;
-  font-size: 28rpx;
   font-weight: 600;
-  color: #1f2d3d;
-}
-
-.shift-actions {
-  display: flex;
-  margin-top: 24rpx;
-  gap: 18rpx;
-}
-
-.action-btn {
-  flex: 1;
-  height: 76rpx;
-  line-height: 76rpx;
-  border-radius: 38rpx;
-  font-size: 28rpx;
-  border: none;
-  text-align: center;
-}
-
-.action-btn.check-in {
-  background: #07c160;
-  color: #ffffff;
-  animation: pulse-green 2s infinite;
-}
-
-.action-btn.check-out {
-  background: #ffffff;
-  color: #07c160;
-  border: 1rpx solid #07c160;
-  animation: pulse-border 2s infinite;
-}
-
-.action-btn.disabled {
-  background: #eef1f5;
-  color: #b7c0cc;
-  border-color: #eef1f5;
-  animation: none;
-}
-
-@keyframes pulse-green {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(7, 193, 96, 0.4); }
-  50% { box-shadow: 0 0 0 12rpx rgba(7, 193, 96, 0); }
-}
-
-@keyframes pulse-border {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(7, 193, 96, 0.3); }
-  50% { box-shadow: 0 0 0 12rpx rgba(7, 193, 96, 0); }
-}
-
-.empty-title {
-  font-size: 34rpx;
-  color: #15231b;
-  font-weight: 800;
   margin-bottom: 16rpx;
 }
 
-.empty-desc {
-  font-size: 27rpx;
-  color: #8c9892;
+.hint-btn {
+  width: 240rpx;
+  height: 72rpx;
+  border-radius: 36rpx;
+  background: rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-size: 28rpx;
+  border: none;
+  margin: 0 auto;
+}
+
+.hint-btn::after {
+  border: none;
+}
+
+.today-shift-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 28rpx 32rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06);
+}
+
+.shift-card-time {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.shift-time-text {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.shift-badge {
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  font-weight: 500;
+}
+
+.shift-badge.working {
+  background: rgba(32, 194, 107, 0.12);
+  color: #20c26b;
+}
+
+.shift-card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.shift-card-loc {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shift-loc-text {
+  font-size: 26rpx;
+  color: #6b7280;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.shift-dist-tag {
+  font-size: 24rpx;
+  color: #20c26b;
+  font-weight: 500;
+  flex-shrink: 0;
+  margin-left: 16rpx;
+}
+
+.content-section {
+  margin-top: -40rpx;
+  padding: 0 24rpx;
+  position: relative;
+  z-index: 10;
+}
+
+.clock-btn-wrap {
+  display: flex;
+  justify-content: center;
   margin-bottom: 28rpx;
 }
 
-.more {
-  font-size: 28rpx;
-  color: #08a857;
-  font-weight: 700;
-}
-
-.future-list {
-  margin-top: 16rpx;
-}
-
-.future-item {
-  padding: 24rpx 0;
-  border-bottom: 1rpx solid #f0f3f1;
-}
-
-.future-item:last-child {
-  border-bottom: none;
-}
-
-.future-date-box {
-  width: 86rpx;
-  height: 86rpx;
-  border-radius: 22rpx;
-  background: #eafaf1;
+.big-clock-btn {
+  position: relative;
+  width: 360rpx;
+  height: 360rpx;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #2ad879 0%, #20c26b 40%, #1aab5a 100%);
+  color: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-right: 20rpx;
+  box-shadow: 0 24rpx 60rpx rgba(32, 194, 107, 0.45),
+              0 8rpx 20rpx rgba(0, 0, 0, 0.1),
+              inset 0 -10rpx 24rpx rgba(0, 0, 0, 0.12),
+              inset 0 6rpx 16rpx rgba(255, 255, 255, 0.25);
 }
 
-.future-day {
-  font-size: 32rpx;
+.big-clock-btn::after {
+  content: '';
+  position: absolute;
+  top: 12rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 180rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.35);
+  filter: blur(4rpx);
+}
+
+.big-clock-btn.ready {
+  background: linear-gradient(145deg, #2ad879 0%, #20c26b 40%, #1aab5a 100%);
+}
+
+.big-clock-btn.working {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  box-shadow: 0 20rpx 50rpx rgba(59, 130, 246, 0.4),
+              inset 0 -12rpx 30rpx rgba(0, 0, 0, 0.15),
+              inset 0 12rpx 30rpx rgba(255, 255, 255, 0.2);
+}
+
+.big-clock-btn.done {
+  background: linear-gradient(135deg, #8de6b0 0%, #20c26b 100%);
+  opacity: 0.85;
+}
+
+.big-clock-btn.late {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 20rpx 50rpx rgba(245, 158, 11, 0.4),
+              inset 0 -12rpx 30rpx rgba(0, 0, 0, 0.15),
+              inset 0 12rpx 30rpx rgba(255, 255, 255, 0.2);
+}
+
+.big-clock-btn.absent {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.big-clock-btn.disabled-btn {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+}
+
+.big-clock-btn:active {
+  transform: scale(0.96);
+}
+
+.btn-pulse-ring {
+  position: absolute;
+  top: -20rpx;
+  left: -20rpx;
+  right: -20rpx;
+  bottom: -20rpx;
+  border-radius: 50%;
+  border: 4rpx solid rgba(32, 194, 107, 0.35);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.big-clock-btn.working .btn-pulse-ring {
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.big-clock-btn.late .btn-pulse-ring {
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.3;
+  }
+}
+
+.btn-main-text {
+  font-size: 56rpx;
   font-weight: 800;
-  color: #08a857;
-  line-height: 36rpx;
+  margin-bottom: 10rpx;
 }
 
-.future-month {
+.btn-sub-text {
+  font-size: 26rpx;
+  opacity: 0.9;
+  margin-bottom: 16rpx;
+}
+
+.btn-dist-tag {
+  padding: 6rpx 20rpx;
+  border-radius: 20rpx;
+  background: rgba(255, 255, 255, 0.25);
   font-size: 22rpx;
-  color: #58b987;
 }
 
-.future-left {
+.status-tips {
+  display: flex;
+  justify-content: center;
+  gap: 32rpx;
+  margin-bottom: 32rpx;
+}
+
+.status-tip {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  font-size: 24rpx;
+  color: #888;
+}
+
+.tip-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #20c26b;
+}
+
+.tip-dot.ok {
+  background: #20c26b;
+}
+
+.tip-dot.warn {
+  background: #ef4444;
+}
+
+.tip-dot.info {
+  background: #3b82f6;
+}
+
+.stats-row {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.stat-card {
   flex: 1;
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 28rpx 16rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.06), 0 2rpx 6rpx rgba(0, 0, 0, 0.03);
 }
 
-.future-job {
+.stat-num {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: #888;
+}
+
+.section-card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 6rpx 24rpx rgba(0, 0, 0, 0.05), 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.section-title {
   font-size: 30rpx;
-  color: #18251e;
-  font-weight: 800;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.section-more {
+  font-size: 24rpx;
+  color: #20c26b;
+}
+
+.empty-shifts {
+  text-align: center;
+  padding: 40rpx 0;
+}
+
+.empty-text {
+  display: block;
+  font-size: 28rpx;
+  color: #999;
   margin-bottom: 8rpx;
 }
 
-.future-location {
+.empty-desc {
   font-size: 24rpx;
-  color: #96a09b;
+  color: #bbb;
 }
 
-.future-right {
-  text-align: right;
+.shift-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.shift-item {
+  display: flex;
+  gap: 20rpx;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+  position: relative;
+}
+
+.shift-item:last-child {
+  border-bottom: none;
+}
+
+.shift-item.shift-done {
+  opacity: 0.6;
+}
+
+.shift-indicator {
+  width: 6rpx;
+  border-radius: 4rpx;
+  flex-shrink: 0;
+  margin: 6rpx 0;
+  background: #ddd;
+}
+
+.shift-indicator.current {
+  background: linear-gradient(180deg, #20c26b, #1aab5a);
+}
+
+.shift-indicator.done {
+  background: #20c26b;
+  opacity: 0.5;
+}
+
+.shift-indicator.pending {
+  background: #e5e7eb;
+}
+
+.shift-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.shift-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.shift-time {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.shift-status {
+  font-size: 22rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 12rpx;
+  font-weight: 500;
+}
+
+.shift-status.active {
+  background: #e6f8ee;
+  color: #20c26b;
+}
+
+.shift-status.pending {
+  background: #f3f4f6;
+  color: #9ca3af;
+}
+
+.shift-status.done {
+  background: #f3f4f6;
+  color: #9ca3af;
+}
+
+.shift-status.abnormal {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.shift-name {
+  display: block;
+  font-size: 26rpx;
+  color: #555;
+  margin-bottom: 6rpx;
+}
+
+.shift-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.shift-loc {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.shift-dist {
+  font-size: 22rpx;
+  color: #20c26b;
+  font-weight: 500;
+}
+
+.entry-card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 28rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+}
+
+.entry-left {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.entry-icon {
+  width: 56rpx;
+  height: 56rpx;
+  border-radius: 14rpx;
+  background: #eff6ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+}
+
+.entry-text {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+}
+
+.entry-arrow {
+  font-size: 36rpx;
+  color: #ccc;
+}
+
+.future-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+.future-item {
+  display: flex;
+  align-items: center;
+  padding: 12rpx 0;
+  font-size: 24rpx;
+}
+
+.future-date {
+  width: 120rpx;
+  color: #20c26b;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.future-name {
+  flex: 1;
+  color: #555;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .future-time {
-  font-size: 24rpx;
-  color: #7c8882;
-  line-height: 34rpx;
+  color: #999;
+  flex-shrink: 0;
+}
+
+.bottom-pad {
+  height: 120rpx;
 }
 </style>

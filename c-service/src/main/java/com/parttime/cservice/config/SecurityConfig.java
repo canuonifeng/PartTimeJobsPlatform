@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/api/worker/auth/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/worker/jobs/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/worker/job-categories")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/worker/referral/invite")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/worker/**")).authenticated()
                         .anyRequest().permitAll()
                 )
