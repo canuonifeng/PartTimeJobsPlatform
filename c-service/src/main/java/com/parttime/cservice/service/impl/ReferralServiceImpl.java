@@ -271,6 +271,16 @@ public class ReferralServiceImpl implements ReferralService {
             log.warn("生成小程序Scheme失败: " + e.getMessage());
             vo.setMiniProgramScheme("");
         }
+        try {
+            String urlLink = weChatSchemeService.generateUrlLink(
+                    "pages/index/index",
+                    "inviteCode=" + code
+            );
+            vo.setMiniProgramUrlLink(urlLink);
+        } catch (Exception e) {
+            log.warn("生成小程序UrlLink失败: " + e.getMessage());
+            vo.setMiniProgramUrlLink("");
+        }
         return vo;
     }
 

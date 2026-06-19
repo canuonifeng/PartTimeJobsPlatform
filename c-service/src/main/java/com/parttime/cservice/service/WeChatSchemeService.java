@@ -59,6 +59,25 @@ public class WeChatSchemeService {
         return cachedToken;
     }
 
+    public String generateUrlLink(String path, String query) {
+        if (isMockConfig()) {
+            return "https://wxaurl.cn/mock_" + query;
+        }
+        String token = getAccessToken();
+        String url = "https://api.weixin.qq.com/wxa/generate_urllink?access_token=" + token;
+        Map<String, Object> body = Map.of(
+                "path", path,
+                "query", query,
+                "expire_type", 1,
+                "expire_interval", 30
+        );
+        Map<?, ?> response = restTemplate.postForObject(url, body, Map.class);
+        if (response == null || response.get("errcode") != null && !response.get("errcode").equals(0)) {
+            throw new RuntimeException("微信 URL Link 生成失败: " + (response != null ? response.get("errmsg") : "无响应"));
+        }
+        return String.valueOf(response.get("url_link"));
+    }
+
     private boolean isMockConfig() {
         return weChatConfig.getAppId() == null || weChatConfig.getAppId().startsWith("mock_");
     }

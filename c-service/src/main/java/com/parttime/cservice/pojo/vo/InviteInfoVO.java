@@ -8,4 +8,5 @@ public class InviteInfoVO {
     private String inviterAvatar;
     private String code;
     private String miniProgramScheme;
+    private String miniProgramUrlLink;
 }
