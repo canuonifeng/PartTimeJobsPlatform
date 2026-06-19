@@ -33,7 +33,6 @@
           <view class="status-badge" :class="statusClass(shift)">{{ statusText(shift) }}</view>
         </view>
         <view class="time-box"><view class="time-main"><text class="time-label">工作时间</text><text class="time-value">{{ shift.startTime }} - {{ shift.endTime }}</text></view><view class="date-box"><text class="date-day">{{ shift.date.slice(8) }}</text><text class="date-month">{{ shift.date.slice(5, 7) }}月</text></view></view>
-        <view v-if="shift.contactName || shift.contactPhone" class="contact-row"><text>联系人</text><text>{{ [shift.contactName, shift.contactPhone].filter(Boolean).join(' ') }}</text></view>
         <view class="attendance-row">
           <view class="attendance-item"><text class="attendance-label">签到</text><text class="attendance-value">{{ shift.checkInTime || '未签到' }}</text></view>
           <view class="attendance-item"><text class="attendance-label">签退</text><text class="attendance-value">{{ shift.checkOutTime || '未签退' }}</text></view>
@@ -60,7 +59,7 @@ import { submitCorrection } from '@/api/attendance'
 import LoginSheet from '@/components/LoginSheet.vue'
 
 interface DayInfo { name: string; date: string; fullDate: string; isToday: boolean; hasShift: boolean }
-interface Shift { id: number; jobTitle: string; location: string; startTime: string; endTime: string; date: string; status: string; correctionStatus?: string | null; canApplyCorrection: boolean; checkInTime?: string; checkOutTime?: string; workHours?: string; contactName?: string; contactPhone?: string }
+interface Shift { id: number; jobTitle: string; location: string; startTime: string; endTime: string; date: string; status: string; correctionStatus?: string | null; canApplyCorrection: boolean; checkInTime?: string; checkOutTime?: string; workHours?: string }
 
 const loading = ref(false)
 const shifts = ref<Shift[]>([])
@@ -125,8 +124,6 @@ function normalizeShift(s: any, index: number): Shift {
     status: s.status || s.attendanceStatus || 'SCHEDULED',
     correctionStatus: s.correctionStatus || s.applyStatus || null,
     canApplyCorrection: false,
-    contactName: s.contactName || '',
-    contactPhone: s.contactPhone || '',
     checkInTime: normalizeTime(s.checkInTime || s.clockInTime || s.signInTime),
     checkOutTime: normalizeTime(s.checkOutTime || s.clockOutTime || s.signOutTime),
     workHours: s.workHours || s.hours || s.duration || ''
@@ -339,7 +336,7 @@ onMounted(() => {
 .shift-title { font-size: 34rpx; color: #16251d; font-weight: 800; margin-bottom: 8rpx; }
 .shift-location { font-size: 24rpx; color: #98a39d; }
 .status-badge { padding: 10rpx 22rpx; border-radius: 999rpx; font-size: 24rpx; font-weight: 700; }
-.status-badge.completed { background: #eef1f0; color: #7b8580; }
+.status-badge.completed { background: #e6f7ed; color: #00a854; }
 .status-badge.in-progress { background: #e7f8ef; color: #08a857; }
 .status-badge.warning { background: #feecec; color: #df3b30; }
 .status-badge.pending { background: #fff7df; color: #d28a00; }
@@ -347,7 +344,6 @@ onMounted(() => {
 .time-main { flex: 1; }
 .time-label { font-size: 24rpx; color: #96a09b; margin-bottom: 8rpx; }
 .time-value { font-size: 34rpx; color: #08a857; font-weight: 800; }
-.contact-row { display: flex; justify-content: space-between; margin: 18rpx 0; padding: 14rpx 18rpx; border-radius: 16rpx; background: #f8fafc; font-size: 24rpx; color: #64748b; }
 .date-box { width: 86rpx; height: 86rpx; border-radius: 22rpx; background: #eafaf1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .date-day { font-size: 32rpx; line-height: 36rpx; color: #08a857; font-weight: 800; }
 .date-month { font-size: 22rpx; color: #58b987; }

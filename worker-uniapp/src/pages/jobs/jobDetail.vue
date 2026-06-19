@@ -286,7 +286,7 @@ const canApply = computed(() => {
 const applyButtonText = computed(() => {
   if (!job.value) return '加载中'
   if (job.value.status === 'CLOSED') return '已关闭'
-  if (pendingScheduleIds.value.length === 0) return '请先选择班次'
+  if (pendingScheduleIds.value.length === 0) return '请选择可报名班次'
   return `立即报名（${pendingScheduleIds.value.length}班）`
 })
 

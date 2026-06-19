@@ -33,7 +33,7 @@
       <canvas canvas-id="posterCanvas" id="posterCanvas" class="poster-canvas" />
       <canvas canvas-id="qrcodeCanvas" id="qrcodeCanvas" class="qrcode-canvas" />
       <image v-if="posterUrl" :src="posterUrl" class="poster-image" mode="widthFix" />
-      <button class="share-btn" @click="handlePosterAction">{{ posterUrl ? '复制邀请链接' : '生成海报' }}</button>
+      <button class="share-btn" @click="handlePosterAction">{{ posterUrl ? '保存海报' : '生成海报' }}</button>
       <text v-if="posterUrl" class="poster-tip">长按图片保存后分享给好友</text>
     </view>
 
@@ -270,34 +270,10 @@ async function generatePoster() {
 
 function handlePosterAction() {
   if (posterUrl.value) {
-    copyPosterImage()
+    savePoster()
   } else {
     generatePoster()
   }
-}
-
-async function copyPosterImage() {
-  if (!posterUrl.value) return
-  // #ifdef H5
-  try {
-    const res = await fetch(posterUrl.value)
-    const blob = await res.blob()
-    if (navigator.clipboard && window.ClipboardItem) {
-      await navigator.clipboard.write([
-        new ClipboardItem({ [blob.type]: blob })
-      ])
-      uni.showToast({ title: '海报已复制', icon: 'success' })
-    } else {
-      uni.showToast({ title: '当前浏览器不支持复制图片', icon: 'none' })
-    }
-  } catch (e) {
-    console.error('copy image error:', e)
-    uni.showToast({ title: '复制失败，请长按图片保存', icon: 'none' })
-  }
-  // #endif
-  // #ifndef H5
-  uni.showToast({ title: '请长按图片保存后分享', icon: 'none', duration: 2000 })
-  // #endif
 }
 
 function savePoster() {
