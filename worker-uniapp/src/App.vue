@@ -7,8 +7,7 @@ const authStore = useAuthStore()
 
 async function routeBySession() {
   await authStore.loadSession()
-  const target = authStore.token ? '/pages/index/index' : '/pages/jobs/jobList'
-  uni.switchTab({ url: target })
+  uni.switchTab({ url: '/pages/jobs/jobList' })
 }
 
 onLaunch(() => {
