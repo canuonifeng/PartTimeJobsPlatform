@@ -10,4 +10,6 @@ public class AttendanceHoursUpdateCmd {
     private BigDecimal totalHours;
     private BigDecimal scheduledPay;
     private BigDecimal payablePay;
+    private String salaryType;
+    private BigDecimal salaryAmount;
 }

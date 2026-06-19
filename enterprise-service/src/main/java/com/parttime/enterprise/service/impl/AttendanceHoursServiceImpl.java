@@ -1,7 +1,9 @@
 package com.parttime.enterprise.service.impl;
 
 import com.parttime.enterprise.mapper.AttendanceRecordMapper;
+import com.parttime.enterprise.mapper.ScheduleShiftMapper;
 import com.parttime.enterprise.pojo.entity.AttendanceRecord;
+import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.vo.AttendanceHoursVO;
 import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.AttendanceHoursService;
@@ -19,6 +21,9 @@ public class AttendanceHoursServiceImpl implements AttendanceHoursService {
     @Resource
     private AttendanceRecordMapper attendanceRecordMapper;
 
+    @Resource
+    private ScheduleShiftMapper scheduleShiftMapper;
+
     @Override
     public PageVO<AttendanceHoursVO> list(Long companyId, String workerName, LocalDate dateFrom, LocalDate dateTo, String settlementStatus, Integer page, Integer pageSize) {
         int offset = (page - 1) * pageSize;
@@ -29,7 +34,7 @@ public class AttendanceHoursServiceImpl implements AttendanceHoursService {
 
     @Override
     @Transactional
-    public void update(Long id, BigDecimal totalHours, BigDecimal scheduledPay, BigDecimal payablePay) {
+    public void update(Long id, BigDecimal totalHours, BigDecimal scheduledPay, BigDecimal payablePay, String salaryType, BigDecimal salaryAmount) {
         AttendanceRecord record = attendanceRecordMapper.findById(id)
                 .orElseThrow(() -> new RuntimeException("Attendance record not found: " + id));
         if ("PAID".equals(record.getSettlementStatus())) {
@@ -39,6 +44,16 @@ public class AttendanceHoursServiceImpl implements AttendanceHoursService {
         if (scheduledPay != null) record.setScheduledPay(scheduledPay);
         if (payablePay != null) record.setPayablePay(payablePay);
         attendanceRecordMapper.update(record);
+
+        if ((salaryType != null || salaryAmount != null) && record.getShiftId() != null) {
+            ScheduleShift shift = scheduleShiftMapper.findById(record.getShiftId())
+                    .orElse(null);
+            if (shift != null) {
+                if (salaryType != null) shift.setSalaryType(salaryType);
+                if (salaryAmount != null) shift.setSalaryAmount(salaryAmount);
+                scheduleShiftMapper.update(shift);
+            }
+        }
     }
 
     @Override

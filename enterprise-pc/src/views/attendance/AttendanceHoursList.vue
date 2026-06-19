@@ -31,7 +31,9 @@ const editDialogVisible = ref(false)
 const editForm = ref({
   id: null,
   totalHours: 0,
-  scheduledPay: 0
+  scheduledPay: 0,
+  salaryType: 'HOURLY',
+  salaryAmount: 0
 })
 
 const salaryTypeMap = {
@@ -79,7 +81,9 @@ function handleEdit(row) {
     id: row.id,
     totalHours: row.totalHours ?? 0,
     scheduledPay: row.scheduledPay ?? 0,
-    payablePay: row.payablePay ?? null
+    payablePay: row.payablePay ?? null,
+    salaryType: row.salaryType ?? 'HOURLY',
+    salaryAmount: row.salaryAmount ?? 0
   }
   editDialogVisible.value = true
 }
@@ -88,7 +92,9 @@ async function handleEditSave() {
   try {
     const payload = {
       totalHours: editForm.value.totalHours,
-      scheduledPay: editForm.value.scheduledPay
+      scheduledPay: editForm.value.scheduledPay,
+      salaryType: editForm.value.salaryType,
+      salaryAmount: editForm.value.salaryAmount
     }
     if (editForm.value.payablePay != null) payload.payablePay = editForm.value.payablePay
     await updateAttendanceHours(editForm.value.id, payload)
@@ -265,8 +271,17 @@ onMounted(() => {
       </div>
     </el-card>
 
-    <el-dialog v-model="editDialogVisible" title="编辑薪资管理" width="400px">
+    <el-dialog v-model="editDialogVisible" title="编辑薪资管理" width="420px">
       <el-form :model="editForm" label-width="100px">
+        <el-form-item label="薪资标准">
+          <div style="display: flex; gap: 8px; width: 100%">
+            <el-select v-model="editForm.salaryType" style="width: 140px">
+              <el-option label="时薪" value="HOURLY" />
+              <el-option label="日薪" value="DAILY" />
+            </el-select>
+            <el-input-number v-model="editForm.salaryAmount" :min="0" :precision="2" style="flex: 1" />
+          </div>
+        </el-form-item>
         <el-form-item label="工时">
           <el-input-number v-model="editForm.totalHours" :min="0" :precision="2" style="width: 100%" />
         </el-form-item>

@@ -9,6 +9,6 @@ import java.util.List;
 
 public interface AttendanceHoursService {
     PageVO<AttendanceHoursVO> list(Long companyId, String workerName, LocalDate dateFrom, LocalDate dateTo, String settlementStatus, Integer page, Integer pageSize);
-    void update(Long id, BigDecimal totalHours, BigDecimal scheduledPay, BigDecimal payablePay);
+    void update(Long id, BigDecimal totalHours, BigDecimal scheduledPay, BigDecimal payablePay, String salaryType, BigDecimal salaryAmount);
     void batchDelete(List<Long> ids);
 }

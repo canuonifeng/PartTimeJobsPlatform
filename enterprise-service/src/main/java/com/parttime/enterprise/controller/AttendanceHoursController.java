@@ -39,10 +39,10 @@ public class AttendanceHoursController {
         return ApiResponse.success(attendanceHoursService.list(companyId, workerName, dateFrom, dateTo, settlementStatus, page, pageSize));
     }
 
-    @Operation(summary = "编辑考勤工时", description = "编辑考勤工时的工时数和应付薪资")
+    @Operation(summary = "编辑考勤工时", description = "编辑考勤工时的工时、薪资和薪资标准")
     @PostMapping("/update")
     public void update(@RequestBody AttendanceHoursUpdateCmd cmd) {
-        attendanceHoursService.update(cmd.getId(), cmd.getTotalHours(), cmd.getScheduledPay(), cmd.getPayablePay());
+        attendanceHoursService.update(cmd.getId(), cmd.getTotalHours(), cmd.getScheduledPay(), cmd.getPayablePay(), cmd.getSalaryType(), cmd.getSalaryAmount());
     }
 
     @Operation(summary = "批量结算", description = "结算考勤记录，调用第三方支付并生成结算账单")
