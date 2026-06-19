@@ -19,7 +19,7 @@
 
       <view class="total-row">
         <text class="total-label">合计：{{ totalText }}</text>
-        <text class="total-amount">{{ totalAmount }}</text>
+        <text v-if="totalAmount" class="total-amount">{{ totalAmount }}</text>
       </view>
 
       <view class="warning-box">
@@ -186,7 +186,7 @@ function handleConfirm() {
 .sch-pay {
   font-size: 28rpx;
   font-weight: 700;
-  color: #20c26b;
+  color: #ff6b35;
   flex-shrink: 0;
 }
 
@@ -247,6 +247,9 @@ function handleConfirm() {
   font-weight: 500;
   border: none;
   margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-cancel::after {
@@ -264,6 +267,9 @@ function handleConfirm() {
   border: none;
   box-shadow: 0 10rpx 28rpx rgba(32, 194, 107, 0.4);
   margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-confirm:active {

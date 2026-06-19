@@ -152,7 +152,7 @@
       :location="locationText"
       :schedules="selectedScheduleList"
       :total-text="`${pendingScheduleIds.length}个班次`"
-      :total-amount="`¥${selectedTotalAmount}`"
+      :total-amount="''"
       :submitting="applying"
       @close="showApplySheet = false"
       @confirm="confirmApply"
