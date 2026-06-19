@@ -983,6 +983,7 @@ onUnload(stopCountdown)
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  margin: 20rpx 0 20rpx;
   box-shadow: 0 16rpx 40rpx rgba(32, 194, 107, 0.35),
               0 6rpx 16rpx rgba(0, 0, 0, 0.08),
               inset 0 -8rpx 20rpx rgba(0, 0, 0, 0.1),
