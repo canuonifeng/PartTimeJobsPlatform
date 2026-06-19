@@ -43,7 +43,7 @@ const primaryContact = computed(() => selectedSchedules.value.find((item: Schedu
 const contactName = computed(() => primaryContact.value?.contactName || job.value?.contactName || '')
 const contactPhone = computed(() => primaryContact.value?.contactPhone || job.value?.phone || job.value?.contactPhone || job.value?.mobile || '')
 const phoneText = computed(() => contactPhone.value ? `${contactName.value ? contactName.value + ' ' : ''}${contactPhone.value}` : '暂无联系电话')
-const companyInitial = computed(() => companyName.value.slice(0, 1))
+const companyInitial = computed(() => '企')
 const appliedScheduleIds = computed(() => Array.isArray(job.value?.appliedScheduleIds) ? job.value.appliedScheduleIds.map(Number) : [])
 const schedules = computed<ScheduleItem[]>(() => (Array.isArray(job.value?.schedules) ? job.value.schedules : []).map((item: any) => ({ id: Number(item.id), date: item.date, startTime: item.startTime, endTime: item.endTime, remainingSlots: Number(item.remainingSlots), slotsAvailable: Number(item.slotsAvailable), contactName: item.contactName, contactPhone: item.contactPhone })).filter((item: ScheduleItem) => Number.isInteger(item.id) && item.id > 0))
 const selectedSchedules = computed(() => {

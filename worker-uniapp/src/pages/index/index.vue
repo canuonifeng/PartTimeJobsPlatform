@@ -123,14 +123,6 @@
         </view>
       </view>
 
-      <view class="entry-card" @click="goClockInRecord">
-        <view class="entry-left">
-          <view class="entry-icon">📋</view>
-          <text class="entry-text">打卡记录</text>
-        </view>
-        <text class="entry-arrow">›</text>
-      </view>
-
       <view v-if="authStore.token && futureShifts.length > 0" class="section-card">
         <view class="section-header">
           <text class="section-title">未来排班</text>

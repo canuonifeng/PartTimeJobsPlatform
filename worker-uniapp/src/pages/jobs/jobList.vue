@@ -59,7 +59,8 @@
           </view>
           <view class="job-meta">
             <text class="job-address">📍 {{ job.location || '附近' }}</text>
-            <text v-if="job.distanceKm != null" class="job-distance">{{ job.distanceKm }}km</text>
+            <text v-if="job.distanceKm != null && job.distanceKm > 0" class="job-distance">{{ job.distanceKm }}km</text>
+            <text v-else-if="job.distanceKm != null && job.distanceKm === 0" class="job-distance near">附近</text>
           </view>
           <view class="job-tags">
             <text v-for="(tag, idx) in getDisplayTags(job)" :key="idx" class="job-tag" :class="tagClass(tag)">{{ tag }}</text>
@@ -67,7 +68,7 @@
           <view class="job-card-footer">
             <view class="job-company">
               <view class="company-logo">
-                <text>{{ (job.companyName || '企').slice(0, 1) }}</text>
+                <text>企</text>
               </view>
               <text class="company-name">{{ job.companyName || '优选企业' }}</text>
             </view>
@@ -558,7 +559,7 @@ onMounted(() => {
 }
 
 .job-title {
-  font-size: 28rpx;
+  font-size: 30rpx;
   font-weight: 700;
   color: #1a1a2e;
   line-height: 1.3;
@@ -576,7 +577,7 @@ onMounted(() => {
 }
 
 .job-pay {
-  font-size: 34rpx;
+  font-size: 38rpx;
   font-weight: 800;
   color: #ff6b35;
   line-height: 1.2;
@@ -585,9 +586,9 @@ onMounted(() => {
 
 .job-hot-tag {
   flex-shrink: 0;
-  padding: 4rpx 14rpx;
+  padding: 6rpx 16rpx;
   border-radius: 16rpx;
-  font-size: 20rpx;
+  font-size: 22rpx;
   font-weight: 600;
   color: #fff;
   background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
@@ -602,7 +603,7 @@ onMounted(() => {
 }
 
 .job-address {
-  font-size: 22rpx;
+  font-size: 24rpx;
   color: #888;
   flex: 1;
   overflow: hidden;
@@ -612,13 +613,19 @@ onMounted(() => {
 }
 
 .job-distance {
-  font-size: 22rpx;
+  font-size: 24rpx;
   font-weight: 700;
   color: #20c26b;
   flex-shrink: 0;
   background: #ecfdf3;
-  padding: 4rpx 12rpx;
+  padding: 4rpx 14rpx;
   border-radius: 14rpx;
+}
+
+.job-distance.near {
+  color: #888;
+  background: #f5f5f5;
+  font-weight: 500;
 }
 
 .job-tags {
@@ -629,9 +636,9 @@ onMounted(() => {
 }
 
 .job-tag {
-  padding: 4rpx 14rpx;
-  border-radius: 6rpx;
-  font-size: 20rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 8rpx;
+  font-size: 22rpx;
   font-weight: 500;
   flex-shrink: 0;
 }

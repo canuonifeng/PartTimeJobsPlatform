@@ -59,6 +59,7 @@
               <text v-if="isScheduleApplied(slot.id)" class="sch-corner-badge applied">已报名</text>
               <text v-else-if="isScheduleFull(slot)" class="sch-corner-badge full">已报满</text>
               <text v-else-if="pendingScheduleIds.includes(Number(slot.id))" class="sch-corner-badge selected">已选</text>
+              <text v-else class="sch-corner-badge available">可选</text>
             </view>
           </view>
 
@@ -257,7 +258,7 @@ const companyAuthText = computed(() => {
   return map[companyAuthStatus.value] || '未认证'
 })
 const companyAuthClass = computed(() => companyAuthStatus.value === 'APPROVED' ? 'approved' : (companyAuthStatus.value === 'PENDING' ? 'pending' : ''))
-const companyInitial = computed(() => companyName.value.slice(0, 1) || '企')
+const companyInitial = computed(() => '企')
 const salaryText = computed(() => {
   const rates = Array.isArray(job.value?.rates) ? job.value.rates : []
   const rate = rates[0]
@@ -602,6 +603,9 @@ onShareAppMessage(() => ({
   padding: 60rpx 32rpx 32rpx;
   color: #fff;
   overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .detail-banner::before {
@@ -711,12 +715,12 @@ onShareAppMessage(() => ({
 }
 
 .job-info-tag {
-  font-size: 22rpx;
-  padding: 6rpx 16rpx;
+  font-size: 24rpx;
+  padding: 8rpx 18rpx;
   border-radius: 16rpx;
-  background: #ecfdf3;
-  color: #20c26b;
-  font-weight: 500;
+  background: #fff3e8;
+  color: #ff6b35;
+  font-weight: 600;
 }
 
 .detail-content {
@@ -802,6 +806,16 @@ onShareAppMessage(() => ({
   overflow: hidden;
 }
 
+.schedule-card.applied {
+  border-color: #e5e7eb;
+  background: #f5f5f5;
+  cursor: default;
+}
+
+.schedule-card.applied .sch-right {
+  opacity: 0.7;
+}
+
 .schedule-card.selected {
   border-color: #20c26b;
   background: #f0fdf4;
@@ -859,7 +873,7 @@ onShareAppMessage(() => ({
 }
 
 .sch-pay {
-  font-size: 28rpx;
+  font-size: 26rpx;
   font-weight: 700;
   color: #ff6b35;
   line-height: 1.2;
@@ -884,7 +898,7 @@ onShareAppMessage(() => ({
 }
 
 .sch-corner-badge.selected {
-  background: #20c26b;
+  background: #3b82f6;
   color: #fff;
 }
 
@@ -896,6 +910,11 @@ onShareAppMessage(() => ({
 .sch-corner-badge.full {
   background: #ef4444;
   color: #fff;
+}
+
+.sch-corner-badge.available {
+  background: #f3f4f6;
+  color: #9ca3af;
 }
 
 .schedule-summary {
