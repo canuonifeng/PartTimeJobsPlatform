@@ -18,52 +18,58 @@
     </view>
 
     <view class="content-section">
-      <view v-if="authStore.token && currentShift" class="today-shift-card" @click="openShiftDetail(currentShift)">
-        <view class="shift-card-time">
-          <text class="shift-time-text">{{ currentShift.startTime }} - {{ currentShift.endTime }}</text>
-          <text class="shift-badge working">进行中</text>
-        </view>
-        <text class="shift-card-title">{{ currentShift.jobTitle }}</text>
-        <view class="shift-card-loc">
-          <text class="shift-loc-text">📍 {{ currentShift.location || '暂无地点' }}</text>
-          <text v-if="currentShiftDistance" class="shift-dist-tag">{{ currentShiftDistance }}</text>
-        </view>
-      </view>
-
-      <view v-if="authStore.token && currentShift" class="clock-btn-wrap">
-        <view
-          class="big-clock-btn"
-          :class="buttonState.type"
-          @click="handleClockAction"
-        >
-          <view class="btn-pulse-ring"></view>
-          <text class="btn-main-text">{{ buttonState.mainText }}</text>
-          <text class="btn-sub-text">{{ buttonState.subText }}</text>
-          <view class="btn-dist-tag">
-            <text>📍 {{ buttonState.distText }}</text>
+      <view v-if="authStore.token && currentShift" class="shift-clock-card">
+        <view class="scc-top" @click="openShiftDetail(currentShift)">
+          <text class="scc-title">{{ currentShift.jobTitle }}</text>
+          <view class="scc-meta">
+            <text class="scc-time">🕐 {{ currentShift.startTime }}-{{ currentShift.endTime }}</text>
+            <text class="scc-badge" :class="buttonState.type">{{ shiftStatusLabel(currentShift) }}</text>
+          </view>
+          <view class="scc-loc-row">
+            <text class="scc-loc">📍 {{ currentShift.location || '暂无地点' }}</text>
+            <text v-if="currentShiftDistance" class="scc-dist">{{ currentShiftDistance }}</text>
           </view>
         </view>
+
+        <view class="scc-divider"></view>
+
+        <view class="scc-btn-area">
+          <view
+            class="scc-clock-btn"
+            :class="buttonState.type"
+            @click="handleClockAction"
+          >
+            <view class="scc-btn-pulse"></view>
+            <text class="scc-btn-main">{{ buttonState.mainText }}</text>
+            <text class="scc-btn-sub">{{ buttonState.subText }}</text>
+            <view class="scc-btn-dist">
+              <text>📍 {{ buttonState.distText }}</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="scc-tips">
+          <text class="scc-tip">
+            <text class="scc-dot" :class="positionOk ? 'ok' : 'warn'"></text>
+            {{ positionOk ? '位置正常' : '位置异常' }}
+          </text>
+          <text class="scc-tip">
+            <text class="scc-dot ok"></text>
+            网络良好
+          </text>
+          <text class="scc-tip">
+            <text class="scc-dot" :class="buttonState.timeStatus"></text>
+            {{ buttonState.timeTip }}
+          </text>
+        </view>
       </view>
 
-      <view v-if="authStore.token && currentShift" class="status-tips">
-        <text class="status-tip">
-          <text class="tip-dot" :class="positionOk ? 'ok' : 'warn'"></text>
-          {{ positionOk ? '位置正常' : '位置异常' }}
-        </text>
-        <text class="status-tip">
-          <text class="tip-dot ok"></text>
-          网络良好
-        </text>
-        <text class="status-tip">
-          <text class="tip-dot" :class="buttonState.timeStatus"></text>
-          {{ buttonState.timeTip }}
-        </text>
-      </view>
-
-      <view v-if="!authStore.token" class="clock-btn-wrap">
-        <view class="big-clock-btn disabled-btn" @click="openLoginSheet({ success: refreshHome })">
-          <text class="btn-main-text">登录</text>
-          <text class="btn-sub-text">查看今日排班</text>
+      <view v-if="!authStore.token" class="shift-clock-card">
+        <view class="scc-btn-area">
+          <view class="scc-clock-btn disabled-btn" @click="openLoginSheet({ success: refreshHome })">
+            <text class="scc-btn-main">登录</text>
+            <text class="scc-btn-sub">查看今日排班</text>
+          </view>
         </view>
       </view>
 
@@ -863,70 +869,6 @@ onUnload(stopCountdown)
   border: none;
 }
 
-.today-shift-card {
-  background: #fff;
-  border-radius: 24rpx;
-  padding: 28rpx 32rpx;
-  margin-bottom: 32rpx;
-  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06);
-}
-
-.shift-card-time {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12rpx;
-}
-
-.shift-time-text {
-  font-size: 36rpx;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.shift-badge {
-  font-size: 22rpx;
-  padding: 6rpx 16rpx;
-  border-radius: 20rpx;
-  font-weight: 500;
-}
-
-.shift-badge.working {
-  background: rgba(32, 194, 107, 0.12);
-  color: #20c26b;
-}
-
-.shift-card-title {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 16rpx;
-  display: block;
-}
-
-.shift-card-loc {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.shift-loc-text {
-  font-size: 26rpx;
-  color: #6b7280;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.shift-dist-tag {
-  font-size: 24rpx;
-  color: #20c26b;
-  font-weight: 500;
-  flex-shrink: 0;
-  margin-left: 16rpx;
-}
-
 .content-section {
   margin-top: -40rpx;
   padding: 0 24rpx;
@@ -934,16 +876,111 @@ onUnload(stopCountdown)
   z-index: 10;
 }
 
-.clock-btn-wrap {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 28rpx;
+.shift-clock-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 8rpx 32rpx rgba(0, 0, 0, 0.06);
 }
 
-.big-clock-btn {
+.scc-top {
+  cursor: pointer;
+}
+
+.scc-title {
+  display: block;
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 12rpx;
+}
+
+.scc-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-bottom: 8rpx;
+}
+
+.scc-time {
+  font-size: 26rpx;
+  color: #6b7280;
+}
+
+.scc-badge {
+  font-size: 22rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 16rpx;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.scc-badge.ready,
+.scc-badge.idle {
+  background: #f3f4f6;
+  color: #9ca3af;
+}
+
+.scc-badge.working {
+  background: #e6f8ee;
+  color: #20c26b;
+}
+
+.scc-badge.done {
+  background: #e6f8ee;
+  color: #20c26b;
+}
+
+.scc-badge.late {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.scc-badge.absent {
+  background: #fee2e2;
+  color: #ef4444;
+}
+
+.scc-loc-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.scc-loc {
+  font-size: 24rpx;
+  color: #999;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scc-dist {
+  font-size: 22rpx;
+  color: #20c26b;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.scc-divider {
+  height: 1rpx;
+  background: #f0f0f0;
+  margin: 24rpx 0;
+}
+
+.scc-btn-area {
+  display: flex;
+  justify-content: center;
+}
+
+.scc-clock-btn {
   position: relative;
-  width: 360rpx;
-  height: 360rpx;
+  width: 280rpx;
+  height: 280rpx;
   border-radius: 50%;
   background: linear-gradient(145deg, #2ad879 0%, #20c26b 40%, #1aab5a 100%);
   color: #fff;
@@ -951,80 +988,80 @@ onUnload(stopCountdown)
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 24rpx 60rpx rgba(32, 194, 107, 0.45),
-              0 8rpx 20rpx rgba(0, 0, 0, 0.1),
-              inset 0 -10rpx 24rpx rgba(0, 0, 0, 0.12),
-              inset 0 6rpx 16rpx rgba(255, 255, 255, 0.25);
+  box-shadow: 0 16rpx 40rpx rgba(32, 194, 107, 0.35),
+              0 6rpx 16rpx rgba(0, 0, 0, 0.08),
+              inset 0 -8rpx 20rpx rgba(0, 0, 0, 0.1),
+              inset 0 4rpx 12rpx rgba(255, 255, 255, 0.2);
 }
 
-.big-clock-btn::after {
+.scc-clock-btn::after {
   content: '';
   position: absolute;
-  top: 12rpx;
+  top: 10rpx;
   left: 50%;
   transform: translateX(-50%);
-  width: 180rpx;
-  height: 12rpx;
+  width: 140rpx;
+  height: 10rpx;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.35);
-  filter: blur(4rpx);
+  background: rgba(255, 255, 255, 0.3);
+  filter: blur(3rpx);
 }
 
-.big-clock-btn.ready {
+.scc-clock-btn.ready {
   background: linear-gradient(145deg, #2ad879 0%, #20c26b 40%, #1aab5a 100%);
 }
 
-.big-clock-btn.working {
+.scc-clock-btn.working {
   background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  box-shadow: 0 20rpx 50rpx rgba(59, 130, 246, 0.4),
-              inset 0 -12rpx 30rpx rgba(0, 0, 0, 0.15),
-              inset 0 12rpx 30rpx rgba(255, 255, 255, 0.2);
+  box-shadow: 0 16rpx 40rpx rgba(59, 130, 246, 0.35),
+              inset 0 -8rpx 20rpx rgba(0, 0, 0, 0.12),
+              inset 0 8rpx 20rpx rgba(255, 255, 255, 0.15);
 }
 
-.big-clock-btn.done {
+.scc-clock-btn.done {
   background: linear-gradient(135deg, #8de6b0 0%, #20c26b 100%);
   opacity: 0.85;
 }
 
-.big-clock-btn.late {
+.scc-clock-btn.late {
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  box-shadow: 0 20rpx 50rpx rgba(245, 158, 11, 0.4),
-              inset 0 -12rpx 30rpx rgba(0, 0, 0, 0.15),
-              inset 0 12rpx 30rpx rgba(255, 255, 255, 0.2);
+  box-shadow: 0 16rpx 40rpx rgba(245, 158, 11, 0.35),
+              inset 0 -8rpx 20rpx rgba(0, 0, 0, 0.12),
+              inset 0 8rpx 20rpx rgba(255, 255, 255, 0.15);
 }
 
-.big-clock-btn.absent {
+.scc-clock-btn.absent {
   background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
 }
 
-.big-clock-btn.disabled-btn {
+.scc-clock-btn.disabled-btn {
   background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
 }
 
-.big-clock-btn:active {
+.scc-clock-btn:active {
   transform: scale(0.96);
 }
 
-.btn-pulse-ring {
+.scc-btn-pulse {
   position: absolute;
-  top: -20rpx;
-  left: -20rpx;
-  right: -20rpx;
-  bottom: -20rpx;
+  top: -16rpx;
+  left: -16rpx;
+  right: -16rpx;
+  bottom: -16rpx;
   border-radius: 50%;
-  border: 4rpx solid rgba(32, 194, 107, 0.35);
-  animation: pulse 2s ease-in-out infinite;
+  border: 3rpx solid rgba(32, 194, 107, 0.3);
+  animation: sccPulse 2s ease-in-out infinite;
 }
 
-.big-clock-btn.working .btn-pulse-ring {
-  border-color: rgba(59, 130, 246, 0.3);
+.scc-clock-btn.working .scc-btn-pulse {
+  border-color: rgba(59, 130, 246, 0.25);
 }
 
-.big-clock-btn.late .btn-pulse-ring {
-  border-color: rgba(245, 158, 11, 0.3);
+.scc-clock-btn.late .scc-btn-pulse {
+  border-color: rgba(245, 158, 11, 0.25);
 }
 
-@keyframes pulse {
+@keyframes sccPulse {
   0%, 100% {
     transform: scale(1);
     opacity: 0.6;
@@ -1035,56 +1072,56 @@ onUnload(stopCountdown)
   }
 }
 
-.btn-main-text {
-  font-size: 56rpx;
+.scc-btn-main {
+  font-size: 44rpx;
   font-weight: 800;
-  margin-bottom: 10rpx;
+  margin-bottom: 8rpx;
 }
 
-.btn-sub-text {
-  font-size: 26rpx;
-  opacity: 0.9;
-  margin-bottom: 16rpx;
-}
-
-.btn-dist-tag {
-  padding: 6rpx 20rpx;
-  border-radius: 20rpx;
-  background: rgba(255, 255, 255, 0.25);
+.scc-btn-sub {
   font-size: 22rpx;
+  opacity: 0.9;
+  margin-bottom: 12rpx;
 }
 
-.status-tips {
+.scc-btn-dist {
+  padding: 4rpx 16rpx;
+  border-radius: 16rpx;
+  background: rgba(255, 255, 255, 0.25);
+  font-size: 20rpx;
+}
+
+.scc-tips {
   display: flex;
   justify-content: center;
-  gap: 32rpx;
-  margin-bottom: 32rpx;
+  gap: 24rpx;
+  margin-top: 20rpx;
 }
 
-.status-tip {
+.scc-tip {
   display: flex;
   align-items: center;
-  gap: 8rpx;
-  font-size: 24rpx;
+  gap: 6rpx;
+  font-size: 22rpx;
   color: #888;
 }
 
-.tip-dot {
-  width: 12rpx;
-  height: 12rpx;
+.scc-dot {
+  width: 10rpx;
+  height: 10rpx;
   border-radius: 50%;
   background: #20c26b;
 }
 
-.tip-dot.ok {
+.scc-dot.ok {
   background: #20c26b;
 }
 
-.tip-dot.warn {
+.scc-dot.warn {
   background: #ef4444;
 }
 
-.tip-dot.info {
+.scc-dot.info {
   background: #3b82f6;
 }
 

@@ -55,9 +55,9 @@
               <text class="detail-label">签退</text>
               <text class="detail-value" :class="{ 'is-null': !shift.checkOutTime }">{{ shift.checkOutTime || '未签退' }}</text>
             </view>
-            <view class="detail-item" v-if="shift.location">
+            <view class="detail-item detail-item-location" v-if="shift.location">
               <text class="detail-label">地点</text>
-              <text class="detail-value location">{{ shift.location }}</text>
+              <view class="detail-value location">{{ shift.location }}</view>
             </view>
           </view>
         </view>
@@ -477,6 +477,7 @@ onMounted(() => loadShifts(1))
 
 .detail-item {
   min-width: 160rpx;
+  overflow: hidden;
 }
 
 .detail-label {
@@ -495,9 +496,17 @@ onMounted(() => loadShifts(1))
   color: #ccc;
 }
 
+.detail-item-location {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
 .detail-value.location {
   font-size: 24rpx;
   color: #666;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .empty-state {
