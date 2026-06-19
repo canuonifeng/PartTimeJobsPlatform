@@ -12,6 +12,7 @@ import com.parttime.cservice.pojo.entity.WorkerProfile;
 import com.parttime.cservice.pojo.vo.LoginVO;
 import com.parttime.cservice.pojo.vo.WorkerVO;
 import com.parttime.cservice.service.WorkerService;
+import com.parttime.cservice.service.ReferralService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -38,6 +39,8 @@ public class WorkerServiceImpl implements WorkerService {
     private JwtTokenProvider jwtTokenProvider;
     @Resource
     private WeChatConfig weChatConfig;
+    @Resource
+    private ReferralService referralService;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -76,7 +79,7 @@ public class WorkerServiceImpl implements WorkerService {
     }
 
     @Override
-    public LoginVO loginWithWechat(String code) {
+    public LoginVO loginWithWechat(String code, String referralCode) {
         String openId = exchangeWechatCode(code);
         Optional<Worker> existing = workerMapper.findByOpenId(openId);
         Long workerId;
@@ -93,13 +96,14 @@ public class WorkerServiceImpl implements WorkerService {
             workerMapper.insert(worker);
             createProfile(worker);
             workerId = worker.getId();
+            tryBindReferral(workerId, referralCode);
         }
         String token = jwtTokenProvider.generateToken(String.valueOf(workerId), List.of("ROLE_WORKER"));
         return new LoginVO(token, workerId, openId, worker.getName());
     }
 
     @Override
-    public LoginVO loginWithWechatPhone(WeChatPhoneLoginCmd request) {
+    public LoginVO loginWithWechatPhone(WeChatPhoneLoginCmd request, String referralCode) {
         if (request.code() == null || request.code().isEmpty()) {
             throw new RuntimeException("微信登录code不能为空");
         }
@@ -138,6 +142,7 @@ public class WorkerServiceImpl implements WorkerService {
                 worker.setUpdatedAt(LocalDateTime.now());
                 workerMapper.insert(worker);
                 createProfile(worker);
+                tryBindReferral(worker.getId(), referralCode);
             }
         }
 
@@ -152,7 +157,7 @@ public class WorkerServiceImpl implements WorkerService {
     }
 
     @Override
-    public LoginVO loginByPhone(PhoneLoginCmd request) {
+    public LoginVO loginByPhone(PhoneLoginCmd request, String referralCode) {
         String stored = smsCodeStore.get(request.phone());
         if (stored == null || !stored.equals(request.code())) {
             if (!"123456".equals(request.code())) {
@@ -173,6 +178,7 @@ public class WorkerServiceImpl implements WorkerService {
             worker.setUpdatedAt(LocalDateTime.now());
             workerMapper.insert(worker);
             createProfile(worker);
+            tryBindReferral(worker.getId(), referralCode);
         }
         String token = jwtTokenProvider.generateToken(String.valueOf(worker.getId()), List.of("ROLE_WORKER"));
         return new LoginVO(token, worker.getId());
@@ -205,6 +211,17 @@ public class WorkerServiceImpl implements WorkerService {
         worker.setUpdatedAt(LocalDateTime.now());
         workerMapper.update(worker);
         return toResponse(worker);
+    }
+
+    private void tryBindReferral(Long workerId, String referralCode) {
+        if (referralCode == null || referralCode.isEmpty()) {
+            return;
+        }
+        try {
+            referralService.bindReferral(workerId, referralCode);
+        } catch (Exception e) {
+            // silently ignore
+        }
     }
 
     private void createProfile(Worker worker) {

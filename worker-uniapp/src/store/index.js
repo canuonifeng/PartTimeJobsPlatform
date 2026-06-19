@@ -9,6 +9,14 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isLoggedIn = computed(() => !!token.value)
 
+  function getInviteCode() {
+    return uni.getStorageSync('inviteCode') || ''
+  }
+
+  function clearInviteCode() {
+    uni.removeStorageSync('inviteCode')
+  }
+
   function readStoredWorkerInfo() {
     const stored = uni.getStorageSync('workerInfo')
     if (!stored) return null
@@ -51,11 +59,12 @@ export const useAuthStore = defineStore('auth', () => {
     const data = await request({
       url: '/auth/phone-login',
       method: 'POST',
-      data: { phone, code }
+      data: { phone, code, referralCode: getInviteCode() }
     })
     token.value = data.token
     uni.setStorageSync('token', data.token)
     workerInfo.value = null
+    clearInviteCode()
     return data
   }
 
@@ -69,11 +78,12 @@ export const useAuthStore = defineStore('auth', () => {
             const data = await request({
               url: '/auth/wechat-login',
               method: 'POST',
-              data: { code }
+              data: { code, referralCode: getInviteCode() }
             })
             token.value = data.token
             uni.setStorageSync('token', data.token)
             workerInfo.value = null
+            clearInviteCode()
             resolve(data)
           } catch (err) {
             reject(err)
@@ -93,10 +103,21 @@ export const useAuthStore = defineStore('auth', () => {
         success: async (loginRes) => {
           const code = loginRes.code
           try {
-            const data = await wechatPhoneLoginApi(code, phoneAuth.phoneCode, phoneAuth.encryptedData, phoneAuth.iv)
+            const data = await request({
+                url: '/auth/wechat-phone-login',
+                method: 'POST',
+                data: {
+                  code,
+                  phoneCode: phoneAuth.phoneCode,
+                  encryptedData: phoneAuth.encryptedData,
+                  iv: phoneAuth.iv,
+                  referralCode: getInviteCode()
+                }
+              })
             token.value = data.token
             uni.setStorageSync('token', data.token)
             workerInfo.value = null
+            clearInviteCode()
             resolve(data)
           } catch (err) {
             reject(err)
@@ -153,6 +174,7 @@ export const useAuthStore = defineStore('auth', () => {
     sendSmsCode,
     loadWorkerInfo,
     setWorkerInfo,
-    logout
+    logout,
+    getInviteCode
   }
 })

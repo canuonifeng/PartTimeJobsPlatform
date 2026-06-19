@@ -10,13 +10,27 @@ async function routeBySession() {
   uni.switchTab({ url: '/pages/jobs/jobList' })
 }
 
-onLaunch(() => {
+function saveInviteCodeFromQuery(query) {
+  if (!query) return
+  const code = query.inviteCode || query.referralCode || query.code
+  if (code && typeof code === 'string') {
+    uni.setStorageSync('inviteCode', code)
+  }
+}
+
+onLaunch((options) => {
   console.log('App Launch')
+  if (options && options.query) {
+    saveInviteCodeFromQuery(options.query)
+  }
   routeBySession()
   refreshMessageTabBarBadge()
 })
-onShow(() => {
+onShow((options) => {
   console.log('App Show')
+  if (options && options.query) {
+    saveInviteCodeFromQuery(options.query)
+  }
   refreshMessageTabBarBadge()
 })
 onHide(() => {

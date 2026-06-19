@@ -63,14 +63,14 @@ public class AuthController {
     @Operation(summary = "微信登录", description = "工人通过微信登录获取完整信息")
     @PostMapping("/wechat-login")
     public ApiResponse<LoginVO> wechatLogin(@Parameter(description = "微信登录请求") @RequestBody WeChatLoginCmd request) {
-        LoginVO response = workerService.loginWithWechat(request.code());
+        LoginVO response = workerService.loginWithWechat(request.code(), request.referralCode());
         return ApiResponse.success(response);
     }
 
     @Operation(summary = "微信手机号登录", description = "工人通过微信授权获取手机号并登录")
     @PostMapping("/wechat-phone-login")
     public ApiResponse<LoginVO> wechatPhoneLogin(@Parameter(description = "微信手机号登录请求") @RequestBody WeChatPhoneLoginCmd request) {
-        LoginVO response = workerService.loginWithWechatPhone(request);
+        LoginVO response = workerService.loginWithWechatPhone(request, request.referralCode());
         return ApiResponse.success(response);
     }
 
@@ -84,7 +84,7 @@ public class AuthController {
     @Operation(summary = "手机号登录", description = "通过手机号+验证码登录")
     @PostMapping("/phone-login")
     public ApiResponse<LoginVO> phoneLogin(@RequestBody PhoneLoginCmd request) {
-        LoginVO response = workerService.loginByPhone(request);
+        LoginVO response = workerService.loginByPhone(request, request.referralCode());
         return ApiResponse.success(response);
     }
 
@@ -111,4 +111,5 @@ public class AuthController {
         WorkerVO worker = workerService.updateProfile(workerId, request);
         return ApiResponse.success(worker);
     }
+
 }

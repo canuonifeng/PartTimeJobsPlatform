@@ -11,9 +11,9 @@ import com.parttime.cservice.pojo.vo.WorkerVO;
 public interface WorkerService {
     WorkerVO register(RegisterCmd request);
     String login(String wechatCode);
-    LoginVO loginWithWechat(String code);
-    LoginVO loginWithWechatPhone(WeChatPhoneLoginCmd request);
-    LoginVO loginByPhone(PhoneLoginCmd request);
+    LoginVO loginWithWechat(String code, String referralCode);
+    LoginVO loginWithWechatPhone(WeChatPhoneLoginCmd request, String referralCode);
+    LoginVO loginByPhone(PhoneLoginCmd request, String referralCode);
     void sendSmsCode(String phone);
     WorkerVO getWorkerByOpenId(String openId);
     WorkerVO getWorkerById(Long id);
