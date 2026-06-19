@@ -1,5 +1,5 @@
 <template>
-  <view class="detail-page">
+  <view class="detail-page" >
     <uni-load-more v-if="loading" status="loading" />
 
     <view v-if="!job && !loading" class="empty-state">
@@ -7,22 +7,19 @@
     </view>
 
     <template v-if="job && !loading">
-      <view class="detail-banner">
-        <view class="banner-info">
-          <view class="pay-badge">
-            <text>💰 {{ salaryText }}</text>
-          </view>
-          <text class="banner-title">{{ title }}</text>
-          <view class="banner-tags">
-            <text v-for="(tag, idx) in bannerTags" :key="idx" class="banner-tag">{{ tag }}</text>
-          </view>
-        </view>
-        <view class="banner-illustration">
-          <text>{{ heroEmoji }}</text>
-        </view>
-      </view>
-
+    
       <scroll-view class="detail-content" scroll-y>
+        <view class="detail-banner" :style="bannerStyle">
+          <view v-if="bannerImage" class="banner-overlay"></view>
+        </view>
+
+        <view class="job-info-card">
+          <text class="job-info-title">{{ title }}</text>
+          <view v-if="jobTags.length > 0" class="job-info-tags">
+            <text v-for="(tag, idx) in jobTags.slice(0, 5)" :key="idx" class="job-info-tag">{{ tag }}</text>
+          </view>
+        </view>
+
         <view class="detail-card">
           <view class="card-title">
             <view class="title-icon"><text>📅</text></view>
@@ -51,13 +48,17 @@
               :class="scheduleCardClass(slot)"
               @click="toggleSchedule(slot)"
             >
-              <text v-if="isScheduleApplied(slot.id)" class="sch-status applied">已报名</text>
-              <text v-else-if="isScheduleFull(slot)" class="sch-status full">已报满</text>
-              <text v-else-if="pendingScheduleIds.includes(Number(slot.id))" class="sch-status selected">已选</text>
-              <text v-else class="sch-status">选择</text>
-              <text class="sch-date">{{ scheduleDate(slot) }}</text>
-              <text class="sch-time">{{ scheduleTime(slot) }}</text>
-              <text class="sch-pay">{{ schedulePay(slot) }}</text>
+              <view class="sch-date-box" :class="{ active: pendingScheduleIds.includes(Number(slot.id)) }">
+                <text class="sch-date-day">{{ formatSlotDay(slot.date) }}</text>
+                <text class="sch-date-month">{{ formatSlotMonth(slot.date) }}月</text>
+              </view>
+              <view class="sch-right">
+                <view class="sch-pay">{{ schedulePay(slot) }}</view>
+                <view class="sch-time">{{ scheduleTime(slot) }}</view>
+              </view>
+              <text v-if="isScheduleApplied(slot.id)" class="sch-corner-badge applied">已报名</text>
+              <text v-else-if="isScheduleFull(slot)" class="sch-corner-badge full">已报满</text>
+              <text v-else-if="pendingScheduleIds.includes(Number(slot.id))" class="sch-corner-badge selected">已选</text>
             </view>
           </view>
 
@@ -79,30 +80,6 @@
           </view>
         </view>
 
-        <view class="info-grid">
-          <view class="info-grid-item">
-            <text class="grid-label">招聘人数</text>
-            <text class="grid-value">{{ headcountText }}</text>
-          </view>
-          <view class="info-grid-item">
-            <text class="grid-label">结算方式</text>
-            <text class="grid-value">{{ settlementBadgeText }}</text>
-          </view>
-          <view class="info-grid-item">
-            <text class="grid-label">报名截止</text>
-            <text class="grid-value">{{ deadlineText }}</text>
-          </view>
-        </view>
-
-        <view v-if="jobTags.length > 0" class="detail-card">
-          <view class="card-title">
-            <view class="title-icon"><text>🎁</text></view>
-            <text class="title-text">岗位福利</text>
-          </view>
-          <view class="tag-cloud">
-            <text v-for="(tag, idx) in jobTags" :key="idx" class="cloud-tag">{{ tag }}</text>
-          </view>
-        </view>
 
         <view class="detail-card">
           <view class="card-title">
@@ -156,10 +133,6 @@
         <view class="action-icon-btn" @click="handlePhone">
           <text class="action-icon">📞</text>
           <text class="action-label">电话</text>
-        </view>
-        <view class="action-icon-btn" @click="toggleFavorite">
-          <text class="action-icon">{{ isFavorited ? '♥' : '♡' }}</text>
-          <text class="action-label">收藏</text>
         </view>
         <button
           class="apply-btn-main"
@@ -223,6 +196,13 @@ const showSuccess = ref(false)
 const applying = ref(false)
 
 const title = computed(() => job.value?.title || '')
+const bannerImage = computed(() => job.value?.imageUrl || job.value?.coverImage || '')
+const bannerStyle = computed(() => {
+  if (bannerImage.value) {
+    return { backgroundImage: 'url(' + bannerImage.value + ')' }
+  }
+  return {}
+})
 const companyName = computed(() => job.value?.companyName || '')
 const locationText = computed(() => job.value?.location || '暂无地点')
 const headcountText = computed(() => job.value?.headcount ? `${job.value.headcount}人` : '不限')
@@ -255,7 +235,7 @@ const bannerTags = computed(() => {
       .slice(0, 2 - tags.length)
     tags.push(...tagNames)
   }
-  return tags.slice(0, 3)
+  return tags.slice(0, 2)
 })
 
 const jobTags = computed(() => {
@@ -442,6 +422,18 @@ function scheduleDate(slot: any) {
 function scheduleTime(slot: any) {
   if (slot?.startTime && slot?.endTime) return `${slot.startTime}-${slot.endTime}`
   return '时间待定'
+}
+
+function formatSlotDay(dateStr: string) {
+  if (!dateStr) return ''
+  const parts = String(dateStr).split('-')
+  return parts.length >= 3 ? parts[2] : dateStr.slice(-2)
+}
+
+function formatSlotMonth(dateStr: string) {
+  if (!dateStr) return ''
+  const parts = String(dateStr).split('-')
+  return parts.length >= 2 ? String(Number(parts[1])) : ''
 }
 
 function schedulePay(slot: any) {
@@ -635,7 +627,8 @@ onShareAppMessage(() => ({
   display: inline-block;
   padding: 8rpx 20rpx;
   border-radius: 24rpx;
-  background: rgba(255, 255, 255, 0.25);
+  background: #fff4ee;
+  color: #ff6b35;
   font-size: 24rpx;
   font-weight: 600;
   margin-bottom: 16rpx;
@@ -692,8 +685,42 @@ onShareAppMessage(() => ({
   font-size: 64rpx;
 }
 
+.job-info-card {
+  background: #fff;
+  margin: 30rpx 24rpx 16rpx;
+  border-radius: 20rpx;
+  padding: 28rpx 28rpx 24rpx;
+  position: relative;
+  z-index: 5;
+  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.06);
+}
+
+.job-info-title {
+  display: block;
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.3;
+  margin-bottom: 16rpx;
+}
+
+.job-info-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.job-info-tag {
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 16rpx;
+  background: #ecfdf3;
+  color: #20c26b;
+  font-weight: 500;
+}
+
 .detail-content {
-  height: calc(100vh - 320rpx - 140rpx);
+  height: calc(100vh - 140rpx);
 }
 
 .detail-card {
@@ -761,69 +788,114 @@ onShareAppMessage(() => ({
 }
 
 .schedule-card {
-  position: relative;
-  padding: 20rpx;
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 24rpx 20rpx;
   border: 2rpx solid #f0f0f0;
   border-radius: 16rpx;
-  background: #fafbff;
+  background: #fff;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .schedule-card.selected {
   border-color: #20c26b;
-  background: linear-gradient(135deg, #eefbf3, #e8f8ee);
-  box-shadow: 0 6rpx 18rpx rgba(16, 185, 129, 0.15);
+  background: #f0fdf4;
 }
 
 .schedule-card.full {
-  opacity: 0.5;
+  opacity: 0.55;
 }
 
-.sch-status {
-  position: absolute;
-  top: 12rpx;
-  right: 12rpx;
+.sch-date-box {
+  width: 88rpx;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #ecfdf3;
+  border-radius: 14rpx;
+  padding: 14rpx 0;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.sch-date-box.active {
+  background: #20c26b;
+}
+
+.sch-date-box.active .sch-date-day,
+.sch-date-box.active .sch-date-month {
+  color: #fff;
+}
+
+.sch-date-day {
+  font-size: 40rpx;
+  font-weight: 800;
+  color: #20c26b;
+  line-height: 1;
+}
+
+.sch-date-month {
   font-size: 20rpx;
-  padding: 4rpx 12rpx;
-  border-radius: 16rpx;
-  background: #e5e7eb;
-  color: #6b7280;
+  color: #20c26b;
+  margin-top: 6rpx;
 }
 
-.sch-status.selected {
-  background: #20c26b;
-  color: #fff;
-}
-
-.sch-status.full {
-  background: #ef4444;
-  color: #fff;
-}
-
-.sch-status.applied {
-  background: #20c26b;
-  color: #fff;
-}
-
-.sch-date {
-  display: block;
-  font-size: 26rpx;
-  font-weight: 700;
-  color: #1a1a2e;
-  margin-bottom: 8rpx;
-}
-
-.sch-time {
-  display: block;
-  font-size: 24rpx;
-  color: #666;
-  margin-bottom: 12rpx;
+.sch-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8rpx;
+  min-width: 0;
 }
 
 .sch-pay {
-  display: block;
   font-size: 28rpx;
   font-weight: 700;
-  color: #20c26b;
+  color: #ff6b35;
+  line-height: 1.2;
+}
+
+.sch-time {
+  font-size: 24rpx;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.sch-corner-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 20rpx;
+  padding: 6rpx 16rpx 6rpx 20rpx;
+  border-radius: 0 14rpx 0 14rpx;
+  background: #e5e7eb;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.sch-corner-badge.selected {
+  background: #20c26b;
+  color: #fff;
+}
+
+.sch-corner-badge.applied {
+  background: #20c26b;
+  color: #fff;
+}
+
+.sch-corner-badge.full {
+  background: #ef4444;
+  color: #fff;
 }
 
 .schedule-summary {
@@ -912,36 +984,6 @@ onShareAppMessage(() => ({
   color: #20c26b;
   font-weight: 600;
   flex-shrink: 0;
-}
-
-.info-grid {
-  display: flex;
-  gap: 16rpx;
-  margin: 0 24rpx 20rpx;
-}
-
-.info-grid-item {
-  flex: 1;
-  background: #fff;
-  border-radius: 14rpx;
-  padding: 20rpx 12rpx;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8rpx;
-  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.03);
-}
-
-.grid-label {
-  font-size: 22rpx;
-  color: #999;
-}
-
-.grid-value {
-  font-size: 26rpx;
-  font-weight: 600;
-  color: #333;
-  text-align: center;
 }
 
 .tag-cloud {

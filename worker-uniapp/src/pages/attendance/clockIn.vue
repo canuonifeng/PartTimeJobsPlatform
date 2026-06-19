@@ -290,7 +290,7 @@ onMounted(() => loadShifts(1))
 .page-header {
   position: relative;
   background: linear-gradient(135deg, #20c26b 0%, #1aab5a 55%, #169950 100%);
-  padding: 100rpx 32rpx 60rpx;
+  padding: 100rpx 32rpx 100rpx;
   color: #fff;
   overflow: hidden;
 }

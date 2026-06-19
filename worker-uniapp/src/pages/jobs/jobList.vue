@@ -1,25 +1,26 @@
 <template>
   <view class="job-list-page">
     <view class="jobs-header">
-      <view class="greeting-row">
-        <view class="greeting-col">
-          <text class="greeting-text">{{ greetingText }}</text>
-          <text class="greeting-sub">{{ subGreetingText }}</text>
-        </view>
-        <view class="avatar-box" @click="goProfile">
-          <text class="avatar-emoji">👷</text>
-        </view>
+      <view class="brand-row">
+        <text class="brand-name">老登e站</text>
+        <text class="brand-tagline">日结灵活 · 安全可靠</text>
       </view>
-      <view class="search-box">
-        <text class="search-icon">🔍</text>
-        <input
-          class="search-input"
-          v-model="keyword"
-          placeholder="搜职位、公司或地点"
-          confirm-type="search"
-          @confirm="onSearch"
-        />
-        <text v-if="keyword" class="search-clear" @click.stop="clearSearch">×</text>
+      <view class="city-search-row">
+        <view class="city-box" @click="goProfile">
+          <text class="city-icon">📍</text>
+          <text class="city-name">{{ cityName || locationText }}</text>
+        </view>
+        <view class="search-box">
+          <text class="search-icon">🔍</text>
+          <input
+            class="search-input"
+            v-model="keyword"
+            placeholder="搜职位、公司或地点"
+            confirm-type="search"
+            @confirm="onSearch"
+          />
+          <text v-if="keyword" class="search-clear" @click.stop="clearSearch">×</text>
+        </view>
       </view>
     </view>
 
@@ -49,14 +50,16 @@
     >
       <view class="job-list-inner">
         <view v-for="job in jobList" :key="job.id" class="job-card" @click="goDetail(job.id)">
-          <view class="job-card-top">
-            <text class="job-pay">{{ formatRates(job.rates, job.minRate, job.maxRate) }}</text>
-            <text v-if="hotTagText(job)" class="job-hot-tag">{{ hotTagText(job) }}</text>
+          <view class="job-title-row">
+            <text class="job-title">{{ job.title }}</text>
+            <view class="job-pay-block">
+              <text class="job-pay">{{ formatRates(job.rates, job.minRate, job.maxRate) }}</text>
+              <text v-if="hotTagText(job)" class="job-hot-tag">{{ hotTagText(job) }}</text>
+            </view>
           </view>
-          <text class="job-title">{{ job.title }}</text>
           <view class="job-meta">
-            <text class="job-meta-item">📍 {{ job.location || '附近' }}</text>
-            <text v-if="job.distanceKm != null" class="job-meta-item">📏 {{ job.distanceKm }}km</text>
+            <text class="job-address">📍 {{ job.location || '附近' }}</text>
+            <text v-if="job.distanceKm != null" class="job-distance">{{ job.distanceKm }}km</text>
           </view>
           <view class="job-tags">
             <text v-for="(tag, idx) in getDisplayTags(job)" :key="idx" class="job-tag" :class="tagClass(tag)">{{ tag }}</text>
@@ -126,24 +129,18 @@ const loading = ref(false)
 const loadingMore = ref(false)
 const refreshing = ref(false)
 const currentLocation = ref<{ latitude: number; longitude: number } | null>(null)
+const locationLoaded = ref(false)
+const cityName = ref('')
 
 const allCategory = { id: undefined, name: '全部', key: 'all' }
 const categories = ref<JobCategory[]>([allCategory])
 
-const greetingText = computed(() => {
-  const hour = new Date().getHours()
-  if (hour < 6) return '夜深了'
-  if (hour < 9) return '早上好'
-  if (hour < 12) return '上午好'
-  if (hour < 14) return '中午好'
-  if (hour < 18) return '下午好'
-  return '晚上好'
-})
 
-const subGreetingText = computed(() => {
-  const count = jobList.value.length
-  if (count === 0) return '发现附近的好活'
-  return `附近有 ${count} 个热门职位`
+
+const locationText = computed(() => {
+  if (locationLoaded.value && currentLocation.value) return '定位已获取'
+  if (locationLoaded.value && !currentLocation.value) return '定位失败'
+  return '定位中...'
 })
 
 function flattenCategories(list: JobCategory[], parentName?: string): JobCategory[] {
@@ -202,18 +199,43 @@ async function fetchJobs(p: number, append: boolean = false) {
 }
 
 function loadCurrentLocation() {
+  locationLoaded.value = false
   return new Promise<void>((resolve) => {
     uni.getLocation({
       type: 'wgs84',
       success(res) {
         currentLocation.value = { latitude: res.latitude, longitude: res.longitude }
+        locationLoaded.value = true
+        reverseGeocode(res.latitude, res.longitude)
         resolve()
       },
       fail() {
         currentLocation.value = null
+        locationLoaded.value = true
         resolve()
       }
     })
+  })
+}
+
+function reverseGeocode(lat: number, lng: number) {
+  uni.request({
+    url: `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=zh`,
+    success(res: any) {
+      const data = res?.data || res
+      if (data?.address?.city) {
+        cityName.value = data.address.city
+      } else if (data?.address?.county) {
+        cityName.value = data.address.county
+      } else if (data?.address?.state) {
+        cityName.value = data.address.state
+      } else if (data?.name) {
+        cityName.value = data.name
+      }
+    },
+    fail() {
+      // 静默失败
+    }
   })
 }
 
@@ -328,13 +350,14 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  overflow: hidden;
   background: #f5f6fa;
 }
 
 .jobs-header {
   position: relative;
   background: linear-gradient(135deg, #20c26b 0%, #1aab5a 55%, #169950 100%);
-  padding: 100rpx 32rpx 32rpx;
+  padding: 60rpx 32rpx 32rpx;
   color: #fff;
   overflow: hidden;
 }
@@ -361,51 +384,54 @@ onMounted(() => {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.greeting-row {
+
+
+.brand-row {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 28rpx;
+  align-items: baseline;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
 }
-
-.greeting-col {
-  display: flex;
-  flex-direction: column;
+.brand-name {
+  font-size: 44rpx;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 2rpx;
 }
-
-.greeting-text {
-  font-size: 40rpx;
-  font-weight: 700;
-  line-height: 1.3;
+.brand-tagline {
+  font-size: 24rpx;
+  color: rgba(255,255,255,0.75);
 }
-
-.greeting-sub {
-  font-size: 26rpx;
-  opacity: 0.85;
-  margin-top: 6rpx;
-}
-
-.avatar-box {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.25);
+.city-search-row {
   display: flex;
   align-items: center;
-  justify-content: center;
-  border: 2rpx solid rgba(255, 255, 255, 0.4);
+  gap: 16rpx;
 }
-
-.avatar-emoji {
-  font-size: 36rpx;
+.city-box {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
-
+.city-icon {
+  font-size: 28rpx;
+  margin-right: 6rpx;
+}
+.city-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #fff;
+  max-width: 140rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .search-box {
   display: flex;
   align-items: center;
-  height: 88rpx;
-  padding: 0 28rpx;
-  border-radius: 44rpx;
+  flex: 1;
+  height: 80rpx;
+  padding: 0 24rpx;
+  border-radius: 40rpx;
   background: #fff;
   box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
 }
@@ -476,6 +502,7 @@ onMounted(() => {
 
 .job-scroll {
   flex: 1;
+  min-height: 0;
   padding: 0;
 }
 
@@ -496,10 +523,10 @@ onMounted(() => {
 
 .job-card {
   position: relative;
-  padding: 32rpx;
-  padding-left: 36rpx;
-  margin-bottom: 24rpx;
-  border-radius: 20rpx;
+  padding: 28rpx;
+  padding-left: 32rpx;
+  margin-bottom: 20rpx;
+  border-radius: 18rpx;
   background: #fff;
   box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.05), 0 2rpx 8rpx rgba(0, 0, 0, 0.03);
   overflow: hidden;
@@ -522,74 +549,96 @@ onMounted(() => {
   box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
 }
 
-.job-card-top {
+.job-title-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12rpx;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+.job-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1a1a2e;
+  line-height: 1.3;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.job-pay-block {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  flex-shrink: 0;
 }
 
 .job-pay {
-  font-size: 48rpx;
+  font-size: 34rpx;
   font-weight: 800;
-  color: #20c26b;
+  color: #ff6b35;
   line-height: 1.2;
   letter-spacing: -1rpx;
 }
 
 .job-hot-tag {
   flex-shrink: 0;
-  padding: 6rpx 18rpx;
-  border-radius: 20rpx;
-  font-size: 22rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 16rpx;
+  font-size: 20rpx;
   font-weight: 600;
   color: #fff;
   background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
 }
 
-.job-title {
-  display: block;
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #1a1a2e;
-  line-height: 1.4;
-  margin-bottom: 16rpx;
+.job-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+  margin-bottom: 14rpx;
+}
+
+.job-address {
+  font-size: 22rpx;
+  color: #888;
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
-.job-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20rpx;
-  margin-bottom: 18rpx;
-}
-
-.job-meta-item {
-  font-size: 24rpx;
-  color: #888;
+.job-distance {
+  font-size: 22rpx;
+  font-weight: 700;
+  color: #20c26b;
   flex-shrink: 0;
+  background: #ecfdf3;
+  padding: 4rpx 12rpx;
+  border-radius: 14rpx;
 }
 
 .job-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 12rpx;
-  margin-bottom: 24rpx;
+  gap: 10rpx;
+  margin-bottom: 20rpx;
 }
 
 .job-tag {
-  padding: 6rpx 16rpx;
-  border-radius: 8rpx;
-  font-size: 22rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 6rpx;
+  font-size: 20rpx;
   font-weight: 500;
   flex-shrink: 0;
 }
 
 .job-tag.tag-green {
   background: #e6f8ee;
-  color: #20c26b;
+  color: #ff6b35;
 }
 
 .job-tag.tag-orange {
@@ -611,36 +660,36 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 20rpx;
+  padding-top: 16rpx;
   border-top: 1rpx dashed #f0f0f0;
 }
 
 .job-company {
   display: flex;
   align-items: center;
-  gap: 12rpx;
+  gap: 10rpx;
 }
 
 .company-logo {
-  width: 44rpx;
-  height: 44rpx;
-  border-radius: 10rpx;
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 8rpx;
   background: linear-gradient(135deg, #20c26b 0%, #1aab5a 100%);
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22rpx;
+  font-size: 20rpx;
   font-weight: 700;
   flex-shrink: 0;
 }
 
 .company-name {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: #999;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 300rpx;
+  max-width: 260rpx;
 }
 </style>

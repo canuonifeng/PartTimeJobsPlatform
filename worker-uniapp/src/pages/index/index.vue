@@ -131,10 +131,19 @@
           <text class="section-more" @click="goSchedule">全部 →</text>
         </view>
         <view class="future-list">
-          <view v-for="shift in futureShifts.slice(0, 3)" :key="shift.id" class="future-item">
-            <text class="future-date">{{ formatShortDate(shift.date) }}</text>
-            <text class="future-name">{{ shift.jobTitle }}</text>
-            <text class="future-time">{{ shift.startTime }}</text>
+          <view v-for="shift in futureShifts.slice(0, 5)" :key="shift.id" class="future-item">
+            <view class="future-date-col">
+              <text class="future-date-day">{{ futureDay(shift.date) }}</text>
+              <text class="future-date-weekday">{{ futureWeekday(shift.date) }}</text>
+            </view>
+            <view class="future-info">
+              <text class="future-job-title">{{ shift.jobTitle }}</text>
+              <view class="future-meta-row">
+                <text class="future-time-range">🕐 {{ shift.startTime }}-{{ shift.endTime }}</text>
+                <text class="future-badge">待上岗</text>
+              </view>
+              <text v-if="shift.location" class="future-location">📍 {{ shift.location }}</text>
+            </view>
           </view>
         </view>
       </view>
@@ -225,8 +234,9 @@ const positionOk = computed(() => {
 const currentShift = computed<Shift | null>(() => {
   if (todayShifts.value.length === 0) return null
   const now = new Date()
-  const onDuty = todayShifts.value.find(s => s.status === 'ON_DUTY' || s.status === 'LATE')
-  if (onDuty) return onDuty
+  const active = todayShifts.value.find(s => 
+    ['ON_DUTY', 'LATE', 'EARLY_LEAVE', 'LATE_EARLY_LEAVE'].includes(s.status))
+  if (active) return active
   const next = todayShifts.value.find(s => {
     if (s.status !== 'SCHEDULED') return false
     const end = parseShiftDateTime(s.date, s.endTime)
@@ -251,7 +261,7 @@ const buttonState = computed(() => {
   const end = parseShiftDateTime(shift.date, shift.endTime)
   const status = shift.status
 
-  if (status === 'ON_DUTY' || status === 'LATE') {
+  if (status === 'ON_DUTY' || status === 'LATE' || status === 'EARLY_LEAVE' || status === 'LATE_EARLY_LEAVE') {
     const actualStart = shift.checkInTime
       ? parseShiftDateTime(shift.date, shift.checkInTime)
       : start
@@ -356,10 +366,18 @@ function formatDateKey(date: Date) {
   return `${y}-${m}-${d}`
 }
 
-function formatShortDate(dateStr: string) {
-  if (!dateStr) return ''
+function futureDay(dateStr: string) {
+  if (!dateStr) return '--'
   const d = String(dateStr)
-  return d.length > 5 ? d.slice(5) : d
+  const parts = d.split('-')
+  if (parts.length < 3) return d
+  return `${Number(parts[1])}/${Number(parts[2])}`
+}
+
+function futureWeekday(dateStr: string) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][d.getDay()]
 }
 
 function formatNumber(value: number) {
@@ -1295,34 +1313,88 @@ onUnload(stopCountdown)
 .future-list {
   display: flex;
   flex-direction: column;
-  gap: 4rpx;
+  gap: 16rpx;
 }
 
 .future-item {
   display: flex;
-  align-items: center;
-  padding: 12rpx 0;
-  font-size: 24rpx;
+  gap: 20rpx;
+  padding: 20rpx;
+  border-radius: 14rpx;
+  background: #fafbfc;
+  border: 1rpx solid #f0f0f0;
 }
 
-.future-date {
-  width: 120rpx;
-  color: #20c26b;
-  font-weight: 600;
+.future-date-col {
+  width: 80rpx;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #eefbf3;
+  border-radius: 12rpx;
+  padding: 10rpx 0;
 }
 
-.future-name {
+.future-date-day {
+  font-size: 32rpx;
+  font-weight: 800;
+  color: #20c26b;
+  line-height: 1.2;
+}
+
+.future-date-weekday {
+  font-size: 20rpx;
+  color: #20c26b;
+  margin-top: 4rpx;
+}
+
+.future-info {
   flex: 1;
-  color: #555;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.future-job-title {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1a1a2e;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.future-time {
-  color: #999;
+.future-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.future-time-range {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.future-badge {
+  font-size: 20rpx;
+  padding: 2rpx 12rpx;
+  border-radius: 8rpx;
+  background: #f3f4f6;
+  color: #9ca3af;
+  font-weight: 500;
   flex-shrink: 0;
+}
+
+.future-location {
+  font-size: 22rpx;
+  color: #999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bottom-pad {

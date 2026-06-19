@@ -67,7 +67,7 @@ async function fetchReferralInfo() {
   try {
     const linkRes = await getReferralLink()
     referralCode.value = linkRes.code
-    referralLink.value = 'https://www.linggong.tech/invite?code=' + linkRes.code
+    referralLink.value = 'https://www.linggong.tech/invite.html?code=' + linkRes.code
     inviterName.value = linkRes.inviterName || ''
 
     const statsRes = await getReferralStats()
@@ -230,7 +230,7 @@ async function generatePoster() {
     ctx.setFillStyle('#ffffff')
     ctx.setFontSize(20)
     ctx.setTextAlign('center')
-    ctx.fillText('零工平台 · 安全可靠', w / 2, h - 110)
+    ctx.fillText('老登e站 · 安全可靠', w / 2, h - 110)
 
     ctx.setFillStyle('rgba(255,255,255,0.7)')
     ctx.setFontSize(16)

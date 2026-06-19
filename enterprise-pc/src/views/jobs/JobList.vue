@@ -150,6 +150,7 @@ onMounted(() => {
             <el-button size="small" type="primary" @click="handleEdit(row)">编辑</el-button>
             <el-button v-if="row.status === 'PUBLISHED'" size="small" type="warning" @click="handleClose(row)">关闭</el-button>
             <el-button v-if="row.status === 'DRAFT'" size="small" type="success" @click="handlePublish(row)">发布</el-button>
+            <el-button v-if="row.status === 'CLOSED'" size="small" type="success" @click="handleReopen(row)">重新发布</el-button>
           </template>
         </el-table-column>
       </el-table>

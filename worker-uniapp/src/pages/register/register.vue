@@ -7,7 +7,7 @@
       <view class="logo-box">
         <image class="logo" src="/static/logo.png" mode="aspectFit" />
       </view>
-      <text class="app-name">找零工</text>
+      <text class="app-name">老登e站</text>
       <text class="app-desc">海量零工机会，随时随地赚钱</text>
     </view>
 
