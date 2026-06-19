@@ -4,16 +4,21 @@ import com.parttime.cservice.mapper.ReferralCodeMapper;
 import com.parttime.cservice.mapper.ReferralRecordMapper;
 import com.parttime.cservice.mapper.ReferralRewardMapper;
 import com.parttime.cservice.mapper.ReferralConfigMapper;
+import com.parttime.cservice.mapper.WorkerMapper;
 import com.parttime.cservice.pojo.entity.ReferralCode;
 import com.parttime.cservice.pojo.entity.ReferralRecord;
 import com.parttime.cservice.pojo.entity.ReferralReward;
 import com.parttime.cservice.pojo.entity.ReferralConfig;
+import com.parttime.cservice.pojo.entity.Worker;
 import com.parttime.cservice.pojo.vo.ReferralLinkVO;
 import com.parttime.cservice.pojo.vo.ReferralStatsVO;
 import com.parttime.cservice.pojo.vo.RefereeVO;
 import com.parttime.cservice.pojo.vo.PageVO;
 import com.parttime.cservice.pojo.vo.ReferralRewardVO;
 import com.parttime.cservice.service.ReferralService;
+import com.parttime.cservice.service.WeChatSchemeService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,6 +46,14 @@ public class ReferralServiceImpl implements ReferralService {
     @Resource
     private ReferralConfigMapper referralConfigMapper;
 
+    @Resource
+    private WeChatSchemeService weChatSchemeService;
+
+    @Resource
+    private WorkerMapper workerMapper;
+
+    private static final Logger log = LoggerFactory.getLogger(ReferralServiceImpl.class);
+
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final String CODE_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final DateTimeFormatter BEIJING_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -53,18 +66,23 @@ public class ReferralServiceImpl implements ReferralService {
         }
         ReferralLinkVO vo = new ReferralLinkVO();
         vo.setCode(code.getCode());
-        vo.setLink("https://worker.example.com/invite?code=" + code.getCode());
+        try {
+            String scheme = weChatSchemeService.generateScheme("/pages/register/register", "code=" + code.getCode());
+            vo.setLink(scheme);
+        } catch (Exception e) {
+            log.warn("Failed to generate WeChat scheme, fallback to fake URL: {}", e.getMessage());
+            vo.setLink("weixin://dl/business/?t=fallback_" + code.getCode());
+        }
+        String inviterName = workerMapper.findById(workerId)
+                .map(Worker::getName)
+                .orElse("用户" + workerId);
+        vo.setInviterName(inviterName);
         return vo;
     }
 
     @Override
     public String getReferralPoster(Long workerId) {
-        ReferralCode code = referralCodeMapper.findByWorkerId(workerId);
-        if (code == null) {
-            code = generateReferralCode(workerId);
-        }
-        // TODO: 生成海报图片，返回 URL
-        return "https://cdn.example.com/poster/" + code.getCode() + ".jpg";
+        return null;
     }
 
     @Override

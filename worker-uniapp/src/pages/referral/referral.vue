@@ -31,6 +31,7 @@
     <view class="section">
       <text class="section-title">邀请海报</text>
       <canvas canvas-id="posterCanvas" id="posterCanvas" class="poster-canvas" />
+      <canvas canvas-id="qrcodeCanvas" style="width:200px;height:200px;position:fixed;left:-9999px;"></canvas>
       <image v-if="posterUrl" :src="posterUrl" class="poster-image" mode="aspectFit" />
       <button class="share-btn" @click="generatePoster">{{ posterUrl ? '保存海报' : '生成海报' }}</button>
     </view>
@@ -48,9 +49,11 @@
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { getReferralLink, getReferralStats } from '@/api/referral'
+import drawQrcode from 'weapp-qrcode'
 
 const referralLink = ref('')
 const referralCode = ref('')
+const inviterName = ref('')
 const posterUrl = ref('')
 const stats = ref({
   totalReferees: 0,
@@ -63,6 +66,7 @@ async function fetchReferralInfo() {
     const linkRes = await getReferralLink()
     referralLink.value = linkRes.link
     referralCode.value = linkRes.code
+    inviterName.value = linkRes.inviterName || ''
 
     const statsRes = await getReferralStats()
     stats.value = statsRes
@@ -78,39 +82,6 @@ function copyLink() {
       uni.showToast({ title: '链接已复制', icon: 'success' })
     }
   })
-}
-
-function generateQrMatrix(text, size) {
-  const len = text.length
-  const matrix = []
-  const row = []
-  for (let i = 0; i < size; i++) row.push(0)
-  for (let i = 0; i < size; i++) matrix.push([...row])
-
-  let pos = Math.floor(size / 2)
-  let dir = 1
-  for (let i = 0; i < len && pos >= 0 && pos < size; i++) {
-    const charCode = text.charCodeAt(i)
-    for (let bit = 0; bit < 7 && pos + dir * bit >= 0 && pos + dir * bit < size; bit++) {
-      const r = Math.min(i * 2 + (bit < 4 ? 0 : 1), size - 1)
-      const c = pos + dir * bit
-      if (r >= 0 && r < size && c >= 0 && c < size) {
-        matrix[r][c] = (charCode >> bit) & 1
-      }
-    }
-    pos += dir * 4
-    if (pos >= size - 2 || pos <= 1) dir = -dir
-  }
-
-  for (let i = 0; i < 7; i++) {
-    for (let j = 0; j < 7; j++) {
-      if (i < size && j < size) {
-        matrix[i][j] = (i < 3 && j < 3) || (i < 3 && j > 3) || (i > 3 && j < 3) ? ((i + j) % 2 === 0 ? 1 : 0) : matrix[i][j]
-      }
-    }
-  }
-
-  return matrix
 }
 
 async function generatePoster() {
@@ -150,10 +121,16 @@ async function generatePoster() {
     ctx.setFillStyle('rgba(255,255,255,0.8)')
     ctx.fillText('扫码或复制邀请码注册', w / 2, 95)
 
+    if (inviterName.value) {
+      ctx.setFontSize(24)
+      ctx.setFillStyle('rgba(255,255,255,0.9)')
+      ctx.fillText('邀请人：' + inviterName.value, w / 2, 125)
+    }
+
     const boxX = 60
-    const boxY = 130
+    const boxY = inviterName.value ? 160 : 130
     const boxW = w - 120
-    const boxH = 520
+    const boxH = 490
     ctx.setFillStyle('#ffffff')
     ctx.shadowColor = 'rgba(0,0,0,0.15)'
     ctx.shadowBlur = 20
@@ -180,20 +157,32 @@ async function generatePoster() {
     const qrSize = 200
     const qrX = (w - qrSize) / 2
     const qrY = boxY + 130
-    const matrix = generateQrMatrix(referralLink.value, 21)
-    const cellSize = qrSize / 21
+
+    await new Promise((resolve, reject) => {
+      drawQrcode({
+        canvasId: 'qrcodeCanvas',
+        width: qrSize,
+        height: qrSize,
+        text: referralLink.value,
+        background: '#ffffff',
+        foreground: '#1f2937',
+        success: resolve,
+        fail: reject
+      })
+    })
+
+    const tempRes = await new Promise((resolve, reject) => {
+      uni.canvasToTempFilePath({
+        canvasId: 'qrcodeCanvas',
+        success: resolve,
+        fail: reject
+      })
+    })
 
     ctx.setFillStyle('#ffffff')
     ctx.fillRect(qrX - 10, qrY - 10, qrSize + 20, qrSize + 20)
 
-    ctx.setFillStyle('#1f2937')
-    for (let r = 0; r < 21; r++) {
-      for (let c = 0; c < 21; c++) {
-        if (matrix[r][c]) {
-          ctx.fillRect(qrX + c * cellSize, qrY + r * cellSize, cellSize, cellSize)
-        }
-      }
-    }
+    ctx.drawImage(tempRes.tempFilePath, qrX, qrY, qrSize, qrSize)
 
     ctx.setFillStyle('#6b7280')
     ctx.setFontSize(16)

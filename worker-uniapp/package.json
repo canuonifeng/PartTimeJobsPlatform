@@ -15,7 +15,8 @@
     "@dcloudio/uni-mp-weixin": "3.0.0-alpha-5000920260515001",
     "@dcloudio/uni-ui": "^1.4.28",
     "pinia": "^2.1.6",
-    "vue": "^3.3.4"
+    "vue": "^3.3.4",
+    "weapp-qrcode": "^1.0.0"
   },
   "devDependencies": {
     "@dcloudio/uni-cli-shared": "3.0.0-alpha-5000920260515001",

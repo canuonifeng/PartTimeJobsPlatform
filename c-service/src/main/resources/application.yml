@@ -34,6 +34,7 @@ wechat:
   login-url: ${WECHAT_LOGIN_URL:https://api.weixin.qq.com/sns/jscode2session}
   access-token-url: ${WECHAT_ACCESS_TOKEN_URL:https://api.weixin.qq.com/cgi-bin/token}
   phone-number-url: ${WECHAT_PHONE_NUMBER_URL:https://api.weixin.qq.com/wxa/business/getuserphonenumber}
+  scheme-url: ${WECHAT_SCHEME_URL:https://api.weixin.qq.com/wxa/generatescheme}
   pay:
     mch-id: ${WECHAT_MCH_ID:your_mch_id}
     api-key: ${WECHAT_API_KEY:your_api_key}

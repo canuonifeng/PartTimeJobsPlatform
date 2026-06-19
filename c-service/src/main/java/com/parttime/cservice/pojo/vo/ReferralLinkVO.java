@@ -6,4 +6,5 @@ import lombok.Data;
 public class ReferralLinkVO {
     private String code;
     private String link;
+    private String inviterName;
 }

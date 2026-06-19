@@ -1,7 +1,9 @@
 package com.parttime.cservice.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 @ConfigurationProperties(prefix = "wechat")
@@ -12,6 +14,7 @@ public class WeChatConfig {
     private String loginUrl = "https://api.weixin.qq.com/sns/jscode2session";
     private String accessTokenUrl = "https://api.weixin.qq.com/cgi-bin/token";
     private String phoneNumberUrl = "https://api.weixin.qq.com/wxa/business/getuserphonenumber";
+    private String schemeUrl = "https://api.weixin.qq.com/wxa/generatescheme";
 
     public String getAppId() { return appId; }
     public void setAppId(String appId) { this.appId = appId; }
@@ -23,4 +26,11 @@ public class WeChatConfig {
     public void setAccessTokenUrl(String accessTokenUrl) { this.accessTokenUrl = accessTokenUrl; }
     public String getPhoneNumberUrl() { return phoneNumberUrl; }
     public void setPhoneNumberUrl(String phoneNumberUrl) { this.phoneNumberUrl = phoneNumberUrl; }
+    public String getSchemeUrl() { return schemeUrl; }
+    public void setSchemeUrl(String schemeUrl) { this.schemeUrl = schemeUrl; }
+
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
 }

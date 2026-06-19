@@ -2,11 +2,13 @@ package com.parttime.cservice.service;
 
 import com.parttime.cservice.mapper.ReferralRecordMapper;
 import com.parttime.cservice.mapper.ReferralRewardMapper;
+import com.parttime.cservice.mapper.WorkerMapper;
 import com.parttime.cservice.service.impl.ReferralServiceImpl;
 import com.parttime.cservice.pojo.entity.ReferralCode;
 import com.parttime.cservice.pojo.entity.ReferralRecord;
 import com.parttime.cservice.pojo.entity.ReferralReward;
 import com.parttime.cservice.pojo.entity.ReferralConfig;
+import com.parttime.cservice.pojo.entity.Worker;
 import com.parttime.cservice.pojo.vo.ReferralLinkVO;
 import com.parttime.cservice.pojo.vo.ReferralStatsVO;
 import com.parttime.cservice.pojo.vo.RefereeVO;
@@ -16,6 +18,7 @@ import com.parttime.cservice.pojo.vo.ReferralRewardVO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -24,6 +27,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -33,6 +37,12 @@ class ReferralServiceTest {
     @InjectMocks
     private ReferralServiceImpl referralService;
 
+    @Mock
+    private WeChatSchemeService weChatSchemeService;
+
+    @Mock
+    private WorkerMapper workerMapper;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -40,6 +50,18 @@ class ReferralServiceTest {
         ReflectionTestUtils.setField(referralService, "referralRecordMapper", InMemoryMappers.createReferralRecordMapper());
         ReflectionTestUtils.setField(referralService, "referralRewardMapper", InMemoryMappers.createReferralRewardMapper());
         ReflectionTestUtils.setField(referralService, "referralConfigMapper", InMemoryMappers.createReferralConfigMapper());
+
+        try {
+            when(weChatSchemeService.generateScheme(anyString(), anyString()))
+                    .thenReturn("weixin://dl/business/?t=mock_scheme_code=TEST123");
+        } catch (Exception e) {
+            // won't happen
+        }
+
+        Worker worker = new Worker();
+        worker.setId(100L);
+        worker.setName("测试用户");
+        when(workerMapper.findById(100L)).thenReturn(java.util.Optional.of(worker));
     }
 
     @Test
@@ -49,7 +71,8 @@ class ReferralServiceTest {
         assertThat(link).isNotNull();
         assertThat(link.getCode()).isNotBlank();
         assertThat(link.getCode()).hasSize(8);
-        assertThat(link.getLink()).contains("code=");
+        assertThat(link.getLink()).contains("mock_scheme");
+        assertThat(link.getInviterName()).isEqualTo("测试用户");
     }
 
     @Test
@@ -58,14 +81,14 @@ class ReferralServiceTest {
         ReferralLinkVO second = referralService.getReferralLink(100L);
 
         assertThat(second.getCode()).isEqualTo(first.getCode());
+        assertThat(second.getLink()).contains("mock_scheme");
     }
 
     @Test
-    void getReferralPoster_shouldReturnPosterUrl() {
+    void getReferralPoster_shouldReturnNull() {
         String posterUrl = referralService.getReferralPoster(100L);
 
-        assertThat(posterUrl).isNotBlank();
-        assertThat(posterUrl).contains("cdn.example.com");
+        assertThat(posterUrl).isNull();
     }
 
     @Test
