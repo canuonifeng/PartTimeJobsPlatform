@@ -172,6 +172,8 @@ function onRequirementEditorInput(e) {
 
 function chooseLocation() {
   uni.chooseLocation({
+    latitude: formData.value.latitude || undefined,
+    longitude: formData.value.longitude || undefined,
     success: (res) => {
       formData.value.latitude = res.latitude
       formData.value.longitude = res.longitude
@@ -179,7 +181,8 @@ function chooseLocation() {
         formData.value.address = res.address
       }
     },
-    fail: () => {
+    fail: (err) => {
+      if (err?.errMsg?.includes('cancel')) return
       uni.showToast({ title: '定位失败', icon: 'none' })
     }
   })

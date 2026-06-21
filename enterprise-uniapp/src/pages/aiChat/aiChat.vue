@@ -38,7 +38,10 @@ const confirmAction = ref('')
 const FUNCTION_ACTION_MAP = {
   create_job_and_schedules: 'create_job',
   update_job: 'update_job',
-  add_schedule_to_job: 'add_schedule'
+  add_schedule_to_job: 'add_schedule',
+  update_schedule: 'update_schedule',
+  copy_schedule: 'copy_schedule',
+  batch_create_schedules: 'create_schedules'
 }
 
 function scrollToBottom() {
@@ -226,11 +229,26 @@ function chooseImage() {
       </view>
 
       <view v-if="showConfirm && confirmData" class="confirm-card">
-        <view class="confirm-title">{{ confirmAction === 'create_job' ? '📋 确认创建' : confirmAction === 'update_job' ? '📝 确认修改' : '📅 确认新增班次' }}</view>
+        <view class="confirm-title">{{
+          confirmAction === 'create_job' ? '📋 确认创建' :
+          confirmAction === 'update_job' ? '📝 确认修改' :
+          confirmAction === 'update_schedule' ? '📝 确认修改班次' :
+          confirmAction === 'copy_schedule' ? '📋 确认复制班次' :
+          confirmAction === 'create_schedules' ? '📅 确认批量创建班次' :
+          '📅 确认新增班次'
+        }}</view>
 
-        <view class="confirm-field" v-if="confirmData.jobId">
+        <view class="confirm-field" v-if="confirmData.jobId && !confirmData.scheduleId">
           <text class="confirm-label">编号</text>
           <text class="confirm-value">#{{ confirmData.jobId }}</text>
+        </view>
+        <view class="confirm-field" v-if="confirmData.scheduleId">
+          <text class="confirm-label">班次ID</text>
+          <text class="confirm-value">#{{ confirmData.scheduleId }}</text>
+        </view>
+        <view class="confirm-field" v-if="confirmData.sourceScheduleId">
+          <text class="confirm-label">源班次</text>
+          <text class="confirm-value">#{{ confirmData.sourceScheduleId }}</text>
         </view>
         <view class="confirm-field" v-if="confirmData.title">
           <text class="confirm-label">岗位</text>
@@ -247,6 +265,14 @@ function chooseImage() {
         <view class="confirm-field" v-if="confirmData.headcount">
           <text class="confirm-label">人数</text>
           <text class="confirm-value">{{ confirmData.headcount }} 人</text>
+        </view>
+        <view class="confirm-field" v-if="confirmData.categoryId">
+          <text class="confirm-label">分类</text>
+          <text class="confirm-value">ID: {{ confirmData.categoryId }}</text>
+        </view>
+        <view class="confirm-field" v-if="confirmData.deadline">
+          <text class="confirm-label">截止</text>
+          <text class="confirm-value">{{ confirmData.deadline }}</text>
         </view>
         <view class="confirm-field" v-if="confirmData.salaryAmount">
           <text class="confirm-label">薪资</text>
@@ -272,23 +298,62 @@ function chooseImage() {
         <view v-if="confirmData.schedules && confirmData.schedules.length" class="confirm-schedules">
           <view class="confirm-schedule-title">班次安排</view>
           <view class="confirm-schedule-item" v-for="(s, si) in confirmData.schedules" :key="si">
-            <text class="confirm-schedule-date">{{ s.scheduleDate }}</text>
-            <text class="confirm-schedule-time">{{ (s.startTime || '').slice(0,5) }} - {{ (s.endTime || '').slice(0,5) }}</text>
+            <view class="confirm-schedule-line">
+              <text class="confirm-schedule-date">{{ s.scheduleDate }}</text>
+              <text class="confirm-schedule-time">{{ (s.startTime || '').slice(0,5) }} - {{ (s.endTime || '').slice(0,5) }}</text>
+            </view>
+            <view class="confirm-schedule-meta" v-if="s.scheduleName || s.slotsAvailable">
+              <text v-if="s.scheduleName" class="confirm-schedule-name">{{ s.scheduleName }}</text>
+              <text v-if="s.slotsAvailable" class="confirm-schedule-slots">{{ s.slotsAvailable }}人</text>
+            </view>
+            <view class="confirm-schedule-meta" v-if="s.contactName || s.contactPhone">
+              <text v-if="s.contactName">联系人: {{ s.contactName }}</text>
+              <text v-if="s.contactPhone"> {{ s.contactPhone }}</text>
+            </view>
           </view>
         </view>
 
         <view v-if="confirmData.scheduleDate" class="confirm-schedules">
           <view class="confirm-schedule-title">班次安排</view>
           <view class="confirm-schedule-item">
-            <text class="confirm-schedule-date">{{ confirmData.scheduleDate }}</text>
-            <text class="confirm-schedule-time">{{ (confirmData.startTime || '').slice(0,5) }} - {{ (confirmData.endTime || '').slice(0,5) }}</text>
+            <view class="confirm-schedule-line">
+              <text class="confirm-schedule-date">{{ confirmData.scheduleDate }}</text>
+              <text class="confirm-schedule-time">{{ (confirmData.startTime || '').slice(0,5) }} - {{ (confirmData.endTime || '').slice(0,5) }}</text>
+            </view>
+            <view class="confirm-schedule-meta" v-if="confirmData.scheduleName || confirmData.slotsAvailable">
+              <text v-if="confirmData.scheduleName" class="confirm-schedule-name">{{ confirmData.scheduleName }}</text>
+              <text v-if="confirmData.slotsAvailable" class="confirm-schedule-slots">{{ confirmData.slotsAvailable }}人</text>
+            </view>
+          </view>
+        </view>
+
+        <view v-if="confirmAction === 'create_schedules' && confirmData.weekdays" class="confirm-schedules">
+          <view class="confirm-schedule-title">批量班次</view>
+          <view class="confirm-field">
+            <text class="confirm-label">范围</text>
+            <text class="confirm-value">{{ confirmData.startDate }} ~ {{ confirmData.endDate }}</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.weekdays">
+            <text class="confirm-label">星期</text>
+            <text class="confirm-value">{{ confirmData.weekdays.map(w => ['','一','二','三','四','五','六','日'][w]).join('、') }}</text>
+          </view>
+          <view class="confirm-field">
+            <text class="confirm-label">时段</text>
+            <text class="confirm-value">{{ (confirmData.startTime || '').slice(0,5) }} - {{ (confirmData.endTime || '').slice(0,5) }}</text>
           </view>
         </view>
 
         <view class="confirm-actions">
           <view class="confirm-btn cancel" @click="cancelConfirm">取消</view>
           <view class="confirm-btn edit" @click="editConfirm">修改</view>
-          <view class="confirm-btn confirm" @click="confirmCreate">{{ confirmAction === 'create_job' ? '确认创建' : confirmAction === 'update_job' ? '确认修改' : '确认新增' }}</view>
+          <view class="confirm-btn confirm" @click="confirmCreate">{{
+            confirmAction === 'create_job' ? '确认创建' :
+            confirmAction === 'update_job' ? '确认修改' :
+            confirmAction === 'update_schedule' ? '确认修改' :
+            confirmAction === 'copy_schedule' ? '确认复制' :
+            confirmAction === 'create_schedules' ? '确认创建' :
+            '确认'
+          }}</view>
         </view>
       </view>
 
@@ -338,9 +403,14 @@ function chooseImage() {
 .confirm-value { font-size: 26rpx; font-weight: 700; color: #1f2933; flex: 1; }
 .confirm-schedules { margin-top: 18rpx; padding-top: 14rpx; border-top: 2rpx solid #e5e7eb; }
 .confirm-schedule-title { font-size: 26rpx; font-weight: 800; color: #1f2933; margin-bottom: 12rpx; }
-.confirm-schedule-item { display: flex; align-items: center; padding: 8rpx 0; }
-.confirm-schedule-date { font-size: 24rpx; color: #64748b; width: 180rpx; }
+.confirm-schedule-item { padding: 10rpx 0; border-bottom: 1rpx solid #f0f2f4; }
+.confirm-schedule-item:last-child { border-bottom: none; }
+.confirm-schedule-line { display: flex; align-items: center; }
+.confirm-schedule-date { font-size: 24rpx; color: #64748b; width: 180rpx; flex-shrink: 0; }
 .confirm-schedule-time { font-size: 26rpx; font-weight: 700; color: #16a34a; }
+.confirm-schedule-meta { display: flex; align-items: center; gap: 12rpx; margin-top: 4rpx; font-size: 22rpx; color: #8896a4; padding-left: 180rpx; }
+.confirm-schedule-name { font-weight: 600; color: #1f2933; }
+.confirm-schedule-slots { color: #b45309; }
 .confirm-actions { display: flex; gap: 14rpx; margin-top: 20rpx; }
 .confirm-btn { flex: 1; height: 68rpx; line-height: 68rpx; border-radius: 999rpx; text-align: center; font-size: 26rpx; font-weight: 800; }
 .confirm-btn.cancel { background: #f1f5f9; color: #64748b; }

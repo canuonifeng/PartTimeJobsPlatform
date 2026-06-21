@@ -14,8 +14,8 @@ const processData = ref([])
 const stepOrder = ['PUBLISH', 'SCHEDULE', 'REVIEW', 'ATTENDANCE', 'SALARY']
 
 const stepConfig = {
-  PUBLISH: { number: 1, title: '创建岗位', desc: '发布招聘岗位信息，设置薪资标准', icon: '岗', path: '/pages/jobs/jobList' },
-  SCHEDULE: { number: 2, title: '创建班次', desc: '为岗位设置排班时间和人数', icon: '班', path: '/pages/schedules/manageList' },
+  PUBLISH: { number: 1, title: '岗位管理', desc: '发布招聘岗位信息，设置薪资标准', icon: '岗', path: '/pages/jobs/jobList' },
+  SCHEDULE: { number: 2, title: '班次管理', desc: '为岗位设置排班时间和人数', icon: '班', path: '/pages/schedules/manageList' },
   REVIEW: { number: 3, title: '审核报名', desc: '审核工人报名申请，确认录用', icon: '审', path: '/pages/applications/applicationList?status=PENDING' },
   ATTENDANCE: { number: 4, title: '考勤确认', desc: '确认工人实际出勤和工时', icon: '勤', path: '/pages/schedules/scheduleList?status=SCHEDULED' },
   SALARY: { number: 5, title: '薪资结算', desc: '确认工时后完成薪资发放', icon: '薪', path: '/pages/attendance/attendanceList?settlementStatus=UNPAID' }

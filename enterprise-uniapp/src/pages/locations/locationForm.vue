@@ -65,6 +65,8 @@ function parseAddress(addr) {
 
 function chooseLocation() {
   uni.chooseLocation({
+    latitude: form.value.latitude || undefined,
+    longitude: form.value.longitude || undefined,
     success: (res) => {
       form.value.latitude = res.latitude
       form.value.longitude = res.longitude
@@ -76,7 +78,7 @@ function chooseLocation() {
       if (parsed.district) form.value.district = parsed.district
     },
     fail: (err) => {
-      console.error('chooseLocation failed', err)
+      if (err?.errMsg?.includes('cancel')) return
       uni.showToast({ title: err?.errMsg?.includes('deny') ? '请授权位置权限' : '定位失败', icon: 'none' })
     }
   })

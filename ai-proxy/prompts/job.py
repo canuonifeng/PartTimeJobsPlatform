@@ -2,8 +2,8 @@ SYSTEM_PROMPT = """你是"老登e站"企业端的 AI 招聘助手，帮助企业
 
 ## 你的能力
 1. 理解企业用户用自然语言描述的招聘需求，提取结构化信息
-2. 生成岗位数据（标题、描述、薪资等）
-3. 生成班次数据（日期、时间段等）
+2. 生成岗位数据（标题、描述、分类、标签、薪资等）
+3. 生成班次数据（日期、时间段、容量、联系人等）
 
 ## 岗位 JSON Schema
 ```json
@@ -12,6 +12,8 @@ SYSTEM_PROMPT = """你是"老登e站"企业端的 AI 招聘助手，帮助企业
   "description": "岗位职责描述",
   "requirements": "任职要求",
   "headcount": "招聘人数（默认1）",
+  "categoryId": "职位分类ID（如 1=保安, 2=保洁, 3=服务员）",
+  "deadline": "报名截止日期 yyyy-MM-dd",
   "contactName": "联系人姓名",
   "contactPhone": "联系人电话",
   "province": "省",
@@ -22,7 +24,15 @@ SYSTEM_PROMPT = """你是"老登e站"企业端的 AI 招聘助手，帮助企业
   "longitude": "经度（可选，如 119.992）",
   "salary": {"type": "HOURLY/DAILY", "amount": 金额},
   "schedules": [
-    {"scheduleDate": "2024-01-01", "startTime": "14:00:00", "endTime": "18:00:00"}
+    {
+      "scheduleDate": "2024-01-01",
+      "startTime": "14:00",
+      "endTime": "18:00",
+      "scheduleName": "班次名称（可选）",
+      "slotsAvailable": "该班次可报名人数（可选）",
+      "contactName": "班次联系人（可选）",
+      "contactPhone": "班次联系电话（可选）"
+    }
   ]
 }
 ```
@@ -62,6 +72,8 @@ FUNCTION_CALLING_SCHEMA = [
                 "description": {"type": "string", "description": "岗位职责描述"},
                 "requirements": {"type": "string", "description": "任职要求"},
                 "headcount": {"type": "integer", "description": "招聘人数"},
+                "categoryId": {"type": "integer", "description": "职位分类ID（如 1=保安, 2=保洁, 3=服务员）"},
+                "deadline": {"type": "string", "description": "报名截止日期 yyyy-MM-dd"},
                 "salaryType": {"type": "string", "enum": ["HOURLY", "DAILY"], "description": "薪资类型"},
                 "salaryAmount": {"type": "number", "description": "薪资金额"},
                 "contactName": {"type": "string", "description": "联系人姓名"},
@@ -78,8 +90,12 @@ FUNCTION_CALLING_SCHEMA = [
                         "type": "object",
                         "properties": {
                             "scheduleDate": {"type": "string", "description": "日期 yyyy-MM-dd"},
-                            "startTime": {"type": "string", "description": "开始时间 HH:mm:ss"},
-                            "endTime": {"type": "string", "description": "结束时间 HH:mm:ss"}
+                            "startTime": {"type": "string", "description": "开始时间 HH:mm"},
+                            "endTime": {"type": "string", "description": "结束时间 HH:mm"},
+                            "scheduleName": {"type": "string", "description": "班次名称（可选）"},
+                            "slotsAvailable": {"type": "integer", "description": "该班次可报名人数（可选）"},
+                            "contactName": {"type": "string", "description": "班次联系人（可选）"},
+                            "contactPhone": {"type": "string", "description": "班次联系电话（可选）"}
                         },
                         "required": ["scheduleDate", "startTime", "endTime"]
                     },
@@ -100,8 +116,16 @@ FUNCTION_CALLING_SCHEMA = [
                 "description": {"type": "string", "description": "岗位职责描述"},
                 "requirements": {"type": "string", "description": "任职要求"},
                 "headcount": {"type": "integer", "description": "招聘人数"},
+                "categoryId": {"type": "integer", "description": "职位分类ID"},
+                "deadline": {"type": "string", "description": "报名截止日期 yyyy-MM-dd"},
                 "salaryType": {"type": "string", "enum": ["HOURLY", "DAILY"], "description": "薪资类型"},
                 "salaryAmount": {"type": "number", "description": "薪资金额"},
+                "contactName": {"type": "string", "description": "联系人姓名"},
+                "contactPhone": {"type": "string", "description": "联系人电话"},
+                "province": {"type": "string", "description": "省份"},
+                "city": {"type": "string", "description": "城市"},
+                "district": {"type": "string", "description": "区县"},
+                "address": {"type": "string", "description": "详细地址"},
                 "latitude": {"type": "number", "description": "纬度（可选，如 30.275）"},
                 "longitude": {"type": "number", "description": "经度（可选，如 119.992）"}
             },
@@ -116,10 +140,67 @@ FUNCTION_CALLING_SCHEMA = [
             "properties": {
                 "jobId": {"type": "integer", "description": "岗位ID"},
                 "scheduleDate": {"type": "string", "description": "日期 yyyy-MM-dd"},
-                "startTime": {"type": "string", "description": "开始时间 HH:mm:ss"},
-                "endTime": {"type": "string", "description": "结束时间 HH:mm:ss"}
+                "startTime": {"type": "string", "description": "开始时间 HH:mm"},
+                "endTime": {"type": "string", "description": "结束时间 HH:mm"},
+                "scheduleName": {"type": "string", "description": "班次名称（可选）"},
+                "slotsAvailable": {"type": "integer", "description": "可报名人数（可选）"},
+                "contactName": {"type": "string", "description": "联系人姓名（可选）"},
+                "contactPhone": {"type": "string", "description": "联系人电话（可选）"}
             },
             "required": ["jobId", "scheduleDate", "startTime", "endTime"]
+        }
+    },
+    {
+        "name": "update_schedule",
+        "description": "修改已有班次的信息。当用户要求修改某个班次时调用此函数。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "scheduleId": {"type": "integer", "description": "要修改的班次ID"},
+                "scheduleName": {"type": "string", "description": "班次名称"},
+                "scheduleDate": {"type": "string", "description": "日期 yyyy-MM-dd"},
+                "startTime": {"type": "string", "description": "开始时间 HH:mm"},
+                "endTime": {"type": "string", "description": "结束时间 HH:mm"},
+                "slotsAvailable": {"type": "integer", "description": "可报名人数"},
+                "contactName": {"type": "string", "description": "联系人姓名"},
+                "contactPhone": {"type": "string", "description": "联系人电话"},
+                "status": {"type": "string", "enum": ["ACTIVE", "CANCELLED"], "description": "班次状态"}
+            },
+            "required": ["scheduleId"]
+        }
+    },
+    {
+        "name": "copy_schedule",
+        "description": "复制已有班次到新日期或新时段。当用户要求复制班次时调用此函数。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "sourceScheduleId": {"type": "integer", "description": "源班次ID"},
+                "scheduleDate": {"type": "string", "description": "新日期 yyyy-MM-dd（可选）"},
+                "startTime": {"type": "string", "description": "新开始时间 HH:mm（可选）"},
+                "endTime": {"type": "string", "description": "新结束时间 HH:mm（可选）"}
+            },
+            "required": ["sourceScheduleId"]
+        }
+    },
+    {
+        "name": "batch_create_schedules",
+        "description": "为已有岗位按日期范围和星期几批量创建班次。当用户要求批量创建班次时调用。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "jobId": {"type": "integer", "description": "岗位ID"},
+                "startDate": {"type": "string", "description": "开始日期 yyyy-MM-dd"},
+                "endDate": {"type": "string", "description": "结束日期 yyyy-MM-dd"},
+                "weekdays": {
+                    "type": "array",
+                    "items": {"type": "integer"},
+                    "description": "周几，1=周一至7=周日，如[1,2,3,4,5]表示工作日"
+                },
+                "startTime": {"type": "string", "description": "开始时间 HH:mm"},
+                "endTime": {"type": "string", "description": "结束时间 HH:mm"}
+            },
+            "required": ["jobId", "startDate", "endDate", "startTime", "endTime"]
         }
     }
 ]

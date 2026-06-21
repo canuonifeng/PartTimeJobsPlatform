@@ -178,6 +178,12 @@ async def execute_action(request: Request, body: ActionRequest):
         elif body.action == "add_schedule":
             result = await enterprise_client.create_schedule(body.data, token)
             return {"code": 200, "data": result, "message": "班次创建成功"}
+        elif body.action == "update_schedule":
+            result = await enterprise_client.update_schedule(body.data, token)
+            return {"code": 200, "data": result, "message": "班次更新成功"}
+        elif body.action == "copy_schedule":
+            result = await enterprise_client.copy_schedule(body.data, token)
+            return {"code": 200, "data": result, "message": "班次复制成功"}
         elif body.action == "create_schedules":
             result = await enterprise_client.batch_create_schedules(body.data, token)
             return {"code": 200, "data": result, "message": "班次创建成功"}

@@ -48,7 +48,7 @@ class EnterpriseClient:
         body = {"id": job_id}
         for field in ["title", "description", "requirements", "headcount", "contactName",
                        "contactPhone", "province", "city", "district", "address",
-                       "latitude", "longitude"]:
+                       "latitude", "longitude", "categoryId", "deadline"]:
             if field in data and data[field] is not None:
                 body[field] = data[field]
         if "salaryType" in data or "salaryAmount" in data:
@@ -76,16 +76,46 @@ class EnterpriseClient:
             "address": data.get("address"),
             "latitude": data.get("latitude"),
             "longitude": data.get("longitude"),
+            "categoryId": data.get("categoryId"),
+            "deadline": data.get("deadline"),
             "rates": [{"type": data.get("salaryType", "HOURLY"), "amount": data.get("salaryAmount", 0), "currency": "CNY"}],
             "schedules": [
-                {"scheduleDate": s["scheduleDate"], "startTime": s["startTime"], "endTime": s["endTime"]}
+                {
+                    "scheduleDate": s["scheduleDate"],
+                    "startTime": s["startTime"],
+                    "endTime": s["endTime"],
+                    "slotsAvailable": s.get("slotsAvailable"),
+                    "scheduleName": s.get("scheduleName"),
+                    "contactName": s.get("contactName"),
+                    "contactPhone": s.get("contactPhone"),
+                }
                 for s in (data.get("schedules") or [])
             ],
         }
         return await self._post("/enterprise/jobs", body, token)
 
     async def create_schedule(self, data: dict, token: str) -> dict:
-        return await self._post("/enterprise/jobs/schedules", data, token)
+        body = {
+            "jobId": data.get("jobId"),
+            "scheduleDate": data.get("scheduleDate"),
+            "startTime": data.get("startTime"),
+            "endTime": data.get("endTime"),
+        }
+        if data.get("slotsAvailable") is not None:
+            body["slotsAvailable"] = data["slotsAvailable"]
+        if data.get("scheduleName"):
+            body["scheduleName"] = data["scheduleName"]
+        if data.get("contactName"):
+            body["contactName"] = data["contactName"]
+        if data.get("contactPhone"):
+            body["contactPhone"] = data["contactPhone"]
+        return await self._post("/enterprise/jobs/schedules", body, token)
+
+    async def update_schedule(self, data: dict, token: str) -> dict:
+        return await self._post("/enterprise/schedules/update", data, token)
+
+    async def copy_schedule(self, data: dict, token: str) -> dict:
+        return await self._post("/enterprise/schedules/copy", data, token)
 
     async def batch_create_schedules(self, data: dict, token: str) -> dict:
         return await self._post("/enterprise/schedules/batch-create", data, token)
