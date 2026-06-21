@@ -4,7 +4,7 @@ from typing import AsyncGenerator
 
 import httpx
 
-DASHSCOPE_API_BASE = "https://dashscope.aliyuncs.com/api/v1"
+CHAT_COMPLETIONS_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions"
 
 
 class QwenService:
@@ -15,27 +15,31 @@ class QwenService:
     def _check_api_key(self):
         if not self.api_key:
             raise Exception("DASHSCOPE_API_KEY not configured. Set it in ai-proxy/.env or environment variables.")
-
     async def chat_stream(self, messages: list[dict], functions: list[dict] | None = None) -> AsyncGenerator[str, None]:
         self._check_api_key()
+
         body = {
             "model": self.model,
             "messages": messages,
             "stream": True,
         }
         if functions:
-            body["functions"] = functions
+            body["tools"] = [{"type": "function", "function": f} for f in functions]
 
         async with httpx.AsyncClient(timeout=120) as client:
             async with client.stream(
                 "POST",
-                f"{DASHSCOPE_API_BASE}/services/aigc/text-generation/generation",
+                CHAT_COMPLETIONS_URL,
                 headers={
                     "Authorization": f"Bearer {self.api_key}",
                     "Content-Type": "application/json",
                 },
                 json=body,
             ) as resp:
+                if resp.status_code != 200:
+                    error_body = await resp.aread()
+                    raise Exception(f"DashScope API error {resp.status_code}: {error_body.decode()}")
+
                 async for line in resp.aiter_lines():
                     if not line.startswith("data:"):
                         continue
@@ -44,15 +48,20 @@ class QwenService:
                         break
                     try:
                         data = json.loads(data_str)
-                        choice = data.get("output", {}).get("choices", [{}])[0]
-                        delta = choice.get("delta", {})
-                        content = delta.get("content", "")
-                        if content:
-                            yield content
+                        choices = data.get("choices", [])
+                        for choice in choices:
+                            delta = choice.get("delta", {})
+                            content = delta.get("content", "")
+                            if content:
+                                yield content
 
-                        function_call = delta.get("function_call")
-                        if function_call:
-                            yield f"__FUNCTION_CALL__:{json.dumps(function_call, ensure_ascii=False)}"
+                            tool_calls = delta.get("tool_calls", [])
+                            for tc in tool_calls:
+                                if tc.get("type") == "function":
+                                    func = tc.get("function", {})
+                                    name = func.get("name", "")
+                                    args = func.get("arguments", "{}")
+                                    yield f"__FUNCTION_CALL__:{json.dumps({'name': name, 'arguments': args}, ensure_ascii=False)}"
                     except json.JSONDecodeError:
                         continue
 
