@@ -40,11 +40,16 @@ class QwenService:
                     error_body = await resp.aread()
                     raise Exception(f"DashScope API error {resp.status_code}: {error_body.decode()}")
 
+                tool_call_acc: dict[int, dict] = {}
+
                 async for line in resp.aiter_lines():
                     if not line.startswith("data:"):
                         continue
                     data_str = line.removeprefix("data:").strip()
                     if data_str == "[DONE]":
+                        for tc in tool_call_acc.values():
+                            if tc.get("name"):
+                                yield f"__FUNCTION_CALL__:{json.dumps(tc, ensure_ascii=False)}"
                         break
                     try:
                         data = json.loads(data_str)
@@ -55,13 +60,16 @@ class QwenService:
                             if content:
                                 yield content
 
-                            tool_calls = delta.get("tool_calls", [])
-                            for tc in tool_calls:
-                                if tc.get("type") == "function":
-                                    func = tc.get("function", {})
-                                    name = func.get("name", "")
-                                    args = func.get("arguments", "{}")
-                                    yield f"__FUNCTION_CALL__:{json.dumps({'name': name, 'arguments': args}, ensure_ascii=False)}"
+                            for tc in delta.get("tool_calls", []):
+                                idx = tc.get("index", 0)
+                                if idx not in tool_call_acc:
+                                    tool_call_acc[idx] = {"name": "", "arguments": ""}
+                                func = tc.get("function", {})
+                                if func.get("name"):
+                                    tool_call_acc[idx]["name"] = func["name"]
+                                args = func.get("arguments")
+                                if args is not None:
+                                    tool_call_acc[idx]["arguments"] += args
                     except json.JSONDecodeError:
                         continue
 
