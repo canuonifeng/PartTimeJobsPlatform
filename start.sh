@@ -147,14 +147,12 @@ build_and_restart_ai_proxy() {
       source venv/bin/activate
       pip install -r requirements.txt
     )
-  elif has_changed "$name-requirements" "$name/requirements.txt"; then
-    echo "[$name] requirements changed, reinstalling"
+  else
     (
       cd "$ROOT_DIR/$name"
       source venv/bin/activate
-      pip install -r requirements.txt
+      pip install --quiet -r requirements.txt 2>/dev/null
     )
-    mark_done "$name-requirements"
   fi
 
   if is_port_running "$port"; then
