@@ -7,7 +7,7 @@ const STORAGE_KEY = 'ai_chat_history'
 const MAX_HISTORY_TOKENS = 20000
 const MAX_CONTENT_LEN = 200
 
-const GREETING = '你好！我是 AI 助手，可以帮你创建岗位和班次。例如：「帮我发布一个保安岗位，明天开始每天 14:00-18:00，时薪 25 元」'
+const GREETING = '你好！我是 AI 招聘助手，可以帮你管理岗位、班次、报名审核、考勤结算。例如：「帮我发布一个保安岗位，明天开始每天14-18点，时薪25元」'
 
 function authHeader() {
   const raw = uni.getStorageSync('token')
@@ -342,8 +342,8 @@ function chooseImage() {
         <text class="back-arrow">‹</text>
       </view>
       <view class="chat-header-center">
-        <text class="chat-header-title">AI 创建</text>
-        <text class="chat-header-sub">一句话创建岗位和班次</text>
+        <text class="chat-header-title">AI 助手</text>
+        <text class="chat-header-sub">智能招聘助手</text>
       </view>
       <view class="chat-header-right">
         <text class="clear-btn" @click="clearHistory">清空</text>
