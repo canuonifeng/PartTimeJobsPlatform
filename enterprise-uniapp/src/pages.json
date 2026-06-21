@@ -24,7 +24,8 @@
     {"path": "pages/security/passwordChange", "style": {"navigationBarTitleText": "修改密码"}},
     {"path": "pages/settings/companySettings", "style": {"navigationBarTitleText": "企业设置"}},
     {"path": "pages/balance/balanceList", "style": {"navigationBarTitleText": "账户余额", "enablePullDownRefresh": true}},
-    {"path": "pages/auth/realName", "style": {"navigationBarTitleText": "企业实名认证"}}
+    {"path": "pages/auth/realName", "style": {"navigationBarTitleText": "企业实名认证"}},
+    {"path": "pages/aiChat/aiChat", "style": {"navigationBarTitleText": "AI 创建", "navigationStyle": "custom"}}
   ],
   "globalStyle": {
     "navigationBarTextStyle": "black",

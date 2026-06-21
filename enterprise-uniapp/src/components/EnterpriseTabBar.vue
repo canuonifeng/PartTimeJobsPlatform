@@ -22,6 +22,14 @@ const tabs = [
     url: '/pages/process/process'
   },
   {
+    key: 'aiChat',
+    text: 'AI 创建',
+    icon: '',
+    activeIcon: '',
+    url: '/pages/aiChat/aiChat',
+    fab: true
+  },
+  {
     key: 'messages',
     text: '消息',
     icon: '/static/tab-message.png',
@@ -39,7 +47,11 @@ const tabs = [
 
 function switchTab(item) {
   if (item.key === props.active) return
-  uni.switchTab({ url: item.url })
+  if (item.fab) {
+    uni.navigateTo({ url: item.url })
+  } else {
+    uni.switchTab({ url: item.url })
+  }
 }
 </script>
 
@@ -52,12 +64,18 @@ function switchTab(item) {
       :class="{ active: active === item.key }"
       @click="switchTab(item)"
     >
-      <image
-        class="enterprise-tabbar-icon"
-        :src="active === item.key ? item.activeIcon : item.icon"
-        mode="aspectFit"
-      />
-      <text class="enterprise-tabbar-text">{{ item.text }}</text>
+      <template v-if="item.fab">
+        <view class="fab-button">+</view>
+        <text class="enterprise-tabbar-text fab-text">AI 创建</text>
+      </template>
+      <template v-else>
+        <image
+          class="enterprise-tabbar-icon"
+          :src="active === item.key ? item.activeIcon : item.icon"
+          mode="aspectFit"
+        />
+        <text class="enterprise-tabbar-text">{{ item.text }}</text>
+      </template>
     </view>
   </view>
 </template>
@@ -71,7 +89,7 @@ function switchTab(item) {
   z-index: 99999;
   display: flex;
   align-items: center;
-  padding: 10rpx 16rpx calc(10rpx + env(safe-area-inset-bottom));
+  padding: 10rpx 8rpx calc(10rpx + env(safe-area-inset-bottom));
   background: rgba(255, 255, 255, 0.98);
   border-top: 1rpx solid #edf0f3;
   box-shadow: 0 -8rpx 28rpx rgba(15, 23, 42, 0.08);
@@ -86,6 +104,7 @@ function switchTab(item) {
   justify-content: center;
   min-width: 0;
   color: #98a3b3;
+  position: relative;
 }
 
 .enterprise-tabbar-icon {
@@ -95,7 +114,7 @@ function switchTab(item) {
 
 .enterprise-tabbar-text {
   margin-top: 4rpx;
-  font-size: 22rpx;
+  font-size: 20rpx;
   line-height: 1.2;
   font-weight: 750;
 }
@@ -104,4 +123,21 @@ function switchTab(item) {
   color: #16a34a;
 }
 
+.fab-button {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #18c86b, #08a95a);
+  color: #fff;
+  font-size: 52rpx;
+  font-weight: 300;
+  line-height: 88rpx;
+  text-align: center;
+  margin-top: -28rpx;
+  box-shadow: 0 8rpx 24rpx rgba(22, 163, 74, 0.32);
+}
+
+.fab-text {
+  margin-top: 2rpx;
+}
 </style>

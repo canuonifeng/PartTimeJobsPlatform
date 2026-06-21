@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { getApplications, acceptApplication, rejectApplication } from '@/api/jobs'
 
@@ -10,12 +10,39 @@ const hasMore = ref(true)
 const page = ref(1)
 const pageSize = 20
 const currentStatus = ref('')
+const expandedGroups = ref({})
 const statusTabs = [
   { label: '全部', value: '' },
   { label: '待审核', value: 'PENDING' },
   { label: '已通过', value: 'ACCEPTED' },
   { label: '已拒绝', value: 'REJECTED' }
 ]
+
+const groups = computed(() => {
+  const map = {}
+  applications.value.forEach(app => {
+    const key = `${app.scheduleDate || '未知日期'}_${app.jobId || ''}`
+    if (!map[key]) {
+      map[key] = {
+        key,
+        date: app.scheduleDate || '未知日期',
+        jobTitle: app.jobTitle || '-',
+        timeRange: formatTimeRange(app.startTime, app.endTime),
+        items: []
+      }
+    }
+    map[key].items.push(app)
+  })
+  return Object.values(map).sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+})
+
+function isGroupExpanded(key) {
+  return expandedGroups.value[key] !== false
+}
+
+function toggleGroup(key) {
+  expandedGroups.value = { ...expandedGroups.value, [key]: !isGroupExpanded(key) }
+}
 
 onLoad((options = {}) => {
   currentStatus.value = normalizeStatus(options.status)
@@ -52,6 +79,7 @@ async function loadApplications(append = false) {
 function switchStatus(status) {
   if (currentStatus.value === status || loading.value) return
   currentStatus.value = status
+  expandedGroups.value = {}
   refreshApplications()
 }
 
@@ -88,10 +116,8 @@ async function handleAccept(applicationId) {
   try {
     await acceptApplication(applicationId)
     uni.showToast({ title: '已通过', icon: 'success' })
-    page.value = 1
-    applications.value = []
-    hasMore.value = true
-    loadApplications()
+    uni.showToast({ title: '下一步：考勤确认', icon: 'none', duration: 2000 })
+    refreshApplications()
   } catch {
     uni.showToast({ title: '操作失败', icon: 'none' })
   }
@@ -101,10 +127,7 @@ async function handleReject(applicationId) {
   try {
     await rejectApplication(applicationId)
     uni.showToast({ title: '已拒绝', icon: 'success' })
-    page.value = 1
-    applications.value = []
-    hasMore.value = true
-    loadApplications()
+    refreshApplications()
   } catch {
     uni.showToast({ title: '操作失败', icon: 'none' })
   }
@@ -161,36 +184,52 @@ function pad2(value) {
       </view>
 
       <view v-else class="application-list">
-        <view v-for="app in applications" :key="app.applicationId" class="op-card operation-card application-card">
-          <view class="op-row">
-            <view class="worker-avatar">{{ (app.workerName || '工').slice(0, 1) }}</view>
-            <view class="op-row-main">
-              <text class="op-row-title">{{ app.workerName || '未知姓名' }}</text>
-              <text class="op-row-desc">{{ genderLabel(app.workerGender) }} · {{ ageLabel(app.workerAge) }} · {{ phoneLabel(app.workerPhone) }}</text>
+        <view v-for="group in groups" :key="group.key" class="group-section">
+          <view class="group-header" @click="toggleGroup(group.key)">
+            <view class="group-header-left">
+              <text class="group-date">{{ group.date }}</text>
+              <text class="group-title">{{ group.jobTitle }}</text>
+              <text v-if="group.timeRange" class="group-time">{{ group.timeRange }}</text>
             </view>
-            <text class="op-pill" :class="statusClass(app.status) === 'rejected' ? 'op-pill-danger' : statusClass(app.status) === 'pending' ? 'op-pill-warn' : ''">{{ statusLabel(app.status) }}</text>
-          </view>
-
-          <view class="info-grid">
-            <view class="info-item wide">
-              <text class="info-label">报名岗位</text>
-              <text class="info-value">{{ app.jobTitle || '-' }}</text>
-            </view>
-            <view class="info-item">
-              <text class="info-label">排班时间</text>
-              <text class="info-value multi">{{ scheduleDateLabel(app.scheduleDate) }}</text>
-              <text class="info-value sub">{{ formatTimeRange(app.startTime, app.endTime) || '-' }}</text>
-            </view>
-            <view class="info-item">
-              <text class="info-label">申请时间</text>
-              <text class="info-value time">{{ formatBeijingTime(app.appliedAt) }}</text>
+            <view class="group-header-right">
+              <text class="group-count">{{ group.items.length }}人</text>
+              <text class="group-arrow" :class="{ expanded: isGroupExpanded(group.key) }">›</text>
             </view>
           </view>
 
-          <view v-if="app.status === 'PENDING'" class="action-row">
-            <view class="action-btn reject" @click="handleReject(app.applicationId)">拒绝</view>
-            <view class="action-btn accept" @click="handleAccept(app.applicationId)">通过报名</view>
-          </view>
+          <template v-if="isGroupExpanded(group.key)">
+            <view v-for="app in group.items" :key="app.applicationId" class="op-card operation-card application-card">
+              <view class="op-row">
+                <view class="worker-avatar">{{ (app.workerName || '工').slice(0, 1) }}</view>
+                <view class="op-row-main">
+                  <text class="op-row-title">{{ app.workerName || '未知姓名' }}</text>
+                  <text class="op-row-desc">{{ genderLabel(app.workerGender) }} · {{ ageLabel(app.workerAge) }} · {{ phoneLabel(app.workerPhone) }}</text>
+                </view>
+                <text class="op-pill" :class="statusClass(app.status) === 'rejected' ? 'op-pill-danger' : statusClass(app.status) === 'pending' ? 'op-pill-warn' : ''">{{ statusLabel(app.status) }}</text>
+              </view>
+
+              <view class="info-grid">
+                <view class="info-item wide">
+                  <text class="info-label">报名岗位</text>
+                  <text class="info-value">{{ app.jobTitle || '-' }}</text>
+                </view>
+                <view class="info-item">
+                  <text class="info-label">排班时间</text>
+                  <text class="info-value multi">{{ scheduleDateLabel(app.scheduleDate) }}</text>
+                  <text class="info-value sub">{{ formatTimeRange(app.startTime, app.endTime) || '-' }}</text>
+                </view>
+                <view class="info-item">
+                  <text class="info-label">申请时间</text>
+                  <text class="info-value time">{{ formatBeijingTime(app.appliedAt) }}</text>
+                </view>
+              </view>
+
+              <view v-if="app.status === 'PENDING'" class="action-row">
+                <view class="action-btn reject" @click="handleReject(app.applicationId)">拒绝</view>
+                <view class="action-btn accept" @click="handleAccept(app.applicationId)">通过报名</view>
+              </view>
+            </view>
+          </template>
         </view>
 
         <view class="load-more-wrap">
@@ -228,4 +267,14 @@ function pad2(value) {
 .action-btn.reject { background: #fee2e2; color: #dc2626; }
 .action-btn.accept { background: #16a34a; color: #fff; }
 .load-more-wrap { padding: 16rpx 0 32rpx; }
+.group-section { margin-bottom: 20rpx; }
+.group-header { display: flex; align-items: center; justify-content: space-between; padding: 22rpx 24rpx; background: #fff; border-radius: 20rpx; box-shadow: 0 8rpx 20rpx rgba(23,83,53,.06); margin-bottom: 14rpx; }
+.group-header-left { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12rpx; }
+.group-date { font-size: 24rpx; font-weight: 800; color: #16a34a; background: #ecfdf5; padding: 4rpx 14rpx; border-radius: 999rpx; }
+.group-title { font-size: 26rpx; font-weight: 800; color: #1f2933; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.group-time { font-size: 22rpx; color: #64748b; flex-shrink: 0; }
+.group-header-right { display: flex; align-items: center; gap: 12rpx; flex-shrink: 0; margin-left: 12rpx; }
+.group-count { font-size: 22rpx; color: #64748b; font-weight: 700; }
+.group-arrow { font-size: 36rpx; color: #98a3b3; line-height: 1; transition: transform .2s; }
+.group-arrow.expanded { transform: rotate(90deg); }
 </style>

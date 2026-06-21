@@ -6,11 +6,16 @@ onLaunch(() => {
   const authStore = useAuthStore()
   authStore.init()
 
+  const token = uni.getStorageSync('token')
+  if (!token) {
+    setTimeout(() => uni.reLaunch({ url: '/pages/login/login' }), 100)
+  }
+
   uni.addInterceptor('navigateTo', {
     invoke(args) {
-      const token = uni.getStorageSync('token')
-      if (!token && !args.url.includes('/pages/login/login')) {
-        uni.reLaunch({ url: '/pages/login/login' })
+      const t = uni.getStorageSync('token')
+      if (!t && !args.url.includes('/pages/login/login')) {
+        uni.redirectTo({ url: '/pages/login/login' })
         return false
       }
     }
@@ -18,19 +23,8 @@ onLaunch(() => {
 
   uni.addInterceptor('redirectTo', {
     invoke(args) {
-      const token = uni.getStorageSync('token')
-      if (!token && !args.url.includes('/pages/login/login')) {
-        uni.reLaunch({ url: '/pages/login/login' })
-        return false
-      }
-    }
-  })
-
-  uni.addInterceptor('reLaunch', {
-    invoke(args) {
-      const token = uni.getStorageSync('token')
-      if (!token && !args.url.includes('/pages/login/login')) {
-        uni.reLaunch({ url: '/pages/login/login' })
+      const t = uni.getStorageSync('token')
+      if (!t && !args.url.includes('/pages/login/login')) {
         return false
       }
     }

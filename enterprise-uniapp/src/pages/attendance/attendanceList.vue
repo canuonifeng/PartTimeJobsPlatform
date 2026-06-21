@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { onLoad, onShow, onPullDownRefresh } from '@dcloudio/uni-app'
 import { listAttendance, batchPay } from '@/api/attendance'
+import { getBalance } from '@/api/balance'
+import { request } from '@/api/request'
 
 const records = ref([])
 const loading = ref(false)
@@ -11,6 +13,7 @@ const loadingMore = ref(false)
 const requestSeq = ref(0)
 const pageSize = 20
 const currentSettlementStatus = ref('')
+const balance = ref(null)
 const settlementTabs = [
   { label: '全部', value: '' },
   { label: '未结算', value: 'UNPAID' },
@@ -21,10 +24,22 @@ onLoad((options = {}) => {
   currentSettlementStatus.value = normalizeSettlementStatus(options.settlementStatus)
 })
 
-onShow(refreshRecords)
+onShow(() => { refreshRecords(); loadBalance() })
 onPullDownRefresh(() => {
   refreshRecords().finally(() => uni.stopPullDownRefresh())
 })
+
+async function loadBalance() {
+  try {
+    balance.value = await getBalance(request)
+  } catch {}
+}
+
+function isBalanceInsufficient() {
+  if (!balance.value) return false
+  const bal = typeof balance.value === 'object' ? (balance.value.amount || balance.value.balance || 0) : Number(balance.value)
+  return bal <= 0
+}
 
 function normalizeSettlementStatus(status) {
   return settlementTabs.some(tab => tab.value === status) ? status : ''
@@ -125,6 +140,10 @@ function beijingTime(value) {
 function pad2(value) {
   return String(value).padStart(2, '0')
 }
+
+function navigateToBalance() {
+  uni.navigateTo({ url: '/pages/balance/balanceList' })
+}
 </script>
 
 <template>
@@ -137,6 +156,17 @@ function pad2(value) {
     </view>
 
     <view class="op-content">
+      <view class="balance-card" @click="navigateToBalance">
+        <view class="balance-left">
+          <text class="balance-label">企业余额</text>
+          <text class="balance-amount">¥{{ balance?.amount ?? balance?.balance ?? '-' }}</text>
+        </view>
+        <view class="balance-right">
+          <text class="balance-action">去充值</text>
+          <text class="balance-arrow">›</text>
+        </view>
+      </view>
+
       <view class="summary-card">
         <view class="summary-item">
           <text class="summary-value">{{ records.length }}</text>
@@ -196,7 +226,8 @@ function pad2(value) {
           </view>
 
           <view class="action-row">
-            <view v-if="canOperate(r)" class="action-btn pay" @click="handlePay(r)">结算</view>
+            <view v-if="canOperate(r) && isBalanceInsufficient()" class="action-btn insufficient" @click="navigateToBalance">余额不足，去充值</view>
+            <view v-else-if="canOperate(r)" class="action-btn pay" @click="handlePay(r)">结算</view>
             <view v-else class="action-btn disabled">{{ settlementStatusLabel(r.settlementStatus) }}</view>
           </view>
         </view>
@@ -214,6 +245,13 @@ function pad2(value) {
 <style>
 .salary-page { height: 100vh; }
 .top-space { height: 24rpx; }
+.balance-card { display: flex; align-items: center; justify-content: space-between; padding: 28rpx 24rpx; margin-bottom: 20rpx; border-radius: 24rpx; background: linear-gradient(135deg, #059669, #16a34a); color: #fff; box-shadow: 0 12rpx 30rpx rgba(22,163,74,.2); }
+.balance-left { }
+.balance-label { display: block; font-size: 22rpx; opacity: .82; }
+.balance-amount { display: block; margin-top: 6rpx; font-size: 40rpx; font-weight: 850; line-height: 1; }
+.balance-right { display: flex; align-items: center; gap: 6rpx; opacity: .9; }
+.balance-action { font-size: 24rpx; font-weight: 700; }
+.balance-arrow { font-size: 32rpx; line-height: 1; }
 .summary-card { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16rpx; margin-bottom: 20rpx; }
 .summary-item { padding: 24rpx; border-radius: 24rpx; background: #fff; box-shadow: 0 12rpx 30rpx rgba(23,83,53,.08); }
 .summary-value { display: block; font-size: 40rpx; font-weight: 850; color: #16a34a; line-height: 1; }
@@ -238,6 +276,7 @@ function pad2(value) {
 .action-row { margin-top: 20rpx; }
 .action-btn { height: 68rpx; line-height: 68rpx; border-radius: 999rpx; text-align: center; font-size: 26rpx; font-weight: 850; }
 .action-btn.pay { background: #16a34a; color: #fff; }
+.action-btn.insufficient { background: #fef3c7; color: #b45309; }
 .action-btn.disabled { background: #f1f5f9; color: #98a3b3; }
 .load-more-wrap { padding: 16rpx 0 32rpx; }
 </style>

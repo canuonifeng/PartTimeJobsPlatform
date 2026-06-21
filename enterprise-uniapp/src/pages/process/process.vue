@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { getOperationProcess } from '@/api/operations'
 import EnterpriseTabBar from '@/components/EnterpriseTabBar.vue'
@@ -9,20 +9,47 @@ onShow(() => {
   loadProcess()
 })
 
-const steps = ref([])
-const hiddenProcessCodes = ['APPLICATION', 'SCHEDULE']
+const processData = ref([])
+
+const stepOrder = ['PUBLISH', 'SCHEDULE', 'REVIEW', 'ATTENDANCE', 'SALARY']
+
+const stepConfig = {
+  PUBLISH: { number: 1, title: '创建岗位', desc: '发布招聘岗位信息，设置薪资标准', icon: '岗', path: '/pages/jobs/jobList' },
+  SCHEDULE: { number: 2, title: '创建班次', desc: '为岗位设置排班时间和人数', icon: '班', path: '/pages/schedules/manageList' },
+  REVIEW: { number: 3, title: '审核报名', desc: '审核工人报名申请，确认录用', icon: '审', path: '/pages/applications/applicationList?status=PENDING' },
+  ATTENDANCE: { number: 4, title: '考勤确认', desc: '确认工人实际出勤和工时', icon: '勤', path: '/pages/schedules/scheduleList?status=SCHEDULED' },
+  SALARY: { number: 5, title: '薪资结算', desc: '确认工时后完成薪资发放', icon: '薪', path: '/pages/attendance/attendanceList?settlementStatus=UNPAID' }
+}
+
+const steps = computed(() => {
+  const dataMap = {}
+  ;(Array.isArray(processData.value) ? processData.value : []).forEach(item => {
+    dataMap[item.code] = item
+  })
+
+  return stepOrder.map(code => {
+    const cfg = stepConfig[code] || {}
+    const api = dataMap[code] || {}
+    const status = api.status || 'TODO'
+    return {
+      code,
+      number: cfg.number,
+      title: cfg.title,
+      desc: cfg.desc,
+      icon: cfg.icon,
+      path: cfg.path,
+      tags: api.tags || [],
+      state: status === 'WARNING' ? 'warn' : status === 'TODO' ? 'todo' : 'done',
+      isWarn: status === 'WARNING',
+      isCurrent: status === 'TODO',
+      isDone: status === 'done'
+    }
+  })
+})
 
 async function loadProcess() {
   try {
-    const res = await getOperationProcess()
-    steps.value = (Array.isArray(res) ? res : []).filter(item => !hiddenProcessCodes.includes(item.code)).map(item => ({
-      icon: processIcon(item.code),
-      title: item.name,
-      desc: item.description,
-      tags: item.tags || [],
-      path: processPath(item),
-      state: processState(item.status)
-    }))
+    processData.value = await getOperationProcess()
   } catch {
     uni.showToast({ title: '流程数据加载失败', icon: 'none' })
   }
@@ -31,22 +58,6 @@ async function loadProcess() {
 function navigateTo(path) {
   uni.navigateTo({ url: path })
 }
-
-function processIcon(code) {
-  const map = { PUBLISH: '发', REVIEW: '审', ATTENDANCE: '勤', SALARY: '薪' }
-  return map[code] || '流'
-}
-
-function processPath(item) {
-  if (item.code === 'REVIEW') return '/pages/applications/applicationList?status=PENDING'
-  return item.routePath
-}
-
-function processState(status) {
-  if (status === 'WARNING') return 'warn'
-  if (status === 'TODO') return 'muted'
-  return 'done'
-}
 </script>
 
 <template>
@@ -54,24 +65,32 @@ function processState(status) {
     <view class="top-space"></view>
     <view class="op-hero">
       <text class="op-hero-kicker">招聘运营流程</text>
-      <text class="op-hero-title">招聘链路实时推进</text>
-      <text class="op-hero-desc">发布、审核、考勤、薪资节点来自后端统计</text>
+      <text class="op-hero-title">5 步完成招聘到结算</text>
+      <text class="op-hero-desc">从发布岗位到薪资结算，全链路数据一目了然</text>
     </view>
 
     <view class="op-content">
-      <view class="timeline">
-        <view v-for="step in steps" :key="step.title" class="timeline-step" @click="navigateTo(step.path)">
-          <view class="timeline-node" :class="'node-' + step.state">{{ step.icon }}</view>
-          <view class="timeline-card">
-            <view class="op-row">
-              <view class="op-row-main">
-                <text class="op-row-title">{{ step.title }}</text>
-                <text class="op-row-desc">{{ step.desc }}</text>
-              </view>
-              <text class="arrow">›</text>
+      <view class="process-steps">
+        <view
+          v-for="step in steps"
+          :key="step.code"
+          class="process-step-card"
+          :class="{ 'is-warn': step.isWarn, 'is-done': step.isDone, 'is-todo': step.isCurrent }"
+          @click="navigateTo(step.path)"
+        >
+          <view class="step-left">
+            <view class="step-number" :class="'step-num-' + step.state">
+              <text>{{ step.isDone ? '✓' : step.number }}</text>
             </view>
-            <view class="tag-row">
-              <text v-for="tag in step.tags" :key="tag" class="meta-tag">{{ tag }}</text>
+          </view>
+          <view class="step-body">
+            <view class="step-header">
+              <text class="step-title">{{ step.title }}</text>
+              <text class="step-arrow">›</text>
+            </view>
+            <text class="step-desc">{{ step.desc }}</text>
+            <view v-if="step.tags.length > 0" class="step-tags">
+              <text v-for="tag in step.tags" :key="tag" class="step-tag" :class="'tag-' + step.state">{{ tag }}</text>
             </view>
           </view>
         </view>
@@ -84,15 +103,29 @@ function processState(status) {
 <style>
 .process-page { min-height: 100vh; padding-bottom: calc(140rpx + env(safe-area-inset-bottom)); }
 .top-space { height: 24rpx; }
-.timeline { padding-top: 6rpx; }
-.timeline-step { position: relative; display: flex; padding-bottom: 26rpx; }
-.timeline-step::before { content: ''; position: absolute; left: 35rpx; top: 76rpx; bottom: 0; width: 4rpx; background: #dbe8df; border-radius: 999rpx; }
-.timeline-step:last-child::before { display: none; }
-.timeline-node { width: 72rpx; height: 72rpx; margin-right: 18rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: #16a34a; color: #fff; font-size: 28rpx; font-weight: 850; flex-shrink: 0; box-shadow: 0 10rpx 24rpx rgba(22,163,74,.18); }
-.node-warn { background: #f59e0b; }
-.node-muted { background: #cbd5e1; }
-.timeline-card { flex: 1; min-width: 0; background: #fff; border-radius: 26rpx; padding: 24rpx; box-shadow: 0 12rpx 30rpx rgba(23,83,53,.08); box-sizing: border-box; }
-.arrow { margin-left: 12rpx; color: #98a3b3; font-size: 40rpx; line-height: 1; }
-.tag-row { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 18rpx; }
-.meta-tag { padding: 8rpx 14rpx; border-radius: 999rpx; background: #f1f5f9; color: #64748b; font-size: 22rpx; font-weight: 700; }
+
+.process-steps { padding-top: 6rpx; }
+.process-step-card { display: flex; background: #fff; border-radius: 26rpx; padding: 24rpx; margin-bottom: 18rpx; box-shadow: 0 12rpx 30rpx rgba(23,83,53,.08); box-sizing: border-box; border: 2rpx solid transparent; }
+.process-step-card:last-child { margin-bottom: 0; }
+.process-step-card.is-warn { border-color: #f59e0b; background: #fffbeb; }
+.process-step-card.is-done { border-color: transparent; }
+.process-step-card.is-todo { border-color: #e5e7eb; }
+
+.step-left { margin-right: 20rpx; display: flex; align-items: flex-start; padding-top: 4rpx; }
+.step-number { width: 56rpx; height: 56rpx; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24rpx; font-weight: 850; flex-shrink: 0; }
+.step-num-done { background: #16a34a; color: #fff; }
+.step-num-warn { background: #f59e0b; color: #fff; box-shadow: 0 0 0 4rpx rgba(245,158,11,.2); }
+.step-num-todo { background: #e5e7eb; color: #9ca3af; }
+
+.step-body { flex: 1; min-width: 0; }
+.step-header { display: flex; align-items: center; justify-content: space-between; }
+.step-title { font-size: 28rpx; font-weight: 800; color: #1f2933; }
+.is-warn .step-title { color: #92400e; }
+.step-arrow { font-size: 36rpx; color: #98a3b3; line-height: 1; }
+.step-desc { display: block; margin-top: 6rpx; font-size: 23rpx; color: #64748b; line-height: 1.5; }
+.step-tags { display: flex; flex-wrap: wrap; gap: 10rpx; margin-top: 14rpx; }
+.step-tag { padding: 6rpx 16rpx; border-radius: 999rpx; font-size: 22rpx; font-weight: 700; }
+.tag-done { background: #ecfdf5; color: #12834a; }
+.tag-warn { background: #fef3c7; color: #92400e; }
+.tag-todo { background: #f1f5f9; color: #64748b; }
 </style>

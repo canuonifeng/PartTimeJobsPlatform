@@ -460,7 +460,11 @@ async function handleSave() {
     }
 
     uni.showToast({ title: '保存成功', icon: 'success' })
-    setTimeout(() => uni.navigateBack(), 1500)
+    if (!isEdit.value && id) {
+      setTimeout(() => uni.redirectTo({ url: `/pages/schedules/manageList?jobId=${id}` }), 1000)
+    } else {
+      setTimeout(() => uni.navigateBack(), 1500)
+    }
   } catch (e) {
     uni.showToast({ title: '保存失败', icon: 'none' })
   } finally {

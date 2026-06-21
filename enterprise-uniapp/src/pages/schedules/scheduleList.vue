@@ -14,10 +14,6 @@ const confirmTabs = [
   { label: '全部', value: '' },
   { label: '待确认', value: 'SCHEDULED' },
   { label: '工作中', value: 'ON_DUTY' },
-  { label: '迟到', value: 'LATE' },
-  { label: '早退', value: 'EARLY_LEAVE' },
-  { label: '迟到并早退', value: 'LATE_EARLY_LEAVE' },
-  { label: '缺勤', value: 'ABSENT' },
   { label: '已完成', value: 'COMPLETED' }
 ]
 
@@ -195,6 +191,7 @@ function initials(name) {
               <text class="op-row-desc desc-wrap">{{ dateLabel(s.shiftDate || s.date) }} · {{ shiftTimeLabel(s) }}</text>
             </view>
             <text class="op-pill" :class="statusClass(s.status) === 'danger' ? 'op-pill-danger' : statusClass(s.status) === 'pending' ? 'op-pill-warn' : ''">{{ statusLabel(s.status) }}</text>
+            <text v-if="s.settlementStatus === 'PAID'" class="op-pill settlement-paid">已结算</text>
           </view>
 
           <view class="worker-box">
@@ -243,4 +240,5 @@ function initials(name) {
 .action-btn { height: 68rpx; line-height: 68rpx; border-radius: 999rpx; text-align: center; font-size: 26rpx; font-weight: 850; }
 .action-btn.danger { background: #fee2e2; color: #dc2626; }
 .load-more-wrap { padding: 16rpx 0 32rpx; }
+.settlement-paid { margin-left: 8rpx; color: #12834a; background: #ecfdf5; }
 </style>

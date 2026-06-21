@@ -168,7 +168,7 @@ const total = ref(0)
 const loading = ref(false)
 const uiStatus = ref('')
 const dateMode = ref('today')
-const query = reactive({ status: '', startDate: '', endDate: '', page: 1, pageSize: 10 })
+const query = reactive({ status: '', startDate: '', endDate: '', page: 1, pageSize: 10, jobId: '' })
 const drawerVisible = ref(false)
 const editVisible = ref(false)
 const copyVisible = ref(false)
@@ -256,7 +256,19 @@ function openEdit(item) { Object.assign(editForm, { id: item.id, scheduleName: i
 async function submitEdit() { await updateManagedSchedule({ ...editForm, slotsAvailable: Number(editForm.slotsAvailable || 1) }); uni.showToast({ title: '保存成功', icon: 'success' }); editVisible.value = false; loadData(true) }
 function copySchedule(item) { Object.assign(copyForm, { sourceScheduleId: item.id, scheduleDate: item.scheduleDate, startTime: item.startTime, endTime: item.endTime }); copyVisible.value = true }
 async function submitCopy() { await copyManagedSchedule(copyForm); uni.showToast({ title: '复制成功', icon: 'success' }); copyVisible.value = false; loadData(true) }
-async function openBatch() { batchVisible.value = true; if (jobOptions.value.length === 0) { const res = await getJobs(authStore.companyId); jobOptions.value = Array.isArray(res) ? res : (res.records || res.data || []) } }
+async function openBatch() {
+  batchVisible.value = true
+  if (jobOptions.value.length === 0) {
+    const res = await getJobs(authStore.companyId)
+    jobOptions.value = Array.isArray(res) ? res : (res.records || res.data || [])
+  }
+  if (query.jobId) {
+    const idx = jobOptions.value.findIndex(j => String(j.id) === String(query.jobId))
+    if (idx >= 0) {
+      selectBatchJob({ detail: { value: idx } })
+    }
+  }
+}
 function selectBatchJob(e) { const job = jobOptions.value[Number(e.detail.value)]; if (!job) return; batchForm.jobId = job.id; selectedBatchJobTitle.value = job.title }
 function toggleWeekday(value) { const index = batchForm.weekdays.indexOf(value); index >= 0 ? batchForm.weekdays.splice(index, 1) : batchForm.weekdays.push(value) }
 async function submitBatch() { if (!batchForm.jobId || !batchForm.startDate || !batchForm.endDate || !batchForm.startTime || !batchForm.endTime) { uni.showToast({ title: '请填写完整班次信息', icon: 'none' }); return } await batchCreateManagedSchedules({ jobId: Number(batchForm.jobId), startDate: batchForm.startDate, endDate: batchForm.endDate, weekdays: [...batchForm.weekdays], startTime: batchForm.startTime, endTime: batchForm.endTime }); uni.showToast({ title: '创建成功', icon: 'success' }); batchVisible.value = false; loadData(true) }
@@ -275,7 +287,14 @@ function openMore(item) {
   })
 }
 
-onLoad(() => { setDateMode('today') })
+onLoad((options = {}) => {
+  if (options.jobId) {
+    query.jobId = options.jobId
+    uni.showToast({ title: '岗位已创建，请添加班次', icon: 'none', duration: 3000 })
+    setTimeout(() => { openBatch() }, 500)
+  }
+  setDateMode('today')
+})
 onPullDownRefresh(() => loadData(true))
 onReachBottom(loadMore)
 </script>

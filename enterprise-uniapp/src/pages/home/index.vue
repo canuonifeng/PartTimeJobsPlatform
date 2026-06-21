@@ -23,35 +23,32 @@ const greeting = computed(() => {
 const stats = computed(() => {
   const overview = dashboard.value?.overview || {}
   return [
-    { label: '发布中', value: overview.publishedJobCount ?? 0 },
-    { label: '总报名', value: overview.totalApplicationCount ?? 0 },
-    { label: '待处理', value: overview.pendingTodoCount ?? 0 }
+    { label: '发布中', value: overview.publishedJobCount ?? 0, color: '#12834a' },
+    { label: '总报名', value: overview.totalApplicationCount ?? 0, color: '#3b82f6' },
+    { label: '待处理', value: overview.pendingTodoCount ?? 0, color: '#d28a00' }
   ]
 })
 
-const flowSteps = computed(() => (dashboard.value?.process || []).slice(0, 4).map(item => ({
-  name: shortProcessName(item.name),
-  value: item.count ?? 0,
-  state: processState(item.status)
-})))
+const todoConfig = {
+  APPLICATION: { icon: '审', color: '#d28a00', bg: '#fffbeb', border: '#fde68a', title: '报名审核', desc: '及时审核报名，提高招工转化', path: '/pages/applications/applicationList?status=PENDING', action: '去审核' },
+  SCHEDULE: { icon: '班', color: '#3b82f6', bg: '#eff6ff', border: '#bfdbfe', title: '今日班次', desc: '跟进排班，避免班次遗漏', path: '/pages/schedules/manageList', action: '查看班次' },
+  ATTENDANCE: { icon: '勤', color: '#8b5cf6', bg: '#f5f3ff', border: '#ddd6fe', title: '考勤确认', desc: '处理异常考勤，确认实际工时', path: '/pages/schedules/scheduleList?status=SCHEDULED', action: '去确认' },
+  SALARY: { icon: '薪', color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0', title: '薪资结算', desc: '确认工时后完成薪资结算', path: '/pages/attendance/attendanceList?settlementStatus=UNPAID', action: '去结算' }
+}
 
-const todos = computed(() => (dashboard.value?.todoSummary || [])
+const todoCards = computed(() => (dashboard.value?.todoSummary || [])
   .filter(item => Number(item.count || 0) > 0)
-  .map(item => ({
-    type: todoIcon(item.type),
-    title: `${item.count || 0} 个${item.name}待办`,
-    desc: todoDesc(item.type),
-    tag: Number(item.count || 0) > 0 ? '去处理' : '已完成',
-    path: todoPath(item.type)
-  })))
+  .map(item => {
+    const cfg = todoConfig[item.type] || {}
+    return {
+      type: item.type,
+      count: Number(item.count || 0),
+      ...cfg
+    }
+  })
+)
 
-const quickActions = [
-  { name: '班次管理', icon: '班', path: '/pages/schedules/manageList' },
-  { name: '招聘计划', icon: '岗', path: '/pages/jobs/jobList' },
-  { name: '报名审核', icon: '审', path: '/pages/applications/applicationList' },
-  { name: '考勤确认', icon: '勤', path: '/pages/schedules/scheduleList?status=SCHEDULED' },
-  { name: '薪资结算', icon: '¥', path: '/pages/attendance/attendanceList?settlementStatus=UNPAID' }
-]
+const hasTodos = computed(() => todoCards.value.length > 0)
 
 onShow(() => {
   uni.hideTabBar({ animation: false })
@@ -77,49 +74,6 @@ async function loadDashboard() {
 function navigateTo(path) {
   uni.navigateTo({ url: path })
 }
-
-function switchToProcess() {
-  uni.switchTab({ url: '/pages/process/process' })
-}
-
-function processState(status) {
-  if (status === 'WARNING') return 'warn'
-  if (status === 'TODO') return 'todo'
-  return 'done'
-}
-
-function shortProcessName(name) {
-  if (!name) return '-'
-  if (name.includes('发布')) return '发布'
-  if (name.includes('报名')) return '报名'
-  if (name.includes('审核')) return '审核'
-  if (name.includes('薪资')) return '薪资'
-  return name.slice(0, 2)
-}
-
-function todoIcon(type) {
-  const map = { APPLICATION: '审', SCHEDULE: '班', ATTENDANCE: '勤', SALARY: '薪' }
-  return map[type] || '办'
-}
-
-function todoDesc(type) {
-  const map = {
-    APPLICATION: '及时审核报名，提高招工转化',
-    SCHEDULE: '跟进排班，避免班次遗漏',
-    ATTENDANCE: '处理异常考勤，确认实际工时',
-    SALARY: '确认工时后完成薪资结算'
-  }
-  return map[type] || '查看并处理待办事项'
-}
-
-function todoPath(type) {
-  const map = {
-    APPLICATION: '/pages/applications/applicationList?status=PENDING',
-    ATTENDANCE: '/pages/schedules/scheduleList?status=SCHEDULED',
-    SALARY: '/pages/attendance/attendanceList?settlementStatus=UNPAID'
-  }
-  return map[type] || '/pages/todos/todoList'
-}
 </script>
 
 <template>
@@ -133,7 +87,7 @@ function todoPath(type) {
 
     <view class="stats-grid">
       <view v-for="item in stats" :key="item.label" class="stat-card">
-        <text class="stat-value">{{ item.value }}</text>
+        <text class="stat-value" :style="{ color: item.color }">{{ item.value }}</text>
         <text class="stat-label">{{ item.label }}</text>
       </view>
     </view>
@@ -141,43 +95,39 @@ function todoPath(type) {
     <view class="op-content">
       <view class="op-section">
         <view class="op-section-head">
-          <text class="op-section-title">招聘流程</text>
-          <text class="op-section-link" @click="switchToProcess">查看流程</text>
-        </view>
-        <view class="op-card flow-card">
-          <view v-for="step in flowSteps" :key="step.name" class="flow-item" :class="'flow-' + step.state">
-            <text class="flow-value">{{ step.value }}</text>
-            <text class="flow-name">{{ step.name }}</text>
-          </view>
-        </view>
-      </view>
-
-      <view class="op-section">
-        <view class="op-section-head">
           <text class="op-section-title">今日待办</text>
         </view>
-        <view class="op-card todo-card">
-          <view v-if="todos.length === 0" class="todo-empty">暂无待处理事项</view>
-          <view v-for="item in todos" :key="item.title" class="todo-row" @click="navigateTo(item.path)">
-            <view class="todo-icon">{{ item.type }}</view>
-            <view class="op-row-main">
-              <text class="op-row-title">{{ item.title }}</text>
-              <text class="op-row-desc">{{ item.desc }}</text>
+        <template v-if="hasTodos">
+          <view
+            v-for="card in todoCards"
+            :key="card.type"
+            class="todo-card"
+            :style="{ borderLeftColor: card.color, background: card.bg }"
+            @click="navigateTo(card.path)"
+          >
+            <view class="todo-card-main">
+              <view class="todo-icon-wrap" :style="{ background: card.color }">
+                <text class="todo-icon-text">{{ card.icon }}</text>
+              </view>
+              <view class="todo-info">
+                <text class="todo-info-title">{{ card.title }}</text>
+                <text class="todo-info-desc">{{ card.desc }}</text>
+              </view>
+              <view class="todo-count-wrap">
+                <text class="todo-count-num" :style="{ color: card.color }">{{ card.count }}</text>
+                <text class="todo-count-unit">项</text>
+              </view>
             </view>
-            <text class="op-pill op-pill-warn">{{ item.tag }}</text>
+            <view class="todo-card-footer">
+              <text class="todo-action-text" :style="{ color: card.color }">{{ card.action }}</text>
+              <text class="todo-action-arrow" :style="{ color: card.color }">›</text>
+            </view>
           </view>
-        </view>
-      </view>
-
-      <view class="op-section">
-        <view class="op-section-head">
-          <text class="op-section-title">快捷操作</text>
-        </view>
-        <view class="quick-grid">
-          <view v-for="item in quickActions" :key="item.name" class="quick-item" @click="navigateTo(item.path)">
-            <view class="quick-icon">{{ item.icon }}</view>
-            <text class="quick-name">{{ item.name }}</text>
-          </view>
+        </template>
+        <view v-else class="todo-empty-card">
+          <view class="todo-empty-icon">✓</view>
+          <text class="todo-empty-title">暂无待处理事项</text>
+          <text class="todo-empty-desc">所有招聘流程正常推进中</text>
         </view>
       </view>
     </view>
@@ -190,21 +140,26 @@ function todoPath(type) {
 .top-space { height: 24rpx; }
 .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16rpx; margin: -24rpx 28rpx 0; position: relative; z-index: 2; }
 .stat-card { background: rgba(255,255,255,.96); border-radius: 24rpx; padding: 22rpx 18rpx; box-shadow: 0 12rpx 30rpx rgba(23,83,53,.08); box-sizing: border-box; }
-.stat-value { display: block; font-size: 40rpx; line-height: 1; font-weight: 850; color: #12834a; }
+.stat-value { display: block; font-size: 40rpx; line-height: 1; font-weight: 850; }
 .stat-label { display: block; margin-top: 10rpx; font-size: 22rpx; color: #64748b; }
-.flow-card { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14rpx; }
-.flow-item { border-radius: 22rpx; padding: 20rpx 8rpx; text-align: center; background: #ecfdf5; color: #12834a; }
-.flow-warn { background: #fffbeb; color: #b45309; }
-.flow-todo { background: #f1f5f9; color: #64748b; }
-.flow-value { display: block; font-size: 34rpx; font-weight: 850; line-height: 1; }
-.flow-name { display: block; margin-top: 10rpx; font-size: 22rpx; font-weight: 750; }
-.todo-card { padding-top: 8rpx; padding-bottom: 8rpx; }
-.todo-empty { padding: 28rpx 0; text-align: center; color: #98a3b3; font-size: 25rpx; }
-.todo-row { display: flex; align-items: center; min-width: 0; padding: 18rpx 0; border-bottom: 1rpx solid #edf0f3; }
-.todo-row:last-child { border-bottom: none; }
-.todo-icon { width: 72rpx; height: 72rpx; margin-right: 18rpx; border-radius: 24rpx; display: flex; align-items: center; justify-content: center; background: #16a34a; color: #fff; font-size: 28rpx; font-weight: 850; flex-shrink: 0; }
-.quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16rpx; }
-.quick-item { text-align: center; }
-.quick-icon { width: 86rpx; height: 86rpx; margin: 0 auto 12rpx; border: 2rpx solid rgba(22,163,74,.28); border-radius: 30rpx; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f0fdf4, #dcfce7); color: #16a34a; font-size: 30rpx; font-weight: 900; box-sizing: border-box; box-shadow: inset 0 0 0 6rpx rgba(255,255,255,.54); }
-.quick-name { font-size: 23rpx; color: #334155; }
+
+.todo-card { border-radius: 24rpx; padding: 22rpx 24rpx; margin-bottom: 18rpx; border-left: 6rpx solid; box-shadow: 0 8rpx 24rpx rgba(23,83,53,.06); box-sizing: border-box; }
+.todo-card:last-child { margin-bottom: 0; }
+.todo-card-main { display: flex; align-items: center; min-width: 0; }
+.todo-icon-wrap { width: 64rpx; height: 64rpx; border-radius: 18rpx; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.todo-icon-text { color: #fff; font-size: 28rpx; font-weight: 850; }
+.todo-info { flex: 1; min-width: 0; margin-left: 18rpx; }
+.todo-info-title { display: block; font-size: 28rpx; font-weight: 800; color: #1f2933; }
+.todo-info-desc { display: block; margin-top: 4rpx; font-size: 22rpx; color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.todo-count-wrap { flex-shrink: 0; margin-left: 12rpx; text-align: center; }
+.todo-count-num { font-size: 38rpx; font-weight: 850; line-height: 1; }
+.todo-count-unit { display: block; margin-top: 2rpx; font-size: 20rpx; color: #98a3b3; }
+.todo-card-footer { display: flex; align-items: center; justify-content: flex-end; margin-top: 14rpx; padding-top: 14rpx; border-top: 1rpx solid rgba(0,0,0,.04); }
+.todo-action-text { font-size: 24rpx; font-weight: 700; }
+.todo-action-arrow { margin-left: 4rpx; font-size: 30rpx; font-weight: 700; line-height: 1; }
+
+.todo-empty-card { background: #fff; border-radius: 28rpx; padding: 64rpx 28rpx; box-shadow: 0 12rpx 34rpx rgba(23,83,53,.08); text-align: center; }
+.todo-empty-icon { width: 80rpx; height: 80rpx; margin: 0 auto 20rpx; border-radius: 50%; background: #ecfdf5; color: #16a34a; display: flex; align-items: center; justify-content: center; font-size: 36rpx; font-weight: 850; }
+.todo-empty-title { display: block; font-size: 28rpx; font-weight: 800; color: #1f2933; }
+.todo-empty-desc { display: block; margin-top: 8rpx; font-size: 24rpx; color: #98a3b3; }
 </style>
