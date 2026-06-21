@@ -127,9 +127,55 @@ build_frontend() {
   fi
 }
 
+build_and_restart_ai_proxy() {
+  local name="ai-proxy"
+  local port="8000"
+  local venv_dir="$ROOT_DIR/$name/venv"
+  local env_file="$ROOT_DIR/$name/.env"
+
+  if [[ ! -f "$env_file" ]]; then
+    echo "[$name] ⚠️  .env not found at $env_file"
+    echo "   Required: DASHSCOPE_API_KEY, JWT_SECRET, ENTERPRISE_SERVICE_BASE_URL"
+    echo "   Optional: AMAP_API_KEY, QWEN_MODEL"
+  fi
+
+  if [[ ! -d "$venv_dir" ]]; then
+    echo "[$name] venv missing, creating"
+    (
+      cd "$ROOT_DIR/$name"
+      python3 -m venv venv
+      source venv/bin/activate
+      pip install -r requirements.txt
+    )
+  elif has_changed "$name-requirements" "$name/requirements.txt"; then
+    echo "[$name] requirements changed, reinstalling"
+    (
+      cd "$ROOT_DIR/$name"
+      source venv/bin/activate
+      pip install -r requirements.txt
+    )
+    mark_done "$name-requirements"
+  fi
+
+  if is_port_running "$port"; then
+    echo "[$name] already running on port $port, skip"
+    return
+  fi
+
+  echo "[$name] starting on port $port"
+  (
+    cd "$ROOT_DIR/$name"
+    source venv/bin/activate
+    nohup uvicorn main:app --host 0.0.0.0 --port "$port" --workers 2 --log-level info > "$LOG_DIR/$name.log" 2>&1 &
+  )
+  echo "[$name] started (pid: $(lsof -ti:$port 2>/dev/null || echo 'unknown'))"
+}
+
 build_and_restart_backend "c-service" "8082" "c-service-1.0.0-SNAPSHOT.jar" "c-service-env.yml"
 build_and_restart_backend "enterprise-service" "8081" "enterprise-service-1.0.0-SNAPSHOT.jar" "enterprise-service-env.yml"
 build_and_restart_backend "platform-service" "8083" "platform-service-1.0.0-SNAPSHOT.jar" "platform-service-env.yml"
 
 build_frontend "enterprise-pc"
 build_frontend "platform-pc"
+
+build_and_restart_ai_proxy
