@@ -35,13 +35,70 @@ const showConfirm = ref(false)
 const confirmData = ref(null)
 const confirmAction = ref('')
 
-const FUNCTION_ACTION_MAP = {
-  create_job_and_schedules: 'create_job',
-  update_job: 'update_job',
-  add_schedule_to_job: 'add_schedule',
-  update_schedule: 'update_schedule',
-  copy_schedule: 'copy_schedule',
-  batch_create_schedules: 'create_schedules'
+const ACTION_LABELS = {
+  create_job: '确认创建',
+  update_job: '确认修改',
+  add_schedule: '确认新增班次',
+  update_schedule: '确认修改班次',
+  copy_schedule: '确认复制班次',
+  create_schedules: '确认批量创建班次',
+  accept_application: '确认通过报名',
+  reject_application: '确认拒绝报名',
+  close_job: '确认关闭岗位',
+  reopen_job: '确认重新开放岗位',
+  cancel_schedule: '确认取消班次',
+  update_attendance_hours: '确认修改工时',
+  pay_attendance: '确认结算',
+  unsettle_attendance: '确认撤回结算',
+  batch_accept: '确认批量通过',
+  batch_pay: '确认批量结算'
+}
+
+const ACTION_TITLE_MAP = {
+  create_job: '📋 确认创建岗位',
+  update_job: '📝 确认修改岗位',
+  add_schedule: '📅 确认新增班次',
+  update_schedule: '📝 确认修改班次',
+  copy_schedule: '📋 确认复制班次',
+  create_schedules: '📅 确认批量创建班次',
+  accept_application: '✅ 确认通过报名',
+  reject_application: '❌ 确认拒绝报名',
+  close_job: '🔒 确认关闭岗位',
+  reopen_job: '🔓 确认重新开放岗位',
+  cancel_schedule: '🚫 确认取消班次',
+  update_attendance_hours: '✏️ 确认修改工时',
+  pay_attendance: '💰 确认结算',
+  unsettle_attendance: '↩️ 确认撤回结算',
+  batch_accept: '✅ 确认批量通过',
+  batch_pay: '💰 确认批量结算'
+}
+
+const INNER_ACTION_FUNCS = ['execute_action', 'batch_action']
+
+function resolveConfirmAction(fn) {
+  if (INNER_ACTION_FUNCS.includes(fn.name)) {
+    return fn.arguments?.action || ''
+  }
+  const map = {
+    create_job_and_schedules: 'create_job',
+    update_job: 'update_job',
+    add_schedule_to_job: 'add_schedule',
+    update_schedule: 'update_schedule',
+    copy_schedule: 'copy_schedule',
+    batch_create_schedules: 'create_schedules'
+  }
+  return map[fn.name] || ''
+}
+
+function resolveConfirmData(fn) {
+  const args = parseFunctionCall(fn)
+  if (INNER_ACTION_FUNCS.includes(fn.name)) {
+    if (fn.arguments?.action?.startsWith('batch_')) {
+      return { targetIds: args.targetIds || [], filters: args.filters }
+    }
+    return { targetId: args.targetId, reason: args.reason, updates: args.updates }
+  }
+  return args
 }
 
 function scrollToBottom() {
@@ -77,8 +134,8 @@ async function sendMessage() {
       if (data.function_call) {
         const fn = data.function_call
         showConfirm.value = true
-        confirmAction.value = FUNCTION_ACTION_MAP[fn.name] || 'create_job'
-        confirmData.value = parseFunctionCall(fn)
+        confirmAction.value = resolveConfirmAction(fn)
+        confirmData.value = resolveConfirmData(fn)
       }
     } else {
       assistantMsg.content = '抱歉，请求失败，请重试'
@@ -229,131 +286,186 @@ function chooseImage() {
       </view>
 
       <view v-if="showConfirm && confirmData" class="confirm-card">
-        <view class="confirm-title">{{
-          confirmAction === 'create_job' ? '📋 确认创建' :
-          confirmAction === 'update_job' ? '📝 确认修改' :
-          confirmAction === 'update_schedule' ? '📝 确认修改班次' :
-          confirmAction === 'copy_schedule' ? '📋 确认复制班次' :
-          confirmAction === 'create_schedules' ? '📅 确认批量创建班次' :
-          '📅 确认新增班次'
-        }}</view>
+        <view class="confirm-title">{{ ACTION_TITLE_MAP[confirmAction] || '📋 确认操作' }}</view>
 
-        <view class="confirm-field" v-if="confirmData.jobId && !confirmData.scheduleId">
-          <text class="confirm-label">编号</text>
-          <text class="confirm-value">#{{ confirmData.jobId }}</text>
-        </view>
-        <view class="confirm-field" v-if="confirmData.scheduleId">
-          <text class="confirm-label">班次ID</text>
-          <text class="confirm-value">#{{ confirmData.scheduleId }}</text>
-        </view>
-        <view class="confirm-field" v-if="confirmData.sourceScheduleId">
-          <text class="confirm-label">源班次</text>
-          <text class="confirm-value">#{{ confirmData.sourceScheduleId }}</text>
-        </view>
-        <view class="confirm-field" v-if="confirmData.title">
-          <text class="confirm-label">岗位</text>
-          <text class="confirm-value">{{ confirmData.title }}</text>
-        </view>
-        <view class="confirm-field" v-if="confirmData.description">
-          <text class="confirm-label">职责</text>
-          <text class="confirm-value">{{ confirmData.description }}</text>
-        </view>
-        <view class="confirm-field" v-if="confirmData.requirements">
-          <text class="confirm-label">要求</text>
-          <text class="confirm-value">{{ confirmData.requirements }}</text>
-        </view>
-        <view class="confirm-field" v-if="confirmData.headcount">
-          <text class="confirm-label">人数</text>
-          <text class="confirm-value">{{ confirmData.headcount }} 人</text>
-        </view>
-        <view class="confirm-field" v-if="confirmData.categoryId">
-          <text class="confirm-label">分类</text>
-          <text class="confirm-value">ID: {{ confirmData.categoryId }}</text>
-        </view>
-        <view class="confirm-field" v-if="confirmData.deadline">
-          <text class="confirm-label">截止</text>
-          <text class="confirm-value">{{ confirmData.deadline }}</text>
-        </view>
-        <view class="confirm-field" v-if="confirmData.salaryAmount">
-          <text class="confirm-label">薪资</text>
-          <text class="confirm-value">{{ confirmData.salaryType === 'DAILY' ? '日薪' : '时薪' }} ¥{{ confirmData.salaryAmount }}</text>
-        </view>
-        <view class="confirm-field" v-if="confirmData.province || confirmData.city || confirmData.district || confirmData.address">
-          <text class="confirm-label">地点</text>
-          <text class="confirm-value">{{ [confirmData.province, confirmData.city, confirmData.district, confirmData.address].filter(Boolean).join(' ') }}</text>
-        </view>
-        <view class="confirm-field" v-if="confirmData.contactName">
-          <text class="confirm-label">联系人</text>
-          <text class="confirm-value">{{ confirmData.contactName }}</text>
-        </view>
-        <view class="confirm-field" v-if="confirmData.contactPhone">
-          <text class="confirm-label">电话</text>
-          <text class="confirm-value">{{ confirmData.contactPhone }}</text>
-        </view>
-        <view class="confirm-field" v-if="confirmData.latitude && confirmData.longitude">
-          <text class="confirm-label">定位</text>
-          <text class="confirm-value">{{ confirmData.latitude }}, {{ confirmData.longitude }}</text>
-        </view>
-
-        <view v-if="confirmData.schedules && confirmData.schedules.length" class="confirm-schedules">
-          <view class="confirm-schedule-title">班次安排</view>
-          <view class="confirm-schedule-item" v-for="(s, si) in confirmData.schedules" :key="si">
-            <view class="confirm-schedule-line">
-              <text class="confirm-schedule-date">{{ s.scheduleDate }}</text>
-              <text class="confirm-schedule-time">{{ (s.startTime || '').slice(0,5) }} - {{ (s.endTime || '').slice(0,5) }}</text>
-            </view>
-            <view class="confirm-schedule-meta" v-if="s.scheduleName || s.slotsAvailable">
-              <text v-if="s.scheduleName" class="confirm-schedule-name">{{ s.scheduleName }}</text>
-              <text v-if="s.slotsAvailable" class="confirm-schedule-slots">{{ s.slotsAvailable }}人</text>
-            </view>
-            <view class="confirm-schedule-meta" v-if="s.contactName || s.contactPhone">
-              <text v-if="s.contactName">联系人: {{ s.contactName }}</text>
-              <text v-if="s.contactPhone"> {{ s.contactPhone }}</text>
-            </view>
-          </view>
-        </view>
-
-        <view v-if="confirmData.scheduleDate" class="confirm-schedules">
-          <view class="confirm-schedule-title">班次安排</view>
-          <view class="confirm-schedule-item">
-            <view class="confirm-schedule-line">
-              <text class="confirm-schedule-date">{{ confirmData.scheduleDate }}</text>
-              <text class="confirm-schedule-time">{{ (confirmData.startTime || '').slice(0,5) }} - {{ (confirmData.endTime || '').slice(0,5) }}</text>
-            </view>
-            <view class="confirm-schedule-meta" v-if="confirmData.scheduleName || confirmData.slotsAvailable">
-              <text v-if="confirmData.scheduleName" class="confirm-schedule-name">{{ confirmData.scheduleName }}</text>
-              <text v-if="confirmData.slotsAvailable" class="confirm-schedule-slots">{{ confirmData.slotsAvailable }}人</text>
-            </view>
-          </view>
-        </view>
-
-        <view v-if="confirmAction === 'create_schedules' && confirmData.weekdays" class="confirm-schedules">
-          <view class="confirm-schedule-title">批量班次</view>
+        <!-- 报名操作卡（accept_application / reject_application） -->
+        <template v-if="['accept_application','reject_application'].includes(confirmAction)">
           <view class="confirm-field">
-            <text class="confirm-label">范围</text>
-            <text class="confirm-value">{{ confirmData.startDate }} ~ {{ confirmData.endDate }}</text>
+            <text class="confirm-label">目标</text>
+            <text class="confirm-value">报名 #{{ confirmData.targetId }}</text>
           </view>
-          <view class="confirm-field" v-if="confirmData.weekdays">
-            <text class="confirm-label">星期</text>
-            <text class="confirm-value">{{ confirmData.weekdays.map(w => ['','一','二','三','四','五','六','日'][w]).join('、') }}</text>
+          <view class="confirm-field" v-if="confirmData.reason">
+            <text class="confirm-label">原因</text>
+            <text class="confirm-value">{{ confirmData.reason }}</text>
           </view>
+        </template>
+
+        <!-- 状态操作卡（close_job / reopen_job / cancel_schedule） -->
+        <template v-if="['close_job','reopen_job'].includes(confirmAction)">
           <view class="confirm-field">
-            <text class="confirm-label">时段</text>
-            <text class="confirm-value">{{ (confirmData.startTime || '').slice(0,5) }} - {{ (confirmData.endTime || '').slice(0,5) }}</text>
+            <text class="confirm-label">岗位ID</text>
+            <text class="confirm-value">#{{ confirmData.targetId }}</text>
           </view>
-        </view>
+        </template>
+        <template v-if="confirmAction === 'cancel_schedule'">
+          <view class="confirm-field">
+            <text class="confirm-label">班次ID</text>
+            <text class="confirm-value">#{{ confirmData.targetId }}</text>
+          </view>
+        </template>
+
+        <!-- 考勤操作卡（pay_attendance / unsettle_attendance） -->
+        <template v-if="['pay_attendance','unsettle_attendance'].includes(confirmAction)">
+          <view class="confirm-field">
+            <text class="confirm-label">考勤ID</text>
+            <text class="confirm-value">#{{ confirmData.targetId }}</text>
+          </view>
+        </template>
+
+        <!-- 考勤编辑卡（update_attendance_hours） -->
+        <template v-if="confirmAction === 'update_attendance_hours'">
+          <view class="confirm-field">
+            <text class="confirm-label">考勤ID</text>
+            <text class="confirm-value">#{{ confirmData.targetId }}</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.updates?.totalHours !== undefined">
+            <text class="confirm-label">工时</text>
+            <text class="confirm-value">{{ confirmData.updates.totalHours }} 小时</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.updates?.payablePay !== undefined">
+            <text class="confirm-label">应付</text>
+            <text class="confirm-value">¥{{ confirmData.updates.payablePay }}</text>
+          </view>
+        </template>
+
+        <!-- 批量操作卡（batch_accept / batch_pay） -->
+        <template v-if="confirmAction.startsWith('batch_')">
+          <view class="confirm-field" v-if="confirmData.targetIds?.length">
+            <text class="confirm-label">数量</text>
+            <text class="confirm-value">{{ confirmData.targetIds.length }} 条</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.filters?.jobTitle">
+            <text class="confirm-label">岗位</text>
+            <text class="confirm-value">{{ confirmData.filters.jobTitle }}</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.filters?.settlementStatus">
+            <text class="confirm-label">状态</text>
+            <text class="confirm-value">{{ confirmData.filters.settlementStatus }}</text>
+          </view>
+        </template>
+
+        <!-- 岗位/班次创建编辑卡片（原有布局） -->
+        <template v-if="['create_job','update_job','add_schedule','update_schedule','copy_schedule','create_schedules'].includes(confirmAction)">
+          <view class="confirm-field" v-if="confirmData.jobId && !confirmData.scheduleId">
+            <text class="confirm-label">编号</text>
+            <text class="confirm-value">#{{ confirmData.jobId }}</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.scheduleId">
+            <text class="confirm-label">班次ID</text>
+            <text class="confirm-value">#{{ confirmData.scheduleId }}</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.sourceScheduleId">
+            <text class="confirm-label">源班次</text>
+            <text class="confirm-value">#{{ confirmData.sourceScheduleId }}</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.title">
+            <text class="confirm-label">岗位</text>
+            <text class="confirm-value">{{ confirmData.title }}</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.description">
+            <text class="confirm-label">职责</text>
+            <text class="confirm-value">{{ confirmData.description }}</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.requirements">
+            <text class="confirm-label">要求</text>
+            <text class="confirm-value">{{ confirmData.requirements }}</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.headcount">
+            <text class="confirm-label">人数</text>
+            <text class="confirm-value">{{ confirmData.headcount }} 人</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.categoryId">
+            <text class="confirm-label">分类</text>
+            <text class="confirm-value">ID: {{ confirmData.categoryId }}</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.deadline">
+            <text class="confirm-label">截止</text>
+            <text class="confirm-value">{{ confirmData.deadline }}</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.salaryAmount">
+            <text class="confirm-label">薪资</text>
+            <text class="confirm-value">{{ confirmData.salaryType === 'DAILY' ? '日薪' : '时薪' }} ¥{{ confirmData.salaryAmount }}</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.province || confirmData.city || confirmData.district || confirmData.address">
+            <text class="confirm-label">地点</text>
+            <text class="confirm-value">{{ [confirmData.province, confirmData.city, confirmData.district, confirmData.address].filter(Boolean).join(' ') }}</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.contactName">
+            <text class="confirm-label">联系人</text>
+            <text class="confirm-value">{{ confirmData.contactName }}</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.contactPhone">
+            <text class="confirm-label">电话</text>
+            <text class="confirm-value">{{ confirmData.contactPhone }}</text>
+          </view>
+          <view class="confirm-field" v-if="confirmData.latitude && confirmData.longitude">
+            <text class="confirm-label">定位</text>
+            <text class="confirm-value">{{ confirmData.latitude }}, {{ confirmData.longitude }}</text>
+          </view>
+
+          <view v-if="confirmData.schedules && confirmData.schedules.length" class="confirm-schedules">
+            <view class="confirm-schedule-title">班次安排</view>
+            <view class="confirm-schedule-item" v-for="(s, si) in confirmData.schedules" :key="si">
+              <view class="confirm-schedule-line">
+                <text class="confirm-schedule-date">{{ s.scheduleDate }}</text>
+                <text class="confirm-schedule-time">{{ (s.startTime || '').slice(0,5) }} - {{ (s.endTime || '').slice(0,5) }}</text>
+              </view>
+              <view class="confirm-schedule-meta" v-if="s.scheduleName || s.slotsAvailable">
+                <text v-if="s.scheduleName" class="confirm-schedule-name">{{ s.scheduleName }}</text>
+                <text v-if="s.slotsAvailable" class="confirm-schedule-slots">{{ s.slotsAvailable }}人</text>
+              </view>
+              <view class="confirm-schedule-meta" v-if="s.contactName || s.contactPhone">
+                <text v-if="s.contactName">联系人: {{ s.contactName }}</text>
+                <text v-if="s.contactPhone"> {{ s.contactPhone }}</text>
+              </view>
+            </view>
+          </view>
+
+          <view v-if="confirmData.scheduleDate" class="confirm-schedules">
+            <view class="confirm-schedule-title">班次安排</view>
+            <view class="confirm-schedule-item">
+              <view class="confirm-schedule-line">
+                <text class="confirm-schedule-date">{{ confirmData.scheduleDate }}</text>
+                <text class="confirm-schedule-time">{{ (confirmData.startTime || '').slice(0,5) }} - {{ (confirmData.endTime || '').slice(0,5) }}</text>
+              </view>
+              <view class="confirm-schedule-meta" v-if="confirmData.scheduleName || confirmData.slotsAvailable">
+                <text v-if="confirmData.scheduleName" class="confirm-schedule-name">{{ confirmData.scheduleName }}</text>
+                <text v-if="confirmData.slotsAvailable" class="confirm-schedule-slots">{{ confirmData.slotsAvailable }}人</text>
+              </view>
+            </view>
+          </view>
+
+          <view v-if="confirmAction === 'create_schedules' && confirmData.weekdays" class="confirm-schedules">
+            <view class="confirm-schedule-title">批量班次</view>
+            <view class="confirm-field">
+              <text class="confirm-label">范围</text>
+              <text class="confirm-value">{{ confirmData.startDate }} ~ {{ confirmData.endDate }}</text>
+            </view>
+            <view class="confirm-field" v-if="confirmData.weekdays">
+              <text class="confirm-label">星期</text>
+              <text class="confirm-value">{{ confirmData.weekdays.map(w => ['','一','二','三','四','五','六','日'][w]).join('、') }}</text>
+            </view>
+            <view class="confirm-field">
+              <text class="confirm-label">时段</text>
+              <text class="confirm-value">{{ (confirmData.startTime || '').slice(0,5) }} - {{ (confirmData.endTime || '').slice(0,5) }}</text>
+            </view>
+          </view>
+        </template>
 
         <view class="confirm-actions">
           <view class="confirm-btn cancel" @click="cancelConfirm">取消</view>
           <view class="confirm-btn edit" @click="editConfirm">修改</view>
-          <view class="confirm-btn confirm" @click="confirmCreate">{{
-            confirmAction === 'create_job' ? '确认创建' :
-            confirmAction === 'update_job' ? '确认修改' :
-            confirmAction === 'update_schedule' ? '确认修改' :
-            confirmAction === 'copy_schedule' ? '确认复制' :
-            confirmAction === 'create_schedules' ? '确认创建' :
-            '确认'
-          }}</view>
+          <view class="confirm-btn confirm" @click="confirmCreate">{{ ACTION_LABELS[confirmAction] || '确认' }}</view>
         </view>
       </view>
 

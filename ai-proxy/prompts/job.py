@@ -1,9 +1,11 @@
-SYSTEM_PROMPT = """你是"老登e站"企业端的 AI 招聘助手，帮助企业管理员快速创建岗位和班次。
+SYSTEM_PROMPT = """你是"老登e站"企业端的 AI 招聘助手，帮助企业管理招聘全流程。
 
 ## 你的能力
-1. 理解企业用户用自然语言描述的招聘需求，提取结构化信息
-2. 生成岗位数据（标题、描述、分类、标签、薪资等）
-3. 生成班次数据（日期、时间段、容量、联系人等）
+1. 创建和修改岗位、班次
+2. 查询岗位列表、详情、班次信息
+3. 处理报名审核（通过/拒绝）
+4. 管理考勤结算（查看/修改工时、结算、撤回）
+5. 管理岗位状态（关闭/重新开放）和班次状态（取消）
 
 ## 岗位 JSON Schema
 ```json
@@ -57,13 +59,24 @@ SYSTEM_PROMPT = """你是"老登e站"企业端的 AI 招聘助手，帮助企业
 ## 回复规则
 - 用自然语言确认用户意图，提取的信息用自然语言逐项列出
 - **绝对不要输出任何 JSON 代码块、Markdown 代码块或原始数据结构给用户**
-- 用户确认后才执行创建
+- 用户确认后才执行创建/修改/删除/结算等操作
 - 如果信息不完整，追问缺少的必填项
 - 保持回复简洁友好
 
 ## 搜索岗位
 - 当用户提到"某某岗位"（如"档案管理员岗位"）时，如果不知道岗位ID，先调用 search_jobs 搜索岗位名称获取 ID
-- search_jobs 返回结果后会包含岗位信息，然后再调用对应函数（add_schedule_to_job / update_job 等）"""
+- search_jobs 返回结果后会包含岗位信息，然后再调用对应函数（add_schedule_to_job / update_job 等）
+
+## 数据查询
+- 用户问"看看/查一下/统计/有哪些"等查询性质的问题，调用 query_data 函数
+- query_data 会根据 type 自动查询后端数据并返回
+- 查询结果会直接返回给你，用自然语言总结给用户
+
+## 执行操作
+- 用户要求"通过/拒绝/关闭/开放/结算/撤回"等操作，调用 execute_action 或 batch_action
+- execute_action 用于单条操作，batch_action 用于批量操作
+- 操作需要用户确认后再执行
+- 操作前如果不知道目标ID，先用 search_jobs 或 query_data 查询"""
 
 FUNCTION_CALLING_SCHEMA = [
     {
@@ -216,6 +229,92 @@ FUNCTION_CALLING_SCHEMA = [
                 "endTime": {"type": "string", "description": "结束时间 HH:mm"}
             },
             "required": ["jobId", "startDate", "endDate", "startTime", "endTime"]
+        }
+    },
+    {
+        "name": "query_data",
+        "description": "查询岗位、班次、报名、考勤等数据。当用户问'看看/查一下/统计/有哪些'时调用。查询结果直接返回给你总结。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": ["jobs", "job_detail", "schedules", "applications", "attendance"],
+                    "description": "查询类型：jobs=岗位列表, job_detail=岗位详情(需jobId), schedules=班次列表(需jobId), applications=报名列表(需jobTitle或jobId), attendance=考勤记录"
+                },
+                "jobId": {"type": "integer", "description": "岗位ID（查询岗位详情/班次/报名时使用）"},
+                "jobTitle": {"type": "string", "description": "岗位名称关键词（查询报名/考勤时使用）"},
+                "scheduleId": {"type": "integer", "description": "班次ID"},
+                "status": {"type": "string", "description": "筛选状态：PENDING/ACCEPTED/REJECTED/ACTIVE/CANCELLED"},
+                "settlementStatus": {"type": "string", "description": "结算状态：UNPAID/PAYING/PAID"},
+                "workerName": {"type": "string", "description": "工人姓名"},
+                "dateFrom": {"type": "string", "description": "开始日期 yyyy-MM-dd"},
+                "dateTo": {"type": "string", "description": "结束日期 yyyy-MM-dd"}
+            },
+            "required": ["type"]
+        }
+    },
+    {
+        "name": "execute_action",
+        "description": "执行单条操作：通过/拒绝报名、关闭/重新开放岗位、取消班次、修改工时、结算/撤回结算。操作需要用户确认。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": [
+                        "accept_application", "reject_application",
+                        "close_job", "reopen_job",
+                        "cancel_schedule",
+                        "update_attendance_hours",
+                        "pay_attendance", "unsettle_attendance"
+                    ],
+                    "description": "操作类型"
+                },
+                "targetId": {"type": "integer", "description": "操作目标ID（applicationId/jobId/scheduleId/attendanceId）"},
+                "reason": {"type": "string", "description": "拒绝原因等补充说明"},
+                "updates": {
+                    "type": "object",
+                    "description": "修改字段，如 {\"totalHours\": 8}",
+                    "properties": {
+                        "totalHours": {"type": "number"},
+                        "scheduledPay": {"type": "number"},
+                        "payablePay": {"type": "number"},
+                        "salaryType": {"type": "string"},
+                        "salaryAmount": {"type": "number"}
+                    }
+                }
+            },
+            "required": ["action", "targetId"]
+        }
+    },
+    {
+        "name": "batch_action",
+        "description": "批量操作：批量通过报名、批量结算工资。操作需要用户确认。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["batch_accept", "batch_pay"],
+                    "description": "批量操作类型"
+                },
+                "targetIds": {
+                    "type": "array",
+                    "items": {"type": "integer"},
+                    "description": "操作目标ID列表（如不传则按filters筛选）"
+                },
+                "filters": {
+                    "type": "object",
+                    "description": "筛选条件：如 {\"jobId\": 1, \"settlementStatus\": \"UNPAID\"}",
+                    "properties": {
+                        "jobId": {"type": "integer"},
+                        "jobTitle": {"type": "string"},
+                        "settlementStatus": {"type": "string"}
+                    }
+                }
+            },
+            "required": ["action"]
         }
     }
 ]

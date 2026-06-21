@@ -120,6 +120,39 @@ class EnterpriseClient:
     async def batch_create_schedules(self, data: dict, token: str) -> dict:
         return await self._post("/enterprise/schedules/batch-create", data, token)
 
+    async def list_jobs(self, status: str, token: str) -> dict:
+        return await self._get("/enterprise/jobs", {"status": status}, token)
+
+    async def close_job(self, job_id: int, token: str) -> dict:
+        return await self._post("/enterprise/jobs/close", {"id": job_id}, token)
+
+    async def reopen_job(self, job_id: int, token: str) -> dict:
+        return await self._post("/enterprise/jobs/reopen", {"id": job_id}, token)
+
+    async def list_job_schedules(self, job_id: int, token: str) -> dict:
+        return await self._get("/enterprise/jobs/schedules", {"jobId": job_id}, token)
+
+    async def list_applications(self, params: dict, token: str) -> dict:
+        return await self._get("/enterprise/applications", params, token)
+
+    async def accept_application(self, application_id: int, token: str) -> dict:
+        return await self._post("/enterprise/applications/accept", {"applicationId": application_id}, token)
+
+    async def reject_application(self, application_id: int, token: str) -> dict:
+        return await self._post("/enterprise/applications/reject", {"applicationId": application_id}, token)
+
+    async def list_attendance(self, params: dict, token: str) -> dict:
+        return await self._get("/enterprise/attendance/hours", params, token)
+
+    async def update_attendance_hours(self, data: dict, token: str) -> dict:
+        return await self._post("/enterprise/attendance/hours/update", data, token)
+
+    async def batch_pay_attendance(self, ids: list[int], token: str) -> dict:
+        return await self._post("/enterprise/attendance/hours/pay", {"ids": ids}, token)
+
+    async def unsettle_attendance(self, attendance_record_id: int, token: str) -> dict:
+        return await self._post("/enterprise/settlement/unsettle", {"attendanceRecordId": attendance_record_id}, token)
+
     def _handle(self, resp: httpx.Response) -> dict:
         if resp.status_code >= 400:
             raise Exception(f"Enterprise service error: {resp.status_code} {resp.text}")
