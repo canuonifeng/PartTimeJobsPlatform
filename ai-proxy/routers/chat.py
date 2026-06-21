@@ -129,18 +129,31 @@ class ActionRequest(BaseModel):
 
 
 async def _enrich_location(data: dict) -> dict:
-    if data.get("latitude") and data.get("longitude"):
+    has_coord = data.get("latitude") and data.get("longitude")
+    has_addr = data.get("province") or data.get("city") or data.get("district") or data.get("address")
+    if has_coord and has_addr:
         return data
+
     address = (
         data.get("address")
         or f"{data.get('province', '')}{data.get('city', '')}{data.get('district', '')}"
     )
     if address:
         city = data.get("city") or ""
-        coord = await geocode(address, city)
-        if coord:
-            data["latitude"] = coord["latitude"]
-            data["longitude"] = coord["longitude"]
+        result = await geocode(address, city)
+        if result:
+            if not data.get("province"):
+                data["province"] = result["province"]
+            if not data.get("city"):
+                data["city"] = result["city"]
+            if not data.get("district"):
+                data["district"] = result["district"]
+            if not data.get("address"):
+                data["address"] = result["address"]
+            if not data.get("latitude"):
+                data["latitude"] = result["latitude"]
+            if not data.get("longitude"):
+                data["longitude"] = result["longitude"]
     return data
 
 
