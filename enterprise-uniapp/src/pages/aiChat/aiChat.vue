@@ -3,13 +3,22 @@ import { ref, nextTick } from 'vue'
 
 const AI_PROXY_BASE = import.meta.env.VITE_AI_PROXY_BASE_URL || 'http://localhost:8000'
 
+function authHeader() {
+  const raw = uni.getStorageSync('token')
+  const token = (typeof raw === 'string' ? raw : '').replace(/[\r\n]/g, '').trim()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 function aiRequest(path, data) {
   return new Promise((resolve, reject) => {
     uni.request({
       url: AI_PROXY_BASE + path,
       method: 'POST',
       data,
-      header: { 'Content-Type': 'application/json' },
+      header: {
+        'Content-Type': 'application/json',
+        ...authHeader()
+      },
       success: (res) => resolve(res.data),
       fail: reject
     })
