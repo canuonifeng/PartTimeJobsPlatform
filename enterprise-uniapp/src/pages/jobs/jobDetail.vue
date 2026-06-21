@@ -109,7 +109,7 @@ function rateTypeLabel(t) {
               <text class="info-value">暂无</text>
             </view>
             <view v-for="(sched, i) in schedules" :key="i" class="info-row">
-              <text class="info-label">{{ sched.date || '日期' }}</text>
+              <text class="info-label">{{ sched.scheduleDate || sched.date || '日期' }}</text>
               <text class="info-value">
                 {{ sched.startTime || '开始时间' }} - {{ sched.endTime || '结束时间' }}
               </text>
