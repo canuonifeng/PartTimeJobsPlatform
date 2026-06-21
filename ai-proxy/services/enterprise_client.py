@@ -34,7 +34,7 @@ class EnterpriseClient:
             "city": data.get("city"),
             "district": data.get("district"),
             "address": data.get("address"),
-            "rates": [{"type": data.get("salaryType", "HOURLY"), "amount": data.get("salaryAmount", 0)}],
+            "rates": [{"type": data.get("salaryType", "HOURLY"), "amount": data.get("salaryAmount", 0), "currency": "CNY"}],
             "schedules": [
                 {"scheduleDate": s["scheduleDate"], "startTime": s["startTime"], "endTime": s["endTime"]}
                 for s in (data.get("schedules") or [])
