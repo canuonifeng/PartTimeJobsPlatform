@@ -56,7 +56,7 @@ async function sendMessage() {
   scrollToBottom()
 
   sending.value = true
-  const assistantMsg = { role: 'assistant', content: '', streaming: true }
+  const assistantMsg = { role: 'assistant', content: '🤔 思考中...', streaming: true }
   messages.value.push(assistantMsg)
 
   try {
@@ -68,6 +68,7 @@ async function sendMessage() {
 
     if (res.code === 200) {
       const data = res.data
+      assistantMsg.content = ''
       await typewrite(assistantMsg, data.content || '')
 
       if (data.function_call) {
