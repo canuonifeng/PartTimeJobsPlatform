@@ -1,12 +1,17 @@
 import json
+from datetime import date
 
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
-from prompts.job import FUNCTION_CALLING_SCHEMA, SYSTEM_PROMPT
+from prompts.job import FUNCTION_CALLING_SCHEMA, SYSTEM_PROMPT as _SYSTEM_PROMPT
 from services.enterprise_client import enterprise_client
 from services.qwen import qwen_service
+
+
+def _system_prompt() -> str:
+    return f"{_SYSTEM_PROMPT}\n\n当前真实日期：{date.today().isoformat()}"
 
 router = APIRouter()
 
@@ -21,7 +26,7 @@ async def chat(request: Request, body: ChatRequest):
     company_id = getattr(request.state, "company_id", None)
     token = request.headers.get("Authorization", "").removeprefix("Bearer ")
 
-    full_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    full_messages = [{"role": "system", "content": _system_prompt()}]
     for msg in body.history:
         full_messages.append(msg)
     for msg in body.messages:
@@ -51,7 +56,7 @@ class SyncChatRequest(BaseModel):
 
 @router.post("/chat/sync")
 async def chat_sync(request: Request, body: SyncChatRequest):
-    full_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    full_messages = [{"role": "system", "content": _system_prompt()}]
     for msg in body.history:
         full_messages.append(msg)
     for msg in body.messages:
