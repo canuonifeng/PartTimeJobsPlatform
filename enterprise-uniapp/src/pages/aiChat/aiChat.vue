@@ -33,6 +33,13 @@ const sending = ref(false)
 const messagesEnd = ref(null)
 const showConfirm = ref(false)
 const confirmData = ref(null)
+const confirmAction = ref('')
+
+const FUNCTION_ACTION_MAP = {
+  create_job_and_schedules: 'create_job',
+  update_job: 'update_job',
+  add_schedule_to_job: 'add_schedule'
+}
 
 function scrollToBottom() {
   nextTick(() => {
@@ -64,8 +71,10 @@ async function sendMessage() {
       await typewrite(assistantMsg, data.content || '')
 
       if (data.function_call) {
+        const fn = data.function_call
         showConfirm.value = true
-        confirmData.value = parseFunctionCall(data.function_call)
+        confirmAction.value = FUNCTION_ACTION_MAP[fn.name] || 'create_job'
+        confirmData.value = parseFunctionCall(fn)
       }
     } else {
       assistantMsg.content = '抱歉，请求失败，请重试'
@@ -105,16 +114,16 @@ async function confirmCreate() {
 
   try {
     const res = await aiRequest('/api/chat/execute', {
-      action: 'create_job',
+      action: confirmAction.value || 'create_job',
       data: confirmData.value
     })
     if (res.code === 200) {
-      msg.content += '\n✅ 岗位创建成功！可前往"招聘 → 班次管理"查看'
+      msg.content += '\n✅ 操作成功！'
     } else {
-      msg.content += `\n❌ 创建失败：${res.message || '未知错误'}`
+      msg.content += `\n❌ 操作失败：${res.message || '未知错误'}`
     }
   } catch {
-    msg.content += '\n❌ 创建失败，请稍后重试'
+    msg.content += '\n❌ 操作失败，请稍后重试'
   }
 
   showConfirm.value = false
@@ -216,7 +225,11 @@ function chooseImage() {
       </view>
 
       <view v-if="showConfirm && confirmData" class="confirm-card">
-        <view class="confirm-title">📋 确认创建</view>
+        <view class="confirm-title">{{ confirmAction === 'create_job' ? '📋 确认创建' : confirmAction === 'update_job' ? '📝 确认修改' : '📅 确认新增班次' }}</view>
+        <view class="confirm-field" v-if="confirmData.jobId">
+          <text class="confirm-label">岗位ID</text>
+          <text class="confirm-value">#{{ confirmData.jobId }}</text>
+        </view>
         <view class="confirm-field" v-if="confirmData.title">
           <text class="confirm-label">岗位</text>
           <text class="confirm-value">{{ confirmData.title }}</text>
@@ -229,10 +242,18 @@ function chooseImage() {
           <text class="confirm-label">班次</text>
           <text class="confirm-value">{{ confirmData.schedules.length }} 个排班</text>
         </view>
+        <view class="confirm-field" v-if="confirmData.scheduleDate">
+          <text class="confirm-label">日期</text>
+          <text class="confirm-value">{{ confirmData.scheduleDate }}</text>
+        </view>
+        <view class="confirm-field" v-if="confirmData.startTime">
+          <text class="confirm-label">时间</text>
+          <text class="confirm-value">{{ confirmData.startTime }} - {{ confirmData.endTime }}</text>
+        </view>
         <view class="confirm-actions">
           <view class="confirm-btn cancel" @click="cancelConfirm">取消</view>
           <view class="confirm-btn edit" @click="editConfirm">修改</view>
-          <view class="confirm-btn confirm" @click="confirmCreate">确认创建</view>
+          <view class="confirm-btn confirm" @click="confirmCreate">{{ confirmAction === 'create_job' ? '确认创建' : confirmAction === 'update_job' ? '确认修改' : '确认新增' }}</view>
         </view>
       </view>
 
