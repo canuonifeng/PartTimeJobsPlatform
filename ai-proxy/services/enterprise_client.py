@@ -48,9 +48,11 @@ class EnterpriseClient:
         body = {"id": job_id}
         for field in ["title", "description", "requirements", "headcount", "contactName",
                        "contactPhone", "province", "city", "district", "address",
-                       "latitude", "longitude", "categoryId", "deadline"]:
+                       "latitude", "longitude", "categoryId"]:
             if field in data and data[field] is not None:
                 body[field] = data[field]
+        if "deadline" in data and data["deadline"] is not None:
+            body["deadline"] = self._fmt_deadline(data["deadline"])
         if "salaryType" in data or "salaryAmount" in data:
             body["rates"] = [{
                 "type": data.get("salaryType", "HOURLY"),
@@ -61,6 +63,14 @@ class EnterpriseClient:
 
     async def publish_job(self, job_id: int, token: str) -> dict:
         return await self._post("/enterprise/jobs/publish", {"id": job_id}, token)
+
+    @staticmethod
+    def _fmt_deadline(value: str | None) -> str | None:
+        if not value:
+            return None
+        if ":" not in value:
+            return value + " 23:59:59"
+        return value
 
     async def create_job(self, data: dict, token: str) -> dict:
         body = {
@@ -77,7 +87,7 @@ class EnterpriseClient:
             "latitude": data.get("latitude"),
             "longitude": data.get("longitude"),
             "categoryId": data.get("categoryId"),
-            "deadline": data.get("deadline"),
+            "deadline": self._fmt_deadline(data.get("deadline")),
             "rates": [{"type": data.get("salaryType", "HOURLY"), "amount": data.get("salaryAmount", 0), "currency": "CNY"}],
             "schedules": [
                 {
