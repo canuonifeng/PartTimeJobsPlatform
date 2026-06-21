@@ -47,7 +47,8 @@ class EnterpriseClient:
     async def update_job(self, job_id: int, data: dict, token: str) -> dict:
         body = {"id": job_id}
         for field in ["title", "description", "requirements", "headcount", "contactName",
-                       "contactPhone", "province", "city", "district", "address"]:
+                       "contactPhone", "province", "city", "district", "address",
+                       "latitude", "longitude"]:
             if field in data and data[field] is not None:
                 body[field] = data[field]
         if "salaryType" in data or "salaryAmount" in data:
@@ -73,6 +74,8 @@ class EnterpriseClient:
             "city": data.get("city"),
             "district": data.get("district"),
             "address": data.get("address"),
+            "latitude": data.get("latitude"),
+            "longitude": data.get("longitude"),
             "rates": [{"type": data.get("salaryType", "HOURLY"), "amount": data.get("salaryAmount", 0), "currency": "CNY"}],
             "schedules": [
                 {"scheduleDate": s["scheduleDate"], "startTime": s["startTime"], "endTime": s["endTime"]}

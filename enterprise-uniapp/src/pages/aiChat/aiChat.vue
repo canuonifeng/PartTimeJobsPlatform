@@ -263,6 +263,10 @@ function chooseImage() {
           <text class="confirm-label">电话</text>
           <text class="confirm-value">{{ confirmData.contactPhone }}</text>
         </view>
+        <view class="confirm-field" v-if="confirmData.latitude && confirmData.longitude">
+          <text class="confirm-label">定位</text>
+          <text class="confirm-value">{{ confirmData.latitude }}, {{ confirmData.longitude }}</text>
+        </view>
 
         <view v-if="confirmData.schedules && confirmData.schedules.length" class="confirm-schedules">
           <view class="confirm-schedule-title">班次安排</view>

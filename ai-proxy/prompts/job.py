@@ -18,6 +18,8 @@ SYSTEM_PROMPT = """你是"老登e站"企业端的 AI 招聘助手，帮助企业
   "city": "市",
   "district": "区",
   "address": "详细地址",
+  "latitude": "纬度（可选，如 30.275）",
+  "longitude": "经度（可选，如 119.992）",
   "salary": {"type": "HOURLY/DAILY", "amount": 金额},
   "schedules": [
     {"scheduleDate": "2024-01-01", "startTime": "14:00:00", "endTime": "18:00:00"}
@@ -28,6 +30,11 @@ SYSTEM_PROMPT = """你是"老登e站"企业端的 AI 招聘助手，帮助企业
 ## 时间日期处理
 - scheduleDate 必须使用真实的当前日期，不要编造或使用占位日期
 - 根据用户说的时间词（明天、后天、下周一等）推算真实日期
+
+## 定位信息
+- 如果用户提供了地图上的定位或具体地址，提取 latitude/longitude
+- 如果用户只说了大致地址而没有具体坐标，可以不填经纬度
+- 定位可以让工人更准确地找到工作地点
 
 ## 同名岗位处理
 - 如果用户要创建的岗位名称与已有岗位重复，系统会自动检测并提示用户选择
@@ -62,6 +69,8 @@ FUNCTION_CALLING_SCHEMA = [
                 "city": {"type": "string", "description": "城市"},
                 "district": {"type": "string", "description": "区县"},
                 "address": {"type": "string", "description": "详细地址"},
+                "latitude": {"type": "number", "description": "纬度（可选，如 30.275）"},
+                "longitude": {"type": "number", "description": "经度（可选，如 119.992）"},
                 "schedules": {
                     "type": "array",
                     "items": {
@@ -91,7 +100,9 @@ FUNCTION_CALLING_SCHEMA = [
                 "requirements": {"type": "string", "description": "任职要求"},
                 "headcount": {"type": "integer", "description": "招聘人数"},
                 "salaryType": {"type": "string", "enum": ["HOURLY", "DAILY"], "description": "薪资类型"},
-                "salaryAmount": {"type": "number", "description": "薪资金额"}
+                "salaryAmount": {"type": "number", "description": "薪资金额"},
+                "latitude": {"type": "number", "description": "纬度（可选，如 30.275）"},
+                "longitude": {"type": "number", "description": "经度（可选，如 119.992）"}
             },
             "required": ["jobId"]
         }
