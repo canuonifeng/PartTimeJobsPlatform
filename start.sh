@@ -139,21 +139,29 @@ build_and_restart_ai_proxy() {
     echo "   Optional: AMAP_API_KEY, QWEN_MODEL"
   fi
 
+  local activate_path="$venv_dir/bin/activate"
+
   if [[ ! -d "$venv_dir" ]]; then
     echo "[$name] venv missing, creating"
     (
       cd "$ROOT_DIR/$name"
       python3 -m venv venv
-      source venv/bin/activate
-      pip install -r requirements.txt
-    )
-  else
-    (
-      cd "$ROOT_DIR/$name"
-      source venv/bin/activate
-      pip install --quiet -r requirements.txt 2>/dev/null
     )
   fi
+
+  if [[ ! -f "$activate_path" ]]; then
+    echo "[$name] venv broken at $venv_dir, recreating"
+    rm -rf "$venv_dir"
+    (
+      cd "$ROOT_DIR/$name"
+      python3 -m venv venv
+    )
+  fi
+
+  (
+    source "$activate_path"
+    pip install --quiet -r "$ROOT_DIR/$name/requirements.txt" 2>/dev/null
+  )
 
   if is_port_running "$port"; then
     echo "[$name] already running on port $port, skip"
@@ -162,8 +170,8 @@ build_and_restart_ai_proxy() {
 
   echo "[$name] starting on port $port"
   (
+    source "$activate_path"
     cd "$ROOT_DIR/$name"
-    source venv/bin/activate
     nohup uvicorn main:app --host 0.0.0.0 --port "$port" --workers 2 --log-level info > "$LOG_DIR/$name.log" 2>&1 &
   )
   echo "[$name] started (pid: $(lsof -ti:$port 2>/dev/null || echo 'unknown'))"
