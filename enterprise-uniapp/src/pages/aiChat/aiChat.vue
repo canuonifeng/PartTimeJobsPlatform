@@ -1,8 +1,24 @@
 <script setup>
 import { ref, nextTick } from 'vue'
-import { request } from '@/api/request'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL
+const AI_PROXY_BASE = import.meta.env.VITE_AI_PROXY_BASE_URL || 'http://localhost:8000'
+
+function aiRequest(path, data) {
+  const token = uni.getStorageSync('token')
+  return new Promise((resolve, reject) => {
+    uni.request({
+      url: AI_PROXY_BASE + path,
+      method: 'POST',
+      data,
+      header: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+      success: (res) => resolve(res.data),
+      fail: reject
+    })
+  })
+}
 
 const messages = ref([
   { role: 'assistant', content: '你好！我是 AI 助手，可以帮你创建岗位和班次。例如：「帮我发布一个保安岗位，明天开始每天 14:00-18:00，时薪 25 元」' }
@@ -32,7 +48,7 @@ async function sendMessage() {
   messages.value.push(assistantMsg)
 
   try {
-    const res = await request('POST', `${API_BASE}/api/chat/sync`, {
+    const res = await aiRequest('/api/chat/sync', {
       messages: [{ role: 'user', content: text }],
       history: []
     })
@@ -82,7 +98,7 @@ async function confirmCreate() {
   msg.content += '\n\n✅ 已确认，正在创建...'
 
   try {
-    const res = await request('POST', `${API_BASE}/api/chat/execute`, {
+    const res = await aiRequest('/api/chat/execute', {
       action: 'create_job',
       data: confirmData.value
     })
@@ -123,10 +139,12 @@ function startRecord() {
 
       recorder.onStop(async (res) => {
         try {
+          const token = uni.getStorageSync('token')
           const uploadRes = await uni.uploadFile({
-            url: `${API_BASE}/api/upload/asr`,
+            url: `${AI_PROXY_BASE}/api/upload/asr`,
             filePath: res.tempFilePath,
-            name: 'file'
+            name: 'file',
+            header: token ? { Authorization: `Bearer ${token}` } : {}
           })
           const data = JSON.parse(uploadRes.data)
           if (data.data?.text) {
@@ -152,10 +170,12 @@ function chooseImage() {
     sourceType: ['album', 'camera'],
     success: async (res) => {
       try {
+        const token = uni.getStorageSync('token')
         const uploadRes = await uni.uploadFile({
-          url: `${API_BASE}/api/upload`,
+          url: `${AI_PROXY_BASE}/api/upload`,
           filePath: res.tempFilePaths[0],
-          name: 'file'
+          name: 'file',
+          header: token ? { Authorization: `Bearer ${token}` } : {}
         })
         const data = JSON.parse(uploadRes.data)
         if (data.code === 200) {
