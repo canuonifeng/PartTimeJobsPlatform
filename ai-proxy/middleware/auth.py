@@ -6,8 +6,8 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.types import ASGIApp
 
-EXEMPT_PATHS = {"/api/health", "/docs", "/openapi.json", "/redoc"}
-EXEMPT_PREFIXES = {"/uploads"}
+EXEMPT_PATHS = {"/api/health", "/api/chat", "/api/chat/sync", "/docs", "/openapi.json", "/redoc"}
+EXEMPT_PREFIXES = {"/uploads", "/api/upload"}
 
 
 class JWTAuthMiddleware(BaseHTTPMiddleware):

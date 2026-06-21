@@ -3,21 +3,13 @@ import { ref, nextTick } from 'vue'
 
 const AI_PROXY_BASE = import.meta.env.VITE_AI_PROXY_BASE_URL || 'http://localhost:8000'
 
-function authHeader() {
-  const token = (uni.getStorageSync('token') || '').replace(/[\r\n]/g, '').trim()
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
-
 function aiRequest(path, data) {
   return new Promise((resolve, reject) => {
     uni.request({
       url: AI_PROXY_BASE + path,
       method: 'POST',
       data,
-      header: {
-        'Content-Type': 'application/json',
-        ...authHeader()
-      },
+      header: { 'Content-Type': 'application/json' },
       success: (res) => resolve(res.data),
       fail: reject
     })
@@ -146,8 +138,7 @@ function startRecord() {
           const uploadRes = await uni.uploadFile({
             url: `${AI_PROXY_BASE}/api/upload/asr`,
             filePath: res.tempFilePath,
-            name: 'file',
-            header: authHeader()
+            name: 'file'
           })
           const data = JSON.parse(uploadRes.data)
           if (data.data?.text) {
@@ -176,8 +167,7 @@ function chooseImage() {
         const uploadRes = await uni.uploadFile({
           url: `${AI_PROXY_BASE}/api/upload`,
           filePath: res.tempFilePaths[0],
-          name: 'file',
-          header: authHeader()
+          name: 'file'
         })
         const data = JSON.parse(uploadRes.data)
         if (data.code === 200) {

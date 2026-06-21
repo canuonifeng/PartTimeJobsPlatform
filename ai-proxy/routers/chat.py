@@ -80,11 +80,12 @@ async def chat_sync(request: Request, body: SyncChatRequest):
 class ActionRequest(BaseModel):
     action: str
     data: dict
+    token: str = ""
 
 
 @router.post("/chat/execute")
 async def execute_action(request: Request, body: ActionRequest):
-    token = request.headers.get("Authorization", "").removeprefix("Bearer ")
+    token = body.token or request.headers.get("Authorization", "").removeprefix("Bearer ") or ""
     try:
         if body.action == "create_job":
             result = await enterprise_client.create_job(body.data, token)
