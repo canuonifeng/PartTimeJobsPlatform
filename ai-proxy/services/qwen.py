@@ -12,7 +12,12 @@ class QwenService:
         self.api_key = os.getenv("DASHSCOPE_API_KEY", "")
         self.model = os.getenv("QWEN_MODEL", "qwen-max")
 
+    def _check_api_key(self):
+        if not self.api_key:
+            raise Exception("DASHSCOPE_API_KEY not configured. Set it in ai-proxy/.env or environment variables.")
+
     async def chat_stream(self, messages: list[dict], functions: list[dict] | None = None) -> AsyncGenerator[str, None]:
+        self._check_api_key()
         body = {
             "model": self.model,
             "messages": messages,
