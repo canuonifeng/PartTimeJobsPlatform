@@ -548,11 +548,20 @@ function chooseImage() {
 
     <view class="chat-input-bar">
       <view class="chat-input-area">
-        <view class="chat-actions">
-          <text class="chat-action-btn" @click="startRecord">语音</text>
-          <text class="chat-action-btn" @click="chooseImage">图片</text>
+        <view class="chat-icon-btn" @click="startRecord">
+          <view class="icon-mic">
+            <view class="mic-head"></view>
+            <view class="mic-stand"></view>
+            <view class="mic-base"></view>
+          </view>
         </view>
         <input v-model="inputText" class="chat-input" confirm-type="send" placeholder="输入你的需求..." @confirm="sendMessage" />
+        <view class="chat-icon-btn" @click="chooseImage">
+          <view class="icon-plus">
+            <view class="plus-h"></view>
+            <view class="plus-v"></view>
+          </view>
+        </view>
         <view class="chat-send-btn" :class="{ active: inputText.trim() }" @click="sendMessage">
           <text>{{ sending ? '...' : '发送' }}</text>
         </view>
@@ -570,7 +579,7 @@ function chooseImage() {
 .chat-header-title { display: block; font-size: 34rpx; font-weight: 800; }
 .chat-header-sub { display: block; margin-top: 4rpx; font-size: 22rpx; opacity: .78; }
 .chat-header-right { width: 60rpx; display: flex; align-items: center; justify-content: flex-end; }
-.clear-btn { font-size: 36rpx; line-height: 1; opacity: .8; }
+.clear-btn { font-size: 24rpx; color: rgba(255,255,255,.85); font-weight: 500; padding: 6rpx 16rpx; border: 1rpx solid rgba(255,255,255,.4); border-radius: 8rpx; }
 .chat-messages { flex: 1; overflow-y: auto; padding: 24rpx 28rpx 20rpx; box-sizing: border-box; }
 .msg-row { margin-bottom: 24rpx; display: flex; align-items: flex-start; }
 .msg-user { justify-content: flex-end; }
@@ -604,11 +613,17 @@ function chooseImage() {
 .confirm-btn.edit { background: #fef3c7; color: #b45309; }
 .confirm-btn.confirm { background: #16a34a; color: #fff; }
 
-.chat-input-bar { padding: 16rpx 20rpx; padding-bottom: calc(16rpx + env(safe-area-inset-bottom)); background: #fff; border-top: 1rpx solid #edf0f3; }
-.chat-input-area { display: flex; align-items: center; gap: 14rpx; }
-.chat-actions { display: flex; gap: 10rpx; }
-.chat-action-btn { font-size: 24rpx; line-height: 48rpx; height: 48rpx; padding: 0 16rpx; background: #f1f5f9; border-radius: 8rpx; color: #64748b; font-weight: 600; }
-.chat-input { flex: 1; height: 72rpx; padding: 0 22rpx; border-radius: 36rpx; background: #f1f5f9; font-size: 27rpx; color: #1f2933; }
-.chat-send-btn { height: 72rpx; padding: 0 28rpx; border-radius: 36rpx; background: #e5e7eb; color: #9ca3af; display: flex; align-items: center; justify-content: center; font-size: 27rpx; font-weight: 800; }
-.chat-send-btn.active { background: #16a34a; color: #fff; }
+.chat-input-bar { padding: 16rpx 20rpx; padding-bottom: calc(16rpx + env(safe-area-inset-bottom)); background: #f7f7f7; border-top: 1rpx solid #e5e5e5; }
+.chat-input-area { display: flex; align-items: center; gap: 12rpx; }
+.chat-icon-btn { width: 64rpx; height: 64rpx; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.icon-mic { position: relative; width: 36rpx; height: 44rpx; }
+.mic-head { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 22rpx; height: 28rpx; border: 4rpx solid #333; border-radius: 14rpx 14rpx 14rpx 14rpx; box-sizing: border-box; }
+.mic-stand { position: absolute; bottom: 6rpx; left: 50%; transform: translateX(-50%); width: 4rpx; height: 10rpx; background: #333; }
+.mic-base { position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 16rpx; height: 4rpx; border: 3rpx solid #333; border-top: none; border-radius: 0 0 12rpx 12rpx; box-sizing: border-box; }
+.icon-plus { position: relative; width: 40rpx; height: 40rpx; border: 3rpx solid #333; border-radius: 8rpx; box-sizing: border-box; }
+.plus-h { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20rpx; height: 3rpx; background: #333; }
+.plus-v { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 3rpx; height: 20rpx; background: #333; }
+.chat-input { flex: 1; height: 72rpx; padding: 0 24rpx; border-radius: 8rpx; background: #fff; font-size: 28rpx; color: #1f2933; border: 1rpx solid #e0e0e0; }
+.chat-send-btn { height: 72rpx; padding: 0 28rpx; border-radius: 8rpx; background: #e5e7eb; color: #9ca3af; display: flex; align-items: center; justify-content: center; font-size: 28rpx; font-weight: 500; flex-shrink: 0; }
+.chat-send-btn.active { background: #07c160; color: #fff; }
 </style>
