@@ -104,6 +104,7 @@ public class JobServiceImpl implements JobService {
                 schedule.setStartTime(scheduleReq.getStartTime());
                 schedule.setEndTime(scheduleReq.getEndTime());
                 schedule.setSlotsAvailable(job.getHeadcount());
+                schedule.setStatus("ACTIVE");
                 syncScheduleSnapshot(schedule, job);
                 jobScheduleMapper.insert(schedule);
             }
