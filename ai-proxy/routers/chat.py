@@ -7,6 +7,7 @@ from sse_starlette.sse import EventSourceResponse
 
 from prompts.job import FUNCTION_CALLING_SCHEMA, SYSTEM_PROMPT as _SYSTEM_PROMPT
 from services.enterprise_client import enterprise_client
+from services.geocoding import geocode
 from services.qwen import qwen_service
 
 
@@ -127,12 +128,29 @@ class ActionRequest(BaseModel):
     token: str = ""
 
 
+async def _enrich_location(data: dict) -> dict:
+    if data.get("latitude") and data.get("longitude"):
+        return data
+    address = (
+        data.get("address")
+        or f"{data.get('province', '')}{data.get('city', '')}{data.get('district', '')}"
+    )
+    if address:
+        city = data.get("city") or ""
+        coord = await geocode(address, city)
+        if coord:
+            data["latitude"] = coord["latitude"]
+            data["longitude"] = coord["longitude"]
+    return data
+
+
 @router.post("/chat/execute")
 async def execute_action(request: Request, body: ActionRequest):
     token = body.token or request.headers.get("Authorization", "").removeprefix("Bearer ") or ""
     try:
         if body.action == "create_job":
-            result = await enterprise_client.create_job(body.data, token)
+            data = await _enrich_location(body.data)
+            result = await enterprise_client.create_job(data, token)
             job_id = result.get("data", {}).get("id")
             final = result
             if job_id:
@@ -143,8 +161,9 @@ async def execute_action(request: Request, body: ActionRequest):
                     pass
             return {"code": 200, "data": final, "message": "岗位创建成功"}
         elif body.action == "update_job":
-            job_id = body.data.get("jobId") or body.data.get("id")
-            result = await enterprise_client.update_job(job_id, body.data, token)
+            data = await _enrich_location(body.data)
+            job_id = data.get("jobId") or data.get("id")
+            result = await enterprise_client.update_job(job_id, data, token)
             return {"code": 200, "data": result, "message": "岗位更新成功"}
         elif body.action == "add_schedule":
             result = await enterprise_client.create_schedule(body.data, token)
