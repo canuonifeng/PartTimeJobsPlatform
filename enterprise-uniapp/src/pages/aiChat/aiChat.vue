@@ -226,30 +226,60 @@ function chooseImage() {
 
       <view v-if="showConfirm && confirmData" class="confirm-card">
         <view class="confirm-title">{{ confirmAction === 'create_job' ? '📋 确认创建' : confirmAction === 'update_job' ? '📝 确认修改' : '📅 确认新增班次' }}</view>
+
         <view class="confirm-field" v-if="confirmData.jobId">
-          <text class="confirm-label">岗位ID</text>
+          <text class="confirm-label">编号</text>
           <text class="confirm-value">#{{ confirmData.jobId }}</text>
         </view>
         <view class="confirm-field" v-if="confirmData.title">
           <text class="confirm-label">岗位</text>
           <text class="confirm-value">{{ confirmData.title }}</text>
         </view>
+        <view class="confirm-field" v-if="confirmData.description">
+          <text class="confirm-label">职责</text>
+          <text class="confirm-value">{{ confirmData.description }}</text>
+        </view>
+        <view class="confirm-field" v-if="confirmData.requirements">
+          <text class="confirm-label">要求</text>
+          <text class="confirm-value">{{ confirmData.requirements }}</text>
+        </view>
+        <view class="confirm-field" v-if="confirmData.headcount">
+          <text class="confirm-label">人数</text>
+          <text class="confirm-value">{{ confirmData.headcount }} 人</text>
+        </view>
         <view class="confirm-field" v-if="confirmData.salaryAmount">
           <text class="confirm-label">薪资</text>
           <text class="confirm-value">{{ confirmData.salaryType === 'DAILY' ? '日薪' : '时薪' }} ¥{{ confirmData.salaryAmount }}</text>
         </view>
-        <view class="confirm-field" v-if="confirmData.schedules && confirmData.schedules.length">
-          <text class="confirm-label">班次</text>
-          <text class="confirm-value">{{ confirmData.schedules.length }} 个排班</text>
+        <view class="confirm-field" v-if="confirmData.province || confirmData.city || confirmData.district || confirmData.address">
+          <text class="confirm-label">地点</text>
+          <text class="confirm-value">{{ [confirmData.province, confirmData.city, confirmData.district, confirmData.address].filter(Boolean).join(' ') }}</text>
         </view>
-        <view class="confirm-field" v-if="confirmData.scheduleDate">
-          <text class="confirm-label">日期</text>
-          <text class="confirm-value">{{ confirmData.scheduleDate }}</text>
+        <view class="confirm-field" v-if="confirmData.contactName">
+          <text class="confirm-label">联系人</text>
+          <text class="confirm-value">{{ confirmData.contactName }}</text>
         </view>
-        <view class="confirm-field" v-if="confirmData.startTime">
-          <text class="confirm-label">时间</text>
-          <text class="confirm-value">{{ confirmData.startTime }} - {{ confirmData.endTime }}</text>
+        <view class="confirm-field" v-if="confirmData.contactPhone">
+          <text class="confirm-label">电话</text>
+          <text class="confirm-value">{{ confirmData.contactPhone }}</text>
         </view>
+
+        <view v-if="confirmData.schedules && confirmData.schedules.length" class="confirm-schedules">
+          <view class="confirm-schedule-title">班次安排</view>
+          <view class="confirm-schedule-item" v-for="(s, si) in confirmData.schedules" :key="si">
+            <text class="confirm-schedule-date">{{ s.scheduleDate }}</text>
+            <text class="confirm-schedule-time">{{ (s.startTime || '').slice(0,5) }} - {{ (s.endTime || '').slice(0,5) }}</text>
+          </view>
+        </view>
+
+        <view v-if="confirmData.scheduleDate" class="confirm-schedules">
+          <view class="confirm-schedule-title">班次安排</view>
+          <view class="confirm-schedule-item">
+            <text class="confirm-schedule-date">{{ confirmData.scheduleDate }}</text>
+            <text class="confirm-schedule-time">{{ (confirmData.startTime || '').slice(0,5) }} - {{ (confirmData.endTime || '').slice(0,5) }}</text>
+          </view>
+        </view>
+
         <view class="confirm-actions">
           <view class="confirm-btn cancel" @click="cancelConfirm">取消</view>
           <view class="confirm-btn edit" @click="editConfirm">修改</view>
@@ -297,10 +327,15 @@ function chooseImage() {
 
 .confirm-card { margin: 16rpx 0 24rpx; padding: 24rpx; border-radius: 24rpx; background: #fff; box-shadow: 0 8rpx 24rpx rgba(23,83,53,.08); border: 2rpx solid #16a34a; }
 .confirm-title { font-size: 30rpx; font-weight: 800; color: #1f2933; margin-bottom: 18rpx; }
-.confirm-field { display: flex; align-items: center; padding: 12rpx 0; border-bottom: 1rpx solid #f0f2f4; }
+.confirm-field { display: flex; align-items: flex-start; padding: 10rpx 0; border-bottom: 1rpx solid #f0f2f4; }
 .confirm-field:last-of-type { border-bottom: none; }
-.confirm-label { width: 100rpx; font-size: 24rpx; color: #64748b; flex-shrink: 0; }
-.confirm-value { font-size: 26rpx; font-weight: 700; color: #1f2933; }
+.confirm-label { width: 100rpx; font-size: 24rpx; color: #64748b; flex-shrink: 0; padding-top: 4rpx; }
+.confirm-value { font-size: 26rpx; font-weight: 700; color: #1f2933; flex: 1; }
+.confirm-schedules { margin-top: 18rpx; padding-top: 14rpx; border-top: 2rpx solid #e5e7eb; }
+.confirm-schedule-title { font-size: 26rpx; font-weight: 800; color: #1f2933; margin-bottom: 12rpx; }
+.confirm-schedule-item { display: flex; align-items: center; padding: 8rpx 0; }
+.confirm-schedule-date { font-size: 24rpx; color: #64748b; width: 180rpx; }
+.confirm-schedule-time { font-size: 26rpx; font-weight: 700; color: #16a34a; }
 .confirm-actions { display: flex; gap: 14rpx; margin-top: 20rpx; }
 .confirm-btn { flex: 1; height: 68rpx; line-height: 68rpx; border-radius: 999rpx; text-align: center; font-size: 26rpx; font-weight: 800; }
 .confirm-btn.cancel { background: #f1f5f9; color: #64748b; }
