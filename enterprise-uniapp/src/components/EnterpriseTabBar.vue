@@ -23,7 +23,7 @@ const tabs = [
   },
   {
     key: 'aiChat',
-    text: 'AI 创建',
+    text: 'AI 助手',
     icon: '',
     activeIcon: '',
     url: '/pages/aiChat/aiChat',
@@ -66,7 +66,7 @@ function switchTab(item) {
     >
       <template v-if="item.fab">
         <view class="fab-button">+</view>
-        <text class="enterprise-tabbar-text fab-text">AI 创建</text>
+        <text class="enterprise-tabbar-text fab-text">AI 助手</text>
       </template>
       <template v-else>
         <image
