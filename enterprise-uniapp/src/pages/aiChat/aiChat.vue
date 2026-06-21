@@ -44,9 +44,10 @@ async function sendMessage() {
   messages.value.push(assistantMsg)
 
   try {
+    const history = messages.value.slice(0, -2).map(m => ({ role: m.role, content: m.content }))
     const res = await aiRequest('/api/chat/sync', {
       messages: [{ role: 'user', content: text }],
-      history: []
+      history
     })
 
     if (res.code === 200) {
