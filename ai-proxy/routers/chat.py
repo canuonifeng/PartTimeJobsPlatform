@@ -129,11 +129,7 @@ class ActionRequest(BaseModel):
 
 
 async def _enrich_location(data: dict) -> dict:
-    has_coord = data.get("latitude") and data.get("longitude")
-    has_addr = data.get("province") or data.get("city") or data.get("district") or data.get("address")
-    if has_coord and has_addr:
-        return data
-
+    result = None
     address = (
         data.get("address")
         or f"{data.get('province', '')}{data.get('city', '')}{data.get('district', '')}"
@@ -141,19 +137,20 @@ async def _enrich_location(data: dict) -> dict:
     if address:
         city = data.get("city") or ""
         result = await geocode(address, city)
-        if result:
-            if not data.get("province"):
-                data["province"] = result["province"]
-            if not data.get("city"):
-                data["city"] = result["city"]
-            if not data.get("district"):
-                data["district"] = result["district"]
-            if not data.get("address"):
-                data["address"] = result["address"]
-            if not data.get("latitude"):
-                data["latitude"] = result["latitude"]
-            if not data.get("longitude"):
-                data["longitude"] = result["longitude"]
+
+    if result:
+        if not data.get("province") or (result["province"] and result["province"] != data.get("province")):
+            data["province"] = result["province"]
+        if not data.get("city") or (result["city"] and result["city"] != data.get("city")):
+            data["city"] = result["city"]
+        if not data.get("district") or (result["district"] and result["district"] != data.get("district")):
+            data["district"] = result["district"]
+        if not data.get("address"):
+            data["address"] = result["address"]
+        if not data.get("latitude") and result.get("latitude"):
+            data["latitude"] = result["latitude"]
+        if not data.get("longitude") and result.get("longitude"):
+            data["longitude"] = result["longitude"]
     return data
 
 
