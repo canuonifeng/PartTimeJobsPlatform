@@ -97,7 +97,7 @@ function clearHistory() {
 
 onShow(loadMessages)
 
-const messages = ref([{ role: 'assistant', content: GREETING }])
+const messages = ref([{ role: 'assistant', content: GREETING, time: now() }])
 const inputText = ref('')
 const sending = ref(false)
 const messagesEnd = ref(null)
@@ -171,6 +171,13 @@ function resolveConfirmData(fn) {
   return args
 }
 
+function now() {
+  const d = new Date()
+  const h = String(d.getHours()).padStart(2, '0')
+  const m = String(d.getMinutes()).padStart(2, '0')
+  return h + ':' + m
+}
+
 function scrollToBottom() {
   nextTick(() => {
     messagesEnd.value?.scrollIntoView({ behavior: 'smooth' })
@@ -181,7 +188,7 @@ async function sendMessage() {
   const text = inputText.value.trim()
   if (!text || sending.value) return
 
-  messages.value.push({ role: 'user', content: text })
+  messages.value.push({ role: 'user', content: text, time: now() })
   inputText.value = ''
   scrollToBottom()
 
@@ -213,6 +220,7 @@ async function sendMessage() {
   } catch {
     assistantMsg.content = '网络异常，请检查连接后重试'
   } finally {
+    assistantMsg.time = now()
     assistantMsg.streaming = false
     sending.value = false
     scrollToBottom()
@@ -357,6 +365,7 @@ function chooseImage() {
           <text>{{ msg.content }}</text>
           <text v-if="msg.streaming" class="typing-cursor">|</text>
         </view>
+        <text v-if="msg.time && !msg.streaming" class="msg-time">{{ msg.time }}</text>
       </view>
 
       <view v-if="showConfirm && confirmData" class="confirm-card">
@@ -587,6 +596,8 @@ function chooseImage() {
 .msg-bubble { max-width: 76%; padding: 20rpx 24rpx; border-radius: 20rpx; font-size: 27rpx; line-height: 1.6; word-break: break-all; white-space: pre-wrap; }
 .msg-assistant .msg-bubble { background: #fff; color: #1f2933; border-bottom-left-radius: 4rpx; box-shadow: 0 8rpx 20rpx rgba(23,83,53,.06); }
 .msg-user .msg-bubble { background: #16a34a; color: #fff; border-bottom-right-radius: 4rpx; }
+.msg-time { display: block; font-size: 20rpx; color: #999; margin-top: 6rpx; }
+.msg-user .msg-time { text-align: right; }
 .typing-cursor { display: inline; animation: blink 0.8s infinite; color: #16a34a; }
 @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0; } }
 .scroll-anchor { height: 1rpx; }
