@@ -3,8 +3,12 @@ import { ref, nextTick } from 'vue'
 
 const AI_PROXY_BASE = import.meta.env.VITE_AI_PROXY_BASE_URL || 'http://localhost:8000'
 
+function authHeader() {
+  const token = (uni.getStorageSync('token') || '').replace(/[\r\n]/g, '').trim()
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
 function aiRequest(path, data) {
-  const token = uni.getStorageSync('token')
   return new Promise((resolve, reject) => {
     uni.request({
       url: AI_PROXY_BASE + path,
@@ -12,7 +16,7 @@ function aiRequest(path, data) {
       data,
       header: {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
+        ...authHeader()
       },
       success: (res) => resolve(res.data),
       fail: reject
@@ -139,12 +143,11 @@ function startRecord() {
 
       recorder.onStop(async (res) => {
         try {
-          const token = uni.getStorageSync('token')
           const uploadRes = await uni.uploadFile({
             url: `${AI_PROXY_BASE}/api/upload/asr`,
             filePath: res.tempFilePath,
             name: 'file',
-            header: token ? { Authorization: `Bearer ${token}` } : {}
+            header: authHeader()
           })
           const data = JSON.parse(uploadRes.data)
           if (data.data?.text) {
@@ -170,12 +173,11 @@ function chooseImage() {
     sourceType: ['album', 'camera'],
     success: async (res) => {
       try {
-        const token = uni.getStorageSync('token')
         const uploadRes = await uni.uploadFile({
           url: `${AI_PROXY_BASE}/api/upload`,
           filePath: res.tempFilePaths[0],
           name: 'file',
-          header: token ? { Authorization: `Bearer ${token}` } : {}
+          header: authHeader()
         })
         const data = JSON.parse(uploadRes.data)
         if (data.code === 200) {
