@@ -346,7 +346,7 @@ function chooseImage() {
         <text class="chat-header-sub">一句话创建岗位和班次</text>
       </view>
       <view class="chat-header-right">
-        <text class="clear-btn" @click="clearHistory">🗑️</text>
+        <text class="clear-btn" @click="clearHistory">清空</text>
       </view>
     </view>
 
@@ -549,8 +549,8 @@ function chooseImage() {
     <view class="chat-input-bar">
       <view class="chat-input-area">
         <view class="chat-actions">
-          <text class="chat-action-btn" @click="startRecord">🎤</text>
-          <text class="chat-action-btn" @click="chooseImage">📷</text>
+          <text class="chat-action-btn" @click="startRecord">语音</text>
+          <text class="chat-action-btn" @click="chooseImage">图片</text>
         </view>
         <input v-model="inputText" class="chat-input" confirm-type="send" placeholder="输入你的需求..." @confirm="sendMessage" />
         <view class="chat-send-btn" :class="{ active: inputText.trim() }" @click="sendMessage">
@@ -607,7 +607,7 @@ function chooseImage() {
 .chat-input-bar { padding: 16rpx 20rpx; padding-bottom: calc(16rpx + env(safe-area-inset-bottom)); background: #fff; border-top: 1rpx solid #edf0f3; }
 .chat-input-area { display: flex; align-items: center; gap: 14rpx; }
 .chat-actions { display: flex; gap: 10rpx; }
-.chat-action-btn { font-size: 40rpx; line-height: 1; }
+.chat-action-btn { font-size: 24rpx; line-height: 48rpx; height: 48rpx; padding: 0 16rpx; background: #f1f5f9; border-radius: 8rpx; color: #64748b; font-weight: 600; }
 .chat-input { flex: 1; height: 72rpx; padding: 0 22rpx; border-radius: 36rpx; background: #f1f5f9; font-size: 27rpx; color: #1f2933; }
 .chat-send-btn { height: 72rpx; padding: 0 28rpx; border-radius: 36rpx; background: #e5e7eb; color: #9ca3af; display: flex; align-items: center; justify-content: center; font-size: 27rpx; font-weight: 800; }
 .chat-send-btn.active { background: #16a34a; color: #fff; }
