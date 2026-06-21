@@ -98,28 +98,93 @@ async def chat_sync(request: Request, body: SyncChatRequest):
         full_messages.append(msg)
 
     try:
-        full_text = ""
-        function_call = None
-        async for chunk in qwen_service.chat_stream(full_messages, FUNCTION_CALLING_SCHEMA):
-            if chunk.startswith("__FUNCTION_CALL__:"):
-                func_data = json.loads(chunk[len("__FUNCTION_CALL__:"):])
-                duplicate_msg = await _check_job_duplicate(func_data, token)
-                if duplicate_msg:
-                    full_text += duplicate_msg
-                else:
-                    function_call = func_data
-                continue
-            full_text += chunk
-
-        return {
-            "code": 200,
-            "data": {
-                "content": full_text,
-                "function_call": function_call
-            }
-        }
+        return await _chat_sync_with_tools(full_messages, token)
     except Exception as e:
         return {"code": 500, "message": str(e)}
+
+
+async def _chat_sync_with_tools(messages: list[dict], token: str) -> dict:
+    full_text = ""
+    function_call = None
+    max_turns = 5
+
+    for turn in range(max_turns):
+        current_text = ""
+        current_function_call = None
+
+        async for chunk in qwen_service.chat_stream(messages, FUNCTION_CALLING_SCHEMA):
+            if chunk.startswith("__FUNCTION_CALL__:"):
+                func_data = json.loads(chunk[len("__FUNCTION_CALL__:"):])
+
+                if func_data.get("name") == "search_jobs":
+                    args = func_data.get("arguments", {})
+                    if isinstance(args, str):
+                        args = json.loads(args)
+                    keyword = args.get("keyword", "")
+                    try:
+                        results = await enterprise_client.search_jobs_by_title(keyword, token)
+                    except Exception:
+                        results = []
+
+                    assistant_msg = {
+                        "role": "assistant",
+                        "content": None,
+                        "tool_calls": [{
+                            "id": f"search_{turn}",
+                            "type": "function",
+                            "function": {
+                                "name": "search_jobs",
+                                "arguments": json.dumps(args, ensure_ascii=False)
+                            }
+                        }]
+                    }
+                    messages.append(assistant_msg)
+
+                    if results:
+                        jobs_text = "\n".join(
+                            [f"ID: {j.get('id')}, 名称: {j.get('title')}, 状态: {j.get('status', '未知')}"
+                             for j in results]
+                        )
+                        messages.append({
+                            "role": "tool",
+                            "tool_call_id": f"search_{turn}",
+                            "content": f"找到以下岗位：\n{jobs_text}"
+                        })
+                    else:
+                        messages.append({
+                            "role": "tool",
+                            "tool_call_id": f"search_{turn}",
+                            "content": f"未找到名称包含「{keyword}」的岗位"
+                        })
+
+                    break
+
+                # Non-search function_call
+                duplicate_msg = await _check_job_duplicate(func_data, token)
+                if duplicate_msg:
+                    current_text += duplicate_msg
+                else:
+                    current_function_call = func_data
+                continue
+
+            current_text += chunk
+        else:
+            full_text += current_text
+            function_call = current_function_call
+            break
+
+        full_text += current_text
+        if current_function_call:
+            function_call = current_function_call
+            break
+
+    return {
+        "code": 200,
+        "data": {
+            "content": full_text,
+            "function_call": function_call
+        }
+    }
 
 
 class ActionRequest(BaseModel):

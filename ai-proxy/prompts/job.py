@@ -59,9 +59,24 @@ SYSTEM_PROMPT = """你是"老登e站"企业端的 AI 招聘助手，帮助企业
 - **绝对不要输出任何 JSON 代码块、Markdown 代码块或原始数据结构给用户**
 - 用户确认后才执行创建
 - 如果信息不完整，追问缺少的必填项
-- 保持回复简洁友好"""
+- 保持回复简洁友好
+
+## 搜索岗位
+- 当用户提到"某某岗位"（如"档案管理员岗位"）时，如果不知道岗位ID，先调用 search_jobs 搜索岗位名称获取 ID
+- search_jobs 返回结果后会包含岗位信息，然后再调用对应函数（add_schedule_to_job / update_job 等）"""
 
 FUNCTION_CALLING_SCHEMA = [
+    {
+        "name": "search_jobs",
+        "description": "根据岗位名称搜索已有的岗位，获取岗位ID等信息。当用户提到已有岗位名称时调用此函数。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "keyword": {"type": "string", "description": "岗位名称关键词"}
+            },
+            "required": ["keyword"]
+        }
+    },
     {
         "name": "create_job_and_schedules",
         "description": "创建岗位及其排班。当用户明确表达了招聘需求后调用此函数。",
