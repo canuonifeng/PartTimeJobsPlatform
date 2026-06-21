@@ -1,7 +1,13 @@
 <script setup>
 import { ref, nextTick } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 
 const AI_PROXY_BASE = import.meta.env.VITE_AI_PROXY_BASE_URL || 'http://localhost:8000'
+const STORAGE_KEY = 'ai_chat_history'
+const MAX_HISTORY_TOKENS = 20000
+const MAX_CONTENT_LEN = 200
+
+const GREETING = '你好！我是 AI 助手，可以帮你创建岗位和班次。例如：「帮我发布一个保安岗位，明天开始每天 14:00-18:00，时薪 25 元」'
 
 function authHeader() {
   const raw = uni.getStorageSync('token')
@@ -25,9 +31,73 @@ function aiRequest(path, data) {
   })
 }
 
-const messages = ref([
-  { role: 'assistant', content: '你好！我是 AI 助手，可以帮你创建岗位和班次。例如：「帮我发布一个保安岗位，明天开始每天 14:00-18:00，时薪 25 元」' }
-])
+function estimateTokens(text) {
+  if (!text) return 0
+  let t = 0
+  for (const ch of text) {
+    if (ch >= '\u4e00' && ch <= '\u9fff') t += 2
+    else if (/[a-zA-Z0-9]/.test(ch)) t += 0.25
+    else t += 0.5
+  }
+  return Math.ceil(t)
+}
+
+function compressMessage(msg) {
+  if (msg.role === 'assistant' && msg.content && msg.content.length > MAX_CONTENT_LEN) {
+    return { role: 'assistant', content: msg.content.slice(0, MAX_CONTENT_LEN) + '...[省略]' }
+  }
+  return msg
+}
+
+function buildHistory(messages) {
+  const candidates = messages.slice(0, -2).map(compressMessage)
+  let total = 0
+  const result = []
+  for (let i = candidates.length - 1; i >= 0; i--) {
+    const t = estimateTokens(candidates[i].content || '')
+    if (total + t > MAX_HISTORY_TOKENS) break
+    total += t
+    result.unshift(candidates[i])
+  }
+  return result
+}
+
+function saveMessages() {
+  try {
+    uni.setStorageSync(STORAGE_KEY, JSON.stringify(messages.value))
+  } catch (_) {}
+}
+
+function loadMessages() {
+  try {
+    const raw = uni.getStorageSync(STORAGE_KEY)
+    if (raw) {
+      const m = JSON.parse(raw)
+      if (Array.isArray(m) && m.length) {
+        messages.value = m
+        return
+      }
+    }
+  } catch (_) {}
+  messages.value = [{ role: 'assistant', content: GREETING }]
+}
+
+function clearHistory() {
+  uni.showModal({
+    title: '清空记录',
+    content: '确定清空所有对话记录？',
+    success: (r) => {
+      if (r.confirm) {
+        try { uni.removeStorageSync(STORAGE_KEY) } catch (_) {}
+        messages.value = [{ role: 'assistant', content: GREETING }]
+      }
+    }
+  })
+}
+
+onShow(loadMessages)
+
+const messages = ref([{ role: 'assistant', content: GREETING }])
 const inputText = ref('')
 const sending = ref(false)
 const messagesEnd = ref(null)
@@ -120,7 +190,7 @@ async function sendMessage() {
   messages.value.push(assistantMsg)
 
   try {
-    const history = messages.value.slice(0, -2).map(m => ({ role: m.role, content: m.content }))
+    const history = buildHistory(messages.value)
     const res = await aiRequest('/api/chat/sync', {
       messages: [{ role: 'user', content: text }],
       history
@@ -146,6 +216,7 @@ async function sendMessage() {
     assistantMsg.streaming = false
     sending.value = false
     scrollToBottom()
+    saveMessages()
   }
 }
 
@@ -190,6 +261,7 @@ async function confirmCreate() {
   showConfirm.value = false
   confirmData.value = null
   scrollToBottom()
+  saveMessages()
 }
 
 function cancelConfirm() {
@@ -273,7 +345,9 @@ function chooseImage() {
         <text class="chat-header-title">AI 创建</text>
         <text class="chat-header-sub">一句话创建岗位和班次</text>
       </view>
-      <view class="chat-header-right"></view>
+      <view class="chat-header-right">
+        <text class="clear-btn" @click="clearHistory">🗑️</text>
+      </view>
     </view>
 
     <scroll-view class="chat-messages" scroll-y scroll-with-animation :scroll-into-view="'msg-' + (messages.length - 1)">
@@ -495,7 +569,8 @@ function chooseImage() {
 .chat-header-center { flex: 1; text-align: center; }
 .chat-header-title { display: block; font-size: 34rpx; font-weight: 800; }
 .chat-header-sub { display: block; margin-top: 4rpx; font-size: 22rpx; opacity: .78; }
-.chat-header-right { width: 60rpx; }
+.chat-header-right { width: 60rpx; display: flex; align-items: center; justify-content: flex-end; }
+.clear-btn { font-size: 36rpx; line-height: 1; opacity: .8; }
 .chat-messages { flex: 1; overflow-y: auto; padding: 24rpx 28rpx 20rpx; box-sizing: border-box; }
 .msg-row { margin-bottom: 24rpx; display: flex; align-items: flex-start; }
 .msg-user { justify-content: flex-end; }

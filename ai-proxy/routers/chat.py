@@ -10,6 +10,37 @@ from services.enterprise_client import enterprise_client
 from services.geocoding import geocode
 from services.qwen import qwen_service
 
+MAX_CONTEXT_TOKENS = 28000
+
+
+def _estimate_tokens(text: str) -> int:
+    if not text:
+        return 0
+    t = 0
+    for ch in text:
+        if '\u4e00' <= ch <= '\u9fff':
+            t += 2
+        elif ch.isalnum():
+            t += 0.25
+        else:
+            t += 0.5
+    return max(1, int(t))
+
+
+def _truncate_context(messages: list[dict]) -> list[dict]:
+    total = 0
+    keep = []
+    for msg in reversed(messages):
+        tokens = _estimate_tokens(msg.get("content") or "")
+        if total + tokens > MAX_CONTEXT_TOKENS:
+            continue
+        total += tokens
+        keep.append(msg)
+    keep.reverse()
+    if keep and keep[0]["role"] == "system":
+        return keep
+    return messages
+
 
 def _system_prompt() -> str:
     return f"{_SYSTEM_PROMPT}\n\n当前真实日期：{date.today().isoformat()}"
@@ -60,6 +91,8 @@ async def chat(request: Request, body: ChatRequest):
         full_messages.append(msg)
     for msg in body.messages:
         full_messages.append(msg)
+
+    full_messages = _truncate_context(full_messages)
 
     async def event_generator():
         buffer = ""
@@ -118,6 +151,7 @@ async def chat_sync(request: Request, body: SyncChatRequest):
         full_messages.append(msg)
     for msg in body.messages:
         full_messages.append(msg)
+    full_messages = _truncate_context(full_messages)
 
     try:
         return await _chat_sync_with_tools(full_messages, token)
@@ -203,6 +237,7 @@ async def _execute_inline(func_data: dict, turn: int, token: str) -> str | None:
 
 
 async def _chat_sync_with_tools(messages: list[dict], token: str) -> dict:
+    messages = _truncate_context(messages)
     full_text = ""
     function_call = None
     max_turns = 5
