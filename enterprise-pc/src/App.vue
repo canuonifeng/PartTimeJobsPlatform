@@ -51,58 +51,52 @@ function handleMenuSelect(index) {
           <el-icon><House /></el-icon>
           <span>首页</span>
         </el-menu-item>
-        <el-menu-item index="/schedules">
-          <el-icon><Calendar /></el-icon>
-          <span>班次管理</span>
-        </el-menu-item>
-        <el-menu-item index="/jobs">
-          <el-icon><Briefcase /></el-icon>
-          <span>招聘计划</span>
-        </el-menu-item>
-        <el-menu-item index="/applications">
-          <el-icon><Document /></el-icon>
-          <span>报名审核</span>
-        </el-menu-item>
-        <el-menu-item index="/schedules/shifts">
-          <el-icon><Calendar /></el-icon>
-          <span>考勤确认</span>
-        </el-menu-item>
-        <el-menu-item index="/attendance/hours">
-          <el-icon><Money /></el-icon>
-          <span>薪资结算</span>
-        </el-menu-item>
+
+        <el-sub-menu index="recruit">
+          <template #title>
+            <el-icon><Briefcase /></el-icon>
+            <span>招聘管理</span>
+          </template>
+          <el-menu-item index="/jobs">招聘计划</el-menu-item>
+          <el-menu-item index="/applications">报名审核</el-menu-item>
+          <el-menu-item index="/locations">工作地点</el-menu-item>
+          <el-menu-item index="/templates">招聘模板</el-menu-item>
+        </el-sub-menu>
+
+        <el-sub-menu index="schedule">
+          <template #title>
+            <el-icon><Calendar /></el-icon>
+            <span>考勤结算</span>
+          </template>
+          <el-menu-item index="/schedules">班次管理</el-menu-item>
+          <el-menu-item index="/schedules/shifts">考勤确认</el-menu-item>
+          <el-menu-item index="/attendance/hours">薪资结算</el-menu-item>
+        </el-sub-menu>
+
         <el-menu-item index="/workers">
           <el-icon><User /></el-icon>
           <span>兼职管理</span>
         </el-menu-item>
+
         <el-menu-item index="/accounts">
           <el-icon><Setting /></el-icon>
           <span>账号管理</span>
         </el-menu-item>
-        <el-menu-item index="/accounts/password">
-          <el-icon><Lock /></el-icon>
-          <span>修改密码</span>
-        </el-menu-item>
-        <el-menu-item index="/locations">
-          <el-icon><Location /></el-icon>
-          <span>工作地点</span>
-        </el-menu-item>
-        <el-menu-item index="/templates">
-          <el-icon><CopyDocument /></el-icon>
-          <span>招聘模板</span>
-        </el-menu-item>
+
         <el-menu-item index="/balance">
           <el-icon><Wallet /></el-icon>
           <span>账户余额</span>
         </el-menu-item>
-        <el-menu-item index="/auth/real-name">
-          <el-icon><Postcard /></el-icon>
-          <span>实名认证</span>
-        </el-menu-item>
-        <el-menu-item index="/settings">
-          <el-icon><Picture /></el-icon>
-          <span>企业设置</span>
-        </el-menu-item>
+
+        <el-sub-menu index="settings">
+          <template #title>
+            <el-icon><Tools /></el-icon>
+            <span>系统设置</span>
+          </template>
+          <el-menu-item index="/settings">企业设置</el-menu-item>
+          <el-menu-item index="/auth/real-name">实名认证</el-menu-item>
+          <el-menu-item index="/accounts/password">修改密码</el-menu-item>
+        </el-sub-menu>
       </el-menu>
     </el-aside>
     <el-container>
