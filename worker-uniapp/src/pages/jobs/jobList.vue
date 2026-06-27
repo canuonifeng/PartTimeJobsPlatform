@@ -7,7 +7,10 @@
       </view>
       <view class="city-search-row">
         <view class="city-box" @click="goProfile">
-          <text class="city-icon">📍</text>
+          <view class="city-icon">
+            <view class="pin-head"></view>
+            <view class="pin-body"></view>
+          </view>
           <text class="city-name">{{ cityName || locationText }}</text>
         </view>
         <view class="search-box">
@@ -419,8 +422,31 @@ onMounted(() => {
   flex-shrink: 0;
 }
 .city-icon {
-  font-size: 28rpx;
-  margin-right: 6rpx;
+  position: relative;
+  width: 36rpx;
+  height: 36rpx;
+  margin-right: 8rpx;
+}
+.city-icon .pin-head {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 22rpx;
+  height: 26rpx;
+  background: #fff;
+  border-radius: 50% 50% 50% 0;
+  transform: translateX(-50%) rotate(-45deg);
+}
+.city-icon .pin-body {
+  position: absolute;
+  top: 18rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 8rpx;
+  height: 8rpx;
+  background: #18c86b;
+  border-radius: 50%;
 }
 .city-name {
   font-size: 28rpx;

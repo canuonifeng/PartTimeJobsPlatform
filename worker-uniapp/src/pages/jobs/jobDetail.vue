@@ -72,7 +72,10 @@
 
         <view class="detail-card location-card" @click="handleOpenLocation">
           <view class="loc-header">
-            <view class="loc-icon">📍</view>
+            <view class="loc-icon">
+              <view class="loc-pin-head"></view>
+              <view class="loc-pin-body"></view>
+            </view>
             <view class="loc-info">
               <text class="loc-label">工作地点</text>
               <text class="loc-address">{{ locationText }}</text>
@@ -286,7 +289,7 @@ const canApply = computed(() => {
 const applyButtonText = computed(() => {
   if (!job.value) return '加载中'
   if (job.value.status === 'CLOSED') return '已关闭'
-  if (pendingScheduleIds.value.length === 0) return '请选择可报名班次'
+  if (pendingScheduleIds.value.length === 0) return '请选择班次报名'
   return `立即报名（${pendingScheduleIds.value.length}班）`
 })
 
@@ -972,8 +975,28 @@ onShareAppMessage(() => ({
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32rpx;
   flex-shrink: 0;
+  position: relative;
+}
+.loc-icon .loc-pin-head {
+  position: absolute;
+  top: 16rpx;
+  left: 50%;
+  transform: translateX(-50%) rotate(-45deg);
+  width: 28rpx;
+  height: 32rpx;
+  background: linear-gradient(135deg, #07a857, #18c86b);
+  border-radius: 50% 50% 50% 0;
+}
+.loc-icon .loc-pin-body {
+  position: absolute;
+  top: 40rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10rpx;
+  height: 10rpx;
+  background: #fff;
+  border-radius: 50%;
 }
 
 .loc-info {
