@@ -26,7 +26,7 @@
             <text class="scc-badge" :class="buttonState.type">{{ shiftStatusLabel(currentShift) }}</text>
           </view>
           <view class="scc-loc-row">
-            <text class="scc-loc">📍 {{ currentShift.location || '暂无地点' }}</text>
+            <text class="scc-loc">{{ currentShift.location || '暂无地点' }}</text>
             <text v-if="currentShiftDistance" class="scc-dist">{{ currentShiftDistance }}</text>
           </view>
         </view>
@@ -43,7 +43,7 @@
             <text class="scc-btn-main">{{ buttonState.mainText }}</text>
             <text class="scc-btn-sub">{{ buttonState.subText }}</text>
             <view class="scc-btn-dist">
-              <text>📍 {{ buttonState.distText }}</text>
+              <text>{{ buttonState.distText }}</text>
             </view>
           </view>
         </view>
@@ -115,7 +115,7 @@
               </view>
               <text class="shift-name">{{ shift.jobTitle }}</text>
               <view class="shift-bottom">
-                <text class="shift-loc">📍 {{ shift.location || '暂无地点' }}</text>
+                <text class="shift-loc">{{ shift.location || '暂无地点' }}</text>
                 <text v-if="distanceLabel(shift)" class="shift-dist">{{ distanceLabel(shift) }}</text>
               </view>
             </view>
@@ -140,7 +140,7 @@
                 <text class="future-time-range">🕐 {{ shift.startTime }}-{{ shift.endTime }}</text>
                 <text class="future-badge">待上岗</text>
               </view>
-              <text v-if="shift.location" class="future-location">📍 {{ shift.location }}</text>
+              <text v-if="shift.location" class="future-location">{{ shift.location }}</text>
             </view>
           </view>
         </view>
