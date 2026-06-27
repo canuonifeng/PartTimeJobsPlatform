@@ -967,9 +967,9 @@ onShareAppMessage(() => ({
 }
 
 .loc-icon {
-  width: 72rpx;
-  height: 72rpx;
-  border-radius: 16rpx;
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 12rpx;
   background: linear-gradient(135deg, #e6f8ee, #c6f0d8);
   display: flex;
   align-items: center;
@@ -978,13 +978,12 @@ onShareAppMessage(() => ({
   position: relative;
 }
 .loc-pin {
-  width: 32rpx;
-  height: 32rpx;
+  width: 22rpx;
+  height: 22rpx;
   background: linear-gradient(135deg, #07a857, #18c86b);
   border-radius: 50% 50% 50% 10%;
   transform: rotate(-45deg);
   position: relative;
-  margin-top: 4rpx;
 }
 .loc-pin::after {
   content: '';
@@ -992,8 +991,8 @@ onShareAppMessage(() => ({
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 12rpx;
-  height: 12rpx;
+  width: 8rpx;
+  height: 8rpx;
   background: #fff;
   border-radius: 50%;
 }

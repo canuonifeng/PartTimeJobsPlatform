@@ -7,7 +7,6 @@
       </view>
       <view class="city-search-row">
         <view class="city-box" @click="goProfile">
-          <view class="city-icon"></view>
           <text class="city-name">{{ cityName || locationText }}</text>
         </view>
         <view class="search-box">
@@ -58,7 +57,7 @@
             </view>
           </view>
           <view class="job-meta">
-            <text class="job-address">📍 {{ job.location || '附近' }}</text>
+            <text class="job-address">{{ job.location || '附近' }}</text>
             <text v-if="job.distanceKm != null && job.distanceKm > 0" class="job-distance">{{ job.distanceKm }}km</text>
             <text v-else-if="job.distanceKm != null && job.distanceKm === 0" class="job-distance near">附近</text>
           </view>
@@ -417,26 +416,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   flex-shrink: 0;
-}
-.city-icon {
-  width: 32rpx;
-  height: 32rpx;
-  background: #fff;
-  border-radius: 50% 50% 50% 10%;
-  transform: rotate(-45deg);
-  position: relative;
-  margin-right: 10rpx;
-}
-.city-icon::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 10rpx;
-  height: 10rpx;
-  background: #07a857;
-  border-radius: 50%;
 }
 .city-name {
   font-size: 28rpx;
