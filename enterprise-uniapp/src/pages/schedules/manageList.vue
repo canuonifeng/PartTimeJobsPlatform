@@ -55,7 +55,7 @@
 
       <view class="meta-list">
         <view class="meta-line"><text class="meta-icon">⏰</text><text>{{ item.scheduleDate || '-' }}　{{ trimTime(item.startTime) || '--:--' }} - {{ trimTime(item.endTime) || '--:--' }}</text></view>
-        <view class="meta-line"><text class="meta-icon">📍</text><text>{{ item.location || '暂无地点' }}</text></view>
+        <view class="meta-line"><view class="meta-icon meta-icon-loc"><view class="loc-pin"></view></view><text>{{ item.location || '暂无地点' }}</text></view>
         <view class="meta-line"><text class="meta-icon">👤</text><text>{{ item.contactName || '暂无联系人' }}　{{ maskPhone(item.contactPhone) }}</text></view>
       </view>
 
@@ -339,6 +339,9 @@ onReachBottom(loadMore)
 .meta-list { display: grid; gap: 14rpx; margin-top: 24rpx; color: #475569; font-size: 24rpx; }
 .meta-line { display: flex; align-items: center; gap: 12rpx; line-height: 1.45; }
 .meta-icon { width: 42rpx; height: 42rpx; border-radius: 16rpx; display: flex; align-items: center; justify-content: center; background: #f1f5f9; font-size: 24rpx; }
+.meta-icon-loc { background: linear-gradient(135deg, #e6f8ee, #c6f0d8); }
+.loc-pin { width: 20rpx; height: 20rpx; background: linear-gradient(135deg, #07a857, #18c86b); border-radius: 50% 50% 50% 10%; transform: rotate(-45deg); position: relative; }
+.loc-pin::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 8rpx; height: 8rpx; background: #fff; border-radius: 50%; }
 .progress-head { display: flex; justify-content: space-between; align-items: center; margin-top: 28rpx; font-size: 24rpx; font-weight: 900; color: #0f172a; }
 .progress-text { color: #64748b; font-weight: 800; }
 .progress-bar { overflow: hidden; height: 16rpx; margin-top: 16rpx; border-radius: 999rpx; background: #e2e8f0; }
