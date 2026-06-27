@@ -73,8 +73,7 @@
         <view class="detail-card location-card" @click="handleOpenLocation">
           <view class="loc-header">
             <view class="loc-icon">
-              <view class="loc-pin-head"></view>
-              <view class="loc-pin-body"></view>
+              <view class="loc-pin"></view>
             </view>
             <view class="loc-info">
               <text class="loc-label">工作地点</text>
@@ -978,23 +977,23 @@ onShareAppMessage(() => ({
   flex-shrink: 0;
   position: relative;
 }
-.loc-icon .loc-pin-head {
-  position: absolute;
-  top: 16rpx;
-  left: 50%;
-  transform: translateX(-50%) rotate(-45deg);
-  width: 28rpx;
+.loc-pin {
+  width: 32rpx;
   height: 32rpx;
   background: linear-gradient(135deg, #07a857, #18c86b);
-  border-radius: 50% 50% 50% 0;
+  border-radius: 50% 50% 50% 10%;
+  transform: rotate(-45deg);
+  position: relative;
+  margin-top: 4rpx;
 }
-.loc-icon .loc-pin-body {
+.loc-pin::after {
+  content: '';
   position: absolute;
-  top: 40rpx;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  width: 10rpx;
-  height: 10rpx;
+  transform: translate(-50%, -50%);
+  width: 12rpx;
+  height: 12rpx;
   background: #fff;
   border-radius: 50%;
 }
