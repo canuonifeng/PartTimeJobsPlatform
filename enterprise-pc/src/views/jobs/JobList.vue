@@ -128,7 +128,11 @@ onMounted(() => {
       </div>
       <el-table :data="jobs" v-loading="loading" stripe style="width: 100%">
         <el-table-column prop="title" label="职位名称" min-width="160" />
-        <el-table-column prop="location" label="工作地点" width="140" />
+        <el-table-column label="工作地点" width="180">
+          <template #default="{ row }">
+            {{ row.location || [row.province, row.city, row.district, row.address].filter(Boolean).join(' ') || '暂无' }}
+          </template>
+        </el-table-column>
         <el-table-column prop="categoryName" label="类别" width="100" />
         <el-table-column prop="headcount" label="招聘人数" width="80" />
         <el-table-column label="报名情况" width="140">

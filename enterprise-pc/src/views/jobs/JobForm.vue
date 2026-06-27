@@ -136,6 +136,7 @@ function onLocationConfirm(pos) {
   if (pos.city) form.value.city = pos.city
   if (pos.district) form.value.district = pos.district
   if (pos.address) form.value.address = pos.address
+  form.value.location = [pos.province, pos.city, pos.district, pos.address].filter(Boolean).join(' ')
 }
 
 function addSalaryRate() {
@@ -205,6 +206,7 @@ async function fetchDetail() {
 }
 
 function buildPayload() {
+  const locationStr = form.value.location || [form.value.province, form.value.city, form.value.district, form.value.address].filter(Boolean).join(' ')
   return {
     title: form.value.title,
     description: form.value.description,
@@ -212,7 +214,7 @@ function buildPayload() {
     contactName: form.value.contactName,
     contactPhone: form.value.contactPhone,
     tagIds: normalizeTagIds(form.value.tagIds),
-    location: form.value.location,
+    location: locationStr,
     province: form.value.province || null,
     city: form.value.city || null,
     district: form.value.district || null,
@@ -267,6 +269,7 @@ function selectLocation(loc) {
   form.value.address = loc.address || ''
   form.value.latitude = loc.latitude
   form.value.longitude = loc.longitude
+  form.value.location = loc.name
   selectedLocationName.value = loc.name
   locationDialogVisible.value = false
   ElMessage.success(`已选择地点：${loc.name}`)
