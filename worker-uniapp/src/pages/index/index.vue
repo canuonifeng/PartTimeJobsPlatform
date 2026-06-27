@@ -108,17 +108,14 @@
             @click="openShiftDetail(shift)"
           >
             <view class="shift-indicator" :class="shiftIndicatorClass(shift)"></view>
-            <view class="shift-main">
-              <view class="shift-top-row">
-                <text class="shift-time">{{ shift.startTime }} - {{ shift.endTime }}</text>
-                <text class="shift-status" :class="shiftStatusClass(shift)">{{ shiftStatusLabel(shift) }}</text>
-              </view>
-              <text class="shift-name">{{ shift.jobTitle }}</text>
-              <view class="shift-bottom">
-                <text class="shift-loc">{{ shift.location || '暂无地点' }}</text>
-                <text v-if="distanceLabel(shift)" class="shift-dist">{{ distanceLabel(shift) }}</text>
-              </view>
-            </view>
+             <view class="shift-main">
+               <text class="shift-name">{{ shift.jobTitle }}</text>
+               <view class="shift-top-row">
+                 <text class="shift-time">{{ shift.startTime }} - {{ shift.endTime }}</text>
+                 <text class="shift-status" :class="shiftStatusClass(shift)">{{ shiftStatusLabel(shift) }}</text>
+               </view>
+               <text v-if="shift.location" class="shift-loc">{{ shift.location }}</text>
+             </view>
           </view>
         </view>
       </view>
@@ -1240,17 +1237,24 @@ onUnload(stopCountdown)
   min-width: 0;
 }
 
+.shift-name {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 8rpx;
+}
+
 .shift-top-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8rpx;
+  margin-bottom: 6rpx;
 }
 
 .shift-time {
-  font-size: 28rpx;
-  font-weight: 700;
-  color: #1a1a2e;
+  font-size: 26rpx;
+  color: #555;
 }
 
 .shift-status {
@@ -1280,28 +1284,10 @@ onUnload(stopCountdown)
   color: #ef4444;
 }
 
-.shift-name {
-  display: block;
-  font-size: 26rpx;
-  color: #555;
-  margin-bottom: 6rpx;
-}
-
-.shift-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
 .shift-loc {
+  display: block;
   font-size: 24rpx;
   color: #999;
-}
-
-.shift-dist {
-  font-size: 22rpx;
-  color: #20c26b;
-  font-weight: 500;
 }
 
 .entry-card {
