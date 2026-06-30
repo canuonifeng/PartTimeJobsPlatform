@@ -11,7 +11,9 @@
           <template #title><el-icon><Folder /></el-icon><span>职位运营</span></template>
           <el-menu-item index="/jobs">职位管理</el-menu-item>
           <el-menu-item index="/applications">报名审核</el-menu-item>
+          <el-menu-item index="/schedules">排班管理</el-menu-item>
           <el-menu-item index="/attendance">考勤管理</el-menu-item>
+          <el-menu-item index="/settlements">结算管理</el-menu-item>
         </el-sub-menu>
         <el-menu-item index="/job-reports">
           <el-icon><Warning /></el-icon><span>职位举报</span>
@@ -35,6 +37,7 @@
           <template #title><el-icon><Money /></el-icon><span>交易财务</span></template>
           <el-menu-item index="/withdrawals">提现审核</el-menu-item>
           <el-menu-item index="/top-up">企业充值</el-menu-item>
+          <el-menu-item index="/transactions">交易流水</el-menu-item>
           <el-menu-item index="/finance-report">财务对账</el-menu-item>
         </el-sub-menu>
         <el-sub-menu index="risk">

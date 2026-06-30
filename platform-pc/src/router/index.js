@@ -29,9 +29,21 @@ const routes = [
         meta: { requiresAuth: true }
       },
       {
+        path: '/schedules',
+        name: 'Schedules',
+        component: () => import('../views/schedules/ScheduleList.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
         path: '/attendance',
         name: 'Attendance',
         component: () => import('../views/attendance/AttendanceList.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/settlements',
+        name: 'Settlements',
+        component: () => import('../views/settlements/SettlementList.vue'),
         meta: { requiresAuth: true }
       },
       {
@@ -44,6 +56,12 @@ const routes = [
         path: '/finance-report',
         name: 'FinanceReport',
         component: () => import('../views/finance/FinanceReport.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/transactions',
+        name: 'Transactions',
+        component: () => import('../views/finance/TransactionList.vue'),
         meta: { requiresAuth: true }
       },
       {
