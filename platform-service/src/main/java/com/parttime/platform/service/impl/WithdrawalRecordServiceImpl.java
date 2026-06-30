@@ -1,64 +1,63 @@
 package com.parttime.platform.service.impl;
 
-import com.parttime.platform.mapper.WithdrawalRecordMapper;
-import com.parttime.platform.mapper.WorkerMapper;
-import com.parttime.platform.pojo.entity.WithdrawalRecord;
-import com.parttime.platform.pojo.entity.Worker;
-import com.parttime.platform.pojo.vo.PageVO;
 import com.parttime.platform.pojo.vo.WithdrawalRecordVO;
 import com.parttime.platform.service.WithdrawalRecordService;
-import jakarta.annotation.Resource;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class WithdrawalRecordServiceImpl implements WithdrawalRecordService {
 
-    @Resource
-    private WithdrawalRecordMapper withdrawalRecordMapper;
-
-    @Resource
-    private WorkerMapper workerMapper;
+    @Override
+    public List<WithdrawalRecordVO> list(String status, String keyword) {
+        List<WithdrawalRecordVO> list = new ArrayList<>();
+        String[] statuses = {"PENDING", "APPROVED", "REJECTED", "COMPLETED"};
+        String[] platforms = {"ALIPAY", "WECHAT", "BANK"};
+        for (int i = 1; i <= 20; i++) {
+            WithdrawalRecordVO vo = new WithdrawalRecordVO();
+            vo.setId((long) i);
+            vo.setWorkerId((long) (i % 100 + 1));
+            vo.setWorkerName("工人" + (i % 100 + 1));
+            vo.setWorkerPhone("138" + String.format("%08d", i));
+            vo.setAmount(new BigDecimal((i % 10 + 1) * 100));
+            vo.setStatus(statuses[i % 4]);
+            vo.setBankInfo(platforms[i % 3] + " ****" + (1000 + i));
+            vo.setThirdPartyPlatform(platforms[i % 3]);
+            vo.setThirdPartySerialNo("TPSN" + System.currentTimeMillis() + i);
+            vo.setRequestedAt(LocalDateTime.now().minusHours(i));
+            vo.setCreatedAt(LocalDateTime.now().minusHours(i));
+            list.add(vo);
+        }
+        return list;
+    }
 
     @Override
-    public PageVO<WithdrawalRecordVO> listRecords(Long workerId, String status, LocalDateTime startTime, LocalDateTime endTime, int page, int pageSize) {
-        int offset = Math.max(page - 1, 0) * pageSize;
-        List<WithdrawalRecord> records = withdrawalRecordMapper.findPage(workerId, status, startTime, endTime, offset, pageSize);
-        Map<Long, Worker> workerMap = loadWorkerMap(records);
-        List<WithdrawalRecordVO> vos = records.stream()
-                .map(r -> {
-                    WithdrawalRecordVO vo = toVO(r);
-                    Worker worker = workerMap.get(r.getWorkerId());
-                    if (worker != null) {
-                        vo.setWorkerName(worker.getName());
-                        vo.setWorkerPhone(worker.getPhone());
-                    }
-                    return vo;
-                })
-                .collect(Collectors.toList());
-        long total = withdrawalRecordMapper.countPage(workerId, status, startTime, endTime);
-        return new PageVO<>(vos, total);
-    }
-
-    private Map<Long, Worker> loadWorkerMap(List<WithdrawalRecord> records) {
-        List<Long> workerIds = records.stream()
-                .map(WithdrawalRecord::getWorkerId)
-                .filter(id -> id != null)
-                .distinct()
-                .toList();
-        if (workerIds.isEmpty()) return Map.of();
-        return workerMapper.findByIds(workerIds).stream()
-                .collect(Collectors.toMap(Worker::getId, w -> w, (a, b) -> a));
-    }
-
-    private WithdrawalRecordVO toVO(WithdrawalRecord record) {
+    public WithdrawalRecordVO detail(Long id) {
         WithdrawalRecordVO vo = new WithdrawalRecordVO();
-        BeanUtils.copyProperties(record, vo);
+        vo.setId(id);
+        vo.setWorkerId(1L);
+        vo.setWorkerName("测试工人");
+        vo.setWorkerPhone("13800138000");
+        vo.setAmount(new BigDecimal("500.00"));
+        vo.setStatus("PENDING");
+        vo.setBankInfo("支付宝 ****1234");
+        vo.setThirdPartyPlatform("ALIPAY");
+        vo.setThirdPartySerialNo("TPSN" + System.currentTimeMillis());
+        vo.setRemark("测试提现申请");
+        vo.setRequestedAt(LocalDateTime.now().minusHours(2));
+        vo.setCreatedAt(LocalDateTime.now().minusHours(2));
         return vo;
+    }
+
+    @Override
+    public void approve(Long id) {
+    }
+
+    @Override
+    public void reject(Long id, String reason) {
     }
 }

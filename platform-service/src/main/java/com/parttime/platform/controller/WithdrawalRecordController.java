@@ -1,18 +1,20 @@
 package com.parttime.platform.controller;
 
+import com.parttime.platform.pojo.cmd.IdCmd;
 import com.parttime.platform.pojo.vo.ApiResponse;
 import com.parttime.platform.pojo.vo.PageVO;
 import com.parttime.platform.pojo.vo.WithdrawalRecordVO;
 import com.parttime.platform.service.WithdrawalRecordService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.annotation.Resource;
-import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/withdrawals")
@@ -21,14 +23,33 @@ public class WithdrawalRecordController {
     @Resource
     private WithdrawalRecordService withdrawalRecordService;
 
-    @Operation(summary = "运营后台提现记录列表")
-    @GetMapping
-    public ApiResponse<PageVO<WithdrawalRecordVO>> listRecords(@RequestParam(required = false) Long workerId,
-                                                   @RequestParam(required = false) String status,
-                                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
-                                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
-                                                   @RequestParam(defaultValue = "1") Integer page,
-                                                   @RequestParam(defaultValue = "20") Integer pageSize) {
-        return ApiResponse.success(withdrawalRecordService.listRecords(workerId, status, startTime, endTime, page, pageSize));
+    @Operation(summary = "提现记录列表")
+    @PostMapping("/list")
+    public ApiResponse<List<WithdrawalRecordVO>> list(@RequestBody(required = false) Map<String, String> body) {
+        String status = body != null ? body.get("status") : null;
+        String keyword = body != null ? body.get("keyword") : null;
+        return ApiResponse.success(withdrawalRecordService.list(status, keyword));
+    }
+
+    @Operation(summary = "提现详情")
+    @PostMapping("/detail")
+    public ApiResponse<WithdrawalRecordVO> detail(@RequestBody IdCmd body) {
+        return ApiResponse.success(withdrawalRecordService.detail(body.getId()));
+    }
+
+    @Operation(summary = "审核通过")
+    @PostMapping("/approve")
+    public ApiResponse<Void> approve(@RequestBody IdCmd body) {
+        withdrawalRecordService.approve(body.getId());
+        return ApiResponse.success();
+    }
+
+    @Operation(summary = "审核拒绝")
+    @PostMapping("/reject")
+    public ApiResponse<Void> reject(@RequestBody Map<String, Object> body) {
+        Long id = Long.valueOf(body.get("id").toString());
+        String reason = body.get("reason") != null ? body.get("reason").toString() : null;
+        withdrawalRecordService.reject(id, reason);
+        return ApiResponse.success();
     }
 }
