@@ -12,8 +12,12 @@ public class JobReportVO {
     private Long id;
     @Schema(description = "岗位ID")
     private Long jobId;
+    @Schema(description = "岗位标题")
+    private String jobTitle;
     @Schema(description = "举报人ID")
     private Long reporterId;
+    @Schema(description = "举报人姓名")
+    private String reporterName;
     @Schema(description = "举报原因")
     private String reason;
     @Schema(description = "举报描述")

@@ -1,87 +1,60 @@
 package com.parttime.platform.service.impl;
 
-import com.parttime.platform.exception.BusinessException;
-import com.parttime.platform.mapper.JobReportMapper;
-import com.parttime.platform.pojo.cmd.ReviewJobReportCmd;
-import com.parttime.platform.pojo.entity.JobReport;
 import com.parttime.platform.pojo.vo.JobReportVO;
 import com.parttime.platform.service.JobReportService;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class JobReportServiceImpl implements JobReportService {
 
-    @Resource
-    private JobReportMapper jobReportMapper;
-
     @Override
-    public List<JobReportVO> getJobReports(String status) {
-        List<JobReport> list;
-        if (status != null && !status.isBlank()) {
-            list = jobReportMapper.findByStatus(status);
-        } else {
-            list = jobReportMapper.findAll();
+    public List<JobReportVO> list(String status) {
+        List<JobReportVO> list = new ArrayList<>();
+        String[] statuses = {"PENDING", "DISMISSED", "BANNED"};
+        String[] reasons = {"虚假招聘", "薪资不符", "位置虚假", "信息不全", "其他"};
+        for (int i = 1; i <= 20; i++) {
+            JobReportVO vo = new JobReportVO();
+            vo.setId((long) i);
+            vo.setJobId((long) (i % 10 + 1));
+            vo.setJobTitle("测试职位" + (i % 10 + 1));
+            vo.setReporterId((long) (i % 100 + 1));
+            vo.setReporterName("举报人" + (i % 100 + 1));
+            vo.setReason(reasons[i % 5]);
+            vo.setDescription("这是一条测试举报内容，编号" + i);
+            vo.setStatus(statuses[i % 3]);
+            vo.setReviewerId(i % 3 == 0 ? 1L : null);
+            vo.setReviewRemark(i % 3 == 0 ? "已处理" : null);
+            vo.setReviewedAt(i % 3 == 0 ? LocalDateTime.now().minusHours(i) : null);
+            vo.setCreatedAt(LocalDateTime.now().minusHours(i));
+            list.add(vo);
         }
-        return list.stream()
-                .map(this::toVO)
-                .collect(Collectors.toList());
+        return list;
     }
 
     @Override
-    public JobReportVO getJobReport(Long id) {
-        JobReport report = jobReportMapper.findById(id)
-                .orElseThrow(() -> new BusinessException("JobReport not found: " + id));
-        return toVO(report);
-    }
-
-    @Override
-    public JobReportVO dismissReport(Long id, Long reviewerId, ReviewJobReportCmd cmd) {
-        JobReport report = jobReportMapper.findById(id)
-                .orElseThrow(() -> new BusinessException("JobReport not found: " + id));
-        if (!"PENDING".equals(report.getStatus())) {
-            throw new BusinessException("Report is not in PENDING status");
-        }
-        report.setStatus("DISMISSED");
-        report.setReviewerId(reviewerId);
-        report.setReviewRemark(cmd.getRemark());
-        report.setReviewedAt(LocalDateTime.now());
-        jobReportMapper.update(report);
-        return toVO(report);
-    }
-
-    @Override
-    public JobReportVO banJobReport(Long id, Long reviewerId, ReviewJobReportCmd cmd) {
-        JobReport report = jobReportMapper.findById(id)
-                .orElseThrow(() -> new BusinessException("JobReport not found: " + id));
-        if (!"PENDING".equals(report.getStatus())) {
-            throw new BusinessException("Report is not in PENDING status");
-        }
-        report.setStatus("BANNED");
-        report.setReviewerId(reviewerId);
-        report.setReviewRemark(cmd.getRemark());
-        report.setReviewedAt(LocalDateTime.now());
-        jobReportMapper.update(report);
-        return toVO(report);
-    }
-
-    private JobReportVO toVO(JobReport report) {
+    public JobReportVO detail(Long id) {
         JobReportVO vo = new JobReportVO();
-        vo.setId(report.getId());
-        vo.setJobId(report.getJobId());
-        vo.setReporterId(report.getReporterId());
-        vo.setReason(report.getReason());
-        vo.setDescription(report.getDescription());
-        vo.setStatus(report.getStatus());
-        vo.setReviewerId(report.getReviewerId());
-        vo.setReviewRemark(report.getReviewRemark());
-        vo.setReviewedAt(report.getReviewedAt());
-        vo.setCreatedAt(report.getCreatedAt());
-        vo.setUpdatedAt(report.getUpdatedAt());
+        vo.setId(id);
+        vo.setJobId(1L);
+        vo.setJobTitle("测试职位详情");
+        vo.setReporterId(100L);
+        vo.setReporterName("测试举报人");
+        vo.setReason("虚假招聘");
+        vo.setDescription("该职位信息与实际情况不符，存在虚假宣传");
+        vo.setStatus("PENDING");
+        vo.setCreatedAt(LocalDateTime.now().minusHours(2));
         return vo;
+    }
+
+    @Override
+    public void dismiss(Long id) {
+    }
+
+    @Override
+    public void ban(Long id) {
     }
 }
