@@ -7,6 +7,12 @@
         <el-menu-item index="/dashboard">
           <el-icon><DataAnalysis /></el-icon><span>仪表盘</span>
         </el-menu-item>
+        <el-sub-menu index="operations">
+          <template #title><el-icon><Folder /></el-icon><span>职位运营</span></template>
+          <el-menu-item index="/jobs">职位管理</el-menu-item>
+          <el-menu-item index="/applications">报名审核</el-menu-item>
+          <el-menu-item index="/attendance">考勤管理</el-menu-item>
+        </el-sub-menu>
         <el-menu-item index="/job-reports">
           <el-icon><Warning /></el-icon><span>职位举报</span>
         </el-menu-item>
@@ -25,9 +31,14 @@
         <el-menu-item index="/admin/workers">
           <el-icon><User /></el-icon><span>兼职管理</span>
         </el-menu-item>
-        <el-menu-item index="/withdrawals">
-          <el-icon><Money /></el-icon><span>提现记录</span>
-        </el-menu-item>
+        <el-sub-menu index="finance">
+          <template #title><el-icon><Money /></el-icon><span>交易财务</span></template>
+          <el-menu-item index="/withdrawals">提现审核</el-menu-item>
+        </el-sub-menu>
+        <el-sub-menu index="risk">
+          <template #title><el-icon><Warning /></el-icon><span>风控治理</span></template>
+          <el-menu-item index="/complaints">投诉工单</el-menu-item>
+        </el-sub-menu>
         <el-menu-item index="/auth/workers">
           <el-icon><Avatar /></el-icon><span>实名审核-兼职</span>
         </el-menu-item>

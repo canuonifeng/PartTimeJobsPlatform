@@ -16,12 +16,30 @@ const routes = [
     component: () => import('../views/Dashboard.vue'),
     meta: { requiresAuth: true }
   },
-  {
-    path: '/job-reports',
-    name: 'JobReports',
-    component: () => import('../views/reports/JobReportList.vue'),
-    meta: { requiresAuth: true }
-  },
+     {
+       path: '/jobs',
+       name: 'Jobs',
+       component: () => import('../views/jobs/JobList.vue'),
+       meta: { requiresAuth: true }
+     },
+     {
+       path: '/applications',
+       name: 'Applications',
+       component: () => import('../views/applications/ApplicationList.vue'),
+       meta: { requiresAuth: true }
+     },
+     {
+       path: '/attendance',
+       name: 'Attendance',
+       component: () => import('../views/attendance/AttendanceList.vue'),
+       meta: { requiresAuth: true }
+     },
+     {
+       path: '/job-reports',
+       name: 'JobReports',
+       component: () => import('../views/reports/JobReportList.vue'),
+       meta: { requiresAuth: true }
+     },
   {
     path: '/configs',
     name: 'Configs',
@@ -46,18 +64,24 @@ const routes = [
       component: () => import('../views/enterprises/EnterpriseList.vue'),
       meta: { requiresAuth: true }
     },
-    {
-      path: '/admin/workers',
-      name: 'WorkerList',
-      component: () => import('../views/workers/WorkerList.vue'),
-      meta: { requiresAuth: true }
-    },
-    {
-      path: '/withdrawals',
-      name: 'WithdrawalRecords',
-      component: () => import('../views/withdrawals/WithdrawalRecordList.vue'),
-      meta: { requiresAuth: true }
-    },
+     {
+       path: '/admin/workers',
+       name: 'WorkerList',
+       component: () => import('../views/workers/WorkerList.vue'),
+       meta: { requiresAuth: true }
+     },
+     {
+       path: '/withdrawals',
+       name: 'WithdrawalRecords',
+       component: () => import('../views/finance/WithdrawalList.vue'),
+       meta: { requiresAuth: true }
+     },
+     {
+       path: '/complaints',
+       name: 'Complaints',
+       component: () => import('../views/risk/ComplaintList.vue'),
+       meta: { requiresAuth: true }
+     },
     {
       path: '/auth/workers',
       name: 'WorkerRealNameList',

@@ -1,0 +1,43 @@
+package com.parttime.platform.controller;
+
+import com.parttime.platform.pojo.cmd.IdCmd;
+import com.parttime.platform.pojo.vo.ApiResponse;
+import com.parttime.platform.pojo.vo.JobScheduleVO;
+import com.parttime.platform.service.JobScheduleService;
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.annotation.Resource;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/admin/schedules")
+public class JobScheduleController {
+
+    @Resource
+    private JobScheduleService jobScheduleService;
+
+    @Operation(summary = "获取职位的排班列表")
+    @PostMapping("/list-by-job")
+    public ApiResponse<List<JobScheduleVO>> listByJobId(@RequestBody Map<String, Long> body) {
+        Long jobId = body.get("jobId");
+        return ApiResponse.success(jobScheduleService.listByJobId(jobId));
+    }
+
+    @Operation(summary = "获取排班详情")
+    @PostMapping("/detail")
+    public ApiResponse<JobScheduleVO> detail(@RequestBody IdCmd body) {
+        return ApiResponse.success(jobScheduleService.detail(body.getId()));
+    }
+
+    @Operation(summary = "取消排班")
+    @PostMapping("/cancel")
+    public ApiResponse<Void> cancel(@RequestBody IdCmd body) {
+        jobScheduleService.cancel(body.getId());
+        return ApiResponse.success();
+    }
+}
