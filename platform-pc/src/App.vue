@@ -34,10 +34,30 @@
         <el-sub-menu index="finance">
           <template #title><el-icon><Money /></el-icon><span>交易财务</span></template>
           <el-menu-item index="/withdrawals">提现审核</el-menu-item>
+          <el-menu-item index="/top-up">企业充值</el-menu-item>
+          <el-menu-item index="/finance-report">财务对账</el-menu-item>
         </el-sub-menu>
         <el-sub-menu index="risk">
           <template #title><el-icon><Warning /></el-icon><span>风控治理</span></template>
           <el-menu-item index="/complaints">投诉工单</el-menu-item>
+          <el-menu-item index="/risk-center">风控中心</el-menu-item>
+          <el-menu-item index="/reviews">评价管理</el-menu-item>
+        </el-sub-menu>
+        <el-sub-menu index="data">
+          <template #title><el-icon><DataAnalysis /></el-icon><span>数据运营</span></template>
+          <el-menu-item index="/report-center">报表中心</el-menu-item>
+          <el-menu-item index="/activities">活动运营</el-menu-item>
+        </el-sub-menu>
+        <el-sub-menu index="config-new">
+          <template #title><el-icon><Setting /></el-icon><span>平台配置</span></template>
+          <el-menu-item index="/configs">系统配置</el-menu-item>
+          <el-menu-item index="/content-operation">内容运营</el-menu-item>
+          <el-menu-item index="/operators">账号权限</el-menu-item>
+          <el-menu-item index="/operation-logs">操作日志</el-menu-item>
+        </el-sub-menu>
+        <el-sub-menu index="cs">
+          <template #title><el-icon><Avatar /></el-icon><span>客服中心</span></template>
+          <el-menu-item index="/customer-service">在线客服</el-menu-item>
         </el-sub-menu>
         <el-menu-item index="/auth/workers">
           <el-icon><Avatar /></el-icon><span>实名审核-兼职</span>

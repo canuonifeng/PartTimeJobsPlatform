@@ -16,24 +16,84 @@ const routes = [
     component: () => import('../views/Dashboard.vue'),
     meta: { requiresAuth: true }
   },
-     {
-       path: '/jobs',
-       name: 'Jobs',
-       component: () => import('../views/jobs/JobList.vue'),
-       meta: { requiresAuth: true }
-     },
-     {
-       path: '/applications',
-       name: 'Applications',
-       component: () => import('../views/applications/ApplicationList.vue'),
-       meta: { requiresAuth: true }
-     },
-     {
-       path: '/attendance',
-       name: 'Attendance',
-       component: () => import('../views/attendance/AttendanceList.vue'),
-       meta: { requiresAuth: true }
-     },
+      {
+        path: '/jobs',
+        name: 'Jobs',
+        component: () => import('../views/jobs/JobList.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/applications',
+        name: 'Applications',
+        component: () => import('../views/applications/ApplicationList.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/attendance',
+        name: 'Attendance',
+        component: () => import('../views/attendance/AttendanceList.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/top-up',
+        name: 'TopUp',
+        component: () => import('../views/finance/TopUpList.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/finance-report',
+        name: 'FinanceReport',
+        component: () => import('../views/finance/FinanceReport.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/risk-center',
+        name: 'RiskCenter',
+        component: () => import('../views/risk/RiskCenter.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/reviews',
+        name: 'Reviews',
+        component: () => import('../views/risk/ReviewList.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/report-center',
+        name: 'ReportCenter',
+        component: () => import('../views/reports/ReportCenter.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/activities',
+        name: 'Activities',
+        component: () => import('../views/operation/ActivityManage.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/content-operation',
+        name: 'ContentOperation',
+        component: () => import('../views/config/ContentOperation.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/operators',
+        name: 'Operators',
+        component: () => import('../views/config/OperatorManage.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/operation-logs',
+        name: 'OperationLogs',
+        component: () => import('../views/config/OperationLog.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: '/customer-service',
+        name: 'CustomerService',
+        component: () => import('../views/cs/CustomerService.vue'),
+        meta: { requiresAuth: true }
+      },
      {
        path: '/job-reports',
        name: 'JobReports',

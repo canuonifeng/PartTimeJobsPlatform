@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.JobScheduleMapper">
+
+    <resultMap id="JobScheduleResultMap" type="com.parttime.platform.pojo.entity.JobSchedule">
+        <id property="id" column="id"/>
+        <result property="jobId" column="job_id"/>
+        <result property="scheduleDate" column="schedule_date"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="scheduleName" column="schedule_name"/>
+        <result property="slotsAvailable" column="slots_available"/>
+        <result property="applicationCount" column="application_count"/>
+        <result property="contactName" column="contact_name"/>
+        <result property="contactPhone" column="contact_phone"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findById" resultMap="JobScheduleResultMap">
+        SELECT js.*,
+               (SELECT COUNT(*) FROM schedule_applications sa WHERE sa.schedule_id = js.id AND sa.status != 'REJECTED') AS application_count
+        FROM job_schedules js
+        WHERE js.id = #{id}
+    </select>
+
+    <select id="findByJobId" resultMap="JobScheduleResultMap">
+        SELECT js.*,
+               (SELECT COUNT(*) FROM schedule_applications sa WHERE sa.schedule_id = js.id AND sa.status != 'REJECTED') AS application_count
+        FROM job_schedules js
+        WHERE js.job_id = #{jobId}
+        ORDER BY js.schedule_date DESC, js.start_time ASC
+    </select>
+
+    <update id="updateStatus">
+        UPDATE job_schedules SET status = #{status} WHERE id = #{id}
+    </update>
+
+</mapper>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.AttendanceRecordMapper">
+
+    <resultMap id="AttendanceRecordResultMap" type="com.parttime.platform.pojo.entity.AttendanceRecord">
+        <id property="id" column="id"/>
+        <result property="shiftId" column="shift_id"/>
+        <result property="jobId" column="job_id"/>
+        <result property="jobTitle" column="job_title"/>
+        <result property="companyId" column="company_id"/>
+        <result property="companyName" column="company_name"/>
+        <result property="workerId" column="worker_id"/>
+        <result property="workerName" column="worker_name"/>
+        <result property="workerPhone" column="worker_phone"/>
+        <result property="checkInTime" column="check_in_time"/>
+        <result property="checkOutTime" column="check_out_time"/>
+        <result property="totalHours" column="total_hours"/>
+        <result property="scheduledPay" column="scheduled_pay"/>
+        <result property="payablePay" column="payable_pay"/>
+        <result property="settlementStatus" column="settlement_status"/>
+        <result property="status" column="status"/>
+        <result property="remark" column="remark"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findById" resultMap="AttendanceRecordResultMap">
+        SELECT ar.*, j.title AS job_title, e.company_name, w.name AS worker_name, w.phone AS worker_phone
+        FROM attendance_records ar
+        LEFT JOIN jobs j ON ar.job_id = j.id
+        LEFT JOIN enterprises e ON j.company_id = e.id
+        LEFT JOIN workers w ON ar.worker_id = w.id
+        WHERE ar.id = #{id}
+    </select>
+
+    <select id="findByJobId" resultMap="AttendanceRecordResultMap">
+        SELECT ar.*, j.title AS job_title, e.company_name, w.name AS worker_name, w.phone AS worker_phone
+        FROM attendance_records ar
+        LEFT JOIN jobs j ON ar.job_id = j.id
+        LEFT JOIN enterprises e ON j.company_id = e.id
+        LEFT JOIN workers w ON ar.worker_id = w.id
+        WHERE ar.job_id = #{jobId}
+        ORDER BY ar.created_at DESC
+    </select>
+
+    <select id="findByFilters" resultMap="AttendanceRecordResultMap">
+        SELECT ar.*, j.title AS job_title, e.company_name, w.name AS worker_name, w.phone AS worker_phone
+        FROM attendance_records ar
+        LEFT JOIN jobs j ON ar.job_id = j.id
+        LEFT JOIN enterprises e ON j.company_id = e.id
+        LEFT JOIN workers w ON ar.worker_id = w.id
+        <where>
+            <if test="status != null and status != ''">
+                AND ar.status = #{status}
+            </if>
+            <if test="companyId != null">
+                AND j.company_id = #{companyId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (j.title LIKE CONCAT('%', #{keyword}, '%') OR w.name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY ar.created_at DESC
+    </select>
+
+    <update id="updateStatus">
+        UPDATE attendance_records SET status = #{status} WHERE id = #{id}
+    </update>
+
+</mapper>

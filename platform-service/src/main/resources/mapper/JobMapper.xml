@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.JobMapper">
+
+    <resultMap id="JobResultMap" type="com.parttime.platform.pojo.entity.Job">
+        <id property="id" column="id"/>
+        <result property="companyId" column="company_id"/>
+        <result property="companyName" column="company_name"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="requirements" column="requirements"/>
+        <result property="contactName" column="contact_name"/>
+        <result property="contactPhone" column="contact_phone"/>
+        <result property="location" column="location"/>
+        <result property="province" column="province"/>
+        <result property="city" column="city"/>
+        <result property="district" column="district"/>
+        <result property="address" column="address"/>
+        <result property="latitude" column="latitude"/>
+        <result property="longitude" column="longitude"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="headcount" column="headcount"/>
+        <result property="status" column="status"/>
+        <result property="isTop" column="is_top"/>
+        <result property="isRecommended" column="is_recommended"/>
+        <result property="deadline" column="deadline"/>
+        <result property="imageUrl" column="image_url"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="JobResultMap">
+        SELECT j.*, e.company_name, c.name AS category_name
+        FROM jobs j
+        LEFT JOIN enterprises e ON j.company_id = e.id
+        LEFT JOIN job_categories c ON j.category_id = c.id
+        ORDER BY j.created_at DESC
+    </select>
+
+    <select id="findById" resultMap="JobResultMap">
+        SELECT j.*, e.company_name, c.name AS category_name
+        FROM jobs j
+        LEFT JOIN enterprises e ON j.company_id = e.id
+        LEFT JOIN job_categories c ON j.category_id = c.id
+        WHERE j.id = #{id}
+    </select>
+
+    <select id="findByFilters" resultMap="JobResultMap">
+        SELECT j.*, e.company_name, c.name AS category_name
+        FROM jobs j
+        LEFT JOIN enterprises e ON j.company_id = e.id
+        LEFT JOIN job_categories c ON j.category_id = c.id
+        <where>
+            <if test="status != null and status != ''">
+                AND j.status = #{status}
+            </if>
+            <if test="companyId != null">
+                AND j.company_id = #{companyId}
+            </if>
+            <if test="categoryId != null">
+                AND j.category_id = #{categoryId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (j.title LIKE CONCAT('%', #{keyword}, '%') OR e.company_name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY j.created_at DESC
+    </select>
+
+    <update id="updateStatus">
+        UPDATE jobs SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <update id="updateTop">
+        UPDATE jobs SET is_top = #{isTop} WHERE id = #{id}
+    </update>
+
+    <update id="updateRecommended">
+        UPDATE jobs SET is_recommended = #{isRecommended} WHERE id = #{id}
+    </update>
+
+</mapper>
