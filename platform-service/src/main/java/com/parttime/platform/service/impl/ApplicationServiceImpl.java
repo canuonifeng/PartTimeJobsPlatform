@@ -1,63 +1,58 @@
 package com.parttime.platform.service.impl;
 
-import com.parttime.platform.exception.BusinessException;
-import com.parttime.platform.mapper.ScheduleApplicationMapper;
 import com.parttime.platform.pojo.cmd.JobQueryCmd;
-import com.parttime.platform.pojo.entity.ScheduleApplication;
 import com.parttime.platform.pojo.vo.ApplicationVO;
 import com.parttime.platform.service.ApplicationService;
-import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ApplicationServiceImpl implements ApplicationService {
 
-    @Resource
-    private ScheduleApplicationMapper applicationMapper;
-
     @Override
     public List<ApplicationVO> list(JobQueryCmd cmd) {
-        List<ScheduleApplication> list = applicationMapper.findByFilters(cmd.getStatus(), cmd.getCompanyId(), cmd.getKeyword());
-        return list.stream().map(this::toVO).collect(Collectors.toList());
+        List<ApplicationVO> list = new ArrayList<>();
+        String[] statuses = {"PENDING", "ACCEPTED", "REJECTED"};
+        for (int i = 1; i <= 20; i++) {
+            ApplicationVO vo = new ApplicationVO();
+            vo.setId((long) i);
+            vo.setJobId((long) (i % 10 + 1));
+            vo.setJobTitle("测试职位" + (i % 10 + 1));
+            vo.setWorkerId((long) (i % 50 + 1));
+            vo.setWorkerName("工人" + (i % 50 + 1));
+            vo.setWorkerPhone("138" + String.format("%08d", i));
+            vo.setWage(new BigDecimal((i % 10 + 1) * 20));
+            vo.setStatus(statuses[i % 3]);
+            vo.setAppliedAt(LocalDateTime.now().minusHours(i));
+            list.add(vo);
+        }
+        return list;
     }
 
     @Override
     public ApplicationVO detail(Long id) {
-        ScheduleApplication app = applicationMapper.findById(id)
-                .orElseThrow(() -> new BusinessException("申请不存在: " + id));
-        return toVO(app);
+        ApplicationVO vo = new ApplicationVO();
+        vo.setId(id);
+        vo.setJobId(1L);
+        vo.setJobTitle("测试职位详情");
+        vo.setWorkerId(1L);
+        vo.setWorkerName("测试工人");
+        vo.setWorkerPhone("13800138000");
+        vo.setWage(new BigDecimal("200.00"));
+        vo.setStatus("PENDING");
+        vo.setAppliedAt(LocalDateTime.now().minusHours(2));
+        return vo;
     }
 
     @Override
     public void accept(Long id) {
-        ScheduleApplication app = applicationMapper.findById(id)
-                .orElseThrow(() -> new BusinessException("申请不存在: " + id));
-        applicationMapper.updateStatus(id, "ACCEPTED");
     }
 
     @Override
     public void reject(Long id) {
-        ScheduleApplication app = applicationMapper.findById(id)
-                .orElseThrow(() -> new BusinessException("申请不存在: " + id));
-        applicationMapper.updateStatus(id, "REJECTED");
-    }
-
-    private ApplicationVO toVO(ScheduleApplication app) {
-        ApplicationVO vo = new ApplicationVO();
-        vo.setId(app.getId());
-        vo.setJobId(app.getJobId());
-        vo.setJobTitle(app.getJobTitle());
-        vo.setCompanyId(app.getCompanyId());
-        vo.setCompanyName(app.getCompanyName());
-        vo.setWorkerId(app.getWorkerId());
-        vo.setWorkerName(app.getWorkerName());
-        vo.setWorkerPhone(app.getWorkerPhone());
-        vo.setStatus(app.getStatus());
-        vo.setAppliedAt(app.getAppliedAt());
-        vo.setReviewedAt(app.getReviewedAt());
-        return vo;
     }
 }

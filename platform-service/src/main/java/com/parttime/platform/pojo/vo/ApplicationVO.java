@@ -28,4 +28,6 @@ public class ApplicationVO {
     private LocalDateTime appliedAt;
     @Schema(description = "审核时间")
     private LocalDateTime reviewedAt;
+    @Schema(description = "薪资")
+    private java.math.BigDecimal wage;
 }
