@@ -5,74 +5,60 @@
       <el-menu :default-active="currentRoute" router background-color="#304156" text-color="#bfcbd9" active-text-color="#409eff">
         <div class="sidebar-logo">管理后台</div>
         <el-menu-item index="/dashboard">
-          <el-icon><DataAnalysis /></el-icon><span>仪表盘</span>
+          <el-icon><DataAnalysis /></el-icon><span>首页</span>
         </el-menu-item>
-        <el-sub-menu index="operations">
-          <template #title><el-icon><Folder /></el-icon><span>职位运营</span></template>
+        <el-sub-menu index="recruitment">
+          <template #title><el-icon><Briefcase /></el-icon><span>招聘管理</span></template>
           <el-menu-item index="/jobs">职位管理</el-menu-item>
           <el-menu-item index="/applications">报名审核</el-menu-item>
           <el-menu-item index="/schedules">排班管理</el-menu-item>
           <el-menu-item index="/attendance">考勤管理</el-menu-item>
           <el-menu-item index="/settlements">结算管理</el-menu-item>
         </el-sub-menu>
-        <el-menu-item index="/job-reports">
-          <el-icon><Warning /></el-icon><span>职位举报</span>
-        </el-menu-item>
-        <el-menu-item index="/configs">
-          <el-icon><Setting /></el-icon><span>系统配置</span>
-        </el-menu-item>
-        <el-menu-item index="/categories">
-          <el-icon><Folder /></el-icon><span>职位分类</span>
-        </el-menu-item>
-        <el-menu-item index="/job-tags">
-          <el-icon><CollectionTag /></el-icon><span>标签管理</span>
-        </el-menu-item>
-        <el-menu-item index="/enterprises">
-          <el-icon><OfficeBuilding /></el-icon><span>企业管理</span>
-        </el-menu-item>
-        <el-menu-item index="/admin/workers">
-          <el-icon><User /></el-icon><span>兼职管理</span>
-        </el-menu-item>
+        <el-sub-menu index="users">
+          <template #title><el-icon><User /></el-icon><span>用户管理</span></template>
+          <el-menu-item index="/enterprises">企业管理</el-menu-item>
+          <el-menu-item index="/admin/workers">兼职管理</el-menu-item>
+          <el-menu-item index="/auth/enterprises">企业实名</el-menu-item>
+          <el-menu-item index="/auth/workers">兼职实名</el-menu-item>
+        </el-sub-menu>
         <el-sub-menu index="finance">
-          <template #title><el-icon><Money /></el-icon><span>交易财务</span></template>
+          <template #title><el-icon><Money /></el-icon><span>财务管理</span></template>
           <el-menu-item index="/withdrawals">提现审核</el-menu-item>
           <el-menu-item index="/top-up">企业充值</el-menu-item>
           <el-menu-item index="/transactions">交易流水</el-menu-item>
           <el-menu-item index="/finance-report">财务对账</el-menu-item>
         </el-sub-menu>
         <el-sub-menu index="risk">
-          <template #title><el-icon><Warning /></el-icon><span>风控治理</span></template>
+          <template #title><el-icon><Warning /></el-icon><span>风控中心</span></template>
           <el-menu-item index="/complaints">投诉工单</el-menu-item>
           <el-menu-item index="/risk-center">风控中心</el-menu-item>
           <el-menu-item index="/reviews">评价管理</el-menu-item>
         </el-sub-menu>
-        <el-sub-menu index="data">
-          <template #title><el-icon><DataAnalysis /></el-icon><span>数据运营</span></template>
-          <el-menu-item index="/report-center">报表中心</el-menu-item>
+        <el-sub-menu index="content">
+          <template #title><el-icon><Picture /></el-icon><span>内容运营</span></template>
+          <el-menu-item index="/content-operation">轮播管理</el-menu-item>
           <el-menu-item index="/activities">活动运营</el-menu-item>
+          <el-menu-item index="/categories">职位分类</el-menu-item>
+          <el-menu-item index="/job-tags">标签管理</el-menu-item>
         </el-sub-menu>
-        <el-sub-menu index="config-new">
-          <template #title><el-icon><Setting /></el-icon><span>平台配置</span></template>
+        <el-menu-item index="/report-center">
+          <el-icon><DataLine /></el-icon><span>报表中心</span>
+        </el-menu-item>
+        <el-sub-menu index="system">
+          <template #title><el-icon><Setting /></el-icon><span>系统管理</span></template>
           <el-menu-item index="/configs">系统配置</el-menu-item>
-          <el-menu-item index="/content-operation">内容运营</el-menu-item>
           <el-menu-item index="/operators">账号权限</el-menu-item>
           <el-menu-item index="/operation-logs">操作日志</el-menu-item>
+          <el-menu-item index="/job-reports">职位举报</el-menu-item>
         </el-sub-menu>
-        <el-sub-menu index="cs">
-          <template #title><el-icon><Avatar /></el-icon><span>客服中心</span></template>
-          <el-menu-item index="/customer-service">在线客服</el-menu-item>
+        <el-sub-menu index="referral">
+          <template #title><el-icon><Present /></el-icon><span>推荐奖励</span></template>
+          <el-menu-item index="/referral/config">奖励配置</el-menu-item>
+          <el-menu-item index="/referral/audit">奖励审核</el-menu-item>
         </el-sub-menu>
-        <el-menu-item index="/auth/workers">
-          <el-icon><Avatar /></el-icon><span>实名审核-兼职</span>
-        </el-menu-item>
-        <el-menu-item index="/auth/enterprises">
-          <el-icon><Postcard /></el-icon><span>实名审核-企业</span>
-        </el-menu-item>
-        <el-menu-item index="/referral/config">
-          <el-icon><Setting /></el-icon><span>邀请奖励配置</span>
-        </el-menu-item>
-        <el-menu-item index="/referral/audit">
-          <el-icon><Money /></el-icon><span>邀请奖励审核</span>
+        <el-menu-item index="/customer-service">
+          <el-icon><ChatDotRound /></el-icon><span>客服中心</span>
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -92,7 +78,7 @@
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from './stores/auth'
-import { DataAnalysis, Warning, Setting, Folder, CollectionTag, OfficeBuilding, User, Money, Avatar, Postcard } from '@element-plus/icons-vue'
+import { DataAnalysis, Warning, Setting, CollectionTag, OfficeBuilding, User, Money, Briefcase, Picture, DataLine, Present, ChatDotRound } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
