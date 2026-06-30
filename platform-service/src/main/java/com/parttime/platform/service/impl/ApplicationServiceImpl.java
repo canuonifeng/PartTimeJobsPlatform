@@ -22,6 +22,8 @@ public class ApplicationServiceImpl implements ApplicationService {
             vo.setId((long) i);
             vo.setJobId((long) (i % 10 + 1));
             vo.setJobTitle("测试职位" + (i % 10 + 1));
+            vo.setCompanyId((long) (i % 5 + 1));
+            vo.setCompanyName("企业" + (i % 5 + 1));
             vo.setWorkerId((long) (i % 50 + 1));
             vo.setWorkerName("工人" + (i % 50 + 1));
             vo.setWorkerPhone("138" + String.format("%08d", i));
@@ -39,6 +41,8 @@ public class ApplicationServiceImpl implements ApplicationService {
         vo.setId(id);
         vo.setJobId(1L);
         vo.setJobTitle("测试职位详情");
+        vo.setCompanyId(1L);
+        vo.setCompanyName("测试企业");
         vo.setWorkerId(1L);
         vo.setWorkerName("测试工人");
         vo.setWorkerPhone("13800138000");

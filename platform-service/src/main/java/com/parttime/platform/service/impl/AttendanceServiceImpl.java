@@ -23,6 +23,8 @@ public class AttendanceServiceImpl implements AttendanceService {
             vo.setShiftId((long) (i % 10 + 1));
             vo.setJobId((long) (i % 10 + 1));
             vo.setJobTitle("职位" + (i % 10 + 1));
+            vo.setCompanyId((long) (i % 5 + 1));
+            vo.setCompanyName("企业" + (i % 5 + 1));
             vo.setWorkerId((long) (i % 50 + 1));
             vo.setWorkerName("工人" + (i % 50 + 1));
             vo.setCheckInTime(LocalDateTime.now().minusDays(i).withHour(8).withMinute(30));
@@ -42,6 +44,8 @@ public class AttendanceServiceImpl implements AttendanceService {
         vo.setShiftId(1L);
         vo.setJobId(1L);
         vo.setJobTitle("测试职位");
+        vo.setCompanyId(1L);
+        vo.setCompanyName("测试企业");
         vo.setWorkerId(1L);
         vo.setWorkerName("测试工人");
         vo.setCheckInTime(LocalDateTime.now().minusDays(1).withHour(8).withMinute(30));
