@@ -1,6 +1,7 @@
 package com.parttime.platform.controller;
 
 import com.parttime.platform.pojo.cmd.IdCmd;
+import com.parttime.platform.pojo.cmd.JobQueryCmd;
 import com.parttime.platform.pojo.vo.ApiResponse;
 import com.parttime.platform.pojo.vo.JobScheduleVO;
 import com.parttime.platform.service.JobScheduleService;
@@ -20,6 +21,13 @@ public class JobScheduleController {
 
     @Resource
     private JobScheduleService jobScheduleService;
+
+    @Operation(summary = "排班列表")
+    @PostMapping("/list")
+    public ApiResponse<List<JobScheduleVO>> list(@RequestBody(required = false) JobQueryCmd body) {
+        JobQueryCmd cmd = body != null ? body : new JobQueryCmd();
+        return ApiResponse.success(jobScheduleService.list(cmd));
+    }
 
     @Operation(summary = "获取职位的排班列表")
     @PostMapping("/list-by-job")
