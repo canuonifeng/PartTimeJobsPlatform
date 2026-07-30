@@ -50,13 +50,15 @@
         <result property="realNamed" column="real_named"/>
         <result property="applicationStatus" column="application_status"/>
         <result property="appliedAt" column="applied_at"/>
-        <result property="shiftId" column="shift_id"/>
-        <result property="shiftStatus" column="shift_status"/>
-        <result property="checkInTime" column="check_in_time"/>
-        <result property="checkOutTime" column="check_out_time"/>
-        <result property="attendanceStatus" column="attendance_status"/>
-        <result property="correctionStatus" column="correction_status"/>
-        <result property="settlementStatus" column="settlement_status"/>
+        <collection property="shifts" ofType="com.parttime.enterprise.pojo.vo.ScheduleApplicantVO$ShiftItem">
+            <id property="shiftId" column="shift_id"/>
+            <result property="shiftStatus" column="shift_status"/>
+            <result property="checkInTime" column="check_in_time"/>
+            <result property="checkOutTime" column="check_out_time"/>
+            <result property="attendanceStatus" column="attendance_status"/>
+            <result property="correctionStatus" column="correction_status"/>
+            <result property="settlementStatus" column="settlement_status"/>
+        </collection>
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
@@ -168,16 +170,20 @@
                ss.id shift_id, ss.status shift_status,
                ar.check_in_time, ar.check_out_time, ar.status attendance_status, ar.settlement_status,
                ac.status correction_status
-        FROM schedule_applications sa
+        FROM (
+            SELECT id FROM schedule_applications
+            WHERE schedule_id = #{scheduleId}
+            <if test="status != null and status != ''">AND status = #{status}</if>
+            ORDER BY applied_at DESC
+            LIMIT #{pageSize} OFFSET #{offset}
+        ) filtered
+        JOIN schedule_applications sa ON sa.id = filtered.id
         LEFT JOIN c_worker w ON w.id = sa.worker_id
         LEFT JOIN worker_real_name_auth wr ON wr.worker_id = sa.worker_id
         LEFT JOIN schedule_shifts ss ON ss.application_id = sa.id
         LEFT JOIN attendance_records ar ON ar.shift_id = ss.id
         LEFT JOIN attendance_corrections ac ON ac.shift_id = ss.id
-        WHERE sa.schedule_id = #{scheduleId}
-        <if test="status != null and status != ''">AND sa.status = #{status}</if>
-        ORDER BY sa.applied_at DESC
-        LIMIT #{pageSize} OFFSET #{offset}
+        ORDER BY sa.applied_at DESC, ss.id ASC
     </select>
 
     <select id="countApplicants" resultType="long">

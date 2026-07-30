@@ -401,20 +401,34 @@ public class ScheduleServiceImpl implements ScheduleService {
                 .orElseThrow(() -> new RuntimeException("JobSchedule not found: " + request.getScheduleId()));
         String normalizedStatus = request.getStatus() == null || request.getStatus().isBlank() ? null : request.getStatus().trim().toUpperCase();
         List<ScheduleApplicantVO> applicants = jobScheduleMapper.findApplicants(schedule.getId(), normalizedStatus, 0, 10000);
-        StringBuilder content = new StringBuilder("姓名,手机号,实名状态,报名时间,报名状态,排班状态,签到时间,签退时间,考勤状态,补卡状态,结算状态\n");
+        StringBuilder content = new StringBuilder("姓名,手机号,实名状态,报名时间,报名状态,排班ID,排班状态,签到时间,签退时间,考勤状态,补卡状态,结算状态\n");
         for (ScheduleApplicantVO applicant : applicants) {
-            appendCsvRow(content,
-                    applicant.getWorkerName(),
-                    applicant.getWorkerPhone(),
-                    Boolean.TRUE.equals(applicant.getRealNamed()) ? "已实名" : "未实名",
-                    formatValue(applicant.getAppliedAt()),
-                    applicationStatusText(applicant.getApplicationStatus()),
-                    shiftStatusText(applicant.getShiftStatus()),
-                    formatValue(applicant.getCheckInTime()),
-                    formatValue(applicant.getCheckOutTime()),
-                    attendanceStatusText(applicant.getAttendanceStatus()),
-                    correctionStatusText(applicant.getCorrectionStatus()),
-                    settlementStatusText(applicant.getSettlementStatus()));
+            List<ScheduleApplicantVO.ShiftItem> shifts = applicant.getShifts();
+            if (shifts == null || shifts.isEmpty()) {
+                appendCsvRow(content,
+                        applicant.getWorkerName(),
+                        applicant.getWorkerPhone(),
+                        Boolean.TRUE.equals(applicant.getRealNamed()) ? "已实名" : "未实名",
+                        formatValue(applicant.getAppliedAt()),
+                        applicationStatusText(applicant.getApplicationStatus()),
+                        "", "", "", "", "", "");
+            } else {
+                for (ScheduleApplicantVO.ShiftItem shift : shifts) {
+                    appendCsvRow(content,
+                            applicant.getWorkerName(),
+                            applicant.getWorkerPhone(),
+                            Boolean.TRUE.equals(applicant.getRealNamed()) ? "已实名" : "未实名",
+                            formatValue(applicant.getAppliedAt()),
+                            applicationStatusText(applicant.getApplicationStatus()),
+                            String.valueOf(shift.getShiftId()),
+                            shiftStatusText(shift.getShiftStatus()),
+                            formatValue(shift.getCheckInTime()),
+                            formatValue(shift.getCheckOutTime()),
+                            attendanceStatusText(shift.getAttendanceStatus()),
+                            correctionStatusText(shift.getCorrectionStatus()),
+                            settlementStatusText(shift.getSettlementStatus()));
+                }
+            }
         }
         ScheduleExportVO result = new ScheduleExportVO();
         result.setFilename("schedule-" + schedule.getId() + "-applicants.csv");

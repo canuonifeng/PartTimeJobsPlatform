@@ -226,14 +226,24 @@ onMounted(loadData)
         <el-radio-button label="">全部</el-radio-button><el-radio-button label="PENDING">待审核</el-radio-button><el-radio-button label="ACCEPTED">已通过</el-radio-button><el-radio-button label="REJECTED">已拒绝</el-radio-button>
       </el-radio-group>
       <el-button style="margin-left: 12px" type="primary" plain @click="exportCurrentApplicants">导出当前列表</el-button>
-      <el-table v-loading="applicantLoading" :data="applicants" style="margin-top: 16px">
+      <el-table v-loading="applicantLoading" :data="applicants" style="margin-top: 16px" row-key="applicationId">
+        <el-table-column type="expand">
+          <template #default="{ row }">
+            <el-table :data="row.shifts || []" size="small" style="margin: 8px 0">
+              <el-table-column label="排班ID" prop="shiftId" width="80" />
+              <el-table-column label="排班状态"><template #default="{ row: s }">{{ shiftStatusText(s.shiftStatus) }}</template></el-table-column>
+              <el-table-column label="签到时间"><template #default="{ row: s }">{{ s.checkInTime || '-' }}</template></el-table-column>
+              <el-table-column label="签退时间"><template #default="{ row: s }">{{ s.checkOutTime || '-' }}</template></el-table-column>
+              <el-table-column label="考勤状态"><template #default="{ row: s }">{{ attendanceStatusText(s.attendanceStatus) }}</template></el-table-column>
+              <el-table-column label="补卡状态"><template #default="{ row: s }">{{ correctionStatusText(s.correctionStatus) }}</template></el-table-column>
+              <el-table-column label="结算状态"><template #default="{ row: s }">{{ settlementStatusText(s.settlementStatus) }}</template></el-table-column>
+            </el-table>
+          </template>
+        </el-table-column>
         <el-table-column prop="workerName" label="姓名" /><el-table-column prop="workerPhone" label="手机号" />
         <el-table-column label="实名"><template #default="{ row }"><el-tag :type="row.realNamed ? 'success' : 'info'">{{ row.realNamed ? '已实名' : '未实名' }}</el-tag></template></el-table-column>
         <el-table-column label="审核"><template #default="{ row }">{{ applicationStatusText(row.applicationStatus) }}</template></el-table-column>
-        <el-table-column label="排班状态"><template #default="{ row }">{{ shiftStatusText(row.shiftStatus) }}</template></el-table-column>
-        <el-table-column label="考勤状态"><template #default="{ row }">{{ attendanceStatusText(row.attendanceStatus) }}</template></el-table-column>
-        <el-table-column label="补卡状态"><template #default="{ row }">{{ correctionStatusText(row.correctionStatus) }}</template></el-table-column>
-        <el-table-column label="结算状态"><template #default="{ row }">{{ settlementStatusText(row.settlementStatus) }}</template></el-table-column>
+        <el-table-column label="排班数"><template #default="{ row }"><el-tag>{{ (row.shifts || []).length }} 个排班</el-tag></template></el-table-column>
       </el-table>
       <el-pagination v-model:current-page="applicantQuery.page" :total="applicantTotal" layout="total, prev, pager, next" @current-change="loadApplicants" />
     </el-drawer>

@@ -98,13 +98,21 @@
         </scroll-view>
         <view v-if="applicants.length === 0" class="drawer-empty">暂无报名人</view>
         <view v-for="app in applicants" :key="app.applicationId" class="app-row">
-          <view>
-            <text class="name">{{ app.workerName || '未实名' }}</text>
-            <text class="phone">{{ app.workerPhone || '-' }}</text>
+          <view class="app-row-inner">
+            <view class="app-left">
+              <text class="name">{{ app.workerName || '未实名' }}</text>
+              <text class="phone">{{ app.workerPhone || '-' }}</text>
+            </view>
+            <view class="app-right">
+              <text class="app-status">{{ applicationStatusText(app.applicationStatus) }}</text>
+              <text class="shift-count">{{ (app.shifts || []).length }}个排班</text>
+            </view>
           </view>
-          <view class="app-right">
-            <text class="app-status">{{ applicationStatusText(app.applicationStatus) }}</text>
-            <text class="app-attendance">{{ attendanceStatusText(app.attendanceStatus) || shiftStatusText(app.shiftStatus) }}</text>
+          <view v-if="app.shifts && app.shifts.length" class="shift-sublist">
+            <view v-for="s in app.shifts" :key="s.shiftId" class="shift-subitem">
+              <text class="shift-sub-status">{{ shiftStatusText(s.shiftStatus) }}</text>
+              <text class="shift-sub-attendance">{{ attendanceStatusText(s.attendanceStatus) || shiftStatusText(s.shiftStatus) }}</text>
+            </view>
           </view>
         </view>
       </view>
@@ -367,7 +375,13 @@ onReachBottom(loadMore)
 .applicant-scroll { margin-top: 22rpx; white-space: nowrap; }
 .small-tabs { gap: 12rpx; }
 .drawer-empty { padding: 56rpx 0; text-align: center; color: #94a3b8; font-size: 25rpx; }
-.app-row { display: flex; justify-content: space-between; gap: 18rpx; padding: 24rpx 0; border-bottom: 1rpx solid #eef2f7; }
+.app-row { padding: 0; border-bottom: 1rpx solid #eef2f7; }
+.app-row-inner { display: flex; justify-content: space-between; gap: 18rpx; padding: 24rpx 0 16rpx; }
+.shift-sublist { padding: 0 0 16rpx 20rpx; }
+.shift-subitem { display: flex; justify-content: space-between; gap: 12rpx; padding: 6rpx 0; font-size: 13rpx; color: #4a5a72; }
+.shift-sub-status { color: #1e293b; font-weight: 500; }
+.shift-sub-attendance { color: #6b7280; }
+.shift-count { font-size: 11rpx; color: #8a94a6; margin-left: 8rpx; }
 .name { display: block; color: #0f172a; font-size: 28rpx; font-weight: 800; }
 .phone { display: block; margin-top: 8rpx; color: #64748b; font-size: 24rpx; }
 .app-right { text-align: right; }

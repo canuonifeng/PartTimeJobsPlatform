@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.util.List;
 
 @Data
 public class ScheduleApplicantVO {
@@ -22,18 +22,24 @@ public class ScheduleApplicantVO {
     private String applicationStatus;
     @Schema(description = "报名时间")
     private LocalDateTime appliedAt;
-    @Schema(description = "排班ID")
-    private Long shiftId;
-    @Schema(description = "排班状态")
-    private String shiftStatus;
-    @Schema(description = "签到时间")
-    private LocalDateTime checkInTime;
-    @Schema(description = "签退时间")
-    private LocalDateTime checkOutTime;
-    @Schema(description = "考勤状态")
-    private String attendanceStatus;
-    @Schema(description = "补卡状态")
-    private String correctionStatus;
-    @Schema(description = "结算状态")
-    private String settlementStatus;
+    @Schema(description = "排班明细")
+    private List<ShiftItem> shifts;
+
+    @Data
+    public static class ShiftItem {
+        @Schema(description = "排班ID")
+        private Long shiftId;
+        @Schema(description = "排班状态")
+        private String shiftStatus;
+        @Schema(description = "签到时间")
+        private LocalDateTime checkInTime;
+        @Schema(description = "签退时间")
+        private LocalDateTime checkOutTime;
+        @Schema(description = "考勤状态")
+        private String attendanceStatus;
+        @Schema(description = "补卡状态")
+        private String correctionStatus;
+        @Schema(description = "结算状态")
+        private String settlementStatus;
+    }
 }

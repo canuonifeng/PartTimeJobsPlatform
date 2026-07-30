@@ -141,18 +141,21 @@ class ScheduleServiceTest {
         JobSchedule schedule = new JobSchedule();
         schedule.setId(1L);
         schedule.setJobId(10L);
+        ScheduleApplicantVO.ShiftItem shiftItem = new ScheduleApplicantVO.ShiftItem();
+        shiftItem.setShiftId(100L);
+        shiftItem.setShiftStatus("LATE_EARLY_LEAVE");
+        shiftItem.setCheckInTime(LocalDateTime.of(2026, 6, 18, 9, 5));
+        shiftItem.setCheckOutTime(LocalDateTime.of(2026, 6, 18, 17, 50));
+        shiftItem.setAttendanceStatus("CHECKED_OUT");
+        shiftItem.setCorrectionStatus("APPROVED");
+        shiftItem.setSettlementStatus("SETTLED");
         ScheduleApplicantVO applicant = new ScheduleApplicantVO();
         applicant.setWorkerName("张三");
         applicant.setWorkerPhone("13800000000");
         applicant.setRealNamed(true);
         applicant.setAppliedAt(LocalDateTime.of(2026, 6, 18, 10, 30));
         applicant.setApplicationStatus("ACCEPTED");
-        applicant.setShiftStatus("LATE_EARLY_LEAVE");
-        applicant.setCheckInTime(LocalDateTime.of(2026, 6, 18, 9, 5));
-        applicant.setCheckOutTime(LocalDateTime.of(2026, 6, 18, 17, 50));
-        applicant.setAttendanceStatus("CHECKED_OUT");
-        applicant.setCorrectionStatus("APPROVED");
-        applicant.setSettlementStatus("SETTLED");
+        applicant.setShifts(List.of(shiftItem));
         ScheduleExportCmd request = new ScheduleExportCmd();
         request.setScheduleId(1L);
         request.setStatus("accepted");
@@ -162,8 +165,8 @@ class ScheduleServiceTest {
         ScheduleExportVO result = scheduleService.exportScheduleApplicants(request);
 
         assertThat(result.getFilename()).isEqualTo("schedule-1-applicants.csv");
-        assertThat(result.getContent()).contains("姓名,手机号,实名状态,报名时间,报名状态,排班状态,签到时间,签退时间,考勤状态,补卡状态,结算状态");
-        assertThat(result.getContent()).contains("张三,13800000000,已实名,2026-06-18T10:30,已通过,迟到并早退,2026-06-18T09:05,2026-06-18T17:50,已签退,已通过,已结算");
+        assertThat(result.getContent()).contains("姓名,手机号,实名状态,报名时间,报名状态,排班ID,排班状态,签到时间,签退时间,考勤状态,补卡状态,结算状态");
+        assertThat(result.getContent()).contains("张三,13800000000,已实名,2026-06-18T10:30,已通过,100,迟到并早退,2026-06-18T09:05,2026-06-18T17:50,已签退,已通过,已结算");
     }
 
     @Test
