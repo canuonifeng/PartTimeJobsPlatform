@@ -38,7 +38,8 @@ const editForm = ref({
 
 const salaryTypeMap = {
   HOURLY: '元/小时',
-  DAILY: '元/天'
+  DAILY: '元/天',
+  PER_SHIFT: '元/单'
 }
 
 async function fetchData() {
@@ -278,6 +279,7 @@ onMounted(() => {
             <el-select v-model="editForm.salaryType" style="width: 140px">
               <el-option label="时薪" value="HOURLY" />
               <el-option label="日薪" value="DAILY" />
+              <el-option label="按单" value="PER_SHIFT" />
             </el-select>
             <el-input-number v-model="editForm.salaryAmount" :min="0" :precision="2" style="flex: 1" />
           </div>

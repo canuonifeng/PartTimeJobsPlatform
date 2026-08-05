@@ -432,7 +432,7 @@ onMounted(async () => {
             <el-select v-model="item.type" placeholder="薪资类型" style="width: 140px">
               <el-option label="时薪" value="HOURLY" />
               <el-option label="日薪" value="DAILY" />
-              <el-option label="计件" value="PIECEWORK" />
+              <el-option label="按单" value="PER_SHIFT" />
             </el-select>
             <el-input-number v-model="item.rate" :min="0" :precision="2" placeholder="金额" style="width: 180px" />
             <el-button v-if="form.salaryRates.length > 1" type="danger" :icon="Delete" circle @click="removeSalaryRate(index)" />

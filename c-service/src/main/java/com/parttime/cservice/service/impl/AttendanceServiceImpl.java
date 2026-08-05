@@ -267,7 +267,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         if (rateAmount != null && rateAmount.compareTo(BigDecimal.ZERO) > 0) {
             if ("HOURLY".equals(rateType)) {
                 scheduledPay = hours.multiply(rateAmount).setScale(2, RoundingMode.HALF_UP);
-            } else if ("DAILY".equals(rateType)) {
+            } else if ("DAILY".equals(rateType) || "PER_SHIFT".equals(rateType)) {
                 scheduledPay = rateAmount.setScale(2, RoundingMode.HALF_UP);
             }
         }

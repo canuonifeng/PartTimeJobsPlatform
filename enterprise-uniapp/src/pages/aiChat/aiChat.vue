@@ -477,7 +477,7 @@ function chooseImage() {
           </view>
           <view class="confirm-field" v-if="confirmData.salaryAmount">
             <text class="confirm-label">薪资</text>
-            <text class="confirm-value">{{ confirmData.salaryType === 'DAILY' ? '日薪' : '时薪' }} ¥{{ confirmData.salaryAmount }}</text>
+            <text class="confirm-value">{{ ({ HOURLY: '时薪', DAILY: '日薪', PER_SHIFT: '按单' })[confirmData.salaryType] || '时薪' }} ¥{{ confirmData.salaryAmount }}</text>
           </view>
           <view class="confirm-field" v-if="confirmData.province || confirmData.city || confirmData.district || confirmData.address">
             <text class="confirm-label">地点</text>

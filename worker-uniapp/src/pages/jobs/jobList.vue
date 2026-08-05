@@ -323,7 +323,7 @@ function tagClass(tag: string): string {
 }
 
 function rateUnit(type: string): string {
-  const map: Record<string, string> = { HOURLY: '小时', DAILY: '日', PIECEWORK: '件', PIECE: '单', MONTHLY: '月' }
+  const map: Record<string, string> = { HOURLY: '小时', DAILY: '日', PER_SHIFT: '单', MONTHLY: '月' }
   return map[type] || '小时'
 }
 

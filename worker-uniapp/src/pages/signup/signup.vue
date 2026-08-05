@@ -110,7 +110,7 @@ function statusClass(status: any) {
 
 function payText(item: Signup) {
   const amount = item.payAmount == null ? '' : String(item.payAmount)
-  const unitMap: Record<string, string> = { HOURLY: '小时', DAILY: '日', PIECEWORK: '件', PIECE: '单', MONTHLY: '月' }
+  const unitMap: Record<string, string> = { HOURLY: '小时', DAILY: '日', PER_SHIFT: '单', MONTHLY: '月' }
   const unit = unitMap[String(item.payType || '').toUpperCase()] || '小时'
   return amount ? `${amount}元/${unit}` : '-'
 }

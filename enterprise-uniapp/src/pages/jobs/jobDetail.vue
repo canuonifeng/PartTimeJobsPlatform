@@ -42,7 +42,7 @@ function statusLabel(s) {
 }
 
 function rateTypeLabel(t) {
-  const map = { HOURLY: '时薪', DAILY: '日薪', PIECEWORK: '计件' }
+  const map = { HOURLY: '时薪', DAILY: '日薪', PER_SHIFT: '按单' }
   return map[t] || t
 }
 </script>

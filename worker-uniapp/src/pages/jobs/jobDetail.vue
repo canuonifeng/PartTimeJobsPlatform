@@ -225,7 +225,7 @@ const bannerTags = computed(() => {
   const rates = Array.isArray(job.value?.rates) ? job.value.rates : []
   if (rates.length > 0) {
     const type = rates[0]?.type
-    const map: Record<string, string> = { HOURLY: '时结', DAILY: '日结', PIECEWORK: '计件', MONTHLY: '月结' }
+    const map: Record<string, string> = { HOURLY: '时结', DAILY: '日结', PER_SHIFT: '按单', MONTHLY: '月结' }
     if (map[type]) tags.push(map[type])
   }
   if (job.value?.settlement?.length) {
@@ -272,7 +272,7 @@ const salaryText = computed(() => {
 const settlementBadgeText = computed(() => {
   const rates = Array.isArray(job.value?.rates) ? job.value.rates : []
   const type = rates[0]?.type
-  const map: Record<string, string> = { HOURLY: '时结工资', DAILY: '日结工资', PIECEWORK: '计件工资', MONTHLY: '月结工资' }
+  const map: Record<string, string> = { HOURLY: '时结工资', DAILY: '日结工资', PER_SHIFT: '按单工资', MONTHLY: '月结工资' }
   return map[type] || '薪资面议'
 })
 const responsibilitiesHtml = computed(() => htmlContent(job.value?.responsibilities || job.value?.description))
@@ -448,7 +448,7 @@ function schedulePay(slot: any) {
 }
 
 function rateUnit(type: string) {
-  const map: Record<string, string> = { HOURLY: '小时', DAILY: '日', PIECEWORK: '件', PIECE: '单', MONTHLY: '月' }
+  const map: Record<string, string> = { HOURLY: '小时', DAILY: '日', PER_SHIFT: '单', MONTHLY: '月' }
   return map[type] || '小时'
 }
 

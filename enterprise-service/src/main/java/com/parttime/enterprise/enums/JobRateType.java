@@ -7,7 +7,7 @@ public enum JobRateType implements BaseEnum {
 
     HOURLY("时薪", "HOURLY"),
     DAILY("日薪", "DAILY"),
-    PIECEWORK("计件", "PIECEWORK");
+    PER_SHIFT("按单", "PER_SHIFT");
 
     private final String name;
     private final String code;

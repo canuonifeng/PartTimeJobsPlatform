@@ -108,7 +108,7 @@ function settlementStatusLabel(s) {
 
 function salaryLabel(record) {
   if (record.salaryAmount == null) return '-'
-  const unitMap = { HOURLY: '元/小时', DAILY: '元/天' }
+  const unitMap = { HOURLY: '元/小时', DAILY: '元/天', PER_SHIFT: '元/单' }
   return `${record.salaryAmount}${unitMap[record.salaryType] || ''}`
 }
 

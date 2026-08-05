@@ -80,7 +80,7 @@ function parseScheduleIds(value: any) {
     return { valid: false, ids: [] }
   }
 }
-function rateUnit(type: string) { return ({ HOURLY: '小时', DAILY: '日', PIECEWORK: '件', PIECE: '单', MONTHLY: '月' } as Record<string, string>)[type] || '小时' }
+function rateUnit(type: string) { return ({ HOURLY: '小时', DAILY: '日', PER_SHIFT: '单', MONTHLY: '月' } as Record<string, string>)[type] || '小时' }
 function formatDate(value?: string) { const text = String(value || '日期待定'); return text.length > 5 ? text.slice(5) : text }
 function formatTime(slot: ScheduleItem) { return slot.startTime && slot.endTime ? `${slot.startTime}-${slot.endTime}` : '时间待定' }
 function isScheduleApplied(id: number) { return appliedScheduleIds.value.includes(Number(id)) }

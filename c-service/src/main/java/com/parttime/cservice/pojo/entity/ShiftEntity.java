@@ -37,7 +37,7 @@ public class ShiftEntity {
     private String contactName;
     @Schema(description = "联系人电话快照")
     private String contactPhone;
-    @Schema(description = "薪资快照类型(HOURLY/DAILY)")
+    @Schema(description = "薪资快照类型(HOURLY/DAILY/PER_SHIFT)")
     private String salaryType;
     @Schema(description = "薪资快照金额")
     private BigDecimal salaryAmount;

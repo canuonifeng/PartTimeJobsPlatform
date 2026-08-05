@@ -12,7 +12,7 @@ public class JobRate {
     private Long id;
     @Schema(description = "岗位ID")
     private Long jobId;
-    @Schema(description = "薪资类型: HOURLY-时薪, DAILY-日薪, WEEKLY-周薪, MONTHLY-月薪")
+    @Schema(description = "薪资类型: HOURLY-时薪, DAILY-日薪, PER_SHIFT-按单")
     private String type;
     @Schema(description = "金额")
     private BigDecimal amount;

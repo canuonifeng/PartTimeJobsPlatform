@@ -29,7 +29,7 @@ public class AttendanceHoursVO {
     private LocalTime startTime;
     @Schema(description = "结束时间")
     private LocalTime endTime;
-    @Schema(description = "薪资类型: HOURLY/DAILY")
+    @Schema(description = "薪资类型: HOURLY/DAILY/PER_SHIFT")
     private String salaryType;
     @Schema(description = "薪资标准金额")
     private BigDecimal salaryAmount;

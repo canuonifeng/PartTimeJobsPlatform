@@ -40,8 +40,8 @@ const formData = ref({
 const rates = ref([])
 const schedules = ref([])
 
-const rateTypeLabels = ['时薪', '日薪', '计件']
-const rateTypeValues = ['HOURLY', 'DAILY', 'PIECEWORK']
+const rateTypeLabels = ['时薪', '日薪', '按单']
+const rateTypeValues = ['HOURLY', 'DAILY', 'PER_SHIFT']
 
 const categoryNames = ref([])
 const availableTemplates = ref([])
