@@ -42,8 +42,3 @@ wechat:
     private-key-path: ${WECHAT_PRIVATE_KEY_PATH:certs/apiclient_key.pem}
     notify-url: ${WECHAT_NOTIFY_URL:http://your-domain/api/wechat/notify}
     api-v3-key: ${WECHAT_API_V3_KEY:your_api_v3_key}
-
-cors:
-  allowed-origin-patterns: 
-
-  
