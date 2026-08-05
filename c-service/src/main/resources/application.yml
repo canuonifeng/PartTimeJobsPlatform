@@ -44,6 +44,6 @@ wechat:
     api-v3-key: ${WECHAT_API_V3_KEY:your_api_v3_key}
 
 cors:
-  allowed-origin-patterns: http://localhost:*,http://127.0.0.1:*
+  allowed-origin-patterns: 
 
   
