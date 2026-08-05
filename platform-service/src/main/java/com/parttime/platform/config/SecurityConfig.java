@@ -31,7 +31,7 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private static final String DEFAULT_ALLOWED_ORIGIN_PATTERNS = "http://localhost:*,http://127.0.0.1:*,https://linggong.tech,https://www.linggong.tech,https://api.linggong.tech,https://e.linggong.tech,https://admin.linggong.tech";
+    private static final String DEFAULT_ALLOWED_ORIGIN_PATTERNS = "http://localhost:*,http://127.0.0.1:*";
 
     private final JwtTokenProvider jwtTokenProvider;
 

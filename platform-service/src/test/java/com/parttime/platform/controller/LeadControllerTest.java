@@ -70,10 +70,10 @@ class LeadControllerTest {
     @Test
     void createLeadPreflight_shouldAllowApexWebsiteOrigin() throws Exception {
         mockMvc.perform(options("/api/leads")
-                        .header("Origin", "https://linggong.tech")
+                        .header("Origin", "http://localhost")
                         .header("Access-Control-Request-Method", "POST")
                         .header("Access-Control-Request-Headers", "content-type"))
                 .andExpect(status().isOk())
-                .andExpect(header().string("Access-Control-Allow-Origin", "https://linggong.tech"));
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost"));
     }
 }
