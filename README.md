@@ -17,11 +17,11 @@
 │ (Vue+Ele)  │ (小程序/H5)  │ (Vue+Ele)    │ (小程序/H5)   │
 ├────────────┴─────────────┴──────────────┴───────────────┤
 │                     Backend Services                    │
-├────────────┬─────────────┬──────────────────────────────┤
-│ enterprise │   c-service │     platform-service         │
-│  -service  │  (工人端)    │     (平台管理端)              │
-│  (企业端)   │             │                              │
-├────────────┴─────────────┴──────────────────────────────┤
+├────────────┬─────────────┬──────────────┬───────────────┤
+│ enterprise │   c-service │   platform-  │    ai-proxy   │
+│  -service  │  (工人端)    │   service    │  (AI 服务)    │
+│  (企业端)   │             │ (平台管理端)  │   (FastAPI)   │
+├────────────┴─────────────┴──────────────┴───────────────┤
 │                      MySQL + Redis                      │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -31,6 +31,7 @@
 | 层 | 技术 |
 |---|---|
 | 后端 | Java 17, Spring Boot 3.2.5, MyBatis 3.0.3 |
+| AI 服务 | Python 3, FastAPI, Uvicorn |
 | 前端 PC | Vue 3.4, Element Plus, Pinia, Axios |
 | 小程序 | UniApp 3.x (微信小程序 + H5) |
 | 数据库 | MySQL 8.x |
@@ -40,13 +41,14 @@
 
 ## 模块说明
 
-### 后端服务 (3 个)
+### 后端服务 (4 个)
 
 | 服务 | 说明 | 职责 |
 |---|---|---|
 | `enterprise-service` | 企业端后端 | 招聘计划、班次管理、报名审核、考勤确认、薪资结算、消息通知 |
 | `c-service` | 工人端后端 | 找活浏览、报名、打卡、提现、个人中心 |
-| `platform-service` | 平台管理端后端 | 企业管理、工人管理、职位分类、系统配置、数据统计 |
+| `platform-service` | 平台管理端后端 | 企业管理、工人管理、职位分类、风控、结算、内容运营、数据报表 |
+| `ai-proxy` | AI 服务 | AI 对话、智能发岗位、文件上传 |
 
 ### 前端应用 (4 个)
 
@@ -60,8 +62,11 @@
 ## 核心业务流程
 
 ```
-创建招聘计划 → 发布班次 → 工人选择班次报名 → 企业审核报名 → 排班上岗 → 打卡考勤 → 薪资结算
+企业入驻 → 工人入驻 → 发布职位/排班 → 工人报名 → 企业审核 → 自动投保
+   → 打卡考勤 → 薪资结算（含个税扣除）→ 工人提现
 ```
+
+薪资类型支持：按小时（HOURLY）、按日（DAILY）、按单（PER_SHIFT，每班次固定金额）。
 
 ## 开发环境要求
 
@@ -98,6 +103,7 @@ chmod +x start.sh
 | `enterprise-service` | 8081 | `/api/enterprise` |
 | `c-service` | 8082 | `/api/worker` |
 | `platform-service` | 8083 | `/api/admin` |
+| `ai-proxy` | 8000 | `/chat/*` |
 
 ### 方式二：开发环境分别启动
 
@@ -116,6 +122,11 @@ mvn spring-boot:run -Dspring-boot.run.profiles=dev
 # 平台端后端：http://localhost:8083/api/admin
 cd platform-service
 mvn spring-boot:run -Dspring-boot.run.profiles=dev
+
+# AI 服务：http://localhost:8000/chat
+cd ai-proxy
+source venv/bin/activate
+uvicorn main:app --reload --port 8000
 ```
 
 前端开发服务：
@@ -159,10 +170,13 @@ npm run dev:mp-weixin
 │       └── application*.yml # 服务配置
 ├── c-service/               # 工人端后端
 ├── platform-service/        # 平台管理端后端
+├── ai-proxy/                # AI 服务（FastAPI）
 ├── enterprise-pc/           # 企业 PC 前端
 ├── platform-pc/             # 平台 PC 前端
 ├── worker-uniapp/           # 工人端小程序
-└── enterprise-uniapp/       # 企业端小程序
+├── enterprise-uniapp/       # 企业端小程序
+├── scripts/                 # 数据库初始化与迁移脚本
+└── docs/                    # 项目文档（技术规范、落地计划等）
 ```
 
 ## 数据库
@@ -171,5 +185,18 @@ npm run dev:mp-weixin
 
 - 默认数据库：`part_time_work`
 - 默认账号：`part_time_work`
-- 初始化和迁移脚本位于 `scripts/` 目录
+- 初始化和迁移脚本位于 `scripts/` 目录（按编号顺序执行，共 36 个脚本）
 - 当前 Flyway 默认关闭，数据库变更以 `scripts/` 中的 SQL 脚本为准
+
+```bash
+# 本地执行迁移脚本示例
+mysql --default-character-set=utf8mb4 -h localhost -P 3306 \
+  -u part_time_work -ppassword123 part_time_work < scripts/<file>.sql
+```
+
+## 文档
+
+- `docs/后端技术规范.md`：后端目录、URL、Controller、Service、Mapper、数据库规范
+- `docs/前端技术规范.md`：前端目录、接口、页面、组件规范
+- `docs/系统概述.md`：系统整体介绍
+- `AGENTS.md`：AI 协作导航文件（模块定位、排查路线、验证命令）
