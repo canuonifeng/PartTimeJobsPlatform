@@ -38,12 +38,10 @@ ALTER TABLE jobs ADD COLUMN task_type VARCHAR(20) DEFAULT 'WORK' AFTER id;
 ALTER TABLE jobs ADD COLUMN pricing_mode VARCHAR(20) DEFAULT NULL;
 -- PER_ITEM: 按件计费（每条数据单价）
 -- PER_PACKAGE: 按包计费（整个任务包固定价格）
--- PER_HOUR: 按工时计费（每小时单价）
 
 ALTER TABLE jobs ADD COLUMN price_per_unit DECIMAL(10,2) DEFAULT NULL;
 -- 按件时 = 每条单价
 -- 按包时 = 总价
--- 按工时时 = 每小时单价
 
 ALTER TABLE jobs ADD COLUMN total_items INT DEFAULT NULL;
 -- 标注任务总数据条数（仅标注任务有值）
@@ -53,6 +51,9 @@ ALTER TABLE jobs ADD COLUMN external_task_id VARCHAR(100) DEFAULT NULL;
 
 ALTER TABLE jobs ADD COLUMN callback_url VARCHAR(500) DEFAULT NULL;
 -- 外部系统回调地址（可选，也可统一配置）
+
+ALTER TABLE jobs ADD COLUMN external_system_type VARCHAR(50) DEFAULT NULL;
+-- 外部系统类型（如 ANNOTATION_SYSTEM），用于人员映射
 ```
 
 ### 2.2 新增 annotation_submissions 表
@@ -74,7 +75,22 @@ CREATE TABLE annotation_submissions (
 ) COMMENT '标注完成记录';
 ```
 
-### 2.3 job_schedules 表扩展
+### 2.3 新增 external_worker_mapping 表（外部系统人员映射）
+
+```sql
+CREATE TABLE external_worker_mapping (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    worker_id BIGINT NOT NULL COMMENT '本系统工人ID（c_worker.id）',
+    external_system_type VARCHAR(50) NOT NULL COMMENT '外部系统类型（如 ANNOTATION_SYSTEM）',
+    external_worker_id VARCHAR(100) NOT NULL COMMENT '外部系统中的工人ID',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_system_external (external_system_type, external_worker_id),
+    UNIQUE KEY uk_system_worker (external_system_type, worker_id)
+) COMMENT '本系统与外部系统的人员映射';
+```
+
+### 2.4 job_schedules 表扩展
 
 ```sql
 ALTER TABLE job_schedules ADD COLUMN total_items INT DEFAULT NULL COMMENT '该子任务数据条数';
@@ -97,6 +113,8 @@ ALTER TABLE job_schedules ADD COLUMN external_batch_id VARCHAR(100) COMMENT '外
 | `/api/enterprise/jobs/schedules` | GET | 查看子任务列表（含抢单情况和完成进度） |
 | `/api/enterprise/jobs/schedules` | POST | 新增子任务（批次） |
 | `/api/enterprise/jobs/submissions` | GET | 查看标注完成记录 |
+| `/api/enterprise/external-worker-mapping` | POST | 新增外部系统人员映射 |
+| `/api/enterprise/external-worker-mapping` | GET | 查询人员映射列表 |
 
 #### 标注任务发布流程
 
@@ -106,6 +124,7 @@ ALTER TABLE job_schedules ADD COLUMN external_batch_id VARCHAR(100) COMMENT '外
 - `pricePerUnit` → `jobs.price_per_unit`
 - `totalItems` → `jobs.total_items`
 - `externalTaskId` → `jobs.external_task_id`
+- `externalSystemType` → `jobs.external_system_type`
 
 创建排班（子任务）时同步写入 `total_items` 和 `external_batch_id`。
 
@@ -154,7 +173,7 @@ ALTER TABLE job_schedules ADD COLUMN external_batch_id VARCHAR(100) COMMENT '外
 {
   "external_task_id": "ext_task_123",
   "external_batch_id": "batch_001",
-  "worker_phone": "18957186086",
+  "external_worker_id": "worker_456",
   "items_completed": 100,
   "external_submission_id": "sub_789"
 }
@@ -165,14 +184,16 @@ ALTER TABLE job_schedules ADD COLUMN external_batch_id VARCHAR(100) COMMENT '外
 1. 验证 API Key（Header: `X-Callback-Key`）
 2. 根据 `external_task_id` 找到 `jobs.id`
 3. 根据 `external_batch_id` 找到 `job_schedules.id`
-4. 根据 `worker_phone` 查找 `c_worker.id`（手机号作为映射键，简单可靠）
+4. 根据 `external_worker_id` + `external_system_type` 查找 `external_worker_mapping.worker_id`
 5. 插入 `annotation_submissions` 记录（`external_submission_id` 唯一约束防重放）
 6. 更新 `job_schedules.items_completed += items_completed`
 7. 更新 `jobs.accepted_count`
 
 #### 安全
 
-- 回调接口需携带 API Key（Header: `X-Callback-Key`），配置在 `application.yml` 的 `external.callback.api-key`
+- 回调接口需携带 API Key（Header: `X-Callback-Key`）
+- API Key 存储在本地配置文件 `application.yml` 中：`external.callback.api-key`
+- 同时支持环境变量覆盖：`EXTERNAL_CALLBACK_API_KEY`
 - 防重放：`external_submission_id` UNIQUE 约束，重复回调返回成功但不重复处理
 - 回调接口放在 `/api/external/**` 路径下，不走 JWT 认证，仅校验 API Key
 
@@ -185,10 +206,11 @@ ALTER TABLE job_schedules ADD COLUMN external_batch_id VARCHAR(100) COMMENT '外
 表单增加"任务类型"选择：
 - 选择"零工"：显示现有字段
 - 选择"标注任务"：额外显示
-  - 计价模式（按件/按包，MVP 阶段不支持按工时）
+  - 计价模式（按件/按包）
   - 单价/总价
   - 总数据条数
   - 外部任务ID
+  - 外部系统类型（用于人员映射）
 
 #### JobList.vue 修改
 
@@ -235,11 +257,10 @@ ALTER TABLE job_schedules ADD COLUMN external_batch_id VARCHAR(100) COMMENT '外
 
 ### 5.2 结算金额计算
 
-| 计价模式 | 计算公式 | MVP 支持 |
-|---|---|---|
-| 按件（PER_ITEM） | `items_completed × price_per_unit` | ✅ |
-| 按包（PER_PACKAGE） | `price_per_unit`（固定金额） | ✅ |
-| 按工时（PER_HOUR） | 需外部系统提供工时数据 | ❌ 后续迭代 |
+| 计价模式 | 计算公式 |
+|---|---|
+| 按件（PER_ITEM） | `items_completed × price_per_unit` |
+| 按包（PER_PACKAGE） | `price_per_unit`（固定金额） |
 
 ### 5.3 结算流程
 
