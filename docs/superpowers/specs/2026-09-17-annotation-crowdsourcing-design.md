@@ -78,7 +78,6 @@ ALTER TABLE jobs ADD COLUMN auto_settle TINYINT(1) DEFAULT 1;
 
 ```sql
 ALTER TABLE job_schedules ADD COLUMN total_items INT DEFAULT NULL COMMENT '该批次数据条数';
-ALTER TABLE job_schedules ADD COLUMN items_completed INT DEFAULT 0 COMMENT '已标注条数';
 ALTER TABLE job_schedules ADD COLUMN external_batch_id VARCHAR(100) COMMENT '外部系统批次ID';
 ```
 
@@ -272,7 +271,6 @@ PENDING → 审核 → ACCEPTED / REJECTED
 4. 根据 `external_worker_id` + `external_system_type` 查找 `external_worker_mapping.worker_id`
 5. 更新 `annotation_task_orders.status = 'SUBMITTED'`
 6. 更新 `annotation_task_orders.items_completed`、`submitted_at`
-7. 更新 `job_schedules.items_completed`
 
 #### 质检结果回调请求体
 
@@ -293,7 +291,9 @@ PENDING → 审核 → ACCEPTED / REJECTED
 3. `passed = true`：
    - 更新 `annotation_task_orders.status = 'COMPLETED'`
    - 更新 `annotation_task_orders.completed_at`
-   - 触发自动结算（计算金额 → 入账 worker_balances → 创建 balance_transactions）
+   - 计算结算金额（按件：`items_completed × price_per_unit`，按包：`price_per_unit`）
+   - 入账 `worker_balances`，创建 `balance_transactions`（type=EARNINGS）
+   - 更新 `annotation_task_orders.settled_at`
 4. `passed = false`：
    - 更新 `annotation_task_orders.status = 'REJECTED'`
    - 工人可在外部平台重新标注后再次提交
@@ -339,11 +339,11 @@ PENDING → 审核 → ACCEPTED / REJECTED
 
 #### 批次管理（ScheduleList.vue）修改
 
-- 批次列表增加"已标注条数"、"外部批次ID"列
+- 批次列表增加"外部批次ID"列
 
 #### 任务单管理（新增 TaskOrderList.vue）
 
-- 展示任务单列表：任务包名称、批次、工人、进度（已标注/总数）、状态、操作
+- 展示任务单列表：任务包名称、批次、工人、已标注条数、状态、操作
 - 支持按状态筛选
 - 操作：查看详情、标记质检结果
 
@@ -371,7 +371,7 @@ PENDING → 审核 → ACCEPTED / REJECTED
 
 #### taskOrderList.vue（新增）
 
-- 展示我的任务单列表：任务名称、批次、进度、状态
+- 展示我的任务单列表：任务名称、批次、已标注条数、状态
 - 支持按状态筛选
 - 点击进入任务单详情
 
