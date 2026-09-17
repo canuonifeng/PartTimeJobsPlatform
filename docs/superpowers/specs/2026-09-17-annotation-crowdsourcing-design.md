@@ -34,6 +34,7 @@
 | 批次管理 | ✅ 批次拆分/抢单 | ❌ |
 | 抢单/报单审核 | ✅ 抢单/审核 | ❌ |
 | 任务单管理 | ✅ 生成任务单/跟踪进度 | ❌ |
+| 排班/考勤 | ❌ 标注任务不涉及 | ❌ |
 | 数据源管理 | ❌ | ✅ 上传/管理待标注数据 |
 | 标注操作 | ❌ | ✅ 具体标注界面 |
 | 质量审核 | ❌ | ✅ 标注结果质检（完成后回调通知） |
@@ -164,11 +165,16 @@ PENDING → 审核 → ACCEPTED / REJECTED
   → 发布 PUBLISHED
   → 工人抢单（选择批次）→ schedule_applications PENDING
   → 企业审核通过 → schedule_applications ACCEPTED
-  → 自动生成 annotation_task_orders PENDING
+  → 生成 annotation_task_orders PENDING（不生成排班、不考勤打卡）
   → 工人在外部平台标注 → 外部系统回调标注完成 → SUBMITTED
   → 外部系统质检 → 质检通过回调 → COMPLETED
   → 自动结算 → worker_balances 入账
 ```
+
+> ⚠️ 标注任务与零工岗位的关键差异：
+> - **零工岗位**：审核通过 → 生成 schedule_shifts（排班）→ 考勤打卡 → 结算
+> - **标注任务**：审核通过 → 生成 annotation_task_orders（任务单）→ 外部标注 → 回调 → 结算
+> - 标注任务**不生成排班**，**不进行考勤打卡**
 
 ## 4. 后端 API 设计
 
@@ -199,13 +205,19 @@ PENDING → 审核 → ACCEPTED / REJECTED
 
 创建批次（子任务）时同步写入 `total_items` 和 `external_batch_id`。
 
-#### 报单审核 → 生成任务单
+#### 报单审核 → 生成任务单（不生成排班）
 
 `TaskOrderService.createByApplication(Long applicationId)`：
 1. 查找 `schedule_applications` 记录
 2. 校验状态必须为 `ACCEPTED`
-3. 创建 `annotation_task_orders` 记录，状态为 `PENDING`
-4. 关联 `application_id`、`schedule_id`、`worker_id`、`job_id`
+3. 校验关联的 job 必须是 `task_type = 'ANNOTATION'`
+4. 创建 `annotation_task_orders` 记录，状态为 `PENDING`
+5. 关联 `application_id`、`schedule_id`、`worker_id`、`job_id`
+6. **不生成 schedule_shifts（排班）**，**不创建 attendance_records（考勤）**
+
+> 与零工岗位审核通过后的差异：
+> - 零工岗位：审核通过 → `createShiftForApplication()` → 生成 schedule_shifts + attendance_records
+> - 标注任务：审核通过 → `createByApplication()` → 仅生成 annotation_task_orders
 
 ### 4.2 C 端（c-service）
 
