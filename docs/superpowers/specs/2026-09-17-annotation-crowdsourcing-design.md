@@ -36,7 +36,7 @@
 | 任务单管理 | ✅ 生成任务单/跟踪进度 | ❌ |
 | 数据源管理 | ❌ | ✅ 上传/管理待标注数据 |
 | 标注操作 | ❌ | ✅ 具体标注界面 |
-| 质量审核 | ❌ | ✅ 标注结果质检 |
+| 质量审核 | ❌ | ✅ 标注结果质检（完成后回调通知） |
 | 结算 | ✅ 自动结算/余额/提现 | ❌ |
 
 ### 1.4 MVP 范围
@@ -153,9 +153,9 @@ PENDING → 审核 → ACCEPTED / REJECTED
 ```
 审核通过 → PENDING（待标注）
   → 工人在外部平台开始标注 → IN_PROGRESS（标注中）
-  → 外部系统回调完成 → SUBMITTED（已提交）
-  → 质检通过 → COMPLETED（已完成）→ 自动结算
-  → 质检不通过 → REJECTED（需重新标注）→ 重新提交 → SUBMITTED
+  → 外部系统回调标注完成 → SUBMITTED（已提交）
+  → 外部系统回调质检通过 → COMPLETED（已完成）→ 自动结算
+  → 外部系统回调质检不通过 → REJECTED（需重新标注）→ 重新提交 → SUBMITTED
 ```
 
 ### 3.5 完整流程图
@@ -166,9 +166,8 @@ PENDING → 审核 → ACCEPTED / REJECTED
   → 工人抢单（选择批次）→ schedule_applications PENDING
   → 企业审核通过 → schedule_applications ACCEPTED
   → 自动生成 annotation_task_orders PENDING
-  → 工人在外部平台标注 → IN_PROGRESS
-  → 外部系统回调 → SUBMITTED
-  → 质检通过 → COMPLETED
+  → 工人在外部平台标注 → 外部系统回调标注完成 → SUBMITTED
+  → 外部系统质检 → 质检通过回调 → COMPLETED
   → 自动结算 → worker_balances 入账
 ```
 
@@ -249,10 +248,11 @@ PENDING → 审核 → ACCEPTED / REJECTED
 
 | 接口 | 方法 | 说明 |
 |---|---|---|
-| `/api/external/annotation/complete` | POST | 标注完成回调 |
+| `/api/external/annotation/submit` | POST | 标注完成回调（状态→SUBMITTED） |
+| `/api/external/annotation/quality-check` | POST | 质检结果回调（状态→COMPLETED/REJECTED） |
 | `/api/external/annotation/progress` | POST | 标注进度回调（可选） |
 
-#### 完成回调请求体
+#### 标注完成回调请求体
 
 ```json
 {
@@ -264,7 +264,7 @@ PENDING → 审核 → ACCEPTED / REJECTED
 }
 ```
 
-#### 回调处理逻辑
+#### 标注完成回调处理逻辑
 
 1. 验证 API Key（Header: `X-Callback-Key`）
 2. 根据 `external_task_id` 找到 `jobs.id`
@@ -273,7 +273,30 @@ PENDING → 审核 → ACCEPTED / REJECTED
 5. 更新 `annotation_task_orders.status = 'SUBMITTED'`
 6. 更新 `annotation_task_orders.items_completed`、`submitted_at`
 7. 更新 `job_schedules.items_completed`
-8. 如果任务包 `auto_settle = 1`，触发自动结算
+
+#### 质检结果回调请求体
+
+```json
+{
+  "external_task_id": "ext_task_123",
+  "external_batch_id": "batch_001",
+  "external_worker_id": "worker_456",
+  "passed": true,
+  "items_completed": 100
+}
+```
+
+#### 质检结果回调处理逻辑
+
+1. 验证 API Key
+2. 根据 `external_task_id` + `external_batch_id` + `external_worker_id` 定位任务单
+3. `passed = true`：
+   - 更新 `annotation_task_orders.status = 'COMPLETED'`
+   - 更新 `annotation_task_orders.completed_at`
+   - 触发自动结算（计算金额 → 入账 worker_balances → 创建 balance_transactions）
+4. `passed = false`：
+   - 更新 `annotation_task_orders.status = 'REJECTED'`
+   - 工人可在外部平台重新标注后再次提交
 
 #### 进度回调请求体
 
@@ -377,9 +400,9 @@ PENDING → 审核 → ACCEPTED / REJECTED
 
 ### 6.2 自动结算流程
 
-1. 外部系统回调确认完成 → `annotation_task_orders.status = 'SUBMITTED'`
-2. 质检通过 → `annotation_task_orders.status = 'COMPLETED'`
-3. 自动触发结算：
+1. 外部系统回调标注完成 → `annotation_task_orders.status = 'SUBMITTED'`
+2. 外部系统质检通过回调 → `annotation_task_orders.status = 'COMPLETED'`
+3. 质检通过回调同时触发自动结算：
    - 根据计价模式计算应付金额
    - 写入 `worker_balances`（余额增加、累计收入增加）
    - 创建 `balance_transactions`（type=EARNINGS）
