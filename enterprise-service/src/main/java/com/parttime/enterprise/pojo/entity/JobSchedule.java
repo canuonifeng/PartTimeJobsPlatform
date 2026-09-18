@@ -29,6 +29,10 @@ public class JobSchedule {
     private String contactPhone;
     @Schema(description = "状态 ACTIVE/CANCELLED")
     private String status;
+    @Schema(description = "总数量")
+    private Integer totalItems;
+    @Schema(description = "外部批次ID")
+    private String externalBatchId;
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")

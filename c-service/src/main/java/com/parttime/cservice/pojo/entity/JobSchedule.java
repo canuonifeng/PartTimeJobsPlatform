@@ -16,4 +16,6 @@ public class JobSchedule {
     private String contactName;
     private String contactPhone;
     private String status;
+    private Integer totalItems;
+    private String externalBatchId;
 }

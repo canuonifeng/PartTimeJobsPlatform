@@ -62,4 +62,18 @@ public class Job {
     private String imageUrl;
     @Schema(description = "自动审核: null跟随平台默认, true开启, false关闭")
     private Boolean autoApprove;
+    @Schema(description = "任务类型: WORK-工作, ANNOTATION-标注")
+    private String taskType;
+    @Schema(description = "计价模式: PER_ITEM-按件, PER_PACKAGE-按包")
+    private String pricingMode;
+    @Schema(description = "单价")
+    private BigDecimal pricePerUnit;
+    @Schema(description = "总数量")
+    private Integer totalItems;
+    @Schema(description = "外部任务ID")
+    private String externalTaskId;
+    @Schema(description = "外部系统类型")
+    private String externalSystemType;
+    @Schema(description = "是否自动结算")
+    private Boolean autoSettle;
 }
