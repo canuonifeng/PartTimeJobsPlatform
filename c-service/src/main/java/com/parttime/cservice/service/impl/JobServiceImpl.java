@@ -78,7 +78,7 @@ public class JobServiceImpl implements JobService {
                                             BigDecimal minRate, BigDecimal maxRate,
                                             BigDecimal latitude, BigDecimal longitude,
                                             int page, int pageSize) {
-        List<Job> jobs = jobMapper.search(keyword, location, categoryId);
+        List<Job> jobs = jobMapper.search(keyword, location, categoryId, null);
         LocalDateTime now = LocalDateTime.now();
         // 自动关闭已过报名截止的岗位
         List<Long> expiredIds = jobs.stream()

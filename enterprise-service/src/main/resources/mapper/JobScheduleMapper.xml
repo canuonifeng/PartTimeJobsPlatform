@@ -13,6 +13,8 @@
         <result property="contactName" column="contact_name"/>
         <result property="contactPhone" column="contact_phone"/>
         <result property="status" column="status"/>
+        <result property="totalItems" column="total_items"/>
+        <result property="externalBatchId" column="external_batch_id"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
@@ -62,8 +64,8 @@
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO job_schedules (job_id, schedule_date, start_time, end_time, schedule_name, slots_available, contact_name, contact_phone, status)
-        VALUES (#{jobId}, #{scheduleDate}, #{startTime}, #{endTime}, #{scheduleName}, #{slotsAvailable}, #{contactName}, #{contactPhone}, #{status})
+        INSERT INTO job_schedules (job_id, schedule_date, start_time, end_time, schedule_name, slots_available, contact_name, contact_phone, status, total_items, external_batch_id)
+        VALUES (#{jobId}, #{scheduleDate}, #{startTime}, #{endTime}, #{scheduleName}, #{slotsAvailable}, #{contactName}, #{contactPhone}, #{status}, #{totalItems}, #{externalBatchId})
     </insert>
 
     <select id="findById" resultMap="JobScheduleResultMap">
@@ -86,7 +88,8 @@
         UPDATE job_schedules
         SET schedule_date = #{scheduleDate}, start_time = #{startTime},
             end_time = #{endTime}, schedule_name = #{scheduleName}, slots_available = #{slotsAvailable},
-            contact_name = #{contactName}, contact_phone = #{contactPhone}
+            contact_name = #{contactName}, contact_phone = #{contactPhone},
+            total_items = #{totalItems}, external_batch_id = #{externalBatchId}
         WHERE id = #{id}
     </update>
 

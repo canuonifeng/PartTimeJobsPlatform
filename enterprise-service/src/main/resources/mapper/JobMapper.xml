@@ -24,11 +24,20 @@
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
         <result property="imageUrl" column="image_url"/>
+        <result property="taskType" column="task_type"/>
+        <result property="pricingMode" column="pricing_mode"/>
+        <result property="pricePerUnit" column="price_per_unit"/>
+        <result property="totalItems" column="total_items"/>
+        <result property="externalTaskId" column="external_task_id"/>
+        <result property="externalSystemType" column="external_system_type"/>
+        <result property="autoSettle" column="auto_settle"/>
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO jobs (company_id, title, description, requirements, contact_name, contact_phone, location, province, city, district, address, latitude, longitude, category_id, headcount, status, deadline, image_url)
-        VALUES (#{companyId}, #{title}, #{description}, #{requirements}, #{contactName}, #{contactPhone}, #{location}, #{province}, #{city}, #{district}, #{address}, #{latitude}, #{longitude}, #{categoryId}, #{headcount}, #{status}, #{deadline}, #{imageUrl})
+        INSERT INTO jobs (company_id, title, description, requirements, contact_name, contact_phone, location, province, city, district, address, latitude, longitude, category_id, headcount, status, deadline, image_url,
+                          task_type, pricing_mode, price_per_unit, total_items, external_task_id, external_system_type, auto_settle)
+        VALUES (#{companyId}, #{title}, #{description}, #{requirements}, #{contactName}, #{contactPhone}, #{location}, #{province}, #{city}, #{district}, #{address}, #{latitude}, #{longitude}, #{categoryId}, #{headcount}, #{status}, #{deadline}, #{imageUrl},
+                #{taskType}, #{pricingMode}, #{pricePerUnit}, #{totalItems}, #{externalTaskId}, #{externalSystemType}, #{autoSettle})
     </insert>
 
     <select id="findById" resultMap="JobResultMap">
@@ -61,7 +70,10 @@
             province = #{province}, city = #{city}, district = #{district}, address = #{address},
             latitude = #{latitude}, longitude = #{longitude},
             category_id = #{categoryId}, headcount = #{headcount}, deadline = #{deadline},
-            image_url = #{imageUrl}
+            image_url = #{imageUrl},
+            task_type = #{taskType}, pricing_mode = #{pricingMode}, price_per_unit = #{pricePerUnit},
+            total_items = #{totalItems}, external_task_id = #{externalTaskId}, external_system_type = #{externalSystemType},
+            auto_settle = #{autoSettle}
         WHERE id = #{id}
     </update>
 

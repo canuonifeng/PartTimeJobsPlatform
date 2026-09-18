@@ -27,7 +27,9 @@
                location, province, city, district, address, latitude, longitude,
                category_id, rate_type, rate_amount, status, published_at,
                headcount, accepted_count, deadline, created_at, updated_at,
-               close_reason, auto_approve, image_url
+               close_reason, auto_approve, image_url,
+               task_type, pricing_mode, price_per_unit, total_items,
+               external_task_id, external_system_type, auto_settle
         FROM jobs
     </sql>
 
@@ -54,6 +56,9 @@
         </if>
         <if test="categoryId != null">
             AND category_id = #{categoryId}
+        </if>
+        <if test="taskType != null and taskType != ''">
+            AND task_type = #{taskType}
         </if>
     </select>
 
