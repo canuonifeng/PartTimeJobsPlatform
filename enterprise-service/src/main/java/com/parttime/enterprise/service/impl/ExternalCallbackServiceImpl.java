@@ -15,6 +15,7 @@ import com.parttime.enterprise.pojo.entity.ExternalWorkerMapping;
 import com.parttime.enterprise.pojo.entity.Job;
 import com.parttime.enterprise.pojo.entity.JobSchedule;
 import com.parttime.enterprise.pojo.entity.ScheduleApplication;
+import com.parttime.enterprise.service.AnnotationSettlementService;
 import com.parttime.enterprise.service.ExternalCallbackService;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,6 +40,8 @@ public class ExternalCallbackServiceImpl implements ExternalCallbackService {
     private AnnotationTaskOrderMapper taskOrderMapper;
     @Resource
     private ScheduleApplicationMapper applicationMapper;
+    @Resource
+    private AnnotationSettlementService annotationSettlementService;
 
     @Override
     @Transactional
@@ -136,6 +139,7 @@ public class ExternalCallbackServiceImpl implements ExternalCallbackService {
         if (Boolean.TRUE.equals(cmd.getPassed())) {
             order.setStatus(AnnotationTaskOrderStatus.COMPLETED.getCode());
             order.setCompletedAt(LocalDateTime.now());
+            annotationSettlementService.settleAnnotationTask(order, job);
         } else {
             order.setStatus(AnnotationTaskOrderStatus.REJECTED.getCode());
         }
