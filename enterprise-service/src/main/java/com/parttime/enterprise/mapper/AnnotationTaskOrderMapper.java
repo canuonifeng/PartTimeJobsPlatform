@@ -23,6 +23,10 @@ public interface AnnotationTaskOrderMapper {
 
     AnnotationTaskOrder selectByExternalSubmissionId(String externalSubmissionId);
 
+    AnnotationTaskOrder selectByJobIdAndScheduleIdAndWorkerId(@Param("jobId") Long jobId,
+                                                              @Param("scheduleId") Long scheduleId,
+                                                              @Param("workerId") Long workerId);
+
     List<AnnotationTaskOrder> findPage(@Param("companyId") Long companyId,
                                        @Param("workerId") Long workerId,
                                        @Param("jobId") Long jobId,

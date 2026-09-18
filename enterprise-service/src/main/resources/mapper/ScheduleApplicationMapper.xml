@@ -216,4 +216,8 @@
         </if>
     </select>
 
+    <select id="findByScheduleIdAndWorkerId" resultMap="ScheduleApplicationResultMap">
+        SELECT * FROM schedule_applications WHERE schedule_id = #{scheduleId} AND worker_id = #{workerId} LIMIT 1
+    </select>
+
 </mapper>

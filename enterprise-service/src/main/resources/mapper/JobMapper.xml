@@ -88,4 +88,8 @@
         </foreach>
     </select>
 
+    <select id="findByExternalTaskId" resultMap="JobResultMap">
+        SELECT * FROM jobs WHERE external_task_id = #{externalTaskId} LIMIT 1
+    </select>
+
 </mapper>

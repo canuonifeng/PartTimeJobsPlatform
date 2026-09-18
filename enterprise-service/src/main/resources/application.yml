@@ -28,6 +28,10 @@ wechat:
   token-url: ${WECHAT_TOKEN_URL:https://api.weixin.qq.com/cgi-bin/token}
   code-url: ${WECHAT_CODE_URL:https://api.weixin.qq.com/wxa/getwxacodeunlimit}
 
+external:
+  callback:
+    api-key: ${EXTERNAL_CALLBACK_API_KEY:}
+
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
   type-aliases-package: com.parttime.enterprise.pojo.entity

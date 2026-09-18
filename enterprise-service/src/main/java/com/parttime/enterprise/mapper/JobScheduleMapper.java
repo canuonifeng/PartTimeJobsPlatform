@@ -52,4 +52,6 @@ public interface JobScheduleMapper {
                                              @Param("pageSize") int pageSize);
 
     long countApplicants(@Param("scheduleId") Long scheduleId, @Param("status") String status);
+
+    JobSchedule findByExternalBatchId(String externalBatchId);
 }

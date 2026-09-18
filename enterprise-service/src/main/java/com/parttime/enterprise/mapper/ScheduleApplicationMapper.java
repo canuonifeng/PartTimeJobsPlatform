@@ -57,4 +57,7 @@ public interface ScheduleApplicationMapper {
                  @Param("jobTitle") String jobTitle,
                  @Param("scheduleId") Long scheduleId,
                  @Param("status") String status);
+
+    ScheduleApplication findByScheduleIdAndWorkerId(@Param("scheduleId") Long scheduleId,
+                                                     @Param("workerId") Long workerId);
 }

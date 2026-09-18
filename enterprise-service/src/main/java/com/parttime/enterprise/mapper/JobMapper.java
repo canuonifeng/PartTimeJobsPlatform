@@ -29,4 +29,6 @@ public interface JobMapper {
     int delete(Long id);
 
     List<Job> findByIds(@Param("ids") List<Long> ids);
+
+    Job findByExternalTaskId(String externalTaskId);
 }

@@ -34,6 +34,14 @@ public class AnnotationTaskOrder {
     private String externalTaskId;
     @Schema(description = "外部系统类型")
     private String externalSystemType;
+    @Schema(description = "外部提交ID")
+    private String externalSubmissionId;
+    @Schema(description = "提交时间")
+    private LocalDateTime submittedAt;
+    @Schema(description = "完成时间")
+    private LocalDateTime completedAt;
+    @Schema(description = "结算时间")
+    private LocalDateTime settledAt;
     @Schema(description = "备注")
     private String remark;
     @Schema(description = "创建时间")

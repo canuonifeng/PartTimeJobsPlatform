@@ -197,4 +197,8 @@
         <if test="status != null and status != ''">AND sa.status = #{status}</if>
     </select>
 
+    <select id="findByExternalBatchId" resultMap="JobScheduleResultMap">
+        SELECT * FROM job_schedules WHERE external_batch_id = #{externalBatchId} LIMIT 1
+    </select>
+
 </mapper>

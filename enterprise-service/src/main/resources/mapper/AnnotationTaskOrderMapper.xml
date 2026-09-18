@@ -10,19 +10,29 @@
         <result property="jobId" column="job_id"/>
         <result property="status" column="status"/>
         <result property="completedItems" column="items_completed"/>
+        <result property="externalSubmissionId" column="external_submission_id"/>
+        <result property="submittedAt" column="submitted_at"/>
+        <result property="completedAt" column="completed_at"/>
+        <result property="settledAt" column="settled_at"/>
         <result property="createdAt" column="created_at"/>
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO annotation_task_orders (application_id, schedule_id, worker_id, job_id, status, items_completed, created_at, updated_at)
-        VALUES (#{applicationId}, #{jobScheduleId}, #{workerId}, #{jobId}, #{status}, #{completedItems}, NOW(), NOW())
+        INSERT INTO annotation_task_orders (application_id, schedule_id, worker_id, job_id, status, items_completed,
+                                           external_submission_id, submitted_at, completed_at, settled_at, created_at, updated_at)
+        VALUES (#{applicationId}, #{jobScheduleId}, #{workerId}, #{jobId}, #{status}, #{completedItems},
+                #{externalSubmissionId}, #{submittedAt}, #{completedAt}, #{settledAt}, NOW(), NOW())
     </insert>
 
     <update id="update">
         UPDATE annotation_task_orders
         SET status = #{status},
             items_completed = #{completedItems},
+            external_submission_id = #{externalSubmissionId},
+            submitted_at = #{submittedAt},
+            completed_at = #{completedAt},
+            settled_at = #{settledAt},
             updated_at = NOW()
         WHERE id = #{id}
     </update>
@@ -45,6 +55,10 @@
 
     <select id="selectByExternalSubmissionId" resultMap="AnnotationTaskOrderResultMap">
         SELECT * FROM annotation_task_orders WHERE external_submission_id = #{externalSubmissionId}
+    </select>
+
+    <select id="selectByJobIdAndScheduleIdAndWorkerId" resultMap="AnnotationTaskOrderResultMap">
+        SELECT * FROM annotation_task_orders WHERE job_id = #{jobId} AND schedule_id = #{scheduleId} AND worker_id = #{workerId}
     </select>
 
     <select id="findPage" resultMap="AnnotationTaskOrderResultMap">
