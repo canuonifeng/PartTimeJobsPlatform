@@ -113,7 +113,7 @@ class WorkerServiceTest {
 
     @Test
     void loginWithWechat_shouldReturnResponseWithToken() {
-        LoginVO response = workerService.loginWithWechat("test_code");
+        LoginVO response = workerService.loginWithWechat("test_code", null);
 
         assertThat(response).isNotNull();
         assertThat(response.getToken()).isNotBlank();
@@ -123,8 +123,8 @@ class WorkerServiceTest {
 
     @Test
     void loginWithWechat_sameCode_shouldReturnSameWorker() {
-        LoginVO r1 = workerService.loginWithWechat("same_code");
-        LoginVO r2 = workerService.loginWithWechat("same_code");
+        LoginVO r1 = workerService.loginWithWechat("same_code", null);
+        LoginVO r2 = workerService.loginWithWechat("same_code", null);
 
         assertThat(r1.getWorkerId()).isEqualTo(r2.getWorkerId());
         assertThat(r1.getOpenId()).isEqualTo(r2.getOpenId());
@@ -132,8 +132,8 @@ class WorkerServiceTest {
 
     @Test
     void loginWithWechat_differentCodes_shouldReturnDifferentWorkers() {
-        LoginVO r1 = workerService.loginWithWechat("code_1");
-        LoginVO r2 = workerService.loginWithWechat("code_2");
+        LoginVO r1 = workerService.loginWithWechat("code_1", null);
+        LoginVO r2 = workerService.loginWithWechat("code_2", null);
 
         assertThat(r1.getWorkerId()).isNotEqualTo(r2.getWorkerId());
         assertThat(r1.getOpenId()).isNotEqualTo(r2.getOpenId());
@@ -142,7 +142,7 @@ class WorkerServiceTest {
     @Test
     void loginWithWechatPhone_shouldSupportPhoneCode() {
         LoginVO response = workerService.loginWithWechatPhone(
-                new com.parttime.cservice.pojo.cmd.WeChatPhoneLoginCmd("wx_code", "mock_phone_13900139000", null, null));
+                new com.parttime.cservice.pojo.cmd.WeChatPhoneLoginCmd("wx_code", "mock_phone_13900139000", null, null, null), null);
 
         assertThat(response).isNotNull();
         assertThat(response.getToken()).isNotBlank();
@@ -152,7 +152,7 @@ class WorkerServiceTest {
 
     @Test
     void getWorkerByOpenId_shouldReturnWorker() {
-        LoginVO loginResponse = workerService.loginWithWechat("find_by_openid");
+        LoginVO loginResponse = workerService.loginWithWechat("find_by_openid", null);
         WorkerVO worker = workerService.getWorkerByOpenId("openid_find_by_openid");
 
         assertThat(worker).isNotNull();

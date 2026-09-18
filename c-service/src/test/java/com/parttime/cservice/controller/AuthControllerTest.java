@@ -116,7 +116,7 @@ class AuthControllerTest {
     void wechatLogin_shouldReturn200WithToken() throws Exception {
         LoginVO wechatResponse = new LoginVO("wechat.jwt.token", 1L, "openid_123", "nickname");
 
-        when(workerService.loginWithWechat("test_code")).thenReturn(wechatResponse);
+        when(workerService.loginWithWechat("test_code", null)).thenReturn(wechatResponse);
 
         mockMvc.perform(post("/api/worker/auth/wechat-login")
                         .contentType(MediaType.APPLICATION_JSON)
