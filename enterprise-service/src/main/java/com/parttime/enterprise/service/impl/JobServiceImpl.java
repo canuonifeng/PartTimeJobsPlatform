@@ -2,6 +2,8 @@ package com.parttime.enterprise.service.impl;
 
 import com.parttime.enterprise.enums.JobRateType;
 import com.parttime.enterprise.enums.JobStatus;
+import com.parttime.enterprise.enums.TaskType;
+import com.parttime.enterprise.enums.PricingMode;
 import com.parttime.enterprise.exception.BusinessException;
 import com.parttime.enterprise.mapper.ScheduleApplicationMapper;
 import com.parttime.enterprise.mapper.JobCategoryMapper;
@@ -28,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -80,6 +83,29 @@ public class JobServiceImpl implements JobService {
         job.setStatus("DRAFT");
         job.setDeadline(request.getDeadline());
         job.setImageUrl(request.getImageUrl());
+
+        if (request.getTaskType() != null) {
+            job.setTaskType(request.getTaskType().name());
+        }
+        if (request.getPricingMode() != null) {
+            job.setPricingMode(request.getPricingMode().name());
+        }
+        job.setPricePerUnit(request.getPricePerUnit());
+        job.setTotalItems(request.getTotalItems());
+        job.setExternalTaskId(request.getExternalTaskId());
+        job.setExternalSystemType(request.getExternalSystemType());
+
+        if (TaskType.ANNOTATION.equals(request.getTaskType())) {
+            if (request.getPricingMode() == null) {
+                throw new BusinessException("标注任务包必须选择计价模式");
+            }
+            if (request.getPricePerUnit() == null || request.getPricePerUnit().compareTo(BigDecimal.ZERO) <= 0) {
+                throw new BusinessException("标注任务包单价必须大于0");
+            }
+            if (request.getTotalItems() == null || request.getTotalItems() <= 0) {
+                throw new BusinessException("标注任务包总数量必须大于0");
+            }
+        }
 
         jobMapper.insert(job);
         replaceJobTags(job.getId(), request.getTagIds());
@@ -467,6 +493,17 @@ public class JobServiceImpl implements JobService {
         }
         response.setHeadcount(job.getHeadcount());
         response.setImageUrl(job.getImageUrl());
+        if (job.getTaskType() != null) {
+            response.setTaskType(TaskType.valueOf(job.getTaskType()));
+        }
+        if (job.getPricingMode() != null) {
+            response.setPricingMode(PricingMode.valueOf(job.getPricingMode()));
+        }
+        response.setPricePerUnit(job.getPricePerUnit());
+        response.setTotalItems(job.getTotalItems());
+        response.setExternalTaskId(job.getExternalTaskId());
+        response.setExternalSystemType(job.getExternalSystemType());
+        response.setAutoSettle(job.getAutoSettle());
         response.setStatus(JobStatus.valueOf(job.getStatus()));
         response.setApplicationCount(scheduleApplicationMapper.countByJobId(job.getId()));
         response.setPendingApplicationCount(scheduleApplicationMapper.countByJobIdAndStatus(job.getId(), "PENDING"));
