@@ -283,18 +283,20 @@ public class JobServiceImpl implements JobService {
             SystemConfig config = systemConfigMapper.findByKey("auto_approve_applications").orElse(null);
             autoApprove = config != null && "true".equalsIgnoreCase(config.getConfigValue());
         }
+        // 标注任务不走自动审批，始终为待审核状态
+        boolean effectiveAutoApprove = autoApprove && !"ANNOTATION".equals(job.getTaskType());
         // Batch insert all applications
         List<ScheduleApplication> applications = newIds.stream().map(scheduleId -> {
             ScheduleApplication sa = new ScheduleApplication();
             sa.setScheduleId(scheduleId);
             sa.setWorkerId(workerId);
-            sa.setStatus(autoApprove ? "ACCEPTED" : "PENDING");
+            sa.setStatus(effectiveAutoApprove ? "ACCEPTED" : "PENDING");
             return sa;
         }).collect(Collectors.toList());
         scheduleApplicationMapper.batchInsert(applications);
 
         // Handle auto-approve: create shifts and send notifications
-        if (autoApprove) {
+        if (effectiveAutoApprove) {
             for (ScheduleApplication sa : applications) {
                 createShiftForApplication(sa, job, schedMap.get(sa.getScheduleId()));
                 sendAutoApproveNotification(sa, job);
