@@ -345,6 +345,8 @@ public class ScheduleServiceImpl implements ScheduleService {
         if (request.getScheduleName() != null) schedule.setScheduleName(request.getScheduleName());
         if (request.getContactName() != null) schedule.setContactName(request.getContactName());
         if (request.getContactPhone() != null) schedule.setContactPhone(request.getContactPhone());
+        if (request.getTotalItems() != null) schedule.setTotalItems(request.getTotalItems());
+        if (request.getExternalBatchId() != null) schedule.setExternalBatchId(request.getExternalBatchId());
         if (request.getStatus() != null) schedule.setStatus(request.getStatus());
         jobScheduleMapper.update(schedule);
         return findManagedSchedule(schedule.getId());
@@ -363,6 +365,8 @@ public class ScheduleServiceImpl implements ScheduleService {
         target.setSlotsAvailable(source.getSlotsAvailable());
         target.setContactName(source.getContactName());
         target.setContactPhone(source.getContactPhone());
+        target.setTotalItems(source.getTotalItems());
+        target.setExternalBatchId(source.getExternalBatchId());
         target.setStatus("ACTIVE");
         jobScheduleMapper.insert(target);
         return findManagedSchedule(target.getId());
@@ -386,6 +390,8 @@ public class ScheduleServiceImpl implements ScheduleService {
                 schedule.setSlotsAvailable(job.getHeadcount());
                 schedule.setContactName(job.getContactName());
                 schedule.setContactPhone(job.getContactPhone());
+                schedule.setTotalItems(request.getTotalItems());
+                schedule.setExternalBatchId(request.getExternalBatchId());
                 schedule.setStatus("ACTIVE");
                 jobScheduleMapper.insert(schedule);
                 result.add(findManagedSchedule(schedule.getId()));

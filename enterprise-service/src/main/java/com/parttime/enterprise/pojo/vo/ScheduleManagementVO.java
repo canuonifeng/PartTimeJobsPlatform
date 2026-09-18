@@ -51,6 +51,10 @@ public class ScheduleManagementVO {
     private Integer correctionPendingCount;
     @Schema(description = "状态")
     private String status;
+    @Schema(description = "总数量")
+    private Integer totalItems;
+    @Schema(description = "外部批次ID")
+    private String externalBatchId;
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
 }

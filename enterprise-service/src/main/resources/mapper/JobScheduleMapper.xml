@@ -41,6 +41,8 @@
         <result property="settledCount" column="settled_count"/>
         <result property="correctionPendingCount" column="correction_pending_count"/>
         <result property="status" column="status"/>
+        <result property="totalItems" column="total_items"/>
+        <result property="externalBatchId" column="external_batch_id"/>
         <result property="createdAt" column="created_at"/>
     </resultMap>
 
@@ -155,7 +157,7 @@
                COALESCE(sh.exception_count, 0) exception_count,
                COALESCE(sh.settled_count, 0) settled_count,
                COALESCE(sh.correction_pending_count, 0) correction_pending_count,
-               js.status, js.created_at
+               js.status, js.total_items, js.external_batch_id, js.created_at
         <include refid="managementWhere"/>
         ORDER BY js.schedule_date DESC, js.start_time DESC
         LIMIT #{pageSize} OFFSET #{offset}

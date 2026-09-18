@@ -22,4 +22,8 @@ public class ScheduleBatchCreateCmd {
     private LocalTime startTime;
     @Schema(description = "结束时间")
     private LocalTime endTime;
+    @Schema(description = "总数量")
+    private Integer totalItems;
+    @Schema(description = "外部批次ID")
+    private String externalBatchId;
 }
