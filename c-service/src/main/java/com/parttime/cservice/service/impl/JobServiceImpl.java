@@ -77,8 +77,8 @@ public class JobServiceImpl implements JobService {
     public PageVO<JobSummaryVO> searchJobs(String keyword, Long categoryId, String location,
                                             BigDecimal minRate, BigDecimal maxRate,
                                             BigDecimal latitude, BigDecimal longitude,
-                                            int page, int pageSize) {
-        List<Job> jobs = jobMapper.search(keyword, location, categoryId, null);
+                                            String taskType, int page, int pageSize) {
+        List<Job> jobs = jobMapper.search(keyword, location, categoryId, taskType);
         LocalDateTime now = LocalDateTime.now();
         // 自动关闭已过报名截止的岗位
         List<Long> expiredIds = jobs.stream()
@@ -425,6 +425,10 @@ public class JobServiceImpl implements JobService {
         summary.setMaxRate(maxRate);
         summary.setRateTypes(rateTypes);
         summary.setRates(rateVOs);
+        summary.setTaskType(job.getTaskType());
+        summary.setPricingMode(job.getPricingMode());
+        summary.setPricePerUnit(job.getPricePerUnit());
+        summary.setTotalItems(job.getTotalItems());
         return summary;
     }
 
@@ -470,6 +474,10 @@ public class JobServiceImpl implements JobService {
         detail.setCompanyLogo(company != null ? company.getCompanyLogo() : null);
         detail.setImageUrl(job.getImageUrl());
         detail.setCategoryName(category != null ? category.getName() : null);
+        detail.setTaskType(job.getTaskType());
+        detail.setPricingMode(job.getPricingMode());
+        detail.setPricePerUnit(job.getPricePerUnit());
+        detail.setTotalItems(job.getTotalItems());
         detail.setStatus(job.getStatus());
         detail.setHeadcount(job.getHeadcount());
         detail.setDeadline(job.getDeadline());
