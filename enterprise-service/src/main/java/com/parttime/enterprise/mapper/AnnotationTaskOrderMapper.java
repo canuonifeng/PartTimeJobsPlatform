@@ -22,4 +22,16 @@ public interface AnnotationTaskOrderMapper {
     AnnotationTaskOrder selectByApplicationId(Long applicationId);
 
     AnnotationTaskOrder selectByExternalSubmissionId(String externalSubmissionId);
+
+    List<AnnotationTaskOrder> findPage(@Param("companyId") Long companyId,
+                                       @Param("workerId") Long workerId,
+                                       @Param("jobId") Long jobId,
+                                       @Param("status") String status,
+                                       @Param("offset") int offset,
+                                       @Param("pageSize") int pageSize);
+
+    int countPage(@Param("companyId") Long companyId,
+                  @Param("workerId") Long workerId,
+                  @Param("jobId") Long jobId,
+                  @Param("status") String status);
 }

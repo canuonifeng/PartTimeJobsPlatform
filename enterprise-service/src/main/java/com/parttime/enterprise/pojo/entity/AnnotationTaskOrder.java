@@ -10,12 +10,14 @@ public class AnnotationTaskOrder {
 
     @Schema(description = "标注任务订单ID")
     private Long id;
+    @Schema(description = "报名ID")
+    private Long applicationId;
     @Schema(description = "排班ID")
     private Long jobScheduleId;
     @Schema(description = "工人ID")
     private Long workerId;
-    @Schema(description = "企业ID")
-    private Long companyId;
+    @Schema(description = "岗位ID")
+    private Long jobId;
     @Schema(description = "订单状态: PENDING/IN_PROGRESS/SUBMITTED/COMPLETED/REJECTED")
     private String status;
     @Schema(description = "完成数量")

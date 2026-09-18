@@ -4,8 +4,10 @@
 
     <resultMap id="AnnotationTaskOrderResultMap" type="com.parttime.enterprise.pojo.entity.AnnotationTaskOrder" autoMapping="true">
         <id property="id" column="id"/>
+        <result property="applicationId" column="application_id"/>
         <result property="jobScheduleId" column="schedule_id"/>
         <result property="workerId" column="worker_id"/>
+        <result property="jobId" column="job_id"/>
         <result property="status" column="status"/>
         <result property="completedItems" column="items_completed"/>
         <result property="createdAt" column="created_at"/>
@@ -13,8 +15,8 @@
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO annotation_task_orders (schedule_id, worker_id, status, items_completed, created_at, updated_at)
-        VALUES (#{jobScheduleId}, #{workerId}, #{status}, #{completedItems}, NOW(), NOW())
+        INSERT INTO annotation_task_orders (application_id, schedule_id, worker_id, job_id, status, items_completed, created_at, updated_at)
+        VALUES (#{applicationId}, #{jobScheduleId}, #{workerId}, #{jobId}, #{status}, #{completedItems}, NOW(), NOW())
     </insert>
 
     <update id="update">
@@ -43,6 +45,44 @@
 
     <select id="selectByExternalSubmissionId" resultMap="AnnotationTaskOrderResultMap">
         SELECT * FROM annotation_task_orders WHERE external_submission_id = #{externalSubmissionId}
+    </select>
+
+    <select id="findPage" resultMap="AnnotationTaskOrderResultMap">
+        SELECT * FROM annotation_task_orders
+        <where>
+            <if test="companyId != null">
+                AND job_id IN (SELECT id FROM jobs WHERE company_id = #{companyId})
+            </if>
+            <if test="workerId != null">
+                AND worker_id = #{workerId}
+            </if>
+            <if test="jobId != null">
+                AND job_id = #{jobId}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="countPage" resultType="int">
+        SELECT COUNT(*) FROM annotation_task_orders
+        <where>
+            <if test="companyId != null">
+                AND job_id IN (SELECT id FROM jobs WHERE company_id = #{companyId})
+            </if>
+            <if test="workerId != null">
+                AND worker_id = #{workerId}
+            </if>
+            <if test="jobId != null">
+                AND job_id = #{jobId}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
     </select>
 
 </mapper>

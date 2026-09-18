@@ -1,6 +1,7 @@
 package com.parttime.enterprise.service.impl;
 
 import com.parttime.enterprise.enums.ApplicationStatus;
+import com.parttime.enterprise.enums.TaskType;
 import com.parttime.enterprise.exception.BusinessException;
 import com.parttime.enterprise.mapper.CompanyWorkerMapper;
 import com.parttime.enterprise.mapper.ScheduleApplicationMapper;
@@ -18,6 +19,7 @@ import com.parttime.enterprise.pojo.entity.ScheduleShift;
 import com.parttime.enterprise.pojo.vo.ScheduleApplicationVO;
 import com.parttime.enterprise.pojo.vo.PageVO;
 import com.parttime.enterprise.service.ApplicationService;
+import com.parttime.enterprise.service.TaskOrderService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.dao.DuplicateKeyException;
@@ -49,6 +51,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     private CompanyWorkerMapper companyWorkerMapper;
     @Resource
     private WorkerNotificationMapper workerNotificationMapper;
+    @Resource
+    private TaskOrderService taskOrderService;
 
     @Override
     public PageVO<ScheduleApplicationVO> getApplicationsByJob(Long companyId, Long jobId, String jobTitle, Long scheduleId, String status, Integer page, Integer pageSize) {
@@ -89,7 +93,14 @@ public class ApplicationServiceImpl implements ApplicationService {
             app.setStatus("ACCEPTED");
         }
 
-        boolean shiftCreated = ensureShifts(app, job);
+        boolean isAnnotation = TaskType.ANNOTATION.getCode().equals(job.getTaskType());
+        boolean shiftCreated = false;
+        if (isAnnotation) {
+            taskOrderService.createByApplication(applicationId);
+        } else {
+            shiftCreated = ensureShifts(app, job);
+        }
+
         companyWorkerMapper.upsert(job.getCompanyId(), app.getWorkerId());
         workerNotificationMapper.insertWorkerNotification(app.getWorkerId(), "APPLICATION_ACCEPTED", "application",
                 "报名已通过", "您报名的" + job.getTitle() + "已通过审核", "APPLICATION", app.getId());
