@@ -1,6 +1,7 @@
 package com.parttime.enterprise.service.impl;
 
 import com.parttime.enterprise.enums.AnnotationTaskOrderStatus;
+import com.parttime.enterprise.enums.PricingMode;
 import com.parttime.enterprise.enums.TaskType;
 import com.parttime.enterprise.mapper.AnnotationTaskOrderMapper;
 import com.parttime.enterprise.mapper.JobMapper;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -58,6 +60,10 @@ public class TaskOrderServiceImpl implements TaskOrderService {
         order.setJobId(job.getId());
         order.setStatus(AnnotationTaskOrderStatus.PENDING.getCode());
         order.setCompletedItems(0);
+        order.setTotalItems(job.getTotalItems());
+        order.setPricingMode(job.getPricingMode());
+        order.setUnitPrice(job.getPricePerUnit());
+        order.setTotalAmount(calculateTotalAmount(job));
         taskOrderMapper.insert(order);
         return taskOrderMapper.selectById(order.getId());
     }
@@ -81,5 +87,15 @@ public class TaskOrderServiceImpl implements TaskOrderService {
     @Override
     public AnnotationTaskOrder getTaskOrderById(Long id) {
         return taskOrderMapper.selectById(id);
+    }
+
+    private BigDecimal calculateTotalAmount(Job job) {
+        if (job.getPricingMode() == null || job.getPricePerUnit() == null || job.getTotalItems() == null) {
+            return null;
+        }
+        return switch (PricingMode.valueOf(job.getPricingMode())) {
+            case PER_ITEM -> job.getPricePerUnit().multiply(BigDecimal.valueOf(job.getTotalItems()));
+            case PER_PACKAGE -> job.getPricePerUnit();
+        };
     }
 }
