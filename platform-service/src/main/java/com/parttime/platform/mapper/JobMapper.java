@@ -24,4 +24,6 @@ public interface JobMapper {
     int updateTop(@Param("id") Long id, @Param("isTop") Boolean isTop);
 
     int updateRecommended(@Param("id") Long id, @Param("isRecommended") Boolean isRecommended);
+
+    List<Job> findRecommended();
 }

@@ -42,6 +42,7 @@
           </el-button>
           <el-button type="primary" size="small" text @click="handleAccounts(row)">账号管理</el-button>
           <el-button type="success" size="small" text @click="handleTopUp(row)">充值</el-button>
+          <el-button type="info" size="small" text @click="handleCredit(row)">信用</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -195,6 +196,28 @@
       <el-button type="primary" @click="confirmTopUp">确认充值</el-button>
     </template>
   </el-dialog>
+
+  <!-- 信用信息对话框 -->
+  <el-dialog v-model="creditDialog.visible" title="信用信息" width="440px">
+    <el-form label-width="80px">
+      <el-form-item label="企业">
+        <el-input :model-value="creditDialog.name" disabled />
+      </el-form-item>
+      <el-form-item label="当前信用分">
+        <el-input :model-value="creditDialog.creditScore" disabled />
+      </el-form-item>
+      <el-form-item label="调整分值">
+        <el-input-number v-model="creditDialog.delta" :min="-100" :max="100" style="width:100%" />
+      </el-form-item>
+      <el-form-item label="调整原因">
+        <el-input v-model="creditDialog.reason" type="textarea" :rows="2" placeholder="例如：违规扣分 / 申诉恢复" />
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="creditDialog.visible = false">取消</el-button>
+      <el-button type="primary" @click="confirmCredit">提交调整</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup>
@@ -204,10 +227,12 @@ import {
   listEnterprises, createEnterprise, updateEnterprise, suspendEnterprise, activateEnterprise,
   listAccounts, createAccount, updateAccount, resetPassword, deleteAccount, adjustEnterpriseBalance
 } from '../../api/enterprises'
+import { adjustCredit } from '../../api/reviews'
 
 const roleMap = { ADMIN: '管理员', HR: '人力资源', MANAGER: '运营经理', FINANCE: '财务' }
 
 const topUpDialog = ref({ visible: false, companyId: null, companyName: '', amount: 0, operatorName: '' })
+const creditDialog = ref({ visible: false, id: null, name: '', creditScore: 100, delta: 0, reason: '' })
 
 function getCurrentUsername() {
   try {
@@ -354,6 +379,17 @@ async function handleDeleteAccount(row) {
     const data = await listAccounts(accountDialog.value.enterpriseId)
     accountDialog.value.accounts = Array.isArray(data) ? data : []
   } catch { /* cancelled */ }
+}
+
+function handleCredit(row) {
+  creditDialog.value = { visible: true, id: row.id, name: row.companyName, creditScore: row.creditScore ?? 100, delta: 0, reason: '' }
+}
+
+async function confirmCredit() {
+  await adjustCredit({ targetType: 'ENTERPRISE', targetId: creditDialog.value.id, delta: creditDialog.value.delta, reason: creditDialog.value.reason, operatorName: getCurrentUsername() })
+  ElMessage.success('信用分已调整')
+  creditDialog.value.visible = false
+  await fetchData()
 }
 
 onMounted(fetchData)

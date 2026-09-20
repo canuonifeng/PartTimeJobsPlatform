@@ -1,6 +1,8 @@
 package com.parttime.platform.controller;
 
 import com.parttime.platform.pojo.cmd.IdCmd;
+import com.parttime.platform.pojo.cmd.WithdrawalQueryCmd;
+import com.parttime.platform.pojo.cmd.WithdrawalRejectCmd;
 import com.parttime.platform.pojo.vo.ApiResponse;
 import com.parttime.platform.pojo.vo.PageVO;
 import com.parttime.platform.pojo.vo.WithdrawalRecordVO;
@@ -12,9 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/withdrawals")
@@ -25,9 +25,9 @@ public class WithdrawalRecordController {
 
     @Operation(summary = "提现记录列表")
     @PostMapping("/list")
-    public ApiResponse<List<WithdrawalRecordVO>> list(@RequestBody(required = false) Map<String, String> body) {
-        String status = body != null ? body.get("status") : null;
-        String keyword = body != null ? body.get("keyword") : null;
+    public ApiResponse<List<WithdrawalRecordVO>> list(@RequestBody(required = false) WithdrawalQueryCmd body) {
+        String status = body != null ? body.getStatus() : null;
+        String keyword = body != null ? body.getKeyword() : null;
         return ApiResponse.success(withdrawalRecordService.list(status, keyword));
     }
 
@@ -46,10 +46,8 @@ public class WithdrawalRecordController {
 
     @Operation(summary = "审核拒绝")
     @PostMapping("/reject")
-    public ApiResponse<Void> reject(@RequestBody Map<String, Object> body) {
-        Long id = Long.valueOf(body.get("id").toString());
-        String reason = body.get("reason") != null ? body.get("reason").toString() : null;
-        withdrawalRecordService.reject(id, reason);
+    public ApiResponse<Void> reject(@RequestBody WithdrawalRejectCmd body) {
+        withdrawalRecordService.reject(body.getId(), body.getReason());
         return ApiResponse.success();
     }
 }

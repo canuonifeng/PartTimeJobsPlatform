@@ -97,6 +97,7 @@ public class EnterpriseServiceImpl implements EnterpriseService {
         vo.setEmailSuffix(e.getEmailSuffix());
         vo.setCreatedAt(e.getCreatedAt());
         vo.setUpdatedAt(e.getUpdatedAt());
+        vo.setCreditScore(e.getCreditScore());
         return vo;
     }
 }

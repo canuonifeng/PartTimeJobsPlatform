@@ -14,5 +14,9 @@ public interface JobScheduleMapper {
 
     List<JobSchedule> findByJobId(Long jobId);
 
+    List<JobSchedule> findByFilters(@Param("status") String status,
+                                    @Param("companyId") Long companyId,
+                                    @Param("keyword") String keyword);
+
     int updateStatus(@Param("id") Long id, @Param("status") String status);
 }

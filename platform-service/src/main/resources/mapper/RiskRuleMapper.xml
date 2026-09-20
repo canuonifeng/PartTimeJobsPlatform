@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.RiskRuleMapper">
+
+    <resultMap id="RiskRuleResultMap" type="com.parttime.platform.pojo.entity.RiskRule">
+        <id property="id" column="id"/>
+        <result property="ruleName" column="rule_name"/>
+        <result property="ruleCode" column="rule_code"/>
+        <result property="ruleType" column="rule_type"/>
+        <result property="description" column="description"/>
+        <result property="triggerCondition" column="trigger_condition"/>
+        <result property="actionType" column="action_type"/>
+        <result property="actionConfig" column="action_config"/>
+        <result property="riskLevel" column="risk_level"/>
+        <result property="status" column="status"/>
+        <result property="triggerCount" column="trigger_count"/>
+        <result property="lastTriggerAt" column="last_trigger_at"/>
+        <result property="operatorId" column="operator_id"/>
+        <result property="operatorName" column="operator_name"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="RiskRuleResultMap">
+        SELECT * FROM risk_rules ORDER BY created_at DESC
+    </select>
+
+    <select id="findById" resultMap="RiskRuleResultMap">
+        SELECT * FROM risk_rules WHERE id = #{id}
+    </select>
+
+    <select id="findByCode" resultMap="RiskRuleResultMap">
+        SELECT * FROM risk_rules WHERE rule_code = #{ruleCode}
+    </select>
+
+    <insert id="insert" parameterType="com.parttime.platform.pojo.entity.RiskRule" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO risk_rules
+            (rule_name, rule_code, rule_type, description, trigger_condition,
+             action_type, action_config, risk_level, status, operator_name)
+        VALUES
+            (#{ruleName}, #{ruleCode}, #{ruleType}, #{description}, #{triggerCondition},
+             #{actionType}, #{actionConfig}, #{riskLevel}, #{status}, #{operatorName})
+    </insert>
+
+    <update id="update" parameterType="com.parttime.platform.pojo.entity.RiskRule">
+        UPDATE risk_rules
+        SET rule_name = #{ruleName},
+            rule_type = #{ruleType},
+            description = #{description},
+            trigger_condition = #{triggerCondition},
+            action_type = #{actionType},
+            action_config = #{actionConfig},
+            risk_level = #{riskLevel},
+            status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE risk_rules SET status = #{status} WHERE id = #{id}
+    </update>
+
+</mapper>

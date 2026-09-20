@@ -1,6 +1,7 @@
 package com.parttime.platform.controller;
 
 import com.parttime.platform.pojo.cmd.IdCmd;
+import com.parttime.platform.pojo.cmd.StatusQueryCmd;
 import com.parttime.platform.pojo.vo.ApiResponse;
 import com.parttime.platform.pojo.vo.JobReportVO;
 import com.parttime.platform.service.JobReportService;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/job-reports")
@@ -23,8 +23,8 @@ public class JobReportController {
 
     @Operation(summary = "获取举报列表")
     @PostMapping("/list")
-    public ApiResponse<List<JobReportVO>> list(@RequestBody(required = false) Map<String, String> body) {
-        String status = body != null ? body.get("status") : null;
+    public ApiResponse<List<JobReportVO>> list(@RequestBody(required = false) StatusQueryCmd body) {
+        String status = body != null ? body.getStatus() : null;
         return ApiResponse.success(jobReportService.list(status));
     }
 

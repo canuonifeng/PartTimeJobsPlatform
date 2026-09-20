@@ -16,6 +16,7 @@ public interface ScheduleApplicationMapper {
 
     List<ScheduleApplication> findByFilters(@Param("status") String status,
                                              @Param("companyId") Long companyId,
+                                             @Param("jobId") Long jobId,
                                              @Param("keyword") String keyword);
 
     int updateStatus(@Param("id") Long id, @Param("status") String status);

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.RiskBlacklistMapper">
+
+    <resultMap id="RiskBlacklistResultMap" type="com.parttime.platform.pojo.entity.RiskBlacklist">
+        <id property="id" column="id"/>
+        <result property="targetType" column="target_type"/>
+        <result property="targetId" column="target_id"/>
+        <result property="targetName" column="target_name"/>
+        <result property="targetValue" column="target_value"/>
+        <result property="reason" column="reason"/>
+        <result property="riskLevel" column="risk_level"/>
+        <result property="banType" column="ban_type"/>
+        <result property="banStartTime" column="ban_start_time"/>
+        <result property="banEndTime" column="ban_end_time"/>
+        <result property="operatorId" column="operator_id"/>
+        <result property="operatorName" column="operator_name"/>
+        <result property="status" column="status"/>
+        <result property="removedReason" column="removed_reason"/>
+        <result property="removedAt" column="removed_at"/>
+        <result property="removedById" column="removed_by_id"/>
+        <result property="removedByName" column="removed_by_name"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByFilters" resultMap="RiskBlacklistResultMap">
+        SELECT * FROM risk_blacklist
+        <where>
+            <if test="targetType != null and targetType != ''">
+                AND target_type = #{targetType}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (target_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR target_value LIKE CONCAT('%', #{keyword}, '%')
+                     OR reason LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findById" resultMap="RiskBlacklistResultMap">
+        SELECT * FROM risk_blacklist WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.parttime.platform.pojo.entity.RiskBlacklist" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO risk_blacklist
+            (target_type, target_id, target_name, target_value, reason, risk_level, ban_type,
+             ban_start_time, ban_end_time, operator_name, status)
+        VALUES
+            (#{targetType}, #{targetId}, #{targetName}, #{targetValue}, #{reason}, #{riskLevel}, #{banType},
+             #{banStartTime}, #{banEndTime}, #{operatorName}, 'ACTIVE')
+    </insert>
+
+    <update id="softRemove">
+        UPDATE risk_blacklist
+        SET status = 'REMOVED',
+            removed_reason = #{reason},
+            removed_at = NOW(),
+            removed_by_name = #{operatorName}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

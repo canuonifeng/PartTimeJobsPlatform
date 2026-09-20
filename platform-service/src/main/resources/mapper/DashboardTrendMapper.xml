@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.DashboardTrendMapper">
+
+    <resultMap id="TrendRowMap" type="com.parttime.platform.pojo.vo.DashboardVO$TrendDataPoint">
+        <result property="date" column="d"/>
+        <result property="count" column="c"/>
+    </resultMap>
+
+    <select id="countNewJobs" resultMap="TrendRowMap">
+        SELECT DATE(created_at) AS d, COUNT(*) AS c
+        FROM jobs
+        WHERE created_at >= #{start}
+        GROUP BY DATE(created_at)
+    </select>
+
+    <select id="countNewWorkers" resultMap="TrendRowMap">
+        SELECT DATE(created_at) AS d, COUNT(*) AS c
+        FROM c_worker
+        WHERE created_at >= #{start}
+        GROUP BY DATE(created_at)
+    </select>
+
+    <select id="countCompletedShifts" resultMap="TrendRowMap">
+        SELECT DATE(created_at) AS d, COUNT(*) AS c
+        FROM attendance_records
+        WHERE created_at >= #{start} AND status = 'COMPLETED'
+        GROUP BY DATE(created_at)
+    </select>
+
+    <select id="countTotalCompanies" resultType="int">
+        SELECT COUNT(*) FROM enterprises
+    </select>
+
+    <select id="countActiveJobs" resultType="int">
+        SELECT COUNT(*) FROM jobs WHERE status = 'PUBLISHED'
+    </select>
+
+    <select id="countTotalWorkers" resultType="int">
+        SELECT COUNT(*) FROM c_worker
+    </select>
+
+    <select id="countCompletedShiftsTotal" resultType="int">
+        SELECT COUNT(*) FROM attendance_records WHERE status = 'COMPLETED'
+    </select>
+
+    <select id="sumTransactionAmount" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0) FROM enterprise_balance_transactions
+    </select>
+
+</mapper>

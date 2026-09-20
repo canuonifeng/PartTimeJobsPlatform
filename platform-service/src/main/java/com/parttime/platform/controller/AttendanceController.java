@@ -1,6 +1,8 @@
 package com.parttime.platform.controller;
 
+import com.parttime.platform.pojo.cmd.AttendanceReviewCmd;
 import com.parttime.platform.pojo.cmd.IdCmd;
+import com.parttime.platform.pojo.cmd.JobIdCmd;
 import com.parttime.platform.pojo.cmd.JobQueryCmd;
 import com.parttime.platform.pojo.vo.ApiResponse;
 import com.parttime.platform.pojo.vo.AttendanceRecordVO;
@@ -13,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/attendance")
@@ -29,19 +30,22 @@ public class AttendanceController {
         return ApiResponse.success(attendanceService.list(cmd));
     }
 
+    @Operation(summary = "按职位获取考勤列表")
+    @PostMapping("/list-by-job")
+    public ApiResponse<List<AttendanceRecordVO>> listByJobId(@RequestBody JobIdCmd body) {
+        return ApiResponse.success(attendanceService.listByJobId(body.getJobId()));
+    }
+
     @Operation(summary = "获取考勤详情")
     @PostMapping("/detail")
     public ApiResponse<AttendanceRecordVO> detail(@RequestBody IdCmd body) {
         return ApiResponse.success(attendanceService.detail(body.getId()));
     }
 
-    @Operation(summary = "更新考勤状态")
+    @Operation(summary = "异常审核/补卡审批")
     @PostMapping("/update-status")
-    public ApiResponse<Void> updateStatus(@RequestBody Map<String, Object> body) {
-        Long id = Long.valueOf(body.get("id").toString());
-        String status = body.get("status").toString();
-        String remark = body.get("remark") != null ? body.get("remark").toString() : null;
-        attendanceService.updateStatus(id, status, remark);
+    public ApiResponse<Void> updateStatus(@RequestBody AttendanceReviewCmd body) {
+        attendanceService.updateStatus(body.getId(), body.getStatus(), body.getRemark());
         return ApiResponse.success();
     }
 }

@@ -15,7 +15,7 @@
     </resultMap>
 
     <select id="findAll" resultMap="WorkerResultMap">
-        SELECT id, name, phone, wechat_code, open_id, avatar_url, status, created_at, updated_at
+        SELECT id, name, phone, wechat_code, open_id, avatar_url, status, created_at, updated_at, credit_score
         FROM c_worker
         <where>
             <if test="status != null and status != ''">
@@ -29,12 +29,12 @@
     </select>
 
     <select id="findById" resultMap="WorkerResultMap">
-        SELECT id, name, phone, wechat_code, open_id, avatar_url, status, created_at, updated_at
+        SELECT id, name, phone, wechat_code, open_id, avatar_url, status, created_at, updated_at, credit_score
         FROM c_worker WHERE id = #{id}
     </select>
 
     <select id="findByIds" resultMap="WorkerResultMap">
-        SELECT id, name, phone, wechat_code, open_id, avatar_url, status, created_at, updated_at
+        SELECT id, name, phone, wechat_code, open_id, avatar_url, status, created_at, updated_at, credit_score
         FROM c_worker WHERE id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">
             #{id}

@@ -42,7 +42,7 @@ class BackendControllerStandardsTest {
                 if (line.contains("@PathVariable")) {
                     violations.add(path + ":" + (i + 1) + " @PathVariable is not allowed");
                 }
-                if (line.contains("@RequestBody Map") || line.contains("@RequestBody List") || line.contains("@RequestBody Set")) {
+                if (line.contains("@RequestBody Map<") || line.contains("@RequestBody List<") || line.contains("@RequestBody Set<")) {
                     violations.add(path + ":" + (i + 1) + " @RequestBody must use typed cmd");
                 }
                 if (line.contains("ApiResponse<Map") || line.matches(".*public\\s+Map<.*")) {

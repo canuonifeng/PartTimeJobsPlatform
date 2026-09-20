@@ -26,4 +26,6 @@ public class WorkerVO {
     private String status;
     @Schema(description = "注册时间")
     private LocalDateTime createdAt;
+    @Schema(description = "信用分")
+    private Integer creditScore;
 }

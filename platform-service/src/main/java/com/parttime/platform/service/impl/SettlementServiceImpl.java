@@ -1,64 +1,75 @@
 package com.parttime.platform.service.impl;
 
+import com.parttime.platform.exception.BusinessException;
+import com.parttime.platform.mapper.EnterpriseBalanceTransactionMapper;
+import com.parttime.platform.pojo.cmd.SettlementQueryCmd;
+import com.parttime.platform.pojo.entity.EnterpriseBalanceTransaction;
+import com.parttime.platform.pojo.vo.SettlementVO;
+import com.parttime.platform.pojo.vo.TransactionVO;
 import com.parttime.platform.service.SettlementService;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class SettlementServiceImpl implements SettlementService {
 
+    @Resource
+    private EnterpriseBalanceTransactionMapper enterpriseBalanceTransactionMapper;
+
     @Override
-    public List<Map<String, Object>> list(String status, String keyword) {
-        List<Map<String, Object>> list = new ArrayList<>();
-        for (int i = 1; i <= 10; i++) {
-            Map<String, Object> item = new HashMap<>();
-            item.put("id", (long) i);
-            item.put("settlementNo", "STL" + System.currentTimeMillis() + i);
-            item.put("workerName", "工人" + i);
-            item.put("enterpriseName", "企业" + (i % 5 + 1));
-            item.put("jobTitle", "职位" + i);
-            item.put("totalHours", new BigDecimal("8.5"));
-            item.put("totalAmount", new BigDecimal("170.00"));
-            item.put("serviceFee", new BigDecimal("8.50"));
-            item.put("actualPay", new BigDecimal("161.50"));
-            item.put("status", i % 3 == 0 ? "PAID" : i % 3 == 1 ? "PENDING" : "CANCELLED");
-            item.put("createdAt", LocalDateTime.now().minusDays(i));
-            list.add(item);
-        }
-        return list;
+    public List<SettlementVO> list(SettlementQueryCmd cmd) {
+        List<TransactionVO> rows = enterpriseBalanceTransactionMapper.findByFilters(
+                "SETTLEMENT", null, null, cmd.getCompanyId(), cmd.getKeyword());
+        return rows.stream().map(this::toVO).collect(Collectors.toList());
     }
 
     @Override
-    public Map<String, Object> detail(Long id) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("id", id);
-        result.put("settlementNo", "STL" + System.currentTimeMillis());
-        result.put("workerName", "测试工人");
-        result.put("enterpriseName", "测试企业");
-        result.put("jobTitle", "测试职位");
-        result.put("totalHours", new BigDecimal("8.5"));
-        result.put("basePay", new BigDecimal("170.00"));
-        result.put("bonus", new BigDecimal("20.00"));
-        result.put("deduction", new BigDecimal("5.00"));
-        result.put("totalAmount", new BigDecimal("185.00"));
-        result.put("serviceFee", new BigDecimal("9.25"));
-        result.put("actualPay", new BigDecimal("175.75"));
-        result.put("status", "PENDING");
-        result.put("createdAt", LocalDateTime.now().minusHours(2));
-        return result;
+    public SettlementVO detail(Long id) {
+        TransactionVO row = enterpriseBalanceTransactionMapper.findVoById(id)
+                .orElseThrow(() -> new BusinessException("结算记录不存在: " + id));
+        return toVO(row);
     }
 
     @Override
     public void confirm(Long id) {
+        enterpriseBalanceTransactionMapper.findVoById(id)
+                .orElseThrow(() -> new BusinessException("结算记录不存在: " + id));
     }
 
     @Override
+    @Transactional
     public void cancel(Long id, String reason) {
+        EnterpriseBalanceTransaction original = enterpriseBalanceTransactionMapper.findEntityById(id)
+                .orElseThrow(() -> new BusinessException("结算记录不存在: " + id));
+        if (!"SETTLEMENT".equals(original.getType())) {
+            throw new BusinessException("仅结算流水可撤销: " + id);
+        }
+        BigDecimal refund = original.getAmount().abs();
+        EnterpriseBalanceTransaction reversal = new EnterpriseBalanceTransaction();
+        reversal.setCompanyId(original.getCompanyId());
+        reversal.setAmount(refund);
+        reversal.setType("SETTLEMENT_REVERSE");
+        reversal.setDescription("撤销结算: 原单#" + id + (reason != null && !reason.isEmpty() ? "，原因: " + reason : ""));
+        reversal.setCreatedAt(LocalDateTime.now());
+        enterpriseBalanceTransactionMapper.insert(reversal);
+    }
+
+    private SettlementVO toVO(TransactionVO t) {
+        SettlementVO vo = new SettlementVO();
+        vo.setId(t.getId());
+        vo.setSettlementNo("STL" + t.getId());
+        vo.setCompanyName(t.getRelatedName());
+        vo.setAmount(t.getAmount() != null ? t.getAmount().abs() : null);
+        vo.setType(t.getType());
+        vo.setDescription(t.getRemark());
+        vo.setStatus("PAID");
+        vo.setCreatedAt(t.getCreatedAt());
+        return vo;
     }
 }

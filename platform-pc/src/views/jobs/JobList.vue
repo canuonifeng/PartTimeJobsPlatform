@@ -52,8 +52,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { listJobs, closeJob, reopenJob, setJobTop, setJobRecommended } from '../../api/jobs'
+
+const router = useRouter()
 
 const loading = ref(false)
 const jobs = ref([])
@@ -106,7 +109,7 @@ async function handleSetRecommended(row) {
 }
 
 function handleDetail(row) {
-  ElMessage.info('详情功能待开发')
+  router.push({ path: '/jobs/detail', query: { id: row.id } })
 }
 
 onMounted(() => {

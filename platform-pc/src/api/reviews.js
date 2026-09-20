@@ -15,3 +15,7 @@ export function markReviewViolation(id) {
 export function deleteReview(id) {
   return request.post('/reviews/delete', { id })
 }
+
+export function adjustCredit(data) {
+  return request.post('/reviews/adjust-credit', data)
+}

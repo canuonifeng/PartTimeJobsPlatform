@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.RiskWhitelistMapper">
+
+    <resultMap id="RiskWhitelistResultMap" type="com.parttime.platform.pojo.entity.RiskWhitelist">
+        <id property="id" column="id"/>
+        <result property="targetType" column="target_type"/>
+        <result property="targetId" column="target_id"/>
+        <result property="targetName" column="target_name"/>
+        <result property="targetValue" column="target_value"/>
+        <result property="reason" column="reason"/>
+        <result property="effectiveStartTime" column="effective_start_time"/>
+        <result property="effectiveEndTime" column="effective_end_time"/>
+        <result property="operatorId" column="operator_id"/>
+        <result property="operatorName" column="operator_name"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByFilters" resultMap="RiskWhitelistResultMap">
+        SELECT * FROM risk_whitelist
+        <where>
+            <if test="targetType != null and targetType != ''">
+                AND target_type = #{targetType}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (target_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR target_value LIKE CONCAT('%', #{keyword}, '%')
+                     OR reason LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="findById" resultMap="RiskWhitelistResultMap">
+        SELECT * FROM risk_whitelist WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.parttime.platform.pojo.entity.RiskWhitelist" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO risk_whitelist
+            (target_type, target_id, target_name, target_value, reason,
+             effective_start_time, effective_end_time, operator_name, status)
+        VALUES
+            (#{targetType}, #{targetId}, #{targetName}, #{targetValue}, #{reason},
+             #{effectiveStartTime}, #{effectiveEndTime}, #{operatorName}, 'ACTIVE')
+    </insert>
+
+    <update id="softRemove">
+        UPDATE risk_whitelist SET status = 'REMOVED' WHERE id = #{id}
+    </update>
+
+</mapper>

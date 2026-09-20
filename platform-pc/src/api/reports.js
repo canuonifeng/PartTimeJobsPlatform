@@ -12,6 +12,14 @@ export function getWorkerActivity(params) {
   return request.post('/reports/worker-activity', params)
 }
 
+export function getEnterpriseRanking(params) {
+  return request.post('/reports/enterprise-ranking', params)
+}
+
+export function getWorkerRanking(params) {
+  return request.post('/reports/worker-ranking', params)
+}
+
 export function getSupplyDemandAnalysis(params) {
   return request.post('/reports/supply-demand', params)
 }

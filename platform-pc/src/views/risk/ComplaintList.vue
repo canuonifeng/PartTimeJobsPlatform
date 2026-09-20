@@ -10,38 +10,43 @@
             <el-option label="已解决" value="RESOLVED" />
             <el-option label="已关闭" value="CLOSED" />
           </el-select>
+          <el-select v-model="query.complaintType" placeholder="投诉类型" size="small" style="width:120px;margin-right:8px" clearable @change="fetchData">
+            <el-option label="薪资纠纷" value="PAYMENT" />
+            <el-option label="排班问题" value="SCHEDULE" />
+            <el-option label="行为问题" value="BEHAVIOR" />
+            <el-option label="服务问题" value="SERVICE" />
+            <el-option label="其他" value="OTHER" />
+          </el-select>
+          <el-input v-model="query.keyword" placeholder="搜索工单/标题/当事人" size="small" style="width:200px;margin-right:8px" clearable @keyup.enter="fetchData" />
           <el-button type="primary" size="small" @click="fetchData">搜索</el-button>
         </div>
       </div>
     </template>
     <el-table :data="complaints" v-loading="loading" stripe style="width:100%">
-      <el-table-column prop="id" label="ID" width="70" />
-      <el-table-column prop="type" label="类型" width="100">
-        <template #default="{ row }">{{ row.type === 'WORKER_COMPLAINT' ? '工人投诉' : '企业投诉' }}</template>
+      <el-table-column prop="complaintNo" label="工单号" width="160" />
+      <el-table-column prop="complainantType" label="投诉人类型" width="100">
+        <template #default="{ row }">{{ row.complainantType === 'WORKER' ? '工人' : '企业' }}</template>
       </el-table-column>
       <el-table-column prop="complainantName" label="投诉人" width="120" />
-      <el-table-column prop="respondentName" label="被投诉方" width="120" />
-      <el-table-column prop="title" label="投诉标题" min-width="160" />
+      <el-table-column prop="accusedName" label="被投诉方" width="120" />
+      <el-table-column prop="title" label="投诉标题" min-width="160" show-overflow-tooltip />
       <el-table-column prop="priority" label="优先级" width="90">
         <template #default="{ row }">
-          <el-tag :type="row.priority === 'HIGH' ? 'danger' : row.priority === 'MEDIUM' ? 'warning' : 'info'">
-            {{ row.priority === 'HIGH' ? '高' : row.priority === 'MEDIUM' ? '中' : '低' }}
+          <el-tag :type="row.priority === 'URGENT' || row.priority === 'HIGH' ? 'danger' : row.priority === 'NORMAL' ? 'warning' : 'info'">
+            {{ priorityText(row.priority) }}
           </el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="status" label="状态" width="100">
         <template #default="{ row }">
-          <el-tag :type="row.status === 'RESOLVED' ? 'success' : row.status === 'PROCESSING' ? 'warning' : 'info'">
-            {{ row.status === 'RESOLVED' ? '已解决' : row.status === 'PROCESSING' ? '处理中' : row.status === 'CLOSED' ? '已关闭' : '待处理' }}
+          <el-tag :type="row.status === 'RESOLVED' ? 'success' : row.status === 'PROCESSING' ? 'warning' : row.status === 'CLOSED' ? 'info' : 'danger'">
+            {{ statusText(row.status) }}
           </el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="createdAt" label="提交时间" width="180" />
-      <el-table-column label="操作" width="220" fixed="right">
+      <el-table-column label="操作" width="120" fixed="right">
         <template #default="{ row }">
-          <el-button v-if="row.status === 'PENDING'" type="primary" size="small" text @click="handleStartProcess(row)">开始处理</el-button>
-          <el-button v-if="row.status === 'PROCESSING'" type="success" size="small" text @click="handleResolve(row)">标记解决</el-button>
-          <el-button v-if="row.status !== 'CLOSED'" type="info" size="small" text @click="handleClose(row)">关闭</el-button>
           <el-button type="primary" size="small" text @click="handleDetail(row)">详情</el-button>
         </template>
       </el-table-column>
@@ -51,36 +56,36 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { listComplaints } from '../../api/complaintAdmin'
 
+const router = useRouter()
 const loading = ref(false)
 const complaints = ref([])
-const query = ref({ status: '' })
+const query = ref({ status: '', complaintType: '', keyword: '' })
+
+function priorityText(p) {
+  return { URGENT: '紧急', HIGH: '高', NORMAL: '中', LOW: '低' }[p] || p
+}
+function statusText(s) {
+  return { PENDING: '待处理', PROCESSING: '处理中', RESOLVED: '已解决', CLOSED: '已关闭' }[s] || s
+}
 
 async function fetchData() {
-  complaints.value = [
-    { id: 1, type: 'WORKER_COMPLAINT', complainantName: '张三', respondentName: 'XX科技', title: '拖欠工资', priority: 'HIGH', status: 'PENDING', createdAt: '2024-01-15 10:30:00' },
-    { id: 2, type: 'ENTERPRISE_COMPLAINT', complainantName: 'YY公司', respondentName: '李四', title: '无故缺勤', priority: 'MEDIUM', status: 'PROCESSING', createdAt: '2024-01-15 09:20:00' },
-  ]
-}
-
-function handleStartProcess(row) {
-  ElMessage.success('已开始处理')
-  row.status = 'PROCESSING'
-}
-
-function handleResolve(row) {
-  ElMessage.success('已标记为解决')
-  row.status = 'RESOLVED'
-}
-
-function handleClose(row) {
-  ElMessage.success('已关闭')
-  row.status = 'CLOSED'
+  loading.value = true
+  try {
+    const res = await listComplaints(query.value)
+    complaints.value = res || []
+  } catch (e) {
+    ElMessage.error(e.message || '加载失败')
+  } finally {
+    loading.value = false
+  }
 }
 
 function handleDetail(row) {
-  ElMessage.info('详情弹窗待开发')
+  router.push({ path: '/risk/complaints/detail', query: { id: row.id } })
 }
 
 onMounted(() => {

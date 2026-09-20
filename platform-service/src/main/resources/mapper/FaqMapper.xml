@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.FaqMapper">
+
+    <resultMap id="FaqResultMap" type="com.parttime.platform.pojo.entity.Faq">
+        <id property="id" column="id"/>
+        <result property="question" column="question"/>
+        <result property="answer" column="answer"/>
+        <result property="category" column="category"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="helpfulCount" column="helpful_count"/>
+        <result property="notHelpfulCount" column="not_helpful_count"/>
+        <result property="status" column="status"/>
+        <result property="operatorId" column="operator_id"/>
+        <result property="operatorName" column="operator_name"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findById" resultMap="FaqResultMap">
+        SELECT * FROM faqs WHERE id = #{id}
+    </select>
+
+    <select id="findByFilters" resultMap="FaqResultMap">
+        SELECT * FROM faqs
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (question LIKE CONCAT('%', #{keyword}, '%') OR answer LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY sort_order ASC, id DESC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO faqs (question, answer, category, sort_order, status, operator_id, operator_name)
+        VALUES (#{question}, #{answer}, #{category}, #{sortOrder}, #{status}, #{operatorId}, #{operatorName})
+    </insert>
+
+    <update id="update">
+        UPDATE faqs
+        SET question = #{question}, answer = #{answer}, category = #{category},
+            sort_order = #{sortOrder}, status = #{status}, operator_id = #{operatorId}, operator_name = #{operatorName}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateSortOrder">
+        UPDATE faqs SET sort_order = #{sortOrder} WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM faqs WHERE id = #{id}
+    </delete>
+
+</mapper>

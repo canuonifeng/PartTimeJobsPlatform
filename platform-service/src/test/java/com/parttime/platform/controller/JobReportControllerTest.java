@@ -17,11 +17,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -45,23 +42,23 @@ class JobReportControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void listJobReports_shouldReturnList() throws Exception {
-        when(jobReportService.getJobReports(null)).thenReturn(List.of());
+        when(jobReportService.list(null)).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/admin/job-reports"))
+        mockMvc.perform(post("/api/admin/job-reports/list").contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isOk());
 
-        verify(jobReportService).getJobReports(null);
+        verify(jobReportService).list(null);
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     void listJobReports_withStatus_shouldReturnFiltered() throws Exception {
-        when(jobReportService.getJobReports("PENDING")).thenReturn(List.of());
+        when(jobReportService.list("PENDING")).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/admin/job-reports?status=PENDING"))
+        mockMvc.perform(post("/api/admin/job-reports/list").contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"PENDING\"}"))
                 .andExpect(status().isOk());
 
-        verify(jobReportService).getJobReports("PENDING");
+        verify(jobReportService).list("PENDING");
     }
 
     @Test
@@ -69,61 +66,38 @@ class JobReportControllerTest {
     void getJobReport_shouldReturnDetail() throws Exception {
         JobReportVO response = new JobReportVO();
         response.setId(1L);
-        response.setJobId(100L);
         response.setReason("Spam");
 
-        when(jobReportService.getJobReport(1L)).thenReturn(response);
+        when(jobReportService.detail(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/admin/job-reports").param("id", "1"))
+        mockMvc.perform(post("/api/admin/job-reports/detail").contentType(MediaType.APPLICATION_JSON).content("{\"id\":1}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.reason").value("Spam"));
 
-        verify(jobReportService).getJobReport(1L);
+        verify(jobReportService).detail(1L);
     }
 
     @Test
-    @WithMockUser(username = "1", roles = "ADMIN")
+    @WithMockUser(roles = "ADMIN")
     void dismissReport_shouldReturnOk() throws Exception {
-        JobReportVO response = new JobReportVO();
-        response.setId(1L);
-        response.setStatus("DISMISSED");
+        mockMvc.perform(post("/api/admin/job-reports/dismiss").contentType(MediaType.APPLICATION_JSON).content("{\"id\":1}"))
+                .andExpect(status().isOk());
 
-        when(jobReportService.dismissReport(eq(1L), any(), any())).thenReturn(response);
-
-        String json = "{\"id\":1,\"remark\":\"No violation\"}";
-
-        mockMvc.perform(post("/api/admin/job-reports/dismiss")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status").value("DISMISSED"));
-
-        verify(jobReportService).dismissReport(eq(1L), any(), any());
+        verify(jobReportService).dismiss(1L);
     }
 
     @Test
-    @WithMockUser(username = "1", roles = "ADMIN")
+    @WithMockUser(roles = "ADMIN")
     void banReport_shouldReturnOk() throws Exception {
-        JobReportVO response = new JobReportVO();
-        response.setId(1L);
-        response.setStatus("BANNED");
+        mockMvc.perform(post("/api/admin/job-reports/ban").contentType(MediaType.APPLICATION_JSON).content("{\"id\":1}"))
+                .andExpect(status().isOk());
 
-        when(jobReportService.banJobReport(eq(1L), any(), any())).thenReturn(response);
-
-        String json = "{\"id\":1,\"remark\":\"Violates terms\"}";
-
-        mockMvc.perform(post("/api/admin/job-reports/ban")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(json))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status").value("BANNED"));
-
-        verify(jobReportService).banJobReport(eq(1L), any(), any());
+        verify(jobReportService).ban(1L);
     }
 
     @Test
     void listJobReports_withoutAuth_shouldReturn401() throws Exception {
-        mockMvc.perform(get("/api/admin/job-reports"))
+        mockMvc.perform(post("/api/admin/job-reports/list").contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isUnauthorized());
     }
 }

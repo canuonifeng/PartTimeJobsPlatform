@@ -2,6 +2,7 @@ package com.parttime.platform.pojo.entity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -13,6 +14,12 @@ public class JobSchedule {
     private Long id;
     @Schema(description = "岗位ID")
     private Long jobId;
+    @Schema(description = "岗位名称")
+    private String jobTitle;
+    @Schema(description = "企业ID")
+    private Long companyId;
+    @Schema(description = "企业名称")
+    private String companyName;
     @Schema(description = "排班日期")
     private LocalDate scheduleDate;
     @Schema(description = "开始时间")
@@ -25,6 +32,10 @@ public class JobSchedule {
     private Integer slotsAvailable;
     @Schema(description = "已报名人数")
     private Integer applicationCount;
+    @Schema(description = "需求人数")
+    private Integer headcount;
+    @Schema(description = "时薪")
+    private BigDecimal hourlyWage;
     @Schema(description = "联系人姓名")
     private String contactName;
     @Schema(description = "联系人电话")

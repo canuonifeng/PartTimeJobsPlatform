@@ -27,4 +27,6 @@ public class EnterpriseVO {
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")
     private LocalDateTime updatedAt;
+    @Schema(description = "信用分")
+    private Integer creditScore;
 }

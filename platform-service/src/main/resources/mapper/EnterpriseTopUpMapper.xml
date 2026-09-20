@@ -3,31 +3,33 @@
 <mapper namespace="com.parttime.platform.mapper.EnterpriseTopUpMapper">
     <resultMap id="TopUpResultMap" type="com.parttime.platform.pojo.entity.EnterpriseTopUp">
         <id property="id" column="id"/>
-        <result property="enterpriseId" column="enterprise_id"/>
+        <result property="companyId" column="company_id"/>
         <result property="enterpriseName" column="enterprise_name"/>
         <result property="amount" column="amount"/>
-        <result property="paymentMethod" column="payment_method"/>
-        <result property="receiptUrl" column="receipt_url"/>
         <result property="status" column="status"/>
+        <result property="serialNumber" column="serial_number"/>
+        <result property="thirdPartySerialNo" column="third_party_serial_no"/>
+        <result property="thirdPartyPlatform" column="third_party_platform"/>
+        <result property="completedAt" column="completed_at"/>
         <result property="auditor" column="auditor"/>
-        <result property="auditedAt" column="audited_at"/>
         <result property="auditRemark" column="audit_remark"/>
+        <result property="auditedAt" column="audited_at"/>
         <result property="createdAt" column="created_at"/>
     </resultMap>
 
     <select id="findByFilters" resultMap="TopUpResultMap">
-        SELECT t.*, e.enterprise_name FROM enterprise_top_up_records t
-        LEFT JOIN enterprises e ON t.enterprise_id = e.id
+        SELECT t.*, e.company_name AS enterprise_name FROM enterprise_top_up_records t
+        LEFT JOIN enterprises e ON t.company_id = e.id
         <where>
             <if test="status != null and status != ''">AND t.status = #{status}</if>
-            <if test="keyword != null and keyword != ''">AND e.enterprise_name LIKE CONCAT('%', #{keyword}, '%')</if>
+            <if test="keyword != null and keyword != ''">AND e.company_name LIKE CONCAT('%', #{keyword}, '%')</if>
         </where>
         ORDER BY t.created_at DESC
     </select>
 
     <select id="findById" resultMap="TopUpResultMap">
-        SELECT t.*, e.enterprise_name FROM enterprise_top_up_records t
-        LEFT JOIN enterprises e ON t.enterprise_id = e.id WHERE t.id = #{id}
+        SELECT t.*, e.company_name AS enterprise_name FROM enterprise_top_up_records t
+        LEFT JOIN enterprises e ON t.company_id = e.id WHERE t.id = #{id}
     </select>
 
     <update id="updateStatus">

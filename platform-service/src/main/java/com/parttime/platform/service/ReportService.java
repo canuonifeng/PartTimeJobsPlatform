@@ -1,12 +1,28 @@
 package com.parttime.platform.service;
 
+import com.parttime.platform.pojo.vo.ConversionFunnelVO;
+import com.parttime.platform.pojo.vo.EnterpriseActivityVO;
+import com.parttime.platform.pojo.vo.EnterpriseTrendVO;
+import com.parttime.platform.pojo.vo.OverviewVO;
+import com.parttime.platform.pojo.vo.SupplyDemandVO;
+import com.parttime.platform.pojo.vo.WorkerActivityVO;
+import com.parttime.platform.pojo.vo.WorkerTrendVO;
+
 import java.util.List;
-import java.util.Map;
 
 public interface ReportService {
-    Map<String, Object> overview();
-    List<Map<String, Object>> enterpriseActivity();
-    List<Map<String, Object>> workerActivity();
-    Map<String, Object> supplyDemandAnalysis();
-    Map<String, Object> conversionFunnel();
+
+    OverviewVO overview();
+
+    List<EnterpriseTrendVO> enterpriseActivity();
+
+    List<WorkerTrendVO> workerActivity();
+
+    List<EnterpriseActivityVO> enterpriseRanking();
+
+    List<WorkerActivityVO> workerRanking();
+
+    SupplyDemandVO supplyDemandAnalysis();
+
+    ConversionFunnelVO conversionFunnel();
 }

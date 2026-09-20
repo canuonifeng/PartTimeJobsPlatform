@@ -12,8 +12,12 @@ export function updateActivity(data) {
   return request.post('/activities/update', data)
 }
 
-export function toggleActivity(id, enabled) {
-  return request.post('/activities/toggle', { id, enabled })
+export function toggleActivity(id, status) {
+  return request.post('/activities/toggle', { id, status })
+}
+
+export function deleteActivity(id) {
+  return request.post('/activities/delete', { id })
 }
 
 export function getActivityEffectStats(id) {

@@ -1,47 +1,80 @@
 package com.parttime.platform.service.impl;
 
+import com.parttime.platform.exception.BusinessException;
+import com.parttime.platform.mapper.EnterpriseBalanceTransactionMapper;
+import com.parttime.platform.mapper.FinanceReportMapper;
+import com.parttime.platform.pojo.cmd.TransactionQueryCmd;
+import com.parttime.platform.pojo.vo.TransactionOverviewVO;
+import com.parttime.platform.pojo.vo.TransactionVO;
 import com.parttime.platform.service.TransactionService;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class TransactionServiceImpl implements TransactionService {
 
+    private static final Map<String, String> TYPE_NAME = Map.of(
+            "TOP_UP", "企业充值",
+            "SETTLEMENT", "工资结算",
+            "SERVICE_FEE", "平台服务费",
+            "REFUND", "退款"
+    );
+
+    @Resource
+    private EnterpriseBalanceTransactionMapper transactionMapper;
+
+    @Resource
+    private FinanceReportMapper financeReportMapper;
+
     @Override
-    public List<Map<String, Object>> list(String type, String status, String keyword) {
-        List<Map<String, Object>> list = new ArrayList<>();
-        String[] types = {"ENTERPRISE_TOPUP", "WORKER_WITHDRAWAL", "SETTLEMENT", "SERVICE_FEE"};
-        String[] typeNames = {"企业充值", "工人提现", "工资结算", "平台服务费"};
-        String[] statuses = {"SUCCESS", "PENDING", "FAILED"};
-        for (int i = 1; i <= 30; i++) {
-            Map<String, Object> item = new HashMap<>();
-            item.put("id", (long) i);
-            item.put("transactionNo", "TXN" + System.currentTimeMillis() + i);
-            item.put("type", types[i % 4]);
-            item.put("typeName", typeNames[i % 4]);
-            item.put("amount", new BigDecimal((i % 10 + 1) * 100));
-            item.put("balanceAfter", new BigDecimal(5000 + (i % 100) * 100));
-            item.put("status", statuses[i % 3]);
-            item.put("remark", typeNames[i % 4] + "备注" + i);
-            item.put("createdAt", LocalDateTime.now().minusHours(i));
-            list.add(item);
-        }
-        return list;
+    public List<TransactionVO> list(TransactionQueryCmd cmd) {
+        String dbType = mapType(cmd.getType());
+        List<TransactionVO> list = transactionMapper.findByFilters(
+                dbType, cmd.getStartDate(), cmd.getEndDate(), cmd.getCompanyId(), cmd.getKeyword());
+        return list.stream().peek(this::fillTypeName).collect(Collectors.toList());
     }
 
     @Override
-    public Map<String, Object> overview() {
-        Map<String, Object> result = new HashMap<>();
-        result.put("totalTopUp", new BigDecimal("100000.00"));
-        result.put("totalWithdrawal", new BigDecimal("80000.00"));
-        result.put("totalServiceFee", new BigDecimal("5000.00"));
-        result.put("pendingCount", 5);
-        return result;
+    public TransactionVO detail(Long id) {
+        TransactionVO vo = transactionMapper.findVoById(id)
+                .orElseThrow(() -> new BusinessException("交易流水不存在: " + id));
+        fillTypeName(vo);
+        return vo;
+    }
+
+    @Override
+    public TransactionOverviewVO overview() {
+        TransactionOverviewVO vo = new TransactionOverviewVO();
+        vo.setTodayTopUpAmount(nz(transactionMapper.sumByTypeToday("TOP_UP")));
+        vo.setTodaySettlementAmount(nz(transactionMapper.sumByTypeToday("SETTLEMENT")));
+        vo.setTodayWithdrawalAmount(nz(financeReportMapper.sumCompletedWithdrawalToday()));
+        vo.setTodayServiceFeeAmount(BigDecimal.ZERO);
+        return vo;
+    }
+
+    private String mapType(String frontType) {
+        if (frontType == null || frontType.isEmpty()) {
+            return null;
+        }
+        if ("ENTERPRISE_TOPUP".equals(frontType)) {
+            return "TOP_UP";
+        }
+        if ("WORKER_WITHDRAWAL".equals(frontType)) {
+            return null;
+        }
+        return frontType;
+    }
+
+    private void fillTypeName(TransactionVO vo) {
+        vo.setTypeName(TYPE_NAME.getOrDefault(vo.getType(), vo.getType()));
+    }
+
+    private BigDecimal nz(BigDecimal v) {
+        return v == null ? BigDecimal.ZERO : v;
     }
 }

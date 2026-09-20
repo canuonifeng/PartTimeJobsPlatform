@@ -3,6 +3,7 @@ package com.parttime.platform.pojo.vo;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,6 +25,7 @@ public class DashboardVO {
     private List<TrendDataPoint> recentTrend;
 
     @Data
+    @NoArgsConstructor
     @AllArgsConstructor
     public static class TrendDataPoint {
         @Schema(description = "日期")

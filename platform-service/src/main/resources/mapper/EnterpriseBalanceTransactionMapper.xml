@@ -7,4 +7,79 @@
         VALUES (#{companyId}, #{amount}, #{type}, #{relatedBillId}, #{relatedTopUpId}, #{description}, #{createdAt})
     </insert>
 
+    <select id="findEntityById" resultType="com.parttime.platform.pojo.entity.EnterpriseBalanceTransaction">
+        SELECT t.id AS id,
+               t.company_id AS companyId,
+               t.amount AS amount,
+               t.type AS type,
+               t.related_bill_id AS relatedBillId,
+               t.related_top_up_id AS relatedTopUpId,
+               t.description AS description,
+               e.company_name AS companyName,
+               t.created_at AS createdAt
+        FROM enterprise_balance_transactions t
+        LEFT JOIN enterprises e ON t.company_id = e.id
+        WHERE t.id = #{id}
+    </select>
+
+    <select id="findByFilters" resultType="com.parttime.platform.pojo.vo.TransactionVO">
+        SELECT t.id AS id,
+               CONCAT('TXN', t.id) AS transactionNo,
+               t.type AS type,
+               t.amount AS amount,
+               t.description AS remark,
+               'SUCCESS' AS status,
+               e.company_name AS relatedName,
+               e.contact_phone AS relatedPhone,
+               t.created_at AS createdAt
+        FROM enterprise_balance_transactions t
+        LEFT JOIN enterprises e ON t.company_id = e.id
+        <where>
+            <if test="type != null and type != ''">AND t.type = #{type}</if>
+            <if test="startDate != null and startDate != ''">AND DATE(t.created_at) &gt;= #{startDate}</if>
+            <if test="endDate != null and endDate != ''">AND DATE(t.created_at) &lt;= #{endDate}</if>
+            <if test="companyId != null">AND t.company_id = #{companyId}</if>
+            <if test="keyword != null and keyword != ''">AND e.company_name LIKE CONCAT('%', #{keyword}, '%')</if>
+        </where>
+        ORDER BY t.created_at DESC
+    </select>
+
+    <select id="findVoById" resultType="com.parttime.platform.pojo.vo.TransactionVO">
+        SELECT t.id AS id,
+               CONCAT('TXN', t.id) AS transactionNo,
+               t.type AS type,
+               t.amount AS amount,
+               t.description AS remark,
+               'SUCCESS' AS status,
+               e.company_name AS relatedName,
+               e.contact_phone AS relatedPhone,
+               t.created_at AS createdAt
+        FROM enterprise_balance_transactions t
+        LEFT JOIN enterprises e ON t.company_id = e.id
+        WHERE t.id = #{id}
+    </select>
+
+    <select id="sumByTypeToday" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0) FROM enterprise_balance_transactions
+        WHERE type = #{type} AND DATE(created_at) = CURDATE()
+    </select>
+
+    <select id="sumByTypeGroupByDate" resultType="com.parttime.platform.pojo.po.DailyAggRow">
+        SELECT DATE(created_at) AS date, COALESCE(SUM(amount), 0) AS amount
+        FROM enterprise_balance_transactions
+        WHERE type = #{type}
+          AND created_at &gt;= #{startDate}
+          AND created_at &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+        GROUP BY DATE(created_at)
+    </select>
+
+    <select id="countByTypeGroupByDate" resultType="com.parttime.platform.pojo.po.DailyAggRow">
+        SELECT DATE(created_at) AS date, COUNT(*) AS count
+        FROM enterprise_balance_transactions
+        WHERE type = #{type}
+          AND created_at &gt;= #{startDate}
+          AND created_at &lt; DATE_ADD(#{endDate}, INTERVAL 1 DAY)
+        GROUP BY DATE(created_at)
+    </select>
+
 </mapper>

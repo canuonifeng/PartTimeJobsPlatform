@@ -24,31 +24,27 @@
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
-    <select id="findById" resultMap="AttendanceRecordResultMap">
+    <sql id="baseColumns">
         SELECT ar.*, j.title AS job_title, e.company_name, w.name AS worker_name, w.phone AS worker_phone
         FROM attendance_records ar
         LEFT JOIN jobs j ON ar.job_id = j.id
         LEFT JOIN enterprises e ON j.company_id = e.id
-        LEFT JOIN workers w ON ar.worker_id = w.id
+        LEFT JOIN c_worker w ON ar.worker_id = w.id
+    </sql>
+
+    <select id="findById" resultMap="AttendanceRecordResultMap">
+        <include refid="baseColumns"/>
         WHERE ar.id = #{id}
     </select>
 
     <select id="findByJobId" resultMap="AttendanceRecordResultMap">
-        SELECT ar.*, j.title AS job_title, e.company_name, w.name AS worker_name, w.phone AS worker_phone
-        FROM attendance_records ar
-        LEFT JOIN jobs j ON ar.job_id = j.id
-        LEFT JOIN enterprises e ON j.company_id = e.id
-        LEFT JOIN workers w ON ar.worker_id = w.id
+        <include refid="baseColumns"/>
         WHERE ar.job_id = #{jobId}
         ORDER BY ar.created_at DESC
     </select>
 
     <select id="findByFilters" resultMap="AttendanceRecordResultMap">
-        SELECT ar.*, j.title AS job_title, e.company_name, w.name AS worker_name, w.phone AS worker_phone
-        FROM attendance_records ar
-        LEFT JOIN jobs j ON ar.job_id = j.id
-        LEFT JOIN enterprises e ON j.company_id = e.id
-        LEFT JOIN workers w ON ar.worker_id = w.id
+        <include refid="baseColumns"/>
         <where>
             <if test="status != null and status != ''">
                 AND ar.status = #{status}
@@ -64,7 +60,12 @@
     </select>
 
     <update id="updateStatus">
-        UPDATE attendance_records SET status = #{status} WHERE id = #{id}
+        UPDATE attendance_records
+        SET status = #{status}
+        <if test="remark != null">
+            , remark = #{remark}
+        </if>
+        WHERE id = #{id}
     </update>
 
 </mapper>

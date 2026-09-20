@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.CsMessageMapper">
+
+    <resultMap id="CsMessageResultMap" type="com.parttime.platform.pojo.entity.CsMessage">
+        <id property="id" column="id"/>
+        <result property="sessionId" column="session_id"/>
+        <result property="senderType" column="sender_type"/>
+        <result property="senderName" column="sender_name"/>
+        <result property="content" column="content"/>
+        <result property="isRead" column="is_read"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="findBySessionId" resultMap="CsMessageResultMap">
+        SELECT * FROM cs_messages
+        WHERE session_id = #{sessionId}
+        ORDER BY id ASC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO cs_messages (session_id, sender_type, sender_name, content, is_read)
+        VALUES (#{sessionId}, #{senderType}, #{senderName}, #{content}, #{isRead})
+    </insert>
+
+    <update id="markReadBySession">
+        UPDATE cs_messages SET is_read = 1 WHERE session_id = #{sessionId} AND sender_type = 'USER'
+    </update>
+
+</mapper>

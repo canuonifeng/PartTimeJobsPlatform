@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.ComplaintMapper">
+
+    <resultMap id="ComplaintResultMap" type="com.parttime.platform.pojo.entity.Complaint">
+        <id property="id" column="id"/>
+        <result property="complaintNo" column="complaint_no"/>
+        <result property="complainantType" column="complainant_type"/>
+        <result property="complainantId" column="complainant_id"/>
+        <result property="complainantName" column="complainant_name"/>
+        <result property="complainantPhone" column="complainant_phone"/>
+        <result property="accusedType" column="accused_type"/>
+        <result property="accusedId" column="accused_id"/>
+        <result property="accusedName" column="accused_name"/>
+        <result property="complaintType" column="complaint_type"/>
+        <result property="title" column="title"/>
+        <result property="content" column="content"/>
+        <result property="images" column="images"/>
+        <result property="relatedJobId" column="related_job_id"/>
+        <result property="relatedJobTitle" column="related_job_title"/>
+        <result property="relatedScheduleId" column="related_schedule_id"/>
+        <result property="status" column="status"/>
+        <result property="priority" column="priority"/>
+        <result property="handlerId" column="handler_id"/>
+        <result property="handlerName" column="handler_name"/>
+        <result property="handleResult" column="handle_result"/>
+        <result property="handledAt" column="handled_at"/>
+        <result property="satisfactionScore" column="satisfaction_score"/>
+        <result property="isAppeal" column="is_appeal"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="remark" column="remark"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByFilters" resultMap="ComplaintResultMap">
+        SELECT * FROM complaints
+        <where>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+            <if test="complaintType != null and complaintType != ''">
+                AND complaint_type = #{complaintType}
+            </if>
+            <if test="complainantType != null and complainantType != ''">
+                AND complainant_type = #{complainantType}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (title LIKE CONCAT('%', #{keyword}, '%')
+                     OR complainant_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR accused_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR complaint_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY FIELD(priority,'URGENT','HIGH','NORMAL','LOW'), created_at DESC
+    </select>
+
+    <select id="findById" resultMap="ComplaintResultMap">
+        SELECT * FROM complaints WHERE id = #{id}
+    </select>
+
+    <update id="handle">
+        UPDATE complaints
+        SET status = 'PROCESSING',
+            handler_name = #{handlerName},
+            handle_result = #{handleResult},
+            handled_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="arbitrate">
+        UPDATE complaints
+        SET status = 'RESOLVED',
+            handler_name = #{handlerName},
+            handle_result = #{conclusion},
+            handled_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="close">
+        UPDATE complaints SET status = 'CLOSED' WHERE id = #{id}
+    </update>
+
+    <select id="findActiveForMonitor" resultMap="ComplaintResultMap">
+        SELECT * FROM complaints
+        WHERE status IN ('PENDING','PROCESSING')
+        ORDER BY FIELD(priority,'URGENT','HIGH','NORMAL','LOW'), created_at DESC
+        LIMIT 50
+    </select>
+
+</mapper>

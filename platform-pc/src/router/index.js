@@ -195,6 +195,30 @@ const routes = [
       name: 'TrainingCourses',
       component: () => import('../views/training/TrainingCourseList.vue'),
       meta: { requiresAuth: true, title: '培训课程管理' }
+    },
+    {
+      path: '/jobs/detail',
+      name: 'JobDetail',
+      component: () => import('../views/jobs/JobDetail.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/risk/complaints/detail',
+      name: 'ComplaintDetail',
+      component: () => import('../views/risk/ComplaintDetail.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/cs/faqs',
+      name: 'FaqManage',
+      component: () => import('../views/cs/FaqManage.vue'),
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/cs/tickets',
+      name: 'TicketHandle',
+      component: () => import('../views/cs/TicketHandle.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 

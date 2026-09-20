@@ -69,6 +69,7 @@ public class WorkerServiceImpl implements WorkerService {
         vo.setAvatarUrl(w.getAvatarUrl());
         vo.setStatus(w.getStatus());
         vo.setCreatedAt(w.getCreatedAt());
+        vo.setCreditScore(w.getCreditScore());
         return vo;
     }
 }

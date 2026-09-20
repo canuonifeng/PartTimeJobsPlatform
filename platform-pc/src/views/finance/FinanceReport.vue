@@ -3,7 +3,7 @@
     <template #header>
       <span>财务对账</span>
     </template>
-    
+
     <el-row :gutter="20" style="margin-bottom:20px">
       <el-col :span="6">
         <el-statistic title="今日企业充值总额" :value="stats.todayTopUp" precision="2" prefix="¥" />
@@ -48,7 +48,31 @@
       </el-tab-pane>
 
       <el-tab-pane label="服务费统计" name="serviceFee">
-        <el-table :data="categoryStats" stripe style="width:100%">
+        <el-row :gutter="20" style="margin-bottom:16px">
+          <el-col :span="6">
+            <el-statistic title="累计服务费" :value="feeSummary.totalServiceFee" precision="2" prefix="¥" />
+          </el-col>
+          <el-col :span="6">
+            <el-statistic title="今日服务费" :value="feeSummary.todayServiceFee" precision="2" prefix="¥" />
+          </el-col>
+          <el-col :span="6">
+            <el-statistic title="本周服务费" :value="feeSummary.weekServiceFee" precision="2" prefix="¥" />
+          </el-col>
+          <el-col :span="6">
+            <el-statistic title="本月服务费" :value="feeSummary.monthServiceFee" precision="2" prefix="¥" />
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="14">
+            <ChartBox type="line" title="近7日资金趋势" :labels="trendLabels" :series="trendSeries" height="320px" />
+          </el-col>
+          <el-col :span="10">
+            <ChartBox type="bar" title="分类服务费" :labels="categoryLabels" :series="categorySeries" height="320px" />
+          </el-col>
+        </el-row>
+
+        <el-table :data="categoryStats" stripe style="width:100%;margin-top:16px">
           <el-table-column prop="category" label="职位分类" width="200" />
           <el-table-column prop="amount" label="服务费金额" width="150">
             <template #default="{ row }">¥{{ row.amount }}</template>
@@ -60,14 +84,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getDailySummary, getServiceFeeStats } from '../../api/finance'
+import ChartBox from '../../components/ChartBox.vue'
+import { getDailySummary, getServiceFeeStats } from '../../api/financeAdmin'
 
 const loading = ref(false)
 const activeTab = ref('daily')
 const dailyRecords = ref([])
 const categoryStats = ref([])
+const feeSummary = ref({
+  totalServiceFee: 0,
+  todayServiceFee: 0,
+  weekServiceFee: 0,
+  monthServiceFee: 0
+})
 const stats = ref({
   todayTopUp: 0,
   todayWithdrawal: 0,
@@ -75,18 +106,36 @@ const stats = ref({
   todaySettlementCount: 0
 })
 
+const trendLabels = computed(() => dailyRecords.value.map(r => r.date))
+const trendSeries = computed(() => [
+  { name: '充值', data: dailyRecords.value.map(r => Number(r.totalTopUp) || 0) },
+  { name: '提现', data: dailyRecords.value.map(r => Number(r.totalWithdrawal) || 0) },
+  { name: '服务费', data: dailyRecords.value.map(r => Number(r.totalServiceFee) || 0) }
+])
+const categoryLabels = computed(() => categoryStats.value.map(r => r.category))
+const categorySeries = computed(() => [
+  { name: '服务费金额', data: categoryStats.value.map(r => Number(r.amount) || 0) }
+])
+
+function todayStr() {
+  const d = new Date()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${m}-${day}`
+}
+
 async function fetchDailyData() {
   loading.value = true
   try {
     const res = await getDailySummary({})
     dailyRecords.value = res || []
-    if (dailyRecords.value.length > 0) {
-      const today = dailyRecords.value[0]
+    const today = dailyRecords.value.find(r => r.date === todayStr()) || dailyRecords.value[dailyRecords.value.length - 1]
+    if (today) {
       stats.value = {
-        todayTopUp: today.totalTopUp || 0,
-        todayWithdrawal: today.totalWithdrawal || 0,
-        todayServiceFee: today.totalServiceFee || 0,
-        todaySettlementCount: today.settlementCount || 0
+        todayTopUp: Number(today.totalTopUp) || 0,
+        todayWithdrawal: Number(today.totalWithdrawal) || 0,
+        todayServiceFee: Number(today.totalServiceFee) || 0,
+        todaySettlementCount: Number(today.settlementCount) || 0
       }
     }
   } finally {
@@ -98,6 +147,12 @@ async function fetchServiceFeeStats() {
   try {
     const res = await getServiceFeeStats({})
     categoryStats.value = res.byCategory || []
+    feeSummary.value = {
+      totalServiceFee: Number(res.totalServiceFee) || 0,
+      todayServiceFee: Number(res.todayServiceFee) || 0,
+      weekServiceFee: Number(res.weekServiceFee) || 0,
+      monthServiceFee: Number(res.monthServiceFee) || 0
+    }
   } catch {}
 }
 

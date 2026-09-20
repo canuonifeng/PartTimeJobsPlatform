@@ -1,36 +1,37 @@
 package com.parttime.platform.controller;
 
 import com.parttime.platform.pojo.cmd.IdCmd;
+import com.parttime.platform.pojo.cmd.SettlementCancelCmd;
+import com.parttime.platform.pojo.cmd.SettlementQueryCmd;
 import com.parttime.platform.pojo.vo.ApiResponse;
+import com.parttime.platform.pojo.vo.SettlementVO;
 import com.parttime.platform.service.SettlementService;
 import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/settlements")
 public class SettlementController {
 
-    @Autowired
+    @Resource
     private SettlementService settlementService;
 
     @Operation(summary = "获取结算列表")
     @PostMapping("/list")
-    public ApiResponse<List<Map<String, Object>>> list(@RequestBody(required = false) Map<String, String> body) {
-        String status = body != null ? body.get("status") : null;
-        String keyword = body != null ? body.get("keyword") : null;
-        return ApiResponse.success(settlementService.list(status, keyword));
+    public ApiResponse<List<SettlementVO>> list(@RequestBody(required = false) SettlementQueryCmd body) {
+        SettlementQueryCmd cmd = body != null ? body : new SettlementQueryCmd();
+        return ApiResponse.success(settlementService.list(cmd));
     }
 
     @Operation(summary = "获取结算详情")
     @PostMapping("/detail")
-    public ApiResponse<Map<String, Object>> detail(@RequestBody IdCmd body) {
+    public ApiResponse<SettlementVO> detail(@RequestBody IdCmd body) {
         return ApiResponse.success(settlementService.detail(body.getId()));
     }
 
@@ -41,12 +42,10 @@ public class SettlementController {
         return ApiResponse.success();
     }
 
-    @Operation(summary = "取消结算")
+    @Operation(summary = "撤销结算")
     @PostMapping("/cancel")
-    public ApiResponse<Void> cancel(@RequestBody Map<String, Object> body) {
-        Long id = Long.valueOf(body.get("id").toString());
-        String reason = (String) body.get("reason");
-        settlementService.cancel(id, reason);
+    public ApiResponse<Void> cancel(@RequestBody SettlementCancelCmd body) {
+        settlementService.cancel(body.getId(), body.getReason());
         return ApiResponse.success();
     }
 }

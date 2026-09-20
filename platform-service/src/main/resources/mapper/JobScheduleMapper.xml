@@ -5,12 +5,17 @@
     <resultMap id="JobScheduleResultMap" type="com.parttime.platform.pojo.entity.JobSchedule">
         <id property="id" column="id"/>
         <result property="jobId" column="job_id"/>
+        <result property="jobTitle" column="job_title"/>
+        <result property="companyId" column="company_id"/>
+        <result property="companyName" column="company_name"/>
         <result property="scheduleDate" column="schedule_date"/>
         <result property="startTime" column="start_time"/>
         <result property="endTime" column="end_time"/>
         <result property="scheduleName" column="schedule_name"/>
         <result property="slotsAvailable" column="slots_available"/>
         <result property="applicationCount" column="application_count"/>
+        <result property="headcount" column="headcount"/>
+        <result property="hourlyWage" column="hourly_wage"/>
         <result property="contactName" column="contact_name"/>
         <result property="contactPhone" column="contact_phone"/>
         <result property="status" column="status"/>
@@ -18,18 +23,42 @@
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
-    <select id="findById" resultMap="JobScheduleResultMap">
-        SELECT js.*,
+    <sql id="baseColumns">
+        SELECT js.id, js.job_id, js.schedule_date, js.start_time, js.end_time, js.schedule_name,
+               js.slots_available, js.contact_name, js.contact_phone, js.status,
+               js.created_at, js.updated_at,
+               j.title AS job_title, j.company_id AS company_id, e.company_name,
+               j.headcount AS headcount, j.rate_amount AS hourly_wage,
                (SELECT COUNT(*) FROM schedule_applications sa WHERE sa.schedule_id = js.id AND sa.status != 'REJECTED') AS application_count
         FROM job_schedules js
+        JOIN jobs j ON js.job_id = j.id
+        LEFT JOIN enterprises e ON j.company_id = e.id
+    </sql>
+
+    <select id="findById" resultMap="JobScheduleResultMap">
+        <include refid="baseColumns"/>
         WHERE js.id = #{id}
     </select>
 
     <select id="findByJobId" resultMap="JobScheduleResultMap">
-        SELECT js.*,
-               (SELECT COUNT(*) FROM schedule_applications sa WHERE sa.schedule_id = js.id AND sa.status != 'REJECTED') AS application_count
-        FROM job_schedules js
+        <include refid="baseColumns"/>
         WHERE js.job_id = #{jobId}
+        ORDER BY js.schedule_date DESC, js.start_time ASC
+    </select>
+
+    <select id="findByFilters" resultMap="JobScheduleResultMap">
+        <include refid="baseColumns"/>
+        <where>
+            <if test="status != null and status != ''">
+                AND js.status = #{status}
+            </if>
+            <if test="companyId != null">
+                AND j.company_id = #{companyId}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (j.title LIKE CONCAT('%', #{keyword}, '%') OR e.company_name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
         ORDER BY js.schedule_date DESC, js.start_time ASC
     </select>
 

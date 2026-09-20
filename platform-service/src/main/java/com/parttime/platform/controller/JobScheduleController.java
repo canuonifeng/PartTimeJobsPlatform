@@ -1,6 +1,7 @@
 package com.parttime.platform.controller;
 
 import com.parttime.platform.pojo.cmd.IdCmd;
+import com.parttime.platform.pojo.cmd.JobIdCmd;
 import com.parttime.platform.pojo.cmd.JobQueryCmd;
 import com.parttime.platform.pojo.vo.ApiResponse;
 import com.parttime.platform.pojo.vo.JobScheduleVO;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/admin/schedules")
@@ -31,9 +31,8 @@ public class JobScheduleController {
 
     @Operation(summary = "获取职位的排班列表")
     @PostMapping("/list-by-job")
-    public ApiResponse<List<JobScheduleVO>> listByJobId(@RequestBody Map<String, Long> body) {
-        Long jobId = body.get("jobId");
-        return ApiResponse.success(jobScheduleService.listByJobId(jobId));
+    public ApiResponse<List<JobScheduleVO>> listByJobId(@RequestBody JobIdCmd body) {
+        return ApiResponse.success(jobScheduleService.listByJobId(body.getJobId()));
     }
 
     @Operation(summary = "获取排班详情")

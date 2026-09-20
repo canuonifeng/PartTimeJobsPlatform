@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.PlatformOperatorMapper">
+
+    <resultMap id="PlatformOperatorResultMap" type="com.parttime.platform.pojo.entity.PlatformOperator">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="realName" column="real_name"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="avatar" column="avatar"/>
+        <result property="role" column="role"/>
+        <result property="permissions" column="permissions"/>
+        <result property="status" column="status"/>
+        <result property="lastLoginIp" column="last_login_ip"/>
+        <result property="lastLoginAt" column="last_login_at"/>
+        <result property="loginFailCount" column="login_fail_count"/>
+        <result property="lockTime" column="lock_time"/>
+        <result property="operatorId" column="operator_id"/>
+        <result property="operatorName" column="operator_name"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="PlatformOperatorResultMap">
+        SELECT * FROM platform_operators ORDER BY created_at DESC
+    </select>
+
+    <select id="findById" resultMap="PlatformOperatorResultMap">
+        SELECT * FROM platform_operators WHERE id = #{id}
+    </select>
+
+    <select id="findByUsername" resultMap="PlatformOperatorResultMap">
+        SELECT * FROM platform_operators WHERE username = #{username}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO platform_operators
+            (username, password, real_name, phone, email, role, permissions, status, operator_name)
+        VALUES
+            (#{username}, #{password}, #{realName}, #{phone}, #{email}, #{role}, #{permissions},
+             'ACTIVE', #{operatorName})
+    </insert>
+
+    <update id="update">
+        UPDATE platform_operators
+        SET real_name = #{realName},
+            phone = #{phone},
+            email = #{email},
+            role = #{role},
+            permissions = #{permissions}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE platform_operators SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <update id="updatePassword">
+        UPDATE platform_operators SET password = #{password}, login_fail_count = 0 WHERE id = #{id}
+    </update>
+
+</mapper>

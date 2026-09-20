@@ -22,7 +22,7 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
-import { getDashboardStats } from '../api/dashboard'
+import { getDashboardStats, getDashboardTrend } from '../api/dashboard'
 
 use([CanvasRenderer, LineChart, GridComponent, TooltipComponent, LegendComponent])
 
@@ -52,16 +52,21 @@ onMounted(async () => {
     if (data) {
       statCards.value = [
         { label: '企业数', value: data.totalCompanies ?? 0 },
-        { label: '岗位数', value: data.totalJobs ?? 0 },
+        { label: '岗位数', value: data.totalJobs ?? data.activeJobs ?? 0 },
         { label: '工人数', value: data.totalWorkers ?? 0 },
-        { label: '班次数', value: data.totalShifts ?? 0 },
-        { label: '营收', value: `¥${data.totalRevenue ?? 0}` }
+        { label: '班次数', value: data.totalShifts ?? data.completedShifts ?? 0 },
+        { label: '营收', value: `¥${data.totalRevenue ?? data.totalTransactionAmount ?? 0}` }
       ]
-      if (data.trendLabels) {
-        chartOption.value.xAxis.data = data.trendLabels
-        chartOption.value.series[0].data = data.jobTrend ?? []
-        chartOption.value.series[1].data = data.workerTrend ?? []
-      }
+    }
+  } catch {
+    // handled by interceptor
+  }
+  try {
+    const trend = await getDashboardTrend(7)
+    if (trend && trend.dates) {
+      chartOption.value.xAxis.data = trend.dates
+      chartOption.value.series[0].data = trend.newJobs ?? []
+      chartOption.value.series[1].data = trend.newWorkers ?? []
     }
   } catch {
     // handled by interceptor

@@ -13,5 +13,6 @@ public class EnterpriseBalanceTransaction {
     private Long relatedBillId;
     private Long relatedTopUpId;
     private String description;
+    private String companyName;
     private LocalDateTime createdAt;
 }

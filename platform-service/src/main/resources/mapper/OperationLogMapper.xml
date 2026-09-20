@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.OperationLogMapper">
+
+    <resultMap id="OperationLogResultMap" type="com.parttime.platform.pojo.entity.OperationLog">
+        <id property="id" column="id"/>
+        <result property="operatorId" column="operator_id"/>
+        <result property="operatorName" column="operator_name"/>
+        <result property="module" column="module"/>
+        <result property="operationType" column="operation_type"/>
+        <result property="targetType" column="target_type"/>
+        <result property="targetId" column="target_id"/>
+        <result property="targetName" column="target_name"/>
+        <result property="ipAddress" column="ip_address"/>
+        <result property="userAgent" column="user_agent"/>
+        <result property="requestMethod" column="request_method"/>
+        <result property="requestUrl" column="request_url"/>
+        <result property="requestParams" column="request_params"/>
+        <result property="result" column="result"/>
+        <result property="errorMessage" column="error_message"/>
+        <result property="remark" column="remark"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <select id="findByFilters" resultMap="OperationLogResultMap">
+        SELECT * FROM operation_logs
+        <where>
+            <if test="module != null and module != ''">
+                AND module = #{module}
+            </if>
+            <if test="operatorName != null and operatorName != ''">
+                AND operator_name LIKE CONCAT('%', #{operatorName}, '%')
+            </if>
+            <if test="operationType != null and operationType != ''">
+                AND operation_type = #{operationType}
+            </if>
+        </where>
+        ORDER BY created_at DESC
+        LIMIT 200
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO operation_logs
+            (operator_id, operator_name, module, operation_type, target_type, target_id, target_name,
+             ip_address, user_agent, request_method, request_url, request_params, result, error_message, remark)
+        VALUES
+            (#{operatorId}, #{operatorName}, #{module}, #{operationType}, #{targetType}, #{targetId}, #{targetName},
+             #{ipAddress}, #{userAgent}, #{requestMethod}, #{requestUrl}, #{requestParams}, #{result},
+             #{errorMessage}, #{remark})
+    </insert>
+
+</mapper>

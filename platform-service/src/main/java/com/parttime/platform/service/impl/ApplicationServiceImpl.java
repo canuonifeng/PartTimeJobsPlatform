@@ -1,62 +1,95 @@
 package com.parttime.platform.service.impl;
 
+import com.parttime.platform.exception.BusinessException;
+import com.parttime.platform.mapper.ScheduleApplicationMapper;
 import com.parttime.platform.pojo.cmd.JobQueryCmd;
+import com.parttime.platform.pojo.entity.ScheduleApplication;
 import com.parttime.platform.pojo.vo.ApplicationVO;
 import com.parttime.platform.service.ApplicationService;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ApplicationServiceImpl implements ApplicationService {
 
+    @Resource
+    private ScheduleApplicationMapper scheduleApplicationMapper;
+
     @Override
     public List<ApplicationVO> list(JobQueryCmd cmd) {
-        List<ApplicationVO> list = new ArrayList<>();
-        String[] statuses = {"PENDING", "ACCEPTED", "REJECTED"};
-        for (int i = 1; i <= 20; i++) {
-            ApplicationVO vo = new ApplicationVO();
-            vo.setId((long) i);
-            vo.setJobId((long) (i % 10 + 1));
-            vo.setJobTitle("测试职位" + (i % 10 + 1));
-            vo.setCompanyId((long) (i % 5 + 1));
-            vo.setCompanyName("企业" + (i % 5 + 1));
-            vo.setWorkerId((long) (i % 50 + 1));
-            vo.setWorkerName("工人" + (i % 50 + 1));
-            vo.setWorkerPhone("138" + String.format("%08d", i));
-            vo.setWage(new BigDecimal((i % 10 + 1) * 20));
-            vo.setStatus(statuses[i % 3]);
-            vo.setAppliedAt(LocalDateTime.now().minusHours(i));
-            list.add(vo);
-        }
-        return list;
+        List<ScheduleApplication> list = scheduleApplicationMapper.findByFilters(
+                cmd.getStatus(), cmd.getCompanyId(), null, cmd.getKeyword());
+        return list.stream().map(this::toVO).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ApplicationVO> listByJobId(Long jobId) {
+        List<ScheduleApplication> list = scheduleApplicationMapper.findByJobId(jobId);
+        return list.stream().map(this::toVO).collect(Collectors.toList());
     }
 
     @Override
     public ApplicationVO detail(Long id) {
-        ApplicationVO vo = new ApplicationVO();
-        vo.setId(id);
-        vo.setJobId(1L);
-        vo.setJobTitle("测试职位详情");
-        vo.setCompanyId(1L);
-        vo.setCompanyName("测试企业");
-        vo.setWorkerId(1L);
-        vo.setWorkerName("测试工人");
-        vo.setWorkerPhone("13800138000");
-        vo.setWage(new BigDecimal("200.00"));
-        vo.setStatus("PENDING");
-        vo.setAppliedAt(LocalDateTime.now().minusHours(2));
-        return vo;
+        ScheduleApplication entity = scheduleApplicationMapper.findById(id)
+                .orElseThrow(() -> new BusinessException("报名记录不存在: " + id));
+        return toVO(entity);
     }
 
     @Override
+    @Transactional
     public void accept(Long id) {
+        ScheduleApplication entity = scheduleApplicationMapper.findById(id)
+                .orElseThrow(() -> new BusinessException("报名记录不存在: " + id));
+        scheduleApplicationMapper.updateStatus(entity.getId(), "ACCEPTED");
     }
 
     @Override
+    @Transactional
     public void reject(Long id) {
+        ScheduleApplication entity = scheduleApplicationMapper.findById(id)
+                .orElseThrow(() -> new BusinessException("报名记录不存在: " + id));
+        scheduleApplicationMapper.updateStatus(entity.getId(), "REJECTED");
+    }
+
+    @Override
+    @Transactional
+    public void batchAccept(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        for (Long id : ids) {
+            scheduleApplicationMapper.updateStatus(id, "ACCEPTED");
+        }
+    }
+
+    @Override
+    @Transactional
+    public void batchReject(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        for (Long id : ids) {
+            scheduleApplicationMapper.updateStatus(id, "REJECTED");
+        }
+    }
+
+    private ApplicationVO toVO(ScheduleApplication e) {
+        ApplicationVO vo = new ApplicationVO();
+        vo.setId(e.getId());
+        vo.setJobId(e.getJobId());
+        vo.setJobTitle(e.getJobTitle());
+        vo.setCompanyId(e.getCompanyId());
+        vo.setCompanyName(e.getCompanyName());
+        vo.setWorkerId(e.getWorkerId());
+        vo.setWorkerName(e.getWorkerName());
+        vo.setWorkerPhone(e.getWorkerPhone());
+        vo.setStatus(e.getStatus());
+        vo.setAppliedAt(e.getAppliedAt());
+        vo.setReviewedAt(e.getReviewedAt());
+        return vo;
     }
 }

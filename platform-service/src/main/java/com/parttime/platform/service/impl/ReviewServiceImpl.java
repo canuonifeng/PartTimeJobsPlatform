@@ -1,58 +1,103 @@
 package com.parttime.platform.service.impl;
 
+import com.parttime.platform.exception.BusinessException;
+import com.parttime.platform.mapper.ReviewMapper;
+import com.parttime.platform.pojo.cmd.CreditScoreAdjustCmd;
+import com.parttime.platform.pojo.cmd.ReviewQueryCmd;
+import com.parttime.platform.pojo.cmd.ReviewViolationCmd;
+import com.parttime.platform.pojo.entity.Review;
+import com.parttime.platform.pojo.vo.ReviewVO;
 import com.parttime.platform.service.ReviewService;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ReviewServiceImpl implements ReviewService {
 
+    @Resource
+    private ReviewMapper reviewMapper;
+
     @Override
-    public List<Map<String, Object>> list(String isViolation) {
-        List<Map<String, Object>> list = new ArrayList<>();
-        for (int i = 1; i <= 20; i++) {
-            Map<String, Object> item = new HashMap<>();
-            item.put("id", (long) i);
-            item.put("workerName", "工人" + i);
-            item.put("enterpriseName", "企业" + (i % 5 + 1));
-            item.put("jobTitle", "职位" + i);
-            item.put("rating", 5 - (i % 3));
-            item.put("content", "评价内容" + i + "，这是一条测试评价");
-            item.put("isViolation", i % 5 == 0);
-            item.put("createdAt", LocalDateTime.now().minusDays(i));
-            list.add(item);
-        }
-        return list;
+    public List<ReviewVO> list(ReviewQueryCmd cmd) {
+        ReviewQueryCmd q = cmd != null ? cmd : new ReviewQueryCmd();
+        List<Review> list = reviewMapper.findByFilters(q.getReviewType(), q.getIsViolation(), q.getRating(), q.getKeyword());
+        return list.stream().map(this::toVO).collect(Collectors.toList());
     }
 
     @Override
-    public Map<String, Object> detail(Long id) {
-        Map<String, Object> result = new HashMap<>();
-        result.put("id", id);
-        result.put("workerId", 1L);
-        result.put("workerName", "测试工人");
-        result.put("enterpriseId", 1L);
-        result.put("enterpriseName", "测试企业");
-        result.put("jobId", 1L);
-        result.put("jobTitle", "测试职位");
-        result.put("rating", 4);
-        result.put("content", "这是一条详细评价内容，包含更多细节信息");
-        result.put("reply", "感谢您的评价，我们会继续努力");
-        result.put("isViolation", false);
-        result.put("createdAt", LocalDateTime.now().minusDays(1));
-        return result;
+    public ReviewVO detail(Long id) {
+        Review review = reviewMapper.findById(id)
+                .orElseThrow(() -> new BusinessException("评价不存在: " + id));
+        return toVO(review);
     }
 
     @Override
-    public void markViolation(Long id) {
+    public void markViolation(ReviewViolationCmd cmd) {
+        reviewMapper.findById(cmd.getId())
+                .orElseThrow(() -> new BusinessException("评价不存在: " + cmd.getId()));
+        reviewMapper.markViolation(cmd.getId(), cmd.getViolationReason(), cmd.getOperatorName());
     }
 
     @Override
     public void delete(Long id) {
+        reviewMapper.findById(id)
+                .orElseThrow(() -> new BusinessException("评价不存在: " + id));
+        reviewMapper.softDelete(id);
+    }
+
+    @Override
+    @Transactional
+    public void adjustCreditScore(CreditScoreAdjustCmd cmd) {
+        if (cmd.getDelta() == null || cmd.getDelta() == 0) {
+            throw new BusinessException("信用分调整分值不能为空且不能为0");
+        }
+        int affected;
+        if ("WORKER".equalsIgnoreCase(cmd.getTargetType())) {
+            affected = reviewMapper.updateWorkerCreditScore(cmd.getTargetId(), cmd.getDelta());
+        } else if ("ENTERPRISE".equalsIgnoreCase(cmd.getTargetType())) {
+            affected = reviewMapper.updateEnterpriseCreditScore(cmd.getTargetId(), cmd.getDelta());
+        } else {
+            throw new BusinessException("不支持的目标类型: " + cmd.getTargetType());
+        }
+        if (affected == 0) {
+            throw new BusinessException("目标不存在或未更新: " + cmd.getTargetType() + " " + cmd.getTargetId());
+        }
+        reviewMapper.insertCreditScoreLog(cmd.getTargetType(), cmd.getTargetId(), cmd.getDelta(),
+                cmd.getReason(), cmd.getOperatorName());
+    }
+
+    private ReviewVO toVO(Review r) {
+        ReviewVO vo = new ReviewVO();
+        vo.setId(r.getId());
+        vo.setReviewType(r.getReviewType());
+        vo.setReviewerId(r.getReviewerId());
+        vo.setReviewerName(r.getReviewerName());
+        vo.setReviewerType(r.getReviewerType());
+        vo.setRevieweeId(r.getRevieweeId());
+        vo.setRevieweeName(r.getRevieweeName());
+        vo.setRevieweeType(r.getRevieweeType());
+        vo.setJobId(r.getJobId());
+        vo.setJobTitle(r.getJobTitle());
+        vo.setScheduleId(r.getScheduleId());
+        vo.setRating(r.getRating());
+        vo.setContent(r.getContent());
+        vo.setImages(r.getImages());
+        vo.setTags(r.getTags());
+        vo.setIsAnonymous(r.getIsAnonymous());
+        vo.setIsViolation(r.getIsViolation());
+        vo.setViolationReason(r.getViolationReason());
+        vo.setViolationHandledAt(r.getViolationHandledAt());
+        vo.setViolationHandlerName(r.getViolationHandlerName());
+        vo.setReplyContent(r.getReplyContent());
+        vo.setReplyAt(r.getReplyAt());
+        vo.setStatus(r.getStatus());
+        vo.setHelpfulCount(r.getHelpfulCount());
+        vo.setReportCount(r.getReportCount());
+        vo.setCreatedAt(r.getCreatedAt());
+        return vo;
     }
 }

@@ -18,37 +18,40 @@
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
-    <select id="findById" resultMap="ScheduleApplicationResultMap">
-        SELECT sa.*, j.title AS job_title, e.company_name, w.name AS worker_name, w.phone AS worker_phone
+    <sql id="baseColumns">
+        SELECT sa.id, sa.schedule_id, sa.worker_id, sa.status, sa.applied_at, sa.updated_at,
+               js.job_id, j.title AS job_title, j.company_id AS company_id,
+               e.company_name, w.name AS worker_name, w.phone AS worker_phone,
+               sa.updated_at AS reviewed_at
         FROM schedule_applications sa
-        LEFT JOIN jobs j ON sa.job_id = j.id
+        JOIN job_schedules js ON sa.schedule_id = js.id
+        JOIN jobs j ON js.job_id = j.id
         LEFT JOIN enterprises e ON j.company_id = e.id
-        LEFT JOIN workers w ON sa.worker_id = w.id
+        LEFT JOIN c_worker w ON sa.worker_id = w.id
+    </sql>
+
+    <select id="findById" resultMap="ScheduleApplicationResultMap">
+        <include refid="baseColumns"/>
         WHERE sa.id = #{id}
     </select>
 
     <select id="findByJobId" resultMap="ScheduleApplicationResultMap">
-        SELECT sa.*, j.title AS job_title, e.company_name, w.name AS worker_name, w.phone AS worker_phone
-        FROM schedule_applications sa
-        LEFT JOIN jobs j ON sa.job_id = j.id
-        LEFT JOIN enterprises e ON j.company_id = e.id
-        LEFT JOIN workers w ON sa.worker_id = w.id
-        WHERE sa.job_id = #{jobId}
+        <include refid="baseColumns"/>
+        WHERE js.job_id = #{jobId}
         ORDER BY sa.applied_at DESC
     </select>
 
     <select id="findByFilters" resultMap="ScheduleApplicationResultMap">
-        SELECT sa.*, j.title AS job_title, e.company_name, w.name AS worker_name, w.phone AS worker_phone
-        FROM schedule_applications sa
-        LEFT JOIN jobs j ON sa.job_id = j.id
-        LEFT JOIN enterprises e ON j.company_id = e.id
-        LEFT JOIN workers w ON sa.worker_id = w.id
+        <include refid="baseColumns"/>
         <where>
             <if test="status != null and status != ''">
                 AND sa.status = #{status}
             </if>
             <if test="companyId != null">
                 AND j.company_id = #{companyId}
+            </if>
+            <if test="jobId != null">
+                AND js.job_id = #{jobId}
             </if>
             <if test="keyword != null and keyword != ''">
                 AND (j.title LIKE CONCAT('%', #{keyword}, '%') OR w.name LIKE CONCAT('%', #{keyword}, '%'))
@@ -58,7 +61,7 @@
     </select>
 
     <update id="updateStatus">
-        UPDATE schedule_applications SET status = #{status}, reviewed_at = NOW() WHERE id = #{id}
+        UPDATE schedule_applications SET status = #{status} WHERE id = #{id}
     </update>
 
 </mapper>

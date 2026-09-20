@@ -14,4 +14,5 @@ public class Worker {
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Integer creditScore;
 }

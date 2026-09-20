@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.ReportMapper">
+
+    <select id="countJobs" resultType="long">
+        SELECT COUNT(*) FROM jobs
+    </select>
+
+    <select id="countApplications" resultType="long">
+        SELECT COUNT(*) FROM schedule_applications
+    </select>
+
+    <select id="countWorkers" resultType="long">
+        SELECT COUNT(*) FROM c_worker
+    </select>
+
+    <select id="countEnterprises" resultType="long">
+        SELECT COUNT(*) FROM enterprises
+    </select>
+
+    <select id="countTodayNewJobs" resultType="long">
+        SELECT COUNT(*) FROM jobs WHERE DATE(created_at) = CURDATE()
+    </select>
+
+    <select id="countTodayNewApplications" resultType="long">
+        SELECT COUNT(*) FROM schedule_applications WHERE DATE(applied_at) = CURDATE()
+    </select>
+
+    <select id="countTodayCompletedAttendance" resultType="long">
+        SELECT COUNT(*) FROM attendance_records
+        WHERE status = 'COMPLETED' AND DATE(created_at) = CURDATE()
+    </select>
+
+    <select id="sumPaidSettlement" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(payable_pay), 0) FROM attendance_records WHERE settlement_status = 'PAID'
+    </select>
+
+    <select id="sumTodayPaidSettlement" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(payable_pay), 0) FROM attendance_records
+        WHERE settlement_status = 'PAID' AND DATE(updated_at) = CURDATE()
+    </select>
+
+    <select id="sumJobViews" resultType="long">
+        SELECT COALESCE(SUM(views), 0) FROM jobs
+    </select>
+
+    <select id="countApprovedApplications" resultType="long">
+        SELECT COUNT(*) FROM schedule_applications WHERE status = 'ACCEPTED'
+    </select>
+
+    <select id="countCheckinRecords" resultType="long">
+        SELECT COUNT(*) FROM attendance_records WHERE status IN ('COMPLETED', 'ON_DUTY', 'LATE')
+    </select>
+
+    <select id="countSettledRecords" resultType="long">
+        SELECT COUNT(*) FROM attendance_records WHERE settlement_status = 'PAID'
+    </select>
+
+    <select id="enterpriseNewDaily" resultType="com.parttime.platform.pojo.vo.EnterpriseTrendVO">
+        SELECT DATE(created_at) AS date, COUNT(*) AS newEnterprises
+        FROM enterprises
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        GROUP BY DATE(created_at)
+    </select>
+
+    <select id="enterpriseJobDaily" resultType="com.parttime.platform.pojo.vo.EnterpriseTrendVO">
+        SELECT DATE(created_at) AS date,
+               COUNT(*) AS publishedJobs,
+               COUNT(DISTINCT company_id) AS activeEnterprises
+        FROM jobs
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        GROUP BY DATE(created_at)
+    </select>
+
+    <select id="workerNewDaily" resultType="com.parttime.platform.pojo.vo.WorkerTrendVO">
+        SELECT DATE(created_at) AS date, COUNT(*) AS newWorkers
+        FROM c_worker
+        WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        GROUP BY DATE(created_at)
+    </select>
+
+    <select id="workerAppDaily" resultType="com.parttime.platform.pojo.vo.WorkerTrendVO">
+        SELECT DATE(applied_at) AS date,
+               COUNT(*) AS applications,
+               COUNT(DISTINCT worker_id) AS activeWorkers
+        FROM schedule_applications
+        WHERE applied_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+        GROUP BY DATE(applied_at)
+    </select>
+
+    <select id="enterpriseRanking" resultType="com.parttime.platform.pojo.vo.EnterpriseActivityVO">
+        SELECT e.id AS enterpriseId,
+               e.company_name AS enterpriseName,
+               (SELECT COUNT(*) FROM jobs j WHERE j.company_id = e.id) AS jobCount,
+               (SELECT COUNT(*) FROM schedule_applications sa
+                  JOIN job_schedules js ON sa.schedule_id = js.id
+                 WHERE js.job_id IN (SELECT id FROM jobs WHERE company_id = e.id)) AS applicationCount,
+               (SELECT COALESCE(SUM(ar.payable_pay), 0) FROM attendance_records ar
+                 WHERE ar.company_id = e.id AND ar.settlement_status = 'PAID') AS totalSettlement
+        FROM enterprises e
+        ORDER BY applicationCount DESC
+        LIMIT 20
+    </select>
+
+    <select id="workerRanking" resultType="com.parttime.platform.pojo.vo.WorkerActivityVO">
+        SELECT w.id AS workerId,
+               w.name AS workerName,
+               w.phone AS workerPhone,
+               (SELECT COUNT(*) FROM attendance_records ar
+                 WHERE ar.worker_id = w.id AND ar.status IN ('COMPLETED', 'ON_DUTY', 'LATE')) AS completedJobs,
+               (SELECT COALESCE(SUM(ar.payable_pay), 0) FROM attendance_records ar
+                 WHERE ar.worker_id = w.id AND ar.settlement_status = 'PAID') AS totalEarnings
+        FROM c_worker w
+        WHERE w.id IN (SELECT DISTINCT worker_id FROM attendance_records WHERE worker_id IS NOT NULL)
+        ORDER BY totalEarnings DESC
+        LIMIT 20
+    </select>
+
+    <select id="categorySupplyDemand" resultType="com.parttime.platform.pojo.vo.CategorySupplyVO">
+        SELECT c.name AS category,
+               (SELECT COALESCE(SUM(j.headcount), 0) FROM jobs j
+                 WHERE j.category_id = c.id AND j.status = 'PUBLISHED') AS demand,
+               (SELECT COUNT(*) FROM schedule_applications sa
+                  JOIN job_schedules js ON sa.schedule_id = js.id
+                  JOIN jobs j2 ON js.job_id = j2.id
+                 WHERE j2.category_id = c.id) AS supply
+        FROM job_categories c
+        WHERE c.status = 'ACTIVE'
+        ORDER BY demand DESC
+    </select>
+
+</mapper>

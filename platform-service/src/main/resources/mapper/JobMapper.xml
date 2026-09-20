@@ -68,6 +68,15 @@
         ORDER BY j.created_at DESC
     </select>
 
+    <select id="findRecommended" resultMap="JobResultMap">
+        SELECT j.*, e.company_name, c.name AS category_name
+        FROM jobs j
+        LEFT JOIN enterprises e ON j.company_id = e.id
+        LEFT JOIN job_categories c ON j.category_id = c.id
+        WHERE j.is_recommended = 1
+        ORDER BY j.sort_order ASC, j.created_at DESC
+    </select>
+
     <update id="updateStatus">
         UPDATE jobs SET status = #{status} WHERE id = #{id}
     </update>

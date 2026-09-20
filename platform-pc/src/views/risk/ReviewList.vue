@@ -43,7 +43,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { listReviews, markReviewViolation, deleteReview } from '../../api/reviews'
+import { listReviews, markReviewViolation, deleteReview } from '../../api/reviewAdmin'
 
 const loading = ref(false)
 const reviews = ref([])
@@ -61,8 +61,8 @@ async function fetchData() {
 
 async function handleMarkViolation(row) {
   try {
-    await ElMessageBox.confirm(`确定标记该评价为违规？`, '提示', { type: 'warning' })
-    await markReviewViolation(row.id)
+    const { value: reason } = await ElMessageBox.prompt('请输入违规原因', '标记违规', { type: 'warning' })
+    await markReviewViolation({ id: row.id, violationReason: reason, operatorName: '管理员' })
     ElMessage.success('已标记为违规')
     await fetchData()
   } catch {}

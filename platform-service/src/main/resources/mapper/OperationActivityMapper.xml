@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.OperationActivityMapper">
+
+    <resultMap id="OperationActivityResultMap" type="com.parttime.platform.pojo.entity.OperationActivity">
+        <id property="id" column="id"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="activityType" column="activity_type"/>
+        <result property="bannerImage" column="banner_image"/>
+        <result property="contentImage" column="content_image"/>
+        <result property="linkUrl" column="link_url"/>
+        <result property="status" column="status"/>
+        <result property="startTime" column="start_time"/>
+        <result property="endTime" column="end_time"/>
+        <result property="participantCount" column="participant_count"/>
+        <result property="viewCount" column="view_count"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="operatorId" column="operator_id"/>
+        <result property="operatorName" column="operator_name"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findAll" resultMap="OperationActivityResultMap">
+        SELECT * FROM operation_activities ORDER BY sort_order ASC, created_at DESC
+    </select>
+
+    <select id="findById" resultMap="OperationActivityResultMap">
+        SELECT * FROM operation_activities WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO operation_activities
+            (title, description, activity_type, banner_image, content_image, link_url,
+             status, start_time, end_time, participant_count, view_count, sort_order,
+             operator_id, operator_name)
+        VALUES
+            (#{title}, #{description}, #{activityType}, #{bannerImage}, #{contentImage}, #{linkUrl},
+             #{status}, #{startTime}, #{endTime}, 0, 0, #{sortOrder},
+             #{operatorId}, #{operatorName})
+    </insert>
+
+    <update id="update">
+        UPDATE operation_activities
+        SET title = #{title},
+            description = #{description},
+            activity_type = #{activityType},
+            banner_image = #{bannerImage},
+            content_image = #{contentImage},
+            link_url = #{linkUrl},
+            status = #{status},
+            start_time = #{startTime},
+            end_time = #{endTime},
+            sort_order = #{sortOrder}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE operation_activities SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM operation_activities WHERE id = #{id}
+    </delete>
+
+    <select id="countApplicationsByDateRange" resultType="long">
+        SELECT COUNT(*) FROM schedule_applications
+        WHERE applied_at BETWEEN #{startTime} AND #{endTime}
+    </select>
+
+</mapper>
