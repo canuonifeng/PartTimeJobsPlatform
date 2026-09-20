@@ -155,7 +155,7 @@ class JobServiceTest {
         when(scheduleApplicationMapper.countByJobIdAndStatus(1L, "PENDING")).thenReturn(2);
         when(scheduleApplicationMapper.countByJobIdAndStatus(2L, "PENDING")).thenReturn(1);
 
-        List<JobVO> jobs = jobService.getJobsByCompany(1L, null, null, null);
+        List<JobVO> jobs = jobService.getJobsByCompany(1L, null, null, null, null);
 
         assertThat(jobs).hasSize(2);
         assertThat(jobs.get(0).getApplicationCount()).isEqualTo(8);

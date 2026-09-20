@@ -29,6 +29,7 @@ import com.parttime.cservice.pojo.vo.JobTagVO;
 import com.parttime.cservice.pojo.vo.NotificationVO;
 import com.parttime.cservice.pojo.vo.PageVO;
 import com.parttime.cservice.pojo.vo.WorkerSignupVO;
+import com.parttime.cservice.service.CertificationGateService;
 import com.parttime.cservice.service.JobService;
 import org.springframework.stereotype.Service;
 
@@ -72,6 +73,8 @@ public class JobServiceImpl implements JobService {
     private ShiftMapper shiftMapper;
     @Resource
     private NotificationMapper notificationMapper;
+    @Resource
+    private CertificationGateService certificationGateService;
 
     @Override
     public PageVO<JobSummaryVO> searchJobs(String keyword, Long categoryId, String location,
@@ -245,6 +248,11 @@ public class JobServiceImpl implements JobService {
         Job job = jobMapper.findByJobId(jobId).orElse(null);
         if (job == null) {
             throw new RuntimeException("岗位不存在");
+        }
+        // 标注任务等需要技能认证的任务类型，抢单前强制校验认证
+        if (job.getTaskType() != null && !job.getTaskType().isBlank()
+                && !"WORK".equals(job.getTaskType())) {
+            certificationGateService.checkCertification(workerId, job.getTaskType());
         }
         if (job.getDeadline() != null && LocalDateTime.now().isAfter(job.getDeadline())) {
             throw new RuntimeException("报名已截止");
@@ -527,6 +535,11 @@ public class JobServiceImpl implements JobService {
                     .toList();
             if (!scheduleIds.isEmpty()) {
                 detail.setAppliedScheduleIds(scheduleIds);
+            }
+            if (job.getTaskType() != null && !job.getTaskType().isBlank()
+                    && !"WORK".equals(job.getTaskType())) {
+                detail.setCertificationRequired(true);
+                detail.setCertified(certificationGateService.hasCertification(workerId, job.getTaskType()));
             }
         }
         return detail;

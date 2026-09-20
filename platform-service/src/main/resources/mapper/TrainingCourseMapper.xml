@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.TrainingCourseMapper">
+
+    <resultMap id="TrainingCourseMap" type="com.parttime.platform.pojo.entity.TrainingCourse">
+        <id property="id" column="id"/>
+        <result property="certificationId" column="certification_id"/>
+        <result property="title" column="title"/>
+        <result property="summary" column="summary"/>
+        <result property="content" column="content"/>
+        <result property="examJson" column="exam_json"/>
+        <result property="passScore" column="pass_score"/>
+        <result property="status" column="status"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.parttime.platform.pojo.entity.TrainingCourse"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO training_courses (certification_id, title, summary, content, exam_json, pass_score, status, sort_order)
+        VALUES (#{certificationId}, #{title}, #{summary}, #{content}, #{examJson}, #{passScore}, #{status}, #{sortOrder})
+    </insert>
+
+    <select id="findById" resultMap="TrainingCourseMap">
+        SELECT * FROM training_courses WHERE id = #{id}
+    </select>
+
+    <select id="findAll" resultMap="TrainingCourseMap">
+        SELECT * FROM training_courses ORDER BY sort_order ASC, id DESC
+    </select>
+
+    <update id="update" parameterType="com.parttime.platform.pojo.entity.TrainingCourse">
+        UPDATE training_courses
+        SET certification_id = #{certificationId},
+            title = #{title},
+            summary = #{summary},
+            content = #{content},
+            exam_json = #{examJson},
+            pass_score = #{passScore},
+            sort_order = #{sortOrder}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE training_courses SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM training_courses WHERE id = #{id}
+    </delete>
+
+</mapper>

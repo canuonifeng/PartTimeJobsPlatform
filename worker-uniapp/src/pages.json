@@ -137,6 +137,24 @@
       "style": {
         "navigationBarTitleText": "我的任务单"
       }
+    },
+    {
+      "path": "pages/training/trainingList",
+      "style": {
+        "navigationBarTitleText": "培训中心"
+      }
+    },
+    {
+      "path": "pages/training/trainingDetail",
+      "style": {
+        "navigationBarTitleText": "课程详情"
+      }
+    },
+    {
+      "path": "pages/training/myCertifications",
+      "style": {
+        "navigationBarTitleText": "我的技能认证"
+      }
     }
   ],
   "tabBar": {

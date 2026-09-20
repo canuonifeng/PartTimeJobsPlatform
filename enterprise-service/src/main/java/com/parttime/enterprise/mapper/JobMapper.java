@@ -20,6 +20,10 @@ public interface JobMapper {
 
     List<Job> findByCompanyIdAndStatus(@Param("companyId") Long companyId, @Param("status") String status);
 
+    List<Job> findByCompanyIdAndStatusAndTaskType(@Param("companyId") Long companyId,
+                                                  @Param("status") String status,
+                                                  @Param("taskType") String taskType);
+
     List<Job> findByCategoryId(Long categoryId);
 
     int updateStatus(@Param("id") Long id, @Param("status") String status);

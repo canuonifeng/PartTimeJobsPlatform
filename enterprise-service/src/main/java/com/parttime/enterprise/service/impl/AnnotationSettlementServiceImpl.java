@@ -30,12 +30,18 @@ public class AnnotationSettlementServiceImpl implements AnnotationSettlementServ
     @Override
     @Transactional
     public void settleAnnotationTask(AnnotationTaskOrder taskOrder, Job job) {
+        // 计价信息以 Job 为准（annotation_task_orders 表不落库计价字段）
+        String pricingMode = job.getPricingMode();
+        BigDecimal unitPrice = job.getPricePerUnit();
+        if (unitPrice == null) {
+            throw new IllegalStateException("标注任务缺少单价，无法结算: jobId=" + job.getId());
+        }
         BigDecimal amount;
-        if ("PER_ITEM".equals(taskOrder.getPricingMode())) {
-            amount = BigDecimal.valueOf(taskOrder.getCompletedItems())
-                    .multiply(taskOrder.getUnitPrice());
+        if ("PER_ITEM".equals(pricingMode)) {
+            int completed = taskOrder.getCompletedItems() == null ? 0 : taskOrder.getCompletedItems();
+            amount = BigDecimal.valueOf(completed).multiply(unitPrice);
         } else {
-            amount = taskOrder.getTotalAmount();
+            amount = unitPrice;
         }
 
         Long workerId = taskOrder.getWorkerId();

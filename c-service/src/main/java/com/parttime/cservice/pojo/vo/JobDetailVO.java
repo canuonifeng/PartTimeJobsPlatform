@@ -73,4 +73,9 @@ public class JobDetailVO {
     private String applyStatus;
     @Schema(description = "当前工人已报名的排班ID列表")
     private List<Long> appliedScheduleIds;
+
+    @Schema(description = "是否要求技能认证")
+    private Boolean certificationRequired;
+    @Schema(description = "当前工人是否已具备所需认证")
+    private Boolean certified;
 }

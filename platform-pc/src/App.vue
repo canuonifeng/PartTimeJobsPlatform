@@ -41,6 +41,8 @@
           <el-menu-item index="/activities">活动运营</el-menu-item>
           <el-menu-item index="/categories">职位分类</el-menu-item>
           <el-menu-item index="/job-tags">标签管理</el-menu-item>
+          <el-menu-item index="/training/certifications">技能认证</el-menu-item>
+          <el-menu-item index="/training/courses">培训课程</el-menu-item>
         </el-sub-menu>
         <el-menu-item index="/report-center">
           <el-icon><DataLine /></el-icon><span>报表中心</span>

@@ -244,9 +244,11 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public List<JobVO> getJobsByCompany(Long companyId, String status, Integer page, Integer pageSize) {
+    public List<JobVO> getJobsByCompany(Long companyId, String status, String taskType, Integer page, Integer pageSize) {
         List<Job> jobs;
-        if (status != null && !status.isEmpty()) {
+        if (status != null && !status.isEmpty() && taskType != null && !taskType.isEmpty()) {
+            jobs = jobMapper.findByCompanyIdAndStatusAndTaskType(companyId, status, taskType);
+        } else if (status != null && !status.isEmpty()) {
             jobs = jobMapper.findByCompanyIdAndStatus(companyId, status);
         } else {
             jobs = jobMapper.findByCompanyId(companyId);

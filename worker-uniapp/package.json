@@ -7,7 +7,8 @@
     "dev:mp-weixin": "uni -p mp-weixin",
     "dev:h5": "uni",
     "build:mp-weixin": "uni build -p mp-weixin",
-    "build:h5": "uni build"
+    "build:h5": "uni build",
+    "test": "vitest run --config vitest.config.js"
   },
   "dependencies": {
     "@dcloudio/uni-app": "3.0.0-alpha-5000920260515001",
@@ -22,6 +23,7 @@
     "@dcloudio/uni-cli-shared": "3.0.0-alpha-5000920260515001",
     "@dcloudio/vite-plugin-uni": "^3.0.0-alpha-5000920260515001",
     "sass": "^1.99.0",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "vitest": "^1.6.1"
   }
 }

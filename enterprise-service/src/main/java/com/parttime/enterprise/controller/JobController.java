@@ -34,9 +34,10 @@ public class JobController {
 
     @Operation(summary = "获取岗位列表")
     @GetMapping
-    public ApiResponse<List<JobVO>> listJobs(@RequestParam(required = false) String status) {
+    public ApiResponse<List<JobVO>> listJobs(@RequestParam(required = false) String status,
+                                             @RequestParam(required = false) String taskType) {
         Long companyId = SecurityUtil.getCurrentCompanyId();
-        return ApiResponse.success(jobService.getJobsByCompany(companyId, status));
+        return ApiResponse.success(jobService.getJobsByCompany(companyId, status, taskType, null, null));
     }
 
     @Operation(summary = "获取岗位详情")

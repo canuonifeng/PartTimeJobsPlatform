@@ -1,6 +1,8 @@
 package com.parttime.cservice.controller;
 
+import com.parttime.cservice.pojo.cmd.GrabTaskOrderCmd;
 import com.parttime.cservice.pojo.vo.ApiResponse;
+import com.parttime.cservice.pojo.vo.GrabTaskOrderVO;
 import com.parttime.cservice.pojo.vo.PageVO;
 import com.parttime.cservice.pojo.vo.TaskOrderVO;
 import com.parttime.cservice.service.TaskOrderService;
@@ -12,6 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.Resource;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -33,5 +36,19 @@ public class TaskOrderController {
         Long workerId = Long.valueOf(auth.getName());
         PageVO<TaskOrderVO> result = taskOrderService.getMyTaskOrders(workerId, page, pageSize);
         return ApiResponse.success(result);
+    }
+
+    @Operation(summary = "抢标注任务", description = "抢标注任务批次，需先完成培训并获得技能认证")
+    @PostMapping("/grab")
+    public ApiResponse<GrabTaskOrderVO> grabTaskOrder(@RequestBody GrabTaskOrderCmd cmd) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return ApiResponse.error(401, "未登录");
+        }
+        Long workerId = Long.valueOf(auth.getName());
+        int count = taskOrderService.grabTaskOrder(workerId, cmd);
+        GrabTaskOrderVO vo = new GrabTaskOrderVO();
+        vo.setGrabbed(count);
+        return ApiResponse.success(vo);
     }
 }

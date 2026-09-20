@@ -10,7 +10,8 @@ const total = ref(0)
 const loading = ref(false)
 const searchForm = ref({
   title: '',
-  status: ''
+  status: '',
+  taskType: ''
 })
 
 async function fetchData() {
@@ -30,7 +31,7 @@ function handleSearch() {
 }
 
 function handleReset() {
-  searchForm.value = { title: '', status: '' }
+  searchForm.value = { title: '', status: '', taskType: '' }
   fetchData()
 }
 
@@ -92,6 +93,16 @@ const statusOptions = [
   { value: 'CLOSED', label: '已关闭' }
 ]
 
+const taskTypeOptions = [
+  { value: 'WORK', label: '零工' },
+  { value: 'ANNOTATION', label: '标注' }
+]
+
+const taskTypeMap = {
+  WORK: 'info',
+  ANNOTATION: 'warning'
+}
+
 const statusMap = {
   DRAFT: 'info',
   PUBLISHED: 'success',
@@ -115,6 +126,11 @@ onMounted(() => {
             <el-option v-for="opt in statusOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
           </el-select>
         </el-form-item>
+        <el-form-item label="任务类型">
+          <el-select v-model="searchForm.taskType" placeholder="全部" clearable style="width: 140px">
+            <el-option v-for="opt in taskTypeOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+          </el-select>
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">查询</el-button>
           <el-button @click="handleReset">重置</el-button>
@@ -131,6 +147,13 @@ onMounted(() => {
         <el-table-column label="工作地点" width="180">
           <template #default="{ row }">
             {{ row.location || [row.province, row.city, row.district, row.address].filter(Boolean).join(' ') || '暂无' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="任务类型" width="100">
+          <template #default="{ row }">
+            <el-tag :type="taskTypeMap[row.taskType] || 'info'" size="small">
+              {{ (taskTypeOptions.find(o => o.value === row.taskType))?.label || '零工' }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column prop="categoryName" label="类别" width="100" />

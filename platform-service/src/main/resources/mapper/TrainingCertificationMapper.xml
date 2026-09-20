@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.TrainingCertificationMapper">
+
+    <resultMap id="TrainingCertificationMap" type="com.parttime.platform.pojo.entity.TrainingCertification">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="code" column="code"/>
+        <result property="taskType" column="task_type"/>
+        <result property="description" column="description"/>
+        <result property="validDays" column="valid_days"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.parttime.platform.pojo.entity.TrainingCertification"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO training_certifications (name, code, task_type, description, valid_days, status)
+        VALUES (#{name}, #{code}, #{taskType}, #{description}, #{validDays}, #{status})
+    </insert>
+
+    <select id="findById" resultMap="TrainingCertificationMap">
+        SELECT * FROM training_certifications WHERE id = #{id}
+    </select>
+
+    <select id="findByCode" resultMap="TrainingCertificationMap">
+        SELECT * FROM training_certifications WHERE code = #{code} LIMIT 1
+    </select>
+
+    <select id="findAll" resultMap="TrainingCertificationMap">
+        SELECT * FROM training_certifications ORDER BY id DESC
+    </select>
+
+    <update id="update" parameterType="com.parttime.platform.pojo.entity.TrainingCertification">
+        UPDATE training_certifications
+        SET name = #{name},
+            code = #{code},
+            task_type = #{taskType},
+            description = #{description},
+            valid_days = #{validDays}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE training_certifications SET status = #{status} WHERE id = #{id}
+    </update>
+
+</mapper>

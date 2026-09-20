@@ -183,6 +183,18 @@ const routes = [
       name: 'ReferralAudit',
       component: () => import('../views/referral/ReferralAudit.vue'),
       meta: { requiresAuth: true, title: '奖励审核' }
+    },
+    {
+      path: '/training/certifications',
+      name: 'TrainingCertifications',
+      component: () => import('../views/training/TrainingCertificationList.vue'),
+      meta: { requiresAuth: true, title: '技能认证管理' }
+    },
+    {
+      path: '/training/courses',
+      name: 'TrainingCourses',
+      component: () => import('../views/training/TrainingCourseList.vue'),
+      meta: { requiresAuth: true, title: '培训课程管理' }
     }
   ]
 

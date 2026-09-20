@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.cservice.mapper.WorkerCertificationMapper">
+
+    <resultMap id="WorkerCertificationMap" type="com.parttime.cservice.pojo.entity.WorkerCertification">
+        <id property="id" column="id"/>
+        <result property="workerId" column="worker_id"/>
+        <result property="certificationId" column="certification_id"/>
+        <result property="status" column="status"/>
+        <result property="grantedAt" column="granted_at"/>
+        <result property="expiresAt" column="expires_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByWorkerAndCert" resultMap="WorkerCertificationMap">
+        SELECT * FROM worker_certifications WHERE worker_id = #{workerId} AND certification_id = #{certificationId} LIMIT 1
+    </select>
+
+    <select id="findByWorkerId" resultMap="WorkerCertificationMap">
+        SELECT * FROM worker_certifications WHERE worker_id = #{workerId}
+    </select>
+
+    <insert id="insert" parameterType="com.parttime.cservice.pojo.entity.WorkerCertification"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO worker_certifications (worker_id, certification_id, status, granted_at, expires_at)
+        VALUES (#{workerId}, #{certificationId}, #{status}, #{grantedAt}, #{expiresAt})
+    </insert>
+
+    <update id="update" parameterType="com.parttime.cservice.pojo.entity.WorkerCertification">
+        UPDATE worker_certifications
+        SET status = #{status},
+            granted_at = #{grantedAt},
+            expires_at = #{expiresAt}
+        WHERE id = #{id}
+    </update>
+
+</mapper>

@@ -29,7 +29,7 @@ const copyVisible = ref(false)
 const copyForm = reactive({ sourceScheduleId: null, scheduleDate: '', startTime: '', endTime: '' })
 const batchVisible = ref(false)
 const jobOptions = ref([])
-const batchForm = reactive({ jobId: null, startDate: '', endDate: '', weekdays: [], startTime: '', endTime: '' })
+const batchForm = reactive({ jobId: null, startDate: '', endDate: '', weekdays: [], startTime: '', endTime: '', totalItems: null, externalBatchId: '' })
 
 function isExpiredSchedule(row) {
   if (!row.scheduleDate || !row.endTime) return false
@@ -211,6 +211,7 @@ onMounted(loadData)
       <el-table v-loading="loading" :data="rows" stripe>
         <el-table-column prop="scheduleName" label="班次名称" min-width="190" />
         <el-table-column prop="jobTitle" label="岗位" min-width="150" />
+        <el-table-column prop="externalBatchId" label="外部批次ID" min-width="150"><template #default="{ row }">{{ row.externalBatchId || '-' }}</template></el-table-column>
         <el-table-column label="日期/时间" min-width="170"><template #default="{ row }"><div>{{ row.scheduleDate }}</div><div class="muted">{{ row.startTime }} - {{ row.endTime }}</div></template></el-table-column>
         <el-table-column label="联系人" min-width="150"><template #default="{ row }"><div>{{ row.contactName || '-' }}</div><div class="muted">{{ row.contactPhone || '-' }}</div></template></el-table-column>
         <el-table-column label="报名" width="120"><template #default="{ row }"><el-button link type="primary" @click="openApplicants(row)">{{ row.applicationCount || 0 }} 人</el-button><div class="muted">待审 {{ row.pendingCount || 0 }}</div></template></el-table-column>
@@ -261,6 +262,8 @@ onMounted(loadData)
         <el-form-item label="日期范围"><el-date-picker v-model="batchForm.startDate" value-format="YYYY-MM-DD" placeholder="开始日期" /> <el-date-picker v-model="batchForm.endDate" value-format="YYYY-MM-DD" placeholder="结束日期" /></el-form-item>
         <el-form-item label="周几"><el-checkbox-group v-model="batchForm.weekdays"><el-checkbox-button v-for="day in [1,2,3,4,5,6,7]" :key="day" :label="day">周{{ ['一','二','三','四','五','六','日'][day - 1] }}</el-checkbox-button></el-checkbox-group></el-form-item>
         <el-form-item label="时间"><el-time-picker v-model="batchForm.startTime" value-format="HH:mm:ss" /> <el-time-picker v-model="batchForm.endTime" value-format="HH:mm:ss" /></el-form-item>
+        <el-form-item label="标注条数"><el-input-number v-model="batchForm.totalItems" :min="1" placeholder="标注任务批次总条数" style="width: 180px" /></el-form-item>
+        <el-form-item label="外部批次ID"><el-input v-model="batchForm.externalBatchId" placeholder="标注任务外部系统批次ID" style="width: 240px" /></el-form-item>
       </el-form>
       <template #footer><el-button @click="batchVisible = false">取消</el-button><el-button type="primary" @click="submitBatch">创建</el-button></template>
     </el-dialog>

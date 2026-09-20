@@ -136,15 +136,15 @@ public class ExternalCallbackServiceImpl implements ExternalCallbackService {
             throw new BusinessException("未找到对应的任务订单");
         }
 
+        if (cmd.getItemsCompleted() != null) {
+            order.setCompletedItems(cmd.getItemsCompleted());
+        }
         if (Boolean.TRUE.equals(cmd.getPassed())) {
             order.setStatus(AnnotationTaskOrderStatus.COMPLETED.getCode());
             order.setCompletedAt(LocalDateTime.now());
             annotationSettlementService.settleAnnotationTask(order, job);
         } else {
             order.setStatus(AnnotationTaskOrderStatus.REJECTED.getCode());
-        }
-        if (cmd.getItemsCompleted() != null) {
-            order.setCompletedItems(cmd.getItemsCompleted());
         }
         taskOrderMapper.update(order);
     }

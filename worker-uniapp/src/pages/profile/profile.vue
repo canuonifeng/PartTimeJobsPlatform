@@ -110,7 +110,10 @@ const existingPageUrls = [
   '/pages/referral/referral',
   '/pages/referral/referralRecords',
   '/pages/bank/bankCard',
-  '/pages/profile/changePhone'
+  '/pages/profile/changePhone',
+  '/pages/training/trainingList',
+  '/pages/training/trainingDetail',
+  '/pages/training/myCertifications'
 ]
 
 const monthIncome = computed(() => numberValue(dashboardStats.value?.monthIncome))
@@ -131,7 +134,9 @@ const menuGroups = [
     { title: '我的报名', url: '/pages/signup/signup', icon: '报', iconClass: 'icon-blue' },
     { title: '打卡记录', url: '/pages/attendance/clockIn', icon: '卡', iconClass: 'icon-orange' },
     { title: '收入明细', url: '/pages/earnings/earnings', icon: '收', iconClass: 'icon-gold' },
-    { title: '我的任务单', url: '/pages/earnings/myTaskOrders', icon: '标', iconClass: 'icon-cyan' }
+    { title: '我的任务单', url: '/pages/earnings/myTaskOrders', icon: '标', iconClass: 'icon-cyan' },
+    { title: '培训中心', url: '/pages/training/trainingList', icon: '培', iconClass: 'icon-green' },
+    { title: '我的认证', url: '/pages/training/myCertifications', icon: '证', iconClass: 'icon-purple' }
   ],
   [
     { title: '手机号', value: computed(() => profile.value?.phone || profile.value?.mobile || '未绑定'), icon: '手', iconClass: 'icon-cyan' },

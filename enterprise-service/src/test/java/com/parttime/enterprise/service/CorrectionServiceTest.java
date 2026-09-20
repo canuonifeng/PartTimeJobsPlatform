@@ -277,6 +277,7 @@ public class CorrectionServiceTest {
         @Override public int update(Job job) { store.put(job.getId(), job); return 1; }
         @Override public int delete(Long id) { store.remove(id); return 1; }
         @Override public List<Job> findByCompanyIdAndStatus(Long companyId, String status) { return List.of(); }
+        @Override public List<Job> findByCompanyIdAndStatusAndTaskType(Long companyId, String status, String taskType) { return List.of(); }
         @Override public List<Job> findByCategoryId(Long categoryId) { return List.of(); }
         @Override public int updateStatus(Long id, String status) { return 0; }
         @Override public List<Job> findByIds(List<Long> ids) {

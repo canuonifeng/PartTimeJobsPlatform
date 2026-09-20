@@ -22,10 +22,10 @@ public interface JobService {
     JobVO getJobById(Long id);
 
     default List<JobVO> getJobsByCompany(Long companyId, String status) {
-        return getJobsByCompany(companyId, status, null, null);
+        return getJobsByCompany(companyId, status, null, null, null);
     }
 
-    List<JobVO> getJobsByCompany(Long companyId, String status, Integer page, Integer pageSize);
+    List<JobVO> getJobsByCompany(Long companyId, String status, String taskType, Integer page, Integer pageSize);
 
     JobVO publishJob(Long id);
 

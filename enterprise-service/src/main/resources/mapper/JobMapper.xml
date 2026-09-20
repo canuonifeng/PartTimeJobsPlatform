@@ -56,6 +56,14 @@
         SELECT * FROM jobs WHERE company_id = #{companyId} AND status = #{status} ORDER BY created_at DESC
     </select>
 
+    <select id="findByCompanyIdAndStatusAndTaskType" resultMap="JobResultMap">
+        SELECT * FROM jobs
+        WHERE company_id = #{companyId}
+          AND status = #{status}
+          AND task_type = #{taskType}
+        ORDER BY created_at DESC
+    </select>
+
     <select id="findByCategoryId" resultMap="JobResultMap">
         SELECT * FROM jobs WHERE category_id = #{categoryId} ORDER BY created_at DESC
     </select>

@@ -69,6 +69,20 @@
           </view>
         </view>
 
+        <view v-if="certificationRequired" class="detail-card cert-card" :class="{ 'cert-ok': certified }">
+          <view class="card-title">
+            <view class="title-icon"><text>🏅</text></view>
+            <text class="title-text">技能认证要求</text>
+          </view>
+          <view v-if="certified" class="cert-status ok">
+            <text>✅ 已获得技能认证，可以抢单</text>
+          </view>
+          <view v-else class="cert-status missing">
+            <text>⚠️ 本任务需要先完成培训并通过技能认证，才能抢单</text>
+            <button class="cert-btn" @click="goTraining">去培训认证</button>
+          </view>
+        </view>
+
         <view class="detail-card">
           <view class="card-title">
             <view class="title-icon"><text>📋</text></view>
@@ -97,6 +111,14 @@
 
       <view class="action-bar">
         <button
+          v-if="certificationRequired && !certified"
+          class="apply-btn-main cert-pending-btn"
+          @click="goTraining"
+        >
+          去培训认证
+        </button>
+        <button
+          v-else
           class="apply-btn-main"
           :class="{ disabled: !canGrab }"
           :disabled="!canGrab"
@@ -162,7 +184,15 @@ const dutyItems = computed(() => {
   return String(text).split(/\n|。|；|;/).map((item: string) => item.trim()).filter(Boolean)
 })
 
+const certificationRequired = computed(() => {
+  const taskType = job.value?.taskType
+  return taskType === 'ANNOTATION'
+})
+
+const certified = computed(() => !!job.value?.certified)
+
 const canGrab = computed(() => {
+  if (certificationRequired.value && !certified.value) return false
   if (!job.value || job.value.status === 'CLOSED') return false
   if (batches.value.length === 0) return false
   return batches.value.some((b: any) => b.remainingItems > 0)
@@ -197,6 +227,10 @@ async function handleGrab() {
   } finally {
     grabbing.value = false
   }
+}
+
+function goTraining() {
+  uni.navigateTo({ url: '/pages/training/trainingList' })
 }
 
 function goToMyTasks() {
@@ -517,6 +551,44 @@ onLoad((params: any) => {
   background: #d1d5db;
   color: #9ca3af;
   box-shadow: none;
+}
+
+.cert-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+  padding: 8rpx 0;
+  font-size: 26rpx;
+}
+
+.cert-status.ok {
+  color: #059669;
+}
+
+.cert-status.missing {
+  color: #b45309;
+}
+
+.cert-btn {
+  margin-top: 8rpx;
+  padding: 0 40rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  border-radius: 32rpx;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #fff;
+  font-size: 26rpx;
+  border: none;
+}
+
+.cert-btn::after {
+  border: none;
+}
+
+.cert-pending-btn {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  box-shadow: 0 10rpx 28rpx rgba(217, 119, 6, 0.4);
 }
 
 .empty-state {
