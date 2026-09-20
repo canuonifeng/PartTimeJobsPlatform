@@ -25,4 +25,8 @@ public class JobScheduleInfoVO {
     private String contactName;
     @Schema(description = "联系人电话快照")
     private String contactPhone;
+    @Schema(description = "总数量")
+    private Integer totalItems;
+    @Schema(description = "外部批次ID")
+    private String externalBatchId;
 }

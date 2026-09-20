@@ -199,4 +199,5 @@ mysql --default-character-set=utf8mb4 -h localhost -P 3306 \
 - `docs/后端技术规范.md`：后端目录、URL、Controller、Service、Mapper、数据库规范
 - `docs/前端技术规范.md`：前端目录、接口、页面、组件规范
 - `docs/系统概述.md`：系统整体介绍
+- `docs/资质认证要求.md`：零工平台资质认证要求与合规经营指南
 - `AGENTS.md`：AI 协作导航文件（模块定位、排查路线、验证命令）

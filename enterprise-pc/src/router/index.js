@@ -85,6 +85,18 @@ const routes = [
     meta: { requiresAuth: true, title: '招聘模板' }
   },
   {
+    path: '/jobs/task-orders',
+    name: 'TaskOrderList',
+    component: () => import('../views/jobs/TaskOrderList.vue'),
+    meta: { requiresAuth: true, title: '任务单管理' }
+  },
+  {
+    path: '/jobs/worker-mapping',
+    name: 'ExternalWorkerMapping',
+    component: () => import('../views/jobs/ExternalWorkerMapping.vue'),
+    meta: { requiresAuth: true, title: '人员映射' }
+  },
+  {
     path: '/locations',
     name: 'LocationList',
     component: () => import('../views/locations/LocationList.vue'),

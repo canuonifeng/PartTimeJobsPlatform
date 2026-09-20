@@ -67,7 +67,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/enterprise/auth/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/api/external/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/enterprise/external/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/enterprise/**")).authenticated()
                         .anyRequest().permitAll()
                 )

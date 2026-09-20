@@ -63,7 +63,11 @@ const form = ref({
   salaryRates: [{ type: '', rate: '' }],
   scheduleSlots: [{ date: '', startTime: '', endTime: '' }],
   autoApprove: null,
-  status: 'DRAFT'
+  status: 'DRAFT',
+  taskType: 'WORK',
+  pricingMode: 'PER_ITEM',
+  pricePerUnit: null,
+  totalItems: null
 })
 
 const categoryOptions = [
@@ -196,6 +200,10 @@ async function fetchDetail() {
       longitude: res.longitude || null,
       imageUrl: res.imageUrl || '',
       autoApprove: res.autoApprove ?? null,
+      taskType: res.taskType || 'WORK',
+      pricingMode: res.pricingMode || 'PER_ITEM',
+      pricePerUnit: res.pricePerUnit ?? null,
+      totalItems: res.totalItems ?? null,
       salaryRates: (res.rates || []).map((r) => ({ id: r.id, type: r.type || '', rate: r.amount || '' })),
       scheduleSlots: (res.schedules || []).map((s) => ({ id: s.id, date: s.scheduleDate || '', startTime: s.startTime || '', endTime: s.endTime || '' })),
       status: res.status || 'DRAFT'
@@ -227,6 +235,10 @@ function buildPayload() {
     imageUrl: form.value.imageUrl || null,
     autoApprove: form.value.autoApprove,
     status: form.value.status,
+    taskType: form.value.taskType,
+    pricingMode: form.value.taskType === 'ANNOTATION' ? form.value.pricingMode : null,
+    pricePerUnit: form.value.taskType === 'ANNOTATION' ? form.value.pricePerUnit : null,
+    totalItems: form.value.taskType === 'ANNOTATION' ? form.value.totalItems : null,
     rates: form.value.salaryRates.filter((r) => r.type && r.rate).map((r) => ({ id: r.id, type: r.type, amount: Number(r.rate), currency: 'CNY' })),
     schedules: form.value.scheduleSlots.filter((s) => s.date && s.startTime && s.endTime).map((s) => ({ id: s.id, scheduleDate: s.date, startTime: s.startTime, endTime: s.endTime }))
   }
@@ -331,6 +343,26 @@ onMounted(async () => {
             <el-option v-for="opt in categoryOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
           </el-select>
         </el-form-item>
+        <el-form-item label="任务类型">
+          <el-select v-model="form.taskType" style="width: 260px">
+            <el-option label="零工" value="WORK" />
+            <el-option label="标注任务" value="ANNOTATION" />
+          </el-select>
+        </el-form-item>
+        <template v-if="form.taskType === 'ANNOTATION'">
+          <el-form-item label="计价方式">
+            <el-select v-model="form.pricingMode" style="width: 260px">
+              <el-option label="按件计价" value="PER_ITEM" />
+              <el-option label="按包计价" value="PER_PACKAGE" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="单价">
+            <el-input-number v-model="form.pricePerUnit" :min="0" :precision="2" style="width: 260px" />
+          </el-form-item>
+          <el-form-item label="任务总量">
+            <el-input-number v-model="form.totalItems" :min="1" style="width: 260px" />
+          </el-form-item>
+        </template>
         <el-form-item label="岗位职责" prop="description">
           <el-input v-model="form.description" type="textarea" :rows="5" placeholder="请输入HTML富文本岗位职责" />
         </el-form-item>

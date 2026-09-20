@@ -125,6 +125,18 @@
       "style": {
         "navigationBarTitleText": "邀请记录"
       }
+    },
+    {
+      "path": "pages/jobs/jobDetailAnnotation",
+      "style": {
+        "navigationBarTitleText": "标注任务详情"
+      }
+    },
+    {
+      "path": "pages/earnings/myTaskOrders",
+      "style": {
+        "navigationBarTitleText": "我的任务单"
+      }
     }
   ],
   "tabBar": {

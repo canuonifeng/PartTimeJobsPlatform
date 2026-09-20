@@ -36,8 +36,8 @@ public class TaskOrderController {
     }
 
     @Operation(summary = "获取任务单详情", description = "根据ID获取任务单详情")
-    @GetMapping("/{id}")
-    public ApiResponse<AnnotationTaskOrder> getTaskOrderById(@PathVariable Long id) {
+    @GetMapping("/detail")
+    public ApiResponse<AnnotationTaskOrder> getTaskOrderById(@RequestParam Long id) {
         return ApiResponse.success(taskOrderService.getTaskOrderById(id));
     }
 }

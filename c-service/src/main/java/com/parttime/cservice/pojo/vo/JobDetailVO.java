@@ -60,6 +60,15 @@ public class JobDetailVO {
     @Schema(description = "岗位状态")
     private String status;
 
+    @Schema(description = "任务类型: WORK-工作, ANNOTATION-标注")
+    private String taskType;
+    @Schema(description = "计价模式: PER_ITEM-按件, PER_PACKAGE-按包")
+    private String pricingMode;
+    @Schema(description = "单价")
+    private BigDecimal pricePerUnit;
+    @Schema(description = "总数量")
+    private Integer totalItems;
+
     @Schema(description = "当前工人的申请状态")
     private String applyStatus;
     @Schema(description = "当前工人已报名的排班ID列表")

@@ -43,10 +43,11 @@ public class JobController {
             @Parameter(description = "最高薪资") @RequestParam(required = false) BigDecimal maxRate,
             @Parameter(description = "当前位置纬度") @RequestParam(required = false) BigDecimal latitude,
             @Parameter(description = "当前位置经度") @RequestParam(required = false) BigDecimal longitude,
+            @Parameter(description = "任务类型: WORK-工作, ANNOTATION-标注") @RequestParam(required = false) String taskType,
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") int page,
             @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize) {
         log.info("job");
-        PageVO<JobSummaryVO> results = jobService.searchJobs(keyword, categoryId, location, minRate, maxRate, latitude, longitude, page, pageSize);
+        PageVO<JobSummaryVO> results = jobService.searchJobs(keyword, categoryId, location, minRate, maxRate, latitude, longitude, taskType, page, pageSize);
         return ApiResponse.success(results);
     }
 

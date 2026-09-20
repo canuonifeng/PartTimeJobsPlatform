@@ -104,6 +104,7 @@ const existingPageUrls = [
   '/pages/signup/signup',
   '/pages/attendance/clockIn',
   '/pages/earnings/earnings',
+  '/pages/earnings/myTaskOrders',
   '/pages/auth/realName',
   '/pages/settings/settings',
   '/pages/referral/referral',
@@ -129,7 +130,8 @@ const menuGroups = [
     { title: '我的排班', url: '/pages/schedule/schedule', icon: '排', iconClass: 'icon-green' },
     { title: '我的报名', url: '/pages/signup/signup', icon: '报', iconClass: 'icon-blue' },
     { title: '打卡记录', url: '/pages/attendance/clockIn', icon: '卡', iconClass: 'icon-orange' },
-    { title: '收入明细', url: '/pages/earnings/earnings', icon: '收', iconClass: 'icon-gold' }
+    { title: '收入明细', url: '/pages/earnings/earnings', icon: '收', iconClass: 'icon-gold' },
+    { title: '我的任务单', url: '/pages/earnings/myTaskOrders', icon: '标', iconClass: 'icon-cyan' }
   ],
   [
     { title: '手机号', value: computed(() => profile.value?.phone || profile.value?.mobile || '未绑定'), icon: '手', iconClass: 'icon-cyan' },

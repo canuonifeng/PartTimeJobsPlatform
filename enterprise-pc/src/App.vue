@@ -58,6 +58,8 @@ function handleMenuSelect(index) {
             <span>招聘管理</span>
           </template>
           <el-menu-item index="/jobs">招聘计划</el-menu-item>
+          <el-menu-item index="/jobs/task-orders">任务单管理</el-menu-item>
+          <el-menu-item index="/jobs/worker-mapping">人员映射</el-menu-item>
           <el-menu-item index="/applications">报名审核</el-menu-item>
           <el-menu-item index="/locations">工作地点</el-menu-item>
           <el-menu-item index="/templates">招聘模板</el-menu-item>

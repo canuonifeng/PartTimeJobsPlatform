@@ -287,5 +287,6 @@ public class CorrectionServiceTest {
             }
             return result;
         }
+        @Override public Job findByExternalTaskId(String externalTaskId) { return null; }
     }
 }

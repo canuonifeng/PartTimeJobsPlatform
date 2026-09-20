@@ -27,6 +27,15 @@
     <scroll-view class="category-scroll" scroll-x :show-scrollbar="false">
       <view class="category-chips">
         <view
+          v-for="tab in taskTypeTabs"
+          :key="tab.key"
+          class="category-chip"
+          :class="{ active: activeTaskTypeTab === tab.key }"
+          @click="onTaskTypeTabChange(tab.key)"
+        >
+          <text class="chip-text">{{ tab.label }}</text>
+        </view>
+        <view
           v-for="cat in categories"
           :key="cat.key"
           class="category-chip"
@@ -49,18 +58,22 @@
       @refresherrefresh="onRefresh"
     >
       <view class="job-list-inner">
-        <view v-for="job in jobList" :key="job.id" class="job-card" @click="goDetail(job.id)">
+        <view v-for="job in jobList" :key="job.id" class="job-card" :class="{ 'annotation-card': job.taskType === 'ANNOTATION' }" @click="goDetail(job.id)">
+          <view v-if="job.taskType === 'ANNOTATION'" class="annotation-tag-row">
+            <text class="annotation-tag">标注任务</text>
+          </view>
           <view class="job-title-row">
             <text class="job-title">{{ job.title }}</text>
             <view class="job-pay-block">
-              <text class="job-pay">{{ formatRates(job.rates, job.minRate, job.maxRate) }}</text>
+              <text class="job-pay">{{ job.taskType === 'ANNOTATION' ? formatAnnotationPrice(job) : formatRates(job.rates, job.minRate, job.maxRate) }}</text>
               <text v-if="hotTagText(job)" class="job-hot-tag">{{ hotTagText(job) }}</text>
             </view>
           </view>
           <view class="job-meta">
-            <text class="job-address">{{ job.location || '附近' }}</text>
-            <text v-if="job.distanceKm != null && job.distanceKm > 0" class="job-distance">{{ job.distanceKm }}km</text>
-            <text v-else-if="job.distanceKm != null && job.distanceKm === 0" class="job-distance near">附近</text>
+            <text v-if="job.taskType === 'ANNOTATION'" class="job-address">共{{ job.totalItems || 0 }}条标注</text>
+            <text v-else class="job-address">{{ job.location || '附近' }}</text>
+            <text v-if="job.taskType !== 'ANNOTATION' && job.distanceKm != null && job.distanceKm > 0" class="job-distance">{{ job.distanceKm }}km</text>
+            <text v-else-if="job.taskType !== 'ANNOTATION' && job.distanceKm != null && job.distanceKm === 0" class="job-distance near">附近</text>
           </view>
           <view class="job-tags">
             <text v-for="(tag, idx) in getDisplayTags(job)" :key="idx" class="job-tag" :class="tagClass(tag)">{{ tag }}</text>
@@ -72,7 +85,7 @@
               </view>
               <text class="company-name">{{ job.companyName || '优选企业' }}</text>
             </view>
-            <view class="job-apply-btn" @click.stop="goApply(job.id)">去报名</view>
+            <view class="job-apply-btn" @click.stop="goApply(job.id)">{{ job.taskType === 'ANNOTATION' ? '抢单' : '去报名' }}</view>
           </view>
         </view>
 
@@ -119,6 +132,9 @@ type JobItem = {
   applyCount?: number
   urgent?: boolean
   newlyPosted?: boolean
+  taskType?: string
+  totalItems?: number
+  unitPrice?: number
 }
 
 const keyword = ref('')
@@ -133,9 +149,16 @@ const refreshing = ref(false)
 const currentLocation = ref<{ latitude: number; longitude: number } | null>(null)
 const locationLoaded = ref(false)
 const cityName = ref('')
+const activeTaskTypeTab = ref('all')
 
 const allCategory = { id: undefined, name: '全部', key: 'all' }
 const categories = ref<JobCategory[]>([allCategory])
+
+const taskTypeTabs = [
+  { key: 'all', label: '全部' },
+  { key: 'REGULAR', label: '零工' },
+  { key: 'ANNOTATION', label: '标注任务' }
+]
 
 
 
@@ -182,6 +205,7 @@ async function fetchJobs(p: number, append: boolean = false) {
     const res: { list?: JobItem[] } | JobItem[] | null | undefined = await getJobs({
       keyword: keyword.value || undefined,
       categoryId: categoryId.value,
+      taskType: activeTaskTypeTab.value === 'all' ? undefined : activeTaskTypeTab.value,
       page: p,
       pageSize,
       latitude: currentLocation.value?.latitude,
@@ -264,6 +288,13 @@ function onCategoryChange(id: number | undefined) {
   fetchJobs(1)
 }
 
+function onTaskTypeTabChange(key: string) {
+  activeTaskTypeTab.value = key
+  categoryId.value = undefined
+  page.value = 1
+  fetchJobs(1)
+}
+
 function loadMore() {
   if (loadingMore.value || !hasMore.value) return
   page.value += 1
@@ -277,11 +308,21 @@ function onRefresh() {
 }
 
 function goDetail(id: number) {
-  uni.navigateTo({ url: `/pages/jobs/jobDetail?id=${id}` })
+  const job = jobList.value.find(j => j.id === id)
+  if (job?.taskType === 'ANNOTATION') {
+    uni.navigateTo({ url: `/pages/jobs/jobDetailAnnotation?id=${id}` })
+  } else {
+    uni.navigateTo({ url: `/pages/jobs/jobDetail?id=${id}` })
+  }
 }
 
 function goApply(id: number) {
-  uni.navigateTo({ url: `/pages/jobs/jobDetail?id=${id}` })
+  const job = jobList.value.find(j => j.id === id)
+  if (job?.taskType === 'ANNOTATION') {
+    uni.navigateTo({ url: `/pages/jobs/jobDetailAnnotation?id=${id}` })
+  } else {
+    uni.navigateTo({ url: `/pages/jobs/jobDetail?id=${id}` })
+  }
 }
 
 function goProfile() {
@@ -335,6 +376,14 @@ function formatRates(rates?: JobRate[], fallbackMin?: number, fallbackMax?: numb
     return `${fallbackMin}-${fallbackMax}元/小时`
   }
   return `${fallbackMin || fallbackMax || 0}元/小时`
+}
+
+function formatAnnotationPrice(job: JobItem): string {
+  if (job.unitPrice) return `${job.unitPrice}元/条`
+  if (job.rates && job.rates.length > 0) {
+    return `${job.rates[0].amount}元/条`
+  }
+  return '价格待定'
 }
 
 async function refreshJobs() {
@@ -737,5 +786,27 @@ onMounted(() => {
 .job-apply-btn:active {
   transform: scale(0.95);
   opacity: 0.85;
+}
+
+.annotation-card {
+  border-left: 6rpx solid #3b82f6;
+}
+
+.annotation-card::before {
+  background: linear-gradient(180deg, #3b82f6 0%, #60a5fa 100%);
+}
+
+.annotation-tag-row {
+  margin-bottom: 12rpx;
+}
+
+.annotation-tag {
+  display: inline-block;
+  padding: 4rpx 16rpx;
+  border-radius: 8rpx;
+  background: #eff6ff;
+  color: #3b82f6;
+  font-size: 22rpx;
+  font-weight: 600;
 }
 </style>

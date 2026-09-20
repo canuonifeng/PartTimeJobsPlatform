@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/external")
+@RequestMapping("/api/enterprise/external")
 @Tag(name = "外部系统回调接口", description = "供外部系统调用的标注任务回调接口")
 public class ExternalCallbackController {
 

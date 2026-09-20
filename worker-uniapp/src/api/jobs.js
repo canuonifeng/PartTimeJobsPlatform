@@ -38,3 +38,27 @@ export function getMySignups(params) {
     data: params
   })
 }
+
+export function getTaskOrders(params) {
+  return request({
+    url: '/jobs/task-orders/my',
+    method: 'GET',
+    data: params
+  })
+}
+
+export function getAnnotationJobDetail(id) {
+  return request({
+    url: '/jobs/detail',
+    method: 'GET',
+    data: { id, taskType: 'ANNOTATION' }
+  })
+}
+
+export function grabTaskOrder(jobId, data) {
+  return request({
+    url: '/jobs/task-orders/grab',
+    method: 'POST',
+    data: { ...data, jobId }
+  })
+}
