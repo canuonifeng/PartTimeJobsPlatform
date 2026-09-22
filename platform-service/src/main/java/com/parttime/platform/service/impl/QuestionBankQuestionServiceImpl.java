@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,7 +61,7 @@ public class QuestionBankQuestionServiceImpl implements QuestionBankQuestionServ
         question.setBankId(cmd.getBankId());
         question.setQuestionType(cmd.getQuestionType());
         question.setStem(cmd.getStem().trim());
-        question.setOptionsJson(toOptionsJson(cmd.getOptions()));
+        question.setOptionsJson(normalizeOptionsJson(cmd.getOptions()));
         question.setAnswer(normalizeAnswer(cmd.getQuestionType(), cmd.getAnswer()));
         question.setAnalysis(cmd.getAnalysis());
         question.setStatus(DRAFT);
@@ -80,7 +81,7 @@ public class QuestionBankQuestionServiceImpl implements QuestionBankQuestionServ
         }
         question.setQuestionType(cmd.getQuestionType());
         question.setStem(cmd.getStem().trim());
-        question.setOptionsJson(toOptionsJson(cmd.getOptions()));
+        question.setOptionsJson(normalizeOptionsJson(cmd.getOptions()));
         question.setAnswer(normalizeAnswer(cmd.getQuestionType(), cmd.getAnswer()));
         question.setAnalysis(cmd.getAnalysis());
         question.setSortOrder(cmd.getSortOrder() == null ? question.getSortOrder() : cmd.getSortOrder());
@@ -180,7 +181,11 @@ public class QuestionBankQuestionServiceImpl implements QuestionBankQuestionServ
         if (options == null || options.isEmpty()) {
             return new ArrayList<>();
         }
-        return objectMapper.convertValue(options, new TypeReference<List<Map<String, String>>>() {});
+        try {
+            return objectMapper.convertValue(options, new TypeReference<List<Map<String, String>>>() {});
+        } catch (Exception e) {
+            throw new BusinessException("选项格式非法");
+        }
     }
 
     private List<String> parseAnswerKeys(String answer) {
@@ -195,15 +200,21 @@ public class QuestionBankQuestionServiceImpl implements QuestionBankQuestionServ
         return Arrays.stream(trimmed.split(","))
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
+                .distinct()
                 .collect(Collectors.toList());
     }
 
-    private String toOptionsJson(List<?> options) {
-        if (options == null || options.isEmpty()) {
-            return "[]";
+    private String normalizeOptionsJson(List<?> options) {
+        List<Map<String, String>> optList = parseOptionsNeutral(options);
+        List<Map<String, String>> trimmed = new ArrayList<>();
+        for (Map<String, String> opt : optList) {
+            Map<String, String> m = new LinkedHashMap<>();
+            m.put("key", opt.get("key").trim());
+            m.put("label", opt.get("label").trim());
+            trimmed.add(m);
         }
         try {
-            return objectMapper.writeValueAsString(options);
+            return objectMapper.writeValueAsString(trimmed);
         } catch (Exception e) {
             log.warn("options serialize failed", e);
             return "[]";
