@@ -167,6 +167,12 @@
       "style": {
         "navigationBarTitleText": "课时阅读"
       }
+    },
+    {
+      "path": "pages/training/lessonExam",
+      "style": {
+        "navigationBarTitleText": "课时考试"
+      }
     }
   ],
   "tabBar": {
