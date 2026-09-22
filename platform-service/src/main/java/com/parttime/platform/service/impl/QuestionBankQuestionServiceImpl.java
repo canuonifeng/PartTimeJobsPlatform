@@ -17,7 +17,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,7 +31,10 @@ public class QuestionBankQuestionServiceImpl implements QuestionBankQuestionServ
     private static final String DRAFT = "DRAFT";
     private static final String PUBLISHED = "PUBLISHED";
     private static final String OFFLINE = "OFFLINE";
+    private static final String SINGLE_CHOICE = "SINGLE_CHOICE";
     private static final String MULTIPLE_CHOICE = "MULTIPLE_CHOICE";
+    private static final String JUDGE = "JUDGE";
+    private static final Set<String> VALID_TYPES = Set.of(SINGLE_CHOICE, MULTIPLE_CHOICE, JUDGE);
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -49,6 +55,7 @@ public class QuestionBankQuestionServiceImpl implements QuestionBankQuestionServ
     public QuestionVO create(QuestionCreateCmd cmd) {
         requireBankId(cmd.getBankId());
         requireStem(cmd.getStem());
+        validate(cmd.getQuestionType(), cmd.getOptions(), cmd.getAnswer());
         QuestionBankQuestion question = new QuestionBankQuestion();
         question.setBankId(cmd.getBankId());
         question.setQuestionType(cmd.getQuestionType());
@@ -67,6 +74,7 @@ public class QuestionBankQuestionServiceImpl implements QuestionBankQuestionServ
         QuestionBankQuestion question = questionBankQuestionMapper.findById(cmd.getId())
                 .orElseThrow(() -> new BusinessException("题目不存在: " + cmd.getId()));
         requireStem(cmd.getStem());
+        validate(cmd.getQuestionType(), cmd.getOptions(), cmd.getAnswer());
         if (cmd.getBankId() != null) {
             question.setBankId(cmd.getBankId());
         }
@@ -120,6 +128,74 @@ public class QuestionBankQuestionServiceImpl implements QuestionBankQuestionServ
         if (stem == null || stem.isBlank()) {
             throw new BusinessException("题干不能为空");
         }
+    }
+
+    private void validate(String questionType, List<?> options, String answer) {
+        if (questionType == null || !VALID_TYPES.contains(questionType)) {
+            throw new BusinessException("题型不合法");
+        }
+        List<Map<String, String>> optList = parseOptionsNeutral(options);
+        if (optList.size() < 2 || optList.size() > 6) {
+            throw new BusinessException("选项数需在2~6个之间");
+        }
+        Set<String> optionKeys = new HashSet<>();
+        for (Map<String, String> opt : optList) {
+            String key = opt.get("key");
+            String label = opt.get("label");
+            if (key == null || key.isBlank() || label == null || label.isBlank()) {
+                throw new BusinessException("选项key和label不能为空");
+            }
+            optionKeys.add(key.trim());
+        }
+        if (answer == null || answer.isBlank()) {
+            throw new BusinessException("答案不能为空");
+        }
+        if (JUDGE.equals(questionType)) {
+            String ans = answer.trim();
+            if (!"TRUE".equals(ans) && !"FALSE".equals(ans)) {
+                throw new BusinessException("判断题答案必须为 TRUE 或 FALSE");
+            }
+            if (!optionKeys.contains(ans)) {
+                throw new BusinessException("答案不在选项中: " + ans);
+            }
+        } else if (SINGLE_CHOICE.equals(questionType)) {
+            String ans = answer.trim();
+            if (!optionKeys.contains(ans)) {
+                throw new BusinessException("答案不在选项中: " + ans);
+            }
+        } else {
+            List<String> answerKeys = parseAnswerKeys(answer);
+            if (answerKeys.size() < 2) {
+                throw new BusinessException("多选题至少2个正确答案");
+            }
+            for (String key : answerKeys) {
+                if (!optionKeys.contains(key)) {
+                    throw new BusinessException("答案不在选项中: " + key);
+                }
+            }
+        }
+    }
+
+    private List<Map<String, String>> parseOptionsNeutral(List<?> options) {
+        if (options == null || options.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return objectMapper.convertValue(options, new TypeReference<List<Map<String, String>>>() {});
+    }
+
+    private List<String> parseAnswerKeys(String answer) {
+        String trimmed = answer.trim();
+        if (trimmed.startsWith("[")) {
+            try {
+                return objectMapper.readValue(trimmed, new TypeReference<List<String>>() {});
+            } catch (Exception e) {
+                throw new BusinessException("答案格式非法");
+            }
+        }
+        return Arrays.stream(trimmed.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
     }
 
     private String toOptionsJson(List<?> options) {
