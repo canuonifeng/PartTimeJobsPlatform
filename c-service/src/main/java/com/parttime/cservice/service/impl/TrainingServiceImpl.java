@@ -423,7 +423,11 @@ public class TrainingServiceImpl implements TrainingService {
             record = new WorkerLessonRecord();
             record.setWorkerId(workerId);
             record.setLessonId(lesson.getId());
+            record.setStatus(STATUS_IN_PROGRESS);
+            record.setProgress(0);
+            record.setExamAttempts(0);
             record.setStartedAt(now);
+            workerLessonRecordMapper.insert(record);
         }
         record.setExamAttempts(attempts);
         record.setScore(earned);

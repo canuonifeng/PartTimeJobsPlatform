@@ -28,6 +28,7 @@ import com.parttime.cservice.service.impl.TrainingServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -433,6 +434,59 @@ class TrainingV2ServiceTest {
         assertThat(r.getPassed()).isTrue();
         assertThat(r.getSnapshot()).isNotNull();
         verify(workerLessonRecordMapper, never()).updateExamResult(any());
+    }
+
+    @Test
+    void firstSubmit_persistsViaInsertThenUpdate() {
+        stubExamLessonAndQuestions(examConfig(2, 0));
+        when(workerLessonRecordMapper.findByWorkerAndLesson(WORKER, 20L)).thenReturn(Optional.empty());
+
+        LessonExamResultVO r = trainingService.submitLessonExam(WORKER,
+                submit(20L, ans(100L, "A"), ans(101L, "B")));
+
+        assertThat(r.getPassed()).isTrue();
+        assertThat(r.getScore()).isEqualTo(20);
+        verify(workerLessonRecordMapper).insert(any(WorkerLessonRecord.class));
+        ArgumentCaptor<WorkerLessonRecord> cap = ArgumentCaptor.forClass(WorkerLessonRecord.class);
+        verify(workerLessonRecordMapper).updateExamResult(cap.capture());
+        WorkerLessonRecord saved = cap.getValue();
+        assertThat(saved.getStatus()).isEqualTo("COMPLETED");
+        assertThat(saved.getScore()).isEqualTo(20);
+        assertThat(saved.getExamAttempts()).isEqualTo(1);
+        assertThat(saved.getExamSnapshotJson()).isNotNull();
+    }
+
+    @Test
+    void firstSubmitFailed_statusFailedAttemptsOne() {
+        stubExamLessonAndQuestions(examConfig(2, 0));
+        when(workerLessonRecordMapper.findByWorkerAndLesson(WORKER, 20L)).thenReturn(Optional.empty());
+
+        LessonExamResultVO r = trainingService.submitLessonExam(WORKER,
+                submit(20L, ans(100L, "B"), ans(101L, "A")));
+
+        assertThat(r.getPassed()).isFalse();
+        verify(workerLessonRecordMapper).insert(any(WorkerLessonRecord.class));
+        ArgumentCaptor<WorkerLessonRecord> cap = ArgumentCaptor.forClass(WorkerLessonRecord.class);
+        verify(workerLessonRecordMapper).updateExamResult(cap.capture());
+        WorkerLessonRecord saved = cap.getValue();
+        assertThat(saved.getStatus()).isEqualTo("FAILED");
+        assertThat(saved.getExamAttempts()).isEqualTo(1);
+        assertThat(saved.getExamSnapshotJson()).isNull();
+    }
+
+    @Test
+    void secondSubmit_existingRecord_incrementsAttemptsToTwo() {
+        stubExamLessonAndQuestions(examConfig(2, 0));
+        WorkerLessonRecord existing = record(20L, "FAILED", 0);
+        existing.setExamAttempts(1);
+        when(workerLessonRecordMapper.findByWorkerAndLesson(WORKER, 20L)).thenReturn(Optional.of(existing));
+
+        LessonExamResultVO r = trainingService.submitLessonExam(WORKER,
+                submit(20L, ans(100L, "A"), ans(101L, "B")));
+
+        assertThat(r.getPassed()).isTrue();
+        verify(workerLessonRecordMapper, never()).insert(any());
+        assertThat(existing.getExamAttempts()).isEqualTo(2);
     }
 
     // ---------- 7. checkAndGrantCertification ----------
