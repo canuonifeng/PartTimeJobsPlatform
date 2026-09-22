@@ -27,4 +27,10 @@
         SELECT * FROM worker_lesson_records WHERE worker_id = #{workerId}
     </select>
 
+    <insert id="insert" parameterType="com.parttime.cservice.pojo.entity.WorkerLessonRecord"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO worker_lesson_records (worker_id, lesson_id, status, progress, score, exam_attempts, started_at, completed_at)
+        VALUES (#{workerId}, #{lessonId}, #{status}, #{progress}, #{score}, #{examAttempts}, #{startedAt}, #{completedAt})
+    </insert>
+
 </mapper>

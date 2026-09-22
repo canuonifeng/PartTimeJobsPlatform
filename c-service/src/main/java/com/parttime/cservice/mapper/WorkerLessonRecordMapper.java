@@ -13,4 +13,6 @@ public interface WorkerLessonRecordMapper {
     Optional<WorkerLessonRecord> findByWorkerAndLesson(@Param("workerId") Long workerId, @Param("lessonId") Long lessonId);
 
     List<WorkerLessonRecord> findByWorkerId(@Param("workerId") Long workerId);
+
+    int insert(WorkerLessonRecord record);
 }

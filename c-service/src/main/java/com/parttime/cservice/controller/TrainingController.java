@@ -2,8 +2,10 @@ package com.parttime.cservice.controller;
 
 import com.parttime.cservice.pojo.cmd.ExamSubmitCmd;
 import com.parttime.cservice.pojo.cmd.StartCourseCmd;
+import com.parttime.cservice.pojo.cmd.StartLessonCmd;
 import com.parttime.cservice.pojo.vo.ApiResponse;
 import com.parttime.cservice.pojo.vo.ExamResultVO;
+import com.parttime.cservice.pojo.vo.LessonStartVO;
 import com.parttime.cservice.pojo.vo.TrainingCourseDetailVO;
 import com.parttime.cservice.pojo.vo.TrainingCourseVO;
 import com.parttime.cservice.pojo.vo.WorkerCertificationVO;
@@ -38,6 +40,13 @@ public class TrainingController {
     public ApiResponse<TrainingCourseDetailVO> getCourseDetail(@Parameter(description = "课程ID") @RequestParam Long id) {
         Long workerId = getWorkerId();
         return ApiResponse.success(trainingService.getCourseDetail(workerId, id));
+    }
+
+    @Operation(summary = "开始学习课时", description = "校验前置课时后创建学习记录并返回课时内容")
+    @PostMapping("/lessons/start")
+    public ApiResponse<LessonStartVO> startLesson(@RequestBody StartLessonCmd cmd) {
+        Long workerId = requireWorkerId();
+        return ApiResponse.success(trainingService.startLesson(workerId, cmd));
     }
 
     @Operation(summary = "开始学习", description = "开始学习课程，创建学习记录")

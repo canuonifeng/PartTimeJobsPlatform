@@ -9,6 +9,7 @@ import com.parttime.cservice.mapper.WorkerCertificationMapper;
 import com.parttime.cservice.mapper.WorkerLessonRecordMapper;
 import com.parttime.cservice.mapper.WorkerTrainingRecordMapper;
 import com.parttime.cservice.pojo.cmd.ExamSubmitCmd;
+import com.parttime.cservice.pojo.cmd.StartLessonCmd;
 import com.parttime.cservice.pojo.entity.TrainingCertification;
 import com.parttime.cservice.pojo.entity.TrainingCourse;
 import com.parttime.cservice.pojo.entity.TrainingLesson;
@@ -17,6 +18,7 @@ import com.parttime.cservice.pojo.entity.WorkerLessonRecord;
 import com.parttime.cservice.pojo.entity.WorkerTrainingRecord;
 import com.parttime.cservice.pojo.vo.ExamQuestionVO;
 import com.parttime.cservice.pojo.vo.ExamResultVO;
+import com.parttime.cservice.pojo.vo.LessonStartVO;
 import com.parttime.cservice.pojo.vo.TrainingCourseDetailVO;
 import com.parttime.cservice.pojo.vo.TrainingCourseVO;
 import com.parttime.cservice.pojo.vo.TrainingLessonVO;
@@ -182,6 +184,66 @@ public class TrainingServiceImpl implements TrainingService {
                 && (wc.getExpiresAt() == null || wc.getExpiresAt().isAfter(LocalDateTime.now())));
         detail.setLessons(lessonVOs);
         return detail;
+    }
+
+    @Override
+    @Transactional
+    public LessonStartVO startLesson(Long workerId, StartLessonCmd cmd) {
+        TrainingLesson lesson = trainingLessonMapper.findById(cmd.getLessonId())
+                .orElseThrow(() -> new RuntimeException("课时不存在"));
+        if (!"PUBLISHED".equals(lesson.getStatus())) {
+            throw new RuntimeException("课时未发布");
+        }
+        List<TrainingLesson> courseLessons = trainingLessonMapper.findByCourseId(lesson.getCourseId());
+        int idx = -1;
+        for (int i = 0; i < courseLessons.size(); i++) {
+            if (courseLessons.get(i).getId().equals(lesson.getId())) {
+                idx = i;
+                break;
+            }
+        }
+        if (idx < 0) {
+            throw new RuntimeException("课时未发布");
+        }
+        if (idx > 0) {
+            TrainingLesson prev = courseLessons.get(idx - 1);
+            WorkerLessonRecord prevRecord = workerLessonRecordMapper
+                    .findByWorkerAndLesson(workerId, prev.getId()).orElse(null);
+            if (prevRecord == null || !STATUS_COMPLETED.equals(prevRecord.getStatus())) {
+                throw new RuntimeException("请先完成上一课时");
+            }
+        }
+        if ("EXAM".equals(lesson.getLessonType())) {
+            return drawExamPaper(lesson);
+        }
+        WorkerLessonRecord record = workerLessonRecordMapper
+                .findByWorkerAndLesson(workerId, lesson.getId()).orElse(null);
+        int currentProgress = 0;
+        if (record == null) {
+            record = new WorkerLessonRecord();
+            record.setWorkerId(workerId);
+            record.setLessonId(lesson.getId());
+            record.setStatus(STATUS_IN_PROGRESS);
+            record.setProgress(0);
+            record.setExamAttempts(0);
+            record.setStartedAt(LocalDateTime.now());
+            workerLessonRecordMapper.insert(record);
+        } else {
+            currentProgress = record.getProgress() == null ? 0 : record.getProgress();
+        }
+        LessonStartVO vo = new LessonStartVO();
+        vo.setLessonId(lesson.getId());
+        vo.setLessonType(lesson.getLessonType());
+        vo.setTitle(lesson.getTitle());
+        vo.setContent(lesson.getContent());
+        vo.setMediaUrl(lesson.getMediaUrl());
+        vo.setDurationMinutes(lesson.getDurationMinutes());
+        vo.setCurrentProgress(currentProgress);
+        return vo;
+    }
+
+    private LessonStartVO drawExamPaper(TrainingLesson lesson) {
+        throw new UnsupportedOperationException("考试抽题待 Task14 实现");
     }
 
     @Override
