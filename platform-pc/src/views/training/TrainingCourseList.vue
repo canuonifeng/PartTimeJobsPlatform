@@ -12,8 +12,6 @@
           <el-tag type="info">{{ row.certificationName || '-' }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="passScore" label="及格分" width="90" />
-      <el-table-column prop="sortOrder" label="排序" width="80" />
       <el-table-column prop="status" label="状态" width="110">
         <template #default="{ row }">
           <el-tag :type="statusType(row.status)">{{ statusText(row.status) }}</el-tag>
@@ -42,33 +40,6 @@
         </el-form-item>
         <el-form-item label="课程摘要">
           <el-input v-model="dialog.form.summary" type="textarea" :rows="2" placeholder="一句话介绍课程内容" />
-        </el-form-item>
-        <el-form-item label="课程内容">
-          <el-input v-model="dialog.form.content" type="textarea" :rows="6" placeholder="课程正文，支持换行" />
-        </el-form-item>
-        <el-form-item label="及格分">
-          <el-input-number v-model="dialog.form.passScore" :min="0" :max="100" />
-        </el-form-item>
-        <el-form-item label="排序">
-          <el-input-number v-model="dialog.form.sortOrder" :min="0" />
-        </el-form-item>
-        <el-form-item label="考试题目">
-          <div class="exam-editor">
-            <div v-for="(q, qi) in dialog.questions" :key="qi" class="question-box">
-              <div class="question-head">
-                <span class="question-no">第 {{ qi + 1 }} 题</span>
-                <el-button type="danger" size="small" text @click="removeQuestion(qi)">删除</el-button>
-              </div>
-              <el-input v-model="q.question" placeholder="题干" class="mb8" />
-              <div v-for="(opt, oi) in q.options" :key="oi" class="option-row">
-                <el-radio v-model="q.answer" :value="oi" size="small">答案</el-radio>
-                <el-input v-model="q.options[oi]" :placeholder="`选项 ${'ABCD'[oi] || oi + 1}`" size="small" />
-              </div>
-              <el-button size="small" text type="primary" @click="addOption(q)">+ 添加选项</el-button>
-            </div>
-            <el-button type="primary" plain size="small" @click="addQuestion">+ 添加题目</el-button>
-          </div>
-          <div class="form-tip">考试题以 JSON 保存；未设置题目时完成课程即通过</div>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -185,8 +156,7 @@ const banks = ref([])
 const dialog = ref({
   visible: false,
   isEdit: false,
-  form: { title: '', certificationId: null, summary: '', content: '', passScore: 60, sortOrder: 0 },
-  questions: []
+  form: { title: '', certificationId: null, summary: '' }
 })
 
 const lessonDrawer = ref({
@@ -409,25 +379,6 @@ function statusType(s) {
   return { DRAFT: 'info', PUBLISHED: 'success', OFFLINE: 'warning' }[s] || 'info'
 }
 
-function parseQuestions(examJson) {
-  if (!examJson) return []
-  try {
-    const list = JSON.parse(examJson)
-    return Array.isArray(list) ? list.map(q => ({
-      question: q.question || '',
-      options: Array.isArray(q.options) ? q.options.map(String) : [],
-      answer: typeof q.answer === 'number' ? q.answer : -1
-    })) : []
-  } catch {
-    return []
-  }
-}
-
-function buildExamJson(questions) {
-  const valid = questions.filter(q => q.question && Array.isArray(q.options) && q.options.some(o => o))
-  return valid.length ? JSON.stringify(valid) : null
-}
-
 async function fetchData() {
   loading.value = true
   try {
@@ -448,8 +399,7 @@ function handleAdd() {
   dialog.value = {
     visible: true,
     isEdit: false,
-    form: { title: '', certificationId: null, summary: '', content: '', passScore: 60, sortOrder: 0 },
-    questions: []
+    form: { title: '', certificationId: null, summary: '' }
   }
 }
 
@@ -461,25 +411,9 @@ function handleEdit(row) {
       id: row.id,
       title: row.title,
       certificationId: row.certificationId,
-      summary: row.summary,
-      content: row.content,
-      passScore: row.passScore,
-      sortOrder: row.sortOrder
-    },
-    questions: parseQuestions(row.examJson)
+      summary: row.summary
+    }
   }
-}
-
-function addQuestion() {
-  dialog.value.questions.push({ question: '', options: ['', ''], answer: -1 })
-}
-
-function removeQuestion(index) {
-  dialog.value.questions.splice(index, 1)
-}
-
-function addOption(q) {
-  q.options.push('')
 }
 
 async function confirmSave() {
@@ -488,10 +422,7 @@ async function confirmSave() {
     ElMessage.warning('请填写课程标题并选择关联认证')
     return
   }
-  const payload = {
-    ...d.form,
-    examJson: buildExamJson(d.questions)
-  }
+  const payload = { ...d.form }
   try {
     if (d.isEdit) {
       await updateTrainingCourse(payload)
@@ -539,14 +470,6 @@ onMounted(fetchData)
 
 <style scoped>
 .card-title { font-weight: 600; font-size: 16px; }
-.exam-editor { width: 100%; }
-.question-box { border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
-.question-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.question-no { font-weight: 600; }
-.option-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.option-row .el-radio { margin-right: 4px; white-space: nowrap; }
-.mb8 { margin-bottom: 8px; }
-.form-tip { font-size: 12px; color: #999; margin-top: 6px; }
 .lesson-drawer-head { margin-bottom: 12px; }
 .rule-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .rule-label { color: #909399; font-size: 12px; }
