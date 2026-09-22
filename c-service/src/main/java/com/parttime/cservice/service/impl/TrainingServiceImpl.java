@@ -7,6 +7,8 @@ import com.parttime.cservice.mapper.TrainingCourseMapper;
 import com.parttime.cservice.mapper.TrainingLessonMapper;
 import com.parttime.cservice.mapper.WorkerCertificationMapper;
 import com.parttime.cservice.mapper.WorkerLessonRecordMapper;
+import com.parttime.cservice.mapper.QuestionBankMapper;
+import com.parttime.cservice.mapper.QuestionBankQuestionMapper;
 import com.parttime.cservice.mapper.WorkerTrainingRecordMapper;
 import com.parttime.cservice.pojo.cmd.ExamSubmitCmd;
 import com.parttime.cservice.pojo.cmd.LessonCompleteCmd;
@@ -17,8 +19,13 @@ import com.parttime.cservice.pojo.entity.TrainingCourse;
 import com.parttime.cservice.pojo.entity.TrainingLesson;
 import com.parttime.cservice.pojo.entity.WorkerCertification;
 import com.parttime.cservice.pojo.entity.WorkerLessonRecord;
+import com.parttime.cservice.pojo.entity.QuestionBank;
+import com.parttime.cservice.pojo.entity.QuestionBankQuestion;
 import com.parttime.cservice.pojo.entity.WorkerTrainingRecord;
 import com.parttime.cservice.pojo.vo.ExamQuestionVO;
+import com.parttime.cservice.pojo.vo.ExamOptionVO;
+import com.parttime.cservice.pojo.vo.ExamPaperQuestionVO;
+import com.parttime.cservice.pojo.vo.ExamPaperVO;
 import com.parttime.cservice.pojo.vo.ExamResultVO;
 import com.parttime.cservice.pojo.vo.LessonStartVO;
 import com.parttime.cservice.pojo.vo.TrainingCourseDetailVO;
@@ -64,6 +71,12 @@ public class TrainingServiceImpl implements TrainingService {
 
     @Resource
     private WorkerLessonRecordMapper workerLessonRecordMapper;
+
+    @Resource
+    private QuestionBankMapper questionBankMapper;
+
+    @Resource
+    private QuestionBankQuestionMapper questionBankQuestionMapper;
 
     @Resource
     private WorkerCertificationMapper workerCertificationMapper;
@@ -216,7 +229,12 @@ public class TrainingServiceImpl implements TrainingService {
             }
         }
         if ("EXAM".equals(lesson.getLessonType())) {
-            return drawExamPaper(lesson);
+            LessonStartVO examVo = new LessonStartVO();
+            examVo.setLessonId(lesson.getId());
+            examVo.setLessonType(lesson.getLessonType());
+            examVo.setTitle(lesson.getTitle());
+            examVo.setPaper(drawExamPaper(lesson));
+            return examVo;
         }
         WorkerLessonRecord record = workerLessonRecordMapper
                 .findByWorkerAndLesson(workerId, lesson.getId()).orElse(null);
@@ -316,8 +334,82 @@ public class TrainingServiceImpl implements TrainingService {
         log.info("课程完成检查 courseId={}，待 Task16 实现发认证逻辑", courseId);
     }
 
-    private LessonStartVO drawExamPaper(TrainingLesson lesson) {
-        throw new UnsupportedOperationException("考试抽题待 Task14 实现");
+    private ExamPaperVO drawExamPaper(TrainingLesson lesson) {
+        Map<String, Object> cfg;
+        try {
+            cfg = objectMapper.readValue(lesson.getExamConfigJson(), new TypeReference<Map<String, Object>>() {
+            });
+        } catch (Exception e) {
+            throw new RuntimeException("考试配置解析失败");
+        }
+        if (cfg == null || cfg.get("bankId") == null) {
+            throw new RuntimeException("考试配置缺失");
+        }
+        Long bankId = ((Number) cfg.get("bankId")).longValue();
+        QuestionBank bank = questionBankMapper.findById(bankId).orElse(null);
+        if (bank == null || !"ACTIVE".equals(bank.getStatus())) {
+            throw new RuntimeException("题库不存在或已停用，无法开考");
+        }
+        Object rulesObj = cfg.get("rules");
+        if (!(rulesObj instanceof List<?> rawRules) || rawRules.isEmpty()) {
+            throw new RuntimeException("考试规则缺失");
+        }
+        ExamPaperVO paper = new ExamPaperVO();
+        paper.setLessonId(lesson.getId());
+        Object durationObj = cfg.get("durationMinutes");
+        paper.setDurationMinutes(durationObj == null ? null : ((Number) durationObj).intValue());
+        Object passScoreObj = cfg.get("passScore");
+        paper.setPassScore(passScoreObj == null ? null : ((Number) passScoreObj).intValue());
+
+        int totalScore = 0;
+        List<ExamPaperQuestionVO> questions = new ArrayList<>();
+        for (Object ruleObj : rawRules) {
+            Map<?, ?> rule = (Map<?, ?>) ruleObj;
+            String questionType = String.valueOf(rule.get("questionType"));
+            int count = ((Number) rule.get("count")).intValue();
+            int scorePer = ((Number) rule.get("scorePer")).intValue();
+            int available = questionBankQuestionMapper.countPublishedByBankAndType(bankId, questionType);
+            if (available < count) {
+                throw new RuntimeException("题库题量不足，请联系平台配置");
+            }
+            List<QuestionBankQuestion> picked = questionBankQuestionMapper
+                    .randomPublishedByBankAndType(bankId, questionType, count);
+            totalScore += count * scorePer;
+            for (QuestionBankQuestion q : picked) {
+                ExamPaperQuestionVO vo = new ExamPaperQuestionVO();
+                vo.setQuestionId(q.getId());
+                vo.setQuestionType(q.getQuestionType());
+                vo.setStem(q.getStem());
+                vo.setOptions(parseExamOptions(q.getOptionsJson()));
+                vo.setScore(scorePer);
+                questions.add(vo);
+            }
+        }
+        paper.setTotalScore(totalScore);
+        paper.setQuestions(questions);
+        return paper;
+    }
+
+    private List<ExamOptionVO> parseExamOptions(String optionsJson) {
+        if (optionsJson == null || optionsJson.isBlank()) {
+            return List.of();
+        }
+        try {
+            List<Map<String, Object>> list = objectMapper.readValue(optionsJson,
+                    new TypeReference<List<Map<String, Object>>>() {
+                    });
+            List<ExamOptionVO> result = new ArrayList<>();
+            for (Map<String, Object> m : list) {
+                ExamOptionVO opt = new ExamOptionVO();
+                opt.setKey(String.valueOf(m.get("key")));
+                opt.setLabel(String.valueOf(m.get("label")));
+                result.add(opt);
+            }
+            return result;
+        } catch (Exception e) {
+            log.error("解析考试选项失败 optionsJson={}", optionsJson, e);
+            return List.of();
+        }
     }
 
     @Override

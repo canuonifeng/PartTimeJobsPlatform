@@ -20,4 +20,6 @@ public class LessonStartVO {
     private Integer durationMinutes;
     @Schema(description = "当前学习进度（百分比）")
     private Integer currentProgress;
+    @Schema(description = "考试试卷（仅 EXAM 课时返回）")
+    private ExamPaperVO paper;
 }
