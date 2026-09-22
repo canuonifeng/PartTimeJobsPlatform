@@ -1,166 +1,130 @@
 <template>
   <view class="detail-page">
+    <view class="course-header">
+      <text class="course-title">{{ course.title }}</text>
+      <text v-if="course.certificationName" class="course-cert">🏅 认证：{{ course.certificationName }}</text>
+      <view class="progress-wrap">
+        <view class="progress-bar">
+          <view class="progress-inner" :style="{ width: progressPercent + '%' }"></view>
+        </view>
+        <text class="progress-text">已完成 {{ completedCount }}/{{ lessons.length }} 课时</text>
+      </view>
+    </view>
+
     <uni-load-more v-if="loading" status="loading" />
 
-    <template v-if="!loading && course">
-      <scroll-view class="detail-content" scroll-y>
-        <view class="course-header">
-          <text class="course-title">{{ course.title }}</text>
-          <text v-if="course.certificationName" class="course-cert">🏅 认证：{{ course.certificationName }}</text>
-        </view>
+    <view v-else-if="!course" class="empty-state">
+      <text class="empty-text">课程不存在或已下架</text>
+    </view>
 
-        <view v-if="course.content" class="content-card">
-          <view class="card-title">
-            <view class="title-icon"><text>📖</text></view>
-            <text class="title-text">课程内容</text>
-          </view>
-          <text class="content-text">{{ course.content }}</text>
-        </view>
-
-        <view v-if="examMode" class="exam-card">
-          <view class="card-title">
-            <view class="title-icon"><text>📝</text></view>
-            <text class="title-text">结业考试（{{ course.passScore }}分及格）</text>
-          </view>
-          <view v-if="questions.length === 0" class="empty-hint">
-            <text>本课程暂无考试题，点击完成即可获得认证</text>
-          </view>
-          <view v-for="(q, qi) in questions" :key="qi" class="question-item">
-            <text class="question-title">{{ qi + 1 }}. {{ q.question }}</text>
-            <view
-              v-for="(opt, oi) in q.options"
-              :key="oi"
-              class="option-item"
-              :class="{ selected: answers[qi] === oi }"
-              @click="selectAnswer(qi, oi)"
-            >
-              <view class="option-radio" :class="{ active: answers[qi] === oi }">
-                <text v-if="answers[qi] === oi" class="option-check">✓</text>
-              </view>
-              <text class="option-text">{{ opt }}</text>
-            </view>
-          </view>
-        </view>
-
-        <view v-else-if="course.myStatus === 'COMPLETED' && course.myScore !== null" class="score-card">
-          <view class="score-title">最近得分</view>
-          <view class="score-value" :class="{ pass: course.myScore >= course.passScore }">{{ course.myScore }}分</view>
-          <text class="score-tip" v-if="course.certified">🎉 已获得技能认证</text>
-          <text class="score-tip" v-else>考试通过，可重新学习巩固</text>
-        </view>
-
-        <view class="bottom-safe"></view>
-      </scroll-view>
-
-      <view class="action-bar">
-        <button
-          v-if="!examMode"
-          class="action-btn"
-          :class="{ done: course.certified }"
-          @click="startOrExam"
-        >
-          {{ course.certified ? '重新学习' : (course.myStatus === 'FAILED' ? '重新考试' : '开始学习') }}
-        </button>
-        <template v-else>
-          <button class="action-btn secondary" @click="examMode = false">返回</button>
-          <button class="action-btn" :disabled="submitting" @click="handleSubmit">{{ submitting ? '提交中...' : '提交考试' }}</button>
-        </template>
+    <view v-else class="lesson-list">
+      <view v-if="lessons.length === 0" class="empty-state">
+        <text class="empty-text">暂未发布课时</text>
       </view>
-    </template>
+      <view
+        v-for="(lesson, idx) in lessons"
+        :key="lesson.id"
+        class="lesson-card"
+        :class="{ locked: lesson.locked }"
+        @click="onLessonClick(lesson)"
+      >
+        <view class="lesson-icon" :class="typeClass(lesson.lessonType)">
+          <text>{{ typeIcon(lesson.lessonType) }}</text>
+        </view>
+        <view class="lesson-main">
+          <view class="lesson-top">
+            <text class="lesson-title">{{ idx + 1 }}. {{ lesson.title }}</text>
+            <text class="lesson-type" :class="typeClass(lesson.lessonType)">{{ typeText(lesson.lessonType) }}</text>
+          </view>
+          <view class="lesson-bottom">
+            <text v-if="lesson.completed" class="lesson-status done">
+              ✓ 已完成{{ lesson.lessonType === 'EXAM' && lesson.score != null ? '（' + lesson.score + '分）' : '' }}
+            </text>
+            <text v-else-if="lesson.locked" class="lesson-status locked">🔒 未解锁</text>
+            <text v-else class="lesson-status todo">去学习</text>
+          </view>
+        </view>
+      </view>
+    </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
-import { getTrainingCourseDetail, startTrainingCourse, submitExam } from '@/api/training'
+import { courseDetail } from '@/api/training'
 
 const course = ref<any>(null)
+const lessons = ref<any[]>([])
 const loading = ref(true)
 const courseId = ref(0)
-const examMode = ref(false)
-const questions = ref<any[]>([])
-const answers = ref<number[]>([])
-const submitting = ref(false)
+
+const completedCount = computed(() => lessons.value.filter((l) => l.completed).length)
+const progressPercent = computed(() =>
+  lessons.value.length ? Math.round((completedCount.value / lessons.value.length) * 100) : 0
+)
+
+function typeIcon(t: string) {
+  if (t === 'VIDEO') return '🎬'
+  if (t === 'AUDIO') return '🎧'
+  if (t === 'DOCUMENT') return '📄'
+  if (t === 'IMAGE_TEXT') return '🖼️'
+  if (t === 'EXAM') return '📝'
+  return '📘'
+}
+
+function typeText(t: string) {
+  if (t === 'VIDEO') return '视频'
+  if (t === 'AUDIO') return '音频'
+  if (t === 'DOCUMENT') return '文档'
+  if (t === 'IMAGE_TEXT') return '图文'
+  if (t === 'EXAM') return '考试'
+  return '课时'
+}
+
+function typeClass(t: string) {
+  if (t === 'VIDEO') return 't-video'
+  if (t === 'AUDIO') return 't-audio'
+  if (t === 'DOCUMENT') return 't-doc'
+  if (t === 'IMAGE_TEXT') return 't-image'
+  if (t === 'EXAM') return 't-exam'
+  return 't-default'
+}
+
+function onLessonClick(lesson: any) {
+  if (lesson.locked) {
+    uni.showToast({ title: '请先完成上一课时', icon: 'none' })
+    return
+  }
+  let path = ''
+  if (lesson.lessonType === 'VIDEO' || lesson.lessonType === 'AUDIO') {
+    path = '/pages/training/lessonMedia'
+  } else if (lesson.lessonType === 'DOCUMENT' || lesson.lessonType === 'IMAGE_TEXT') {
+    path = '/pages/training/lessonRead'
+  } else if (lesson.lessonType === 'EXAM') {
+    path = '/pages/training/lessonExam'
+  }
+  if (!path) {
+    uni.showToast({ title: '暂不支持该类型课时', icon: 'none' })
+    return
+  }
+  uni.navigateTo({ url: path + '?lessonId=' + lesson.id })
+}
 
 async function load() {
   loading.value = true
   try {
-    const res: any = await getTrainingCourseDetail(courseId.value)
+    const res: any = await courseDetail(courseId.value)
     course.value = res || null
-    questions.value = Array.isArray(res?.questions) ? res.questions : []
-    answers.value = questions.value.map(() => -1)
-    if (course.value?.myStatus === 'FAILED') {
-      examMode.value = true
-    }
+    const list = Array.isArray(res?.lessons) ? res.lessons.slice() : []
+    list.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+    lessons.value = list
   } catch {
     course.value = null
+    lessons.value = []
     uni.showToast({ title: '课程加载失败', icon: 'none' })
   } finally {
     loading.value = false
-  }
-}
-
-function selectAnswer(qi: number, oi: number) {
-  answers.value[qi] = oi
-}
-
-async function startOrExam() {
-  if (!course.value) return
-  if (course.value.myStatus === 'NOT_STARTED' || course.value.certified) {
-    try {
-      await startTrainingCourse(courseId.value)
-      course.value.myStatus = 'IN_PROGRESS'
-    } catch (err: any) {
-      uni.showToast({ title: err?.message || '操作失败', icon: 'none' })
-      return
-    }
-  }
-  if (questions.value.length === 0) {
-    // 无考试题：直接完成
-    await doSubmit([])
-    return
-  }
-  examMode.value = true
-}
-
-async function handleSubmit() {
-  if (answers.value.some((a) => a < 0)) {
-    uni.showToast({ title: '请完成所有题目', icon: 'none' })
-    return
-  }
-  await doSubmit(answers.value)
-}
-
-async function doSubmit(list: number[]) {
-  submitting.value = true
-  try {
-    const res: any = await submitExam(courseId.value, list)
-    if (res?.passed) {
-      uni.showModal({
-        title: '考试通过',
-        content: `得分 ${res.score} 分，恭喜获得技能认证！`,
-        showCancel: false,
-        success: () => {
-          examMode.value = false
-          load()
-        }
-      })
-    } else {
-      uni.showModal({
-        title: '未通过',
-        content: `得分 ${res.score} 分，未达到 ${res.passScore} 分，可重新考试。`,
-        showCancel: false,
-        success: () => {
-          examMode.value = false
-          load()
-        }
-      })
-    }
-  } catch (err: any) {
-    uni.showToast({ title: err?.message || '提交失败', icon: 'none' })
-  } finally {
-    submitting.value = false
   }
 }
 
@@ -175,11 +139,7 @@ onLoad((params: any) => {
 .detail-page {
   min-height: 100vh;
   background: #f5f6fa;
-  position: relative;
-}
-
-.detail-content {
-  height: calc(100vh - 140rpx);
+  padding-bottom: 40rpx;
 }
 
 .course-header {
@@ -200,190 +160,134 @@ onLoad((params: any) => {
   opacity: 0.95;
 }
 
-.content-card,
-.exam-card,
-.score-card {
-  margin: 20rpx 24rpx;
-  padding: 28rpx;
+.progress-wrap {
+  margin-top: 28rpx;
+}
+
+.progress-bar {
+  height: 16rpx;
+  border-radius: 8rpx;
+  background: rgba(255, 255, 255, 0.35);
+  overflow: hidden;
+}
+
+.progress-inner {
+  height: 100%;
+  border-radius: 8rpx;
   background: #fff;
-  border-radius: 20rpx;
-  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.05);
+  transition: width 0.3s;
 }
 
-.card-title {
-  display: flex;
-  align-items: center;
-  gap: 12rpx;
-  margin-bottom: 20rpx;
-}
-
-.title-icon {
-  width: 52rpx;
-  height: 52rpx;
-  border-radius: 12rpx;
-  background: linear-gradient(135deg, #e6f5ee, #c6ecd9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 26rpx;
-}
-
-.title-text {
-  font-size: 32rpx;
-  font-weight: 700;
-  color: #1a1a2e;
-}
-
-.content-text {
-  font-size: 28rpx;
-  color: #374151;
-  line-height: 1.8;
-  white-space: pre-wrap;
-}
-
-.question-item {
-  margin-bottom: 28rpx;
-}
-
-.question-title {
+.progress-text {
   display: block;
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #1a1a2e;
-  margin-bottom: 16rpx;
-  line-height: 1.6;
+  margin-top: 14rpx;
+  font-size: 24rpx;
+  opacity: 0.95;
 }
 
-.option-item {
-  display: flex;
-  align-items: center;
-  gap: 16rpx;
-  padding: 20rpx;
-  border-radius: 16rpx;
-  background: #f8fafc;
-  margin-bottom: 12rpx;
+.lesson-list {
+  padding: 24rpx;
+  margin-top: -20rpx;
 }
 
-.option-item.selected {
-  background: #ecfdf5;
-  border: 2rpx solid #10b981;
-}
-
-.option-radio {
-  width: 36rpx;
-  height: 36rpx;
-  border-radius: 50%;
-  border: 2rpx solid #d1d5db;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.option-radio.active {
-  background: #10b981;
-  border-color: #10b981;
-}
-
-.option-check {
-  color: #fff;
-  font-size: 22rpx;
-}
-
-.option-text {
-  font-size: 26rpx;
-  color: #374151;
-}
-
-.empty-hint {
-  text-align: center;
-  padding: 40rpx 0;
-  color: #999;
-  font-size: 26rpx;
-}
-
-.score-card {
-  text-align: center;
-  padding: 60rpx 28rpx;
-}
-
-.score-title {
-  font-size: 26rpx;
-  color: #9ca3af;
-  margin-bottom: 16rpx;
-}
-
-.score-value {
-  font-size: 72rpx;
-  font-weight: 800;
-  color: #dc2626;
-  margin-bottom: 16rpx;
-}
-
-.score-value.pass {
-  color: #059669;
-}
-
-.score-tip {
-  font-size: 28rpx;
-  color: #374151;
-}
-
-.bottom-safe {
-  height: 40rpx;
-}
-
-.action-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 140rpx;
-  padding: 20rpx 24rpx 40rpx;
-  background: #fff;
-  border-top: 1rpx solid #f0f0f0;
+.lesson-card {
   display: flex;
   align-items: center;
   gap: 20rpx;
-  z-index: 50;
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.05);
 }
 
-.action-btn {
-  flex: 1;
-  height: 88rpx;
-  line-height: 88rpx;
-  padding: 0;
+.lesson-card.locked {
+  opacity: 0.7;
+}
+
+.lesson-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 16rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 44rpx;
-  background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%);
-  color: #fff;
-  font-size: 30rpx;
-  font-weight: 700;
-  border: none;
-  margin: 0;
-  box-shadow: 0 10rpx 28rpx rgba(16, 185, 129, 0.35);
+  font-size: 36rpx;
+  flex-shrink: 0;
 }
 
-.action-btn.secondary {
-  background: #f3f4f6;
-  color: #374151;
-  box-shadow: none;
-  flex: 0 0 200rpx;
+.t-video { background: #dbeafe; }
+.t-audio { background: #ede9fe; }
+.t-doc { background: #ffedd5; }
+.t-image { background: #ccfbf1; }
+.t-exam { background: #fee2e2; }
+.t-default { background: #e5e7eb; }
+
+.lesson-main {
+  flex: 1;
+  min-width: 0;
 }
 
-.action-btn.done {
-  background: #e5e7eb;
-  color: #6b7280;
-  box-shadow: none;
+.lesson-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-bottom: 10rpx;
 }
 
-.action-btn:active {
-  transform: scale(0.98);
+.lesson-title {
+  flex: 1;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1a1a2e;
+  line-height: 1.5;
 }
 
-.action-btn::after {
-  border: none;
+.lesson-type {
+  font-size: 20rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 16rpx;
+  flex-shrink: 0;
+}
+
+.t-video.lesson-type { color: #2563eb; }
+.t-audio.lesson-type { color: #7c3aed; }
+.t-doc.lesson-type { color: #ea580c; }
+.t-image.lesson-type { color: #0d9488; }
+.t-exam.lesson-type { color: #dc2626; }
+.t-default.lesson-type { color: #6b7280; }
+
+.lesson-bottom {
+  display: flex;
+  align-items: center;
+}
+
+.lesson-status {
+  font-size: 24rpx;
+}
+
+.lesson-status.done {
+  color: #059669;
+}
+
+.lesson-status.locked {
+  color: #9ca3af;
+}
+
+.lesson-status.todo {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  padding: 160rpx 0;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: #999;
 }
 </style>
