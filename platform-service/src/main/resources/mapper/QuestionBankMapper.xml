@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.QuestionBankMapper">
+
+    <resultMap id="QuestionBankMap" type="com.parttime.platform.pojo.entity.QuestionBank">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.parttime.platform.pojo.entity.QuestionBank"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO question_banks (name, description, status)
+        VALUES (#{name}, #{description}, #{status})
+    </insert>
+
+    <select id="findById" resultMap="QuestionBankMap">
+        SELECT * FROM question_banks WHERE id = #{id}
+    </select>
+
+    <select id="findByName" resultMap="QuestionBankMap">
+        SELECT * FROM question_banks WHERE name = #{name} LIMIT 1
+    </select>
+
+    <select id="findAll" resultMap="QuestionBankMap">
+        SELECT * FROM question_banks ORDER BY id DESC
+    </select>
+
+    <update id="update" parameterType="com.parttime.platform.pojo.entity.QuestionBank">
+        UPDATE question_banks
+        SET name = #{name},
+            description = #{description}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE question_banks SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <select id="countByBankId" resultType="int">
+        SELECT COUNT(*) FROM question_bank_questions WHERE bank_id = #{bankId}
+    </select>
+
+</mapper>
