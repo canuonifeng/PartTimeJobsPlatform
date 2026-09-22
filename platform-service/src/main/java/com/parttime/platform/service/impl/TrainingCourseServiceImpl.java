@@ -44,9 +44,6 @@ public class TrainingCourseServiceImpl implements TrainingCourseService {
         course.setCertificationId(cmd.getCertificationId());
         course.setTitle(cmd.getTitle().trim());
         course.setSummary(cmd.getSummary());
-        course.setContent(cmd.getContent());
-        course.setExamJson(cmd.getExamJson());
-        course.setPassScore(cmd.getPassScore() == null ? 60 : cmd.getPassScore());
         course.setStatus(DRAFT);
         course.setSortOrder(cmd.getSortOrder() == null ? 0 : cmd.getSortOrder());
         trainingCourseMapper.insert(course);
@@ -65,9 +62,6 @@ public class TrainingCourseServiceImpl implements TrainingCourseService {
             course.setTitle(cmd.getTitle().trim());
         }
         course.setSummary(cmd.getSummary());
-        course.setContent(cmd.getContent());
-        course.setExamJson(cmd.getExamJson());
-        course.setPassScore(cmd.getPassScore() == null ? course.getPassScore() : cmd.getPassScore());
         course.setSortOrder(cmd.getSortOrder() == null ? course.getSortOrder() : cmd.getSortOrder());
         trainingCourseMapper.update(course);
         TrainingCertification certification = trainingCertificationMapper.findById(course.getCertificationId()).orElse(null);
@@ -118,7 +112,6 @@ public class TrainingCourseServiceImpl implements TrainingCourseService {
         vo.setCertificationName(certificationName);
         vo.setTitle(course.getTitle());
         vo.setSummary(course.getSummary());
-        vo.setPassScore(course.getPassScore());
         vo.setStatus(course.getStatus());
         vo.setSortOrder(course.getSortOrder());
         vo.setCreatedAt(course.getCreatedAt());

@@ -47,13 +47,11 @@ class TrainingCourseServiceTest {
         TrainingCourseCmd cmd = new TrainingCourseCmd();
         cmd.setCertificationId(1L);
         cmd.setTitle("数据标注入门");
-        cmd.setPassScore(80);
         when(trainingCertificationMapper.findById(1L)).thenReturn(Optional.of(certification()));
 
         TrainingCourseVO result = service.create(cmd);
 
         assertThat(result.getStatus()).isEqualTo("DRAFT");
-        assertThat(result.getPassScore()).isEqualTo(80);
         assertThat(result.getCertificationName()).isEqualTo("数据标注技能认证");
         verify(trainingCourseMapper).insert(any(TrainingCourse.class));
     }

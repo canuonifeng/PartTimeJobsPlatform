@@ -18,8 +18,6 @@ public class TrainingCourseVO {
     private String title;
     @Schema(description = "课程摘要")
     private String summary;
-    @Schema(description = "及格分（百分制）")
-    private Integer passScore;
     @Schema(description = "状态 DRAFT/PUBLISHED/OFFLINE")
     private String status;
     @Schema(description = "排序号")
