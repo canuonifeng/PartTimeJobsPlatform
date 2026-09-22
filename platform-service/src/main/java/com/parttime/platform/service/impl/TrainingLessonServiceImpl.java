@@ -202,10 +202,16 @@ public class TrainingLessonServiceImpl implements TrainingLessonService {
     }
 
     private boolean isValidRule(Object rule) {
-        if (!(rule instanceof java.util.Map)) {
-            return false;
+        java.util.Map<?, ?> r;
+        if (rule instanceof java.util.Map) {
+            r = (java.util.Map<?, ?>) rule;
+        } else {
+            try {
+                r = objectMapper.convertValue(rule, new TypeReference<java.util.Map<String, Object>>() {});
+            } catch (Exception e) {
+                return false;
+            }
         }
-        java.util.Map<?, ?> r = (java.util.Map<?, ?>) rule;
         Object questionType = r.get("questionType");
         Object count = r.get("count");
         Object scorePer = r.get("scorePer");
