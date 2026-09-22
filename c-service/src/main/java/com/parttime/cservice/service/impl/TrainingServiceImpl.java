@@ -4,17 +4,22 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.parttime.cservice.mapper.TrainingCertificationMapper;
 import com.parttime.cservice.mapper.TrainingCourseMapper;
+import com.parttime.cservice.mapper.TrainingLessonMapper;
 import com.parttime.cservice.mapper.WorkerCertificationMapper;
+import com.parttime.cservice.mapper.WorkerLessonRecordMapper;
 import com.parttime.cservice.mapper.WorkerTrainingRecordMapper;
 import com.parttime.cservice.pojo.cmd.ExamSubmitCmd;
 import com.parttime.cservice.pojo.entity.TrainingCertification;
 import com.parttime.cservice.pojo.entity.TrainingCourse;
+import com.parttime.cservice.pojo.entity.TrainingLesson;
 import com.parttime.cservice.pojo.entity.WorkerCertification;
+import com.parttime.cservice.pojo.entity.WorkerLessonRecord;
 import com.parttime.cservice.pojo.entity.WorkerTrainingRecord;
 import com.parttime.cservice.pojo.vo.ExamQuestionVO;
 import com.parttime.cservice.pojo.vo.ExamResultVO;
 import com.parttime.cservice.pojo.vo.TrainingCourseDetailVO;
 import com.parttime.cservice.pojo.vo.TrainingCourseVO;
+import com.parttime.cservice.pojo.vo.TrainingLessonVO;
 import com.parttime.cservice.pojo.vo.WorkerCertificationVO;
 import com.parttime.cservice.service.TrainingService;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +53,13 @@ public class TrainingServiceImpl implements TrainingService {
     private TrainingCertificationMapper trainingCertificationMapper;
 
     @Resource
+    private TrainingLessonMapper trainingLessonMapper;
+
+    @Resource
     private WorkerTrainingRecordMapper workerTrainingRecordMapper;
+
+    @Resource
+    private WorkerLessonRecordMapper workerLessonRecordMapper;
 
     @Resource
     private WorkerCertificationMapper workerCertificationMapper;
@@ -62,6 +73,7 @@ public class TrainingServiceImpl implements TrainingService {
         if (courses.isEmpty()) {
             return List.of();
         }
+        List<Long> courseIds = courses.stream().map(TrainingCourse::getId).toList();
         List<Long> certIds = courses.stream()
                 .map(TrainingCourse::getCertificationId)
                 .filter(Objects::nonNull)
@@ -71,14 +83,17 @@ public class TrainingServiceImpl implements TrainingService {
                 ? Map.of()
                 : trainingCertificationMapper.findByIds(certIds).stream()
                         .collect(Collectors.toMap(TrainingCertification::getId, Function.identity()));
-        List<WorkerTrainingRecord> myRecords = workerId == null
+        List<TrainingLesson> lessons = trainingLessonMapper.findByCourseIds(courseIds);
+        Map<Long, List<TrainingLesson>> lessonsByCourse = lessons.stream()
+                .collect(Collectors.groupingBy(TrainingLesson::getCourseId));
+        List<WorkerLessonRecord> myLessonRecords = workerId == null
                 ? List.of()
-                : workerTrainingRecordMapper.findByWorkerId(workerId);
+                : workerLessonRecordMapper.findByWorkerId(workerId);
+        Map<Long, WorkerLessonRecord> recordByLesson = myLessonRecords.stream()
+                .collect(Collectors.toMap(WorkerLessonRecord::getLessonId, Function.identity(), (a, b) -> a));
         List<WorkerCertification> myCerts = workerId == null
                 ? List.of()
                 : workerCertificationMapper.findByWorkerId(workerId);
-        Map<Long, WorkerTrainingRecord> recordMap = myRecords.stream()
-                .collect(Collectors.toMap(WorkerTrainingRecord::getCourseId, Function.identity(), (a, b) -> a));
         Map<Long, WorkerCertification> certByCertId = myCerts.stream()
                 .collect(Collectors.toMap(WorkerCertification::getCertificationId, Function.identity(), (a, b) -> a));
 
@@ -90,14 +105,31 @@ public class TrainingServiceImpl implements TrainingService {
             vo.setCertificationName(cert == null ? null : cert.getName());
             vo.setTitle(course.getTitle());
             vo.setSummary(course.getSummary());
-            vo.setPassScore(course.getPassScore());
-            WorkerTrainingRecord record = recordMap.get(course.getId());
-            if (record == null) {
-                vo.setMyStatus("NOT_STARTED");
-            } else {
-                vo.setMyStatus(record.getStatus());
-                vo.setMyScore(record.getScore());
+            List<TrainingLesson> courseLessons = lessonsByCourse.getOrDefault(course.getId(), List.of());
+            int total = courseLessons.size();
+            int completed = 0;
+            boolean anyProgress = false;
+            for (TrainingLesson lesson : courseLessons) {
+                WorkerLessonRecord record = recordByLesson.get(lesson.getId());
+                if (record != null) {
+                    anyProgress = true;
+                    if (STATUS_COMPLETED.equals(record.getStatus())) {
+                        completed++;
+                    }
+                }
             }
+            vo.setTotalLessonCount(total);
+            vo.setCompletedLessonCount(completed);
+            if (total == 0) {
+                vo.setMyStatus("NOT_STARTED");
+            } else if (completed == total) {
+                vo.setMyStatus(STATUS_COMPLETED);
+            } else if (anyProgress) {
+                vo.setMyStatus(STATUS_IN_PROGRESS);
+            } else {
+                vo.setMyStatus("NOT_STARTED");
+            }
+            vo.setMyScore(null);
             WorkerCertification wc = cert == null ? null : certByCertId.get(cert.getId());
             vo.setCertified(wc != null && CERT_ACTIVE.equals(wc.getStatus())
                     && (wc.getExpiresAt() == null || wc.getExpiresAt().isAfter(LocalDateTime.now())));
@@ -111,29 +143,45 @@ public class TrainingServiceImpl implements TrainingService {
                 .orElseThrow(() -> new RuntimeException("课程不存在或未发布"));
         TrainingCertification cert = trainingCertificationMapper.findById(course.getCertificationId()).orElse(null);
 
-        TrainingCourseDetailVO vo = new TrainingCourseDetailVO();
-        vo.setId(course.getId());
-        vo.setCertificationId(course.getCertificationId());
-        vo.setCertificationName(cert == null ? null : cert.getName());
-        vo.setTitle(course.getTitle());
-        vo.setSummary(course.getSummary());
-        vo.setContent(course.getContent());
-        vo.setPassScore(course.getPassScore());
-        vo.setQuestions(parseQuestions(course.getExamJson()));
+        List<TrainingLesson> lessons = trainingLessonMapper.findByCourseId(courseId);
+        Map<Long, WorkerLessonRecord> recordByLesson = (workerId == null
+                ? List.<WorkerLessonRecord>of()
+                : workerLessonRecordMapper.findByWorkerId(workerId)).stream()
+                .collect(Collectors.toMap(WorkerLessonRecord::getLessonId, Function.identity(), (a, b) -> a));
 
-        WorkerTrainingRecord record = workerId == null ? null
-                : workerTrainingRecordMapper.findByWorkerAndCourse(workerId, courseId).orElse(null);
-        if (record == null) {
-            vo.setMyStatus("NOT_STARTED");
-        } else {
-            vo.setMyStatus(record.getStatus());
-            vo.setMyScore(record.getScore());
+        List<TrainingLessonVO> lessonVOs = new ArrayList<>();
+        boolean prevCompleted = true;
+        for (int i = 0; i < lessons.size(); i++) {
+            TrainingLesson lesson = lessons.get(i);
+            WorkerLessonRecord record = recordByLesson.get(lesson.getId());
+            boolean completed = record != null && STATUS_COMPLETED.equals(record.getStatus());
+            boolean locked = i == 0 ? false : !prevCompleted;
+            TrainingLessonVO vo = new TrainingLessonVO();
+            vo.setId(lesson.getId());
+            vo.setLessonType(lesson.getLessonType());
+            vo.setTitle(lesson.getTitle());
+            vo.setSortOrder(lesson.getSortOrder());
+            vo.setStatus(lesson.getStatus());
+            vo.setCompleted(completed);
+            vo.setLocked(locked);
+            vo.setProgress(record == null ? 0 : record.getProgress());
+            vo.setScore(record == null ? null : record.getScore());
+            lessonVOs.add(vo);
+            prevCompleted = completed;
         }
+
+        TrainingCourseDetailVO detail = new TrainingCourseDetailVO();
+        detail.setId(course.getId());
+        detail.setCertificationId(course.getCertificationId());
+        detail.setCertificationName(cert == null ? null : cert.getName());
+        detail.setTitle(course.getTitle());
+        detail.setSummary(course.getSummary());
         WorkerCertification wc = workerId == null || cert == null ? null
                 : workerCertificationMapper.findByWorkerAndCert(workerId, cert.getId()).orElse(null);
-        vo.setCertified(wc != null && CERT_ACTIVE.equals(wc.getStatus())
+        detail.setCertified(wc != null && CERT_ACTIVE.equals(wc.getStatus())
                 && (wc.getExpiresAt() == null || wc.getExpiresAt().isAfter(LocalDateTime.now())));
-        return vo;
+        detail.setLessons(lessonVOs);
+        return detail;
     }
 
     @Override

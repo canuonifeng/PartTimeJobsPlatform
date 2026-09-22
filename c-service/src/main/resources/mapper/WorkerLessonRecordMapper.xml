@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.cservice.mapper.WorkerLessonRecordMapper">
+
+    <resultMap id="WorkerLessonRecordMap" type="com.parttime.cservice.pojo.entity.WorkerLessonRecord">
+        <id property="id" column="id"/>
+        <result property="workerId" column="worker_id"/>
+        <result property="lessonId" column="lesson_id"/>
+        <result property="status" column="status"/>
+        <result property="progress" column="progress"/>
+        <result property="score" column="score"/>
+        <result property="examSnapshotJson" column="exam_snapshot_json"/>
+        <result property="examAttempts" column="exam_attempts"/>
+        <result property="startedAt" column="started_at"/>
+        <result property="completedAt" column="completed_at"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findByWorkerAndLesson" resultMap="WorkerLessonRecordMap">
+        SELECT * FROM worker_lesson_records
+        WHERE worker_id = #{workerId} AND lesson_id = #{lessonId}
+        LIMIT 1
+    </select>
+
+    <select id="findByWorkerId" resultMap="WorkerLessonRecordMap">
+        SELECT * FROM worker_lesson_records WHERE worker_id = #{workerId}
+    </select>
+
+</mapper>
