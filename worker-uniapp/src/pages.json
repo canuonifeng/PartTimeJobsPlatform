@@ -161,6 +161,12 @@
       "style": {
         "navigationBarTitleText": "课时学习"
       }
+    },
+    {
+      "path": "pages/training/lessonRead",
+      "style": {
+        "navigationBarTitleText": "课时阅读"
+      }
     }
   ],
   "tabBar": {
