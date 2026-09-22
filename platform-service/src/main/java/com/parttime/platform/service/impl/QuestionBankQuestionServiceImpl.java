@@ -11,6 +11,8 @@ import com.parttime.platform.pojo.entity.QuestionBankQuestion;
 import com.parttime.platform.pojo.vo.QuestionVO;
 import com.parttime.platform.service.QuestionBankQuestionService;
 import jakarta.annotation.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -20,6 +22,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class QuestionBankQuestionServiceImpl implements QuestionBankQuestionService {
+
+    private static final Logger log = LoggerFactory.getLogger(QuestionBankQuestionServiceImpl.class);
 
     private static final String DRAFT = "DRAFT";
     private static final String PUBLISHED = "PUBLISHED";
@@ -80,8 +84,8 @@ public class QuestionBankQuestionServiceImpl implements QuestionBankQuestionServ
     public void delete(Long id) {
         QuestionBankQuestion question = questionBankQuestionMapper.findById(id)
                 .orElseThrow(() -> new BusinessException("题目不存在: " + id));
-        if (!DRAFT.equals(question.getStatus())) {
-            throw new BusinessException("仅草稿状态可删除，请先下线");
+        if (PUBLISHED.equals(question.getStatus())) {
+            throw new BusinessException("仅草稿或已下线题目可删除，已发布题目请先下线");
         }
         questionBankQuestionMapper.deleteById(id);
     }
@@ -125,6 +129,7 @@ public class QuestionBankQuestionServiceImpl implements QuestionBankQuestionServ
         try {
             return objectMapper.writeValueAsString(options);
         } catch (Exception e) {
+            log.warn("options serialize failed", e);
             return "[]";
         }
     }
@@ -136,7 +141,12 @@ public class QuestionBankQuestionServiceImpl implements QuestionBankQuestionServ
         String trimmed = answer.trim();
         if (MULTIPLE_CHOICE.equals(questionType)) {
             if (trimmed.startsWith("[")) {
-                return trimmed;
+                try {
+                    List<?> parsed = objectMapper.readValue(trimmed, List.class);
+                    return objectMapper.writeValueAsString(parsed);
+                } catch (Exception e) {
+                    throw new BusinessException("答案格式非法");
+                }
             }
             List<String> keys = Arrays.stream(trimmed.split(","))
                     .map(String::trim)
@@ -145,7 +155,7 @@ public class QuestionBankQuestionServiceImpl implements QuestionBankQuestionServ
             try {
                 return objectMapper.writeValueAsString(keys);
             } catch (Exception e) {
-                return trimmed;
+                throw new BusinessException("答案格式非法");
             }
         }
         return trimmed;
@@ -174,6 +184,7 @@ public class QuestionBankQuestionServiceImpl implements QuestionBankQuestionServ
         try {
             return objectMapper.readValue(optionsJson, new TypeReference<List<QuestionVO.OptionDTO>>() {});
         } catch (Exception e) {
+            log.warn("options parse failed: {}", optionsJson, e);
             return new ArrayList<>();
         }
     }
