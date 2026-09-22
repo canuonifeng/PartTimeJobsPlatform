@@ -17,4 +17,6 @@ public interface WorkerLessonRecordMapper {
     int insert(WorkerLessonRecord record);
 
     int update(WorkerLessonRecord record);
+
+    int updateExamResult(WorkerLessonRecord record);
 }

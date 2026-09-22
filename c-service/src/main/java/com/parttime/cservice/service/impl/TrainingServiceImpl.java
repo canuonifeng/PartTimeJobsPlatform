@@ -12,6 +12,8 @@ import com.parttime.cservice.mapper.QuestionBankQuestionMapper;
 import com.parttime.cservice.mapper.WorkerTrainingRecordMapper;
 import com.parttime.cservice.pojo.cmd.ExamSubmitCmd;
 import com.parttime.cservice.pojo.cmd.LessonCompleteCmd;
+import com.parttime.cservice.pojo.cmd.LessonExamAnswerItem;
+import com.parttime.cservice.pojo.cmd.LessonExamSubmitCmd;
 import com.parttime.cservice.pojo.cmd.LessonProgressCmd;
 import com.parttime.cservice.pojo.cmd.StartLessonCmd;
 import com.parttime.cservice.pojo.entity.TrainingCertification;
@@ -27,6 +29,7 @@ import com.parttime.cservice.pojo.vo.ExamOptionVO;
 import com.parttime.cservice.pojo.vo.ExamPaperQuestionVO;
 import com.parttime.cservice.pojo.vo.ExamPaperVO;
 import com.parttime.cservice.pojo.vo.ExamResultVO;
+import com.parttime.cservice.pojo.vo.LessonExamResultVO;
 import com.parttime.cservice.pojo.vo.LessonStartVO;
 import com.parttime.cservice.pojo.vo.TrainingCourseDetailVO;
 import com.parttime.cservice.pojo.vo.TrainingCourseVO;
@@ -327,6 +330,174 @@ public class TrainingServiceImpl implements TrainingService {
             record.setCompletedAt(LocalDateTime.now());
             workerLessonRecordMapper.update(record);
             checkAndGrantCertification(lesson.getCourseId());
+        }
+    }
+
+    @Override
+    @Transactional
+    public LessonExamResultVO submitLessonExam(Long workerId, LessonExamSubmitCmd cmd) {
+        TrainingLesson lesson = trainingLessonMapper.findById(cmd.getLessonId())
+                .orElseThrow(() -> new RuntimeException("课时不存在"));
+        if (!"PUBLISHED".equals(lesson.getStatus())) {
+            throw new RuntimeException("课时未发布");
+        }
+        if (!"EXAM".equals(lesson.getLessonType())) {
+            throw new RuntimeException("仅考试课时可提交考试");
+        }
+        Map<String, Object> cfg;
+        try {
+            cfg = objectMapper.readValue(lesson.getExamConfigJson(), new TypeReference<Map<String, Object>>() {
+            });
+        } catch (Exception e) {
+            throw new RuntimeException("考试配置解析失败");
+        }
+        if (cfg == null || cfg.get("bankId") == null) {
+            throw new RuntimeException("考试配置缺失");
+        }
+        Long bankId = ((Number) cfg.get("bankId")).longValue();
+        int passScore = cfg.get("passScore") == null ? 0 : ((Number) cfg.get("passScore")).intValue();
+
+        WorkerLessonRecord record = workerLessonRecordMapper
+                .findByWorkerAndLesson(workerId, lesson.getId()).orElse(null);
+
+        if (record != null && STATUS_COMPLETED.equals(record.getStatus())) {
+            LessonExamResultVO done = new LessonExamResultVO();
+            done.setPassed(true);
+            done.setScore(record.getScore());
+            done.setPassScore(passScore);
+            done.setTotalScore(computeConfiguredTotal(cfg));
+            done.setSnapshot(parseJsonOrNull(record.getExamSnapshotJson()));
+            return done;
+        }
+
+        Object rulesObj = cfg.get("rules");
+        if (!(rulesObj instanceof List<?> rawRules)) {
+            throw new RuntimeException("考试规则缺失");
+        }
+        Map<String, Integer> scorePerByType = new LinkedHashMap<>();
+        int configuredTotal = 0;
+        for (Object ro : rawRules) {
+            Map<?, ?> rule = (Map<?, ?>) ro;
+            String qt = String.valueOf(rule.get("questionType"));
+            int count = ((Number) rule.get("count")).intValue();
+            int sp = ((Number) rule.get("scorePer")).intValue();
+            scorePerByType.put(qt, sp);
+            configuredTotal += count * sp;
+        }
+
+        List<LessonExamAnswerItem> answers = cmd.getAnswers() == null ? List.of() : cmd.getAnswers();
+        int earned = 0;
+        List<Map<String, Object>> reviewQuestions = new ArrayList<>();
+        LocalDateTime now = LocalDateTime.now();
+        for (LessonExamAnswerItem ai : answers) {
+            QuestionBankQuestion q = questionBankQuestionMapper.findById(ai.getQuestionId()).orElse(null);
+            if (q == null || !bankId.equals(q.getBankId())) {
+                throw new RuntimeException("题目不存在或不属于本考试题库");
+            }
+            int scorePer = scorePerByType.getOrDefault(q.getQuestionType(), 0);
+            String myAnswer = ai.getAnswer() == null ? "" : ai.getAnswer().trim();
+            String correctAnswer = q.getAnswer() == null ? "" : q.getAnswer().trim();
+            boolean correct;
+            if ("MULTIPLE_CHOICE".equals(q.getQuestionType())) {
+                correct = keySetOf(myAnswer).equals(keySetOf(correctAnswer));
+            } else {
+                correct = myAnswer.equals(correctAnswer);
+            }
+            if (correct) {
+                earned += scorePer;
+            }
+            Map<String, Object> rq = new LinkedHashMap<>();
+            rq.put("questionId", q.getId());
+            rq.put("stem", q.getStem());
+            rq.put("options", parseExamOptions(q.getOptionsJson()));
+            rq.put("myAnswer", ai.getAnswer());
+            rq.put("correctAnswer", q.getAnswer());
+            rq.put("score", correct ? scorePer : 0);
+            rq.put("correct", correct);
+            reviewQuestions.add(rq);
+        }
+        boolean passed = earned >= passScore;
+
+        int attempts = (record == null || record.getExamAttempts() == null ? 0 : record.getExamAttempts()) + 1;
+        if (record == null) {
+            record = new WorkerLessonRecord();
+            record.setWorkerId(workerId);
+            record.setLessonId(lesson.getId());
+            record.setStartedAt(now);
+        }
+        record.setExamAttempts(attempts);
+        record.setScore(earned);
+        String snapshotJson = null;
+        if (passed) {
+            record.setStatus(STATUS_COMPLETED);
+            record.setCompletedAt(now);
+            Map<String, Object> snapshot = new LinkedHashMap<>();
+            snapshot.put("submittedAt", now.toString());
+            snapshot.put("score", earned);
+            snapshot.put("passScore", passScore);
+            snapshot.put("totalScore", configuredTotal);
+            snapshot.put("questions", reviewQuestions);
+            try {
+                snapshotJson = objectMapper.writeValueAsString(snapshot);
+            } catch (Exception e) {
+                throw new RuntimeException("考试快照生成失败");
+            }
+            record.setExamSnapshotJson(snapshotJson);
+        } else {
+            record.setStatus(STATUS_FAILED);
+            record.setExamSnapshotJson(null);
+        }
+        workerLessonRecordMapper.updateExamResult(record);
+
+        if (passed) {
+            checkAndGrantCertification(lesson.getCourseId());
+        }
+
+        LessonExamResultVO vo = new LessonExamResultVO();
+        vo.setPassed(passed);
+        vo.setScore(earned);
+        vo.setPassScore(passScore);
+        vo.setTotalScore(configuredTotal);
+        vo.setSnapshot(passed ? parseJsonOrNull(snapshotJson) : null);
+        return vo;
+    }
+
+    private int computeConfiguredTotal(Map<String, Object> cfg) {
+        Object rulesObj = cfg.get("rules");
+        if (!(rulesObj instanceof List<?> rawRules)) {
+            return 0;
+        }
+        int total = 0;
+        for (Object ro : rawRules) {
+            Map<?, ?> rule = (Map<?, ?>) ro;
+            int count = ((Number) rule.get("count")).intValue();
+            int sp = ((Number) rule.get("scorePer")).intValue();
+            total += count * sp;
+        }
+        return total;
+    }
+
+    private java.util.Set<String> keySetOf(String jsonArray) {
+        if (jsonArray == null || jsonArray.isBlank()) {
+            return java.util.Collections.emptySet();
+        }
+        try {
+            List<String> list = objectMapper.readValue(jsonArray, new TypeReference<List<String>>() {
+            });
+            return new java.util.TreeSet<>(list);
+        } catch (Exception e) {
+            return java.util.Collections.emptySet();
+        }
+    }
+
+    private Object parseJsonOrNull(String json) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(json, Object.class);
+        } catch (Exception e) {
+            return null;
         }
     }
 

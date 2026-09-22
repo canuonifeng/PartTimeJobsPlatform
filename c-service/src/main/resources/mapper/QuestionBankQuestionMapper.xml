@@ -16,6 +16,10 @@
         <result property="updatedAt" column="updated_at"/>
     </resultMap>
 
+    <select id="findById" resultMap="QuestionBankQuestionMap">
+        SELECT * FROM question_bank_questions WHERE id = #{id}
+    </select>
+
     <select id="countPublishedByBankAndType" resultType="int">
         SELECT COUNT(*) FROM question_bank_questions
         WHERE bank_id = #{bankId} AND question_type = #{questionType} AND status = 'PUBLISHED'

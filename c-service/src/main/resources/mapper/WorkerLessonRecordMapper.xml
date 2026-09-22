@@ -41,4 +41,14 @@
         WHERE id = #{id}
     </update>
 
+    <update id="updateExamResult" parameterType="com.parttime.cservice.pojo.entity.WorkerLessonRecord">
+        UPDATE worker_lesson_records
+        SET status = #{status},
+            score = #{score},
+            exam_snapshot_json = #{examSnapshotJson},
+            exam_attempts = #{examAttempts},
+            completed_at = #{completedAt}
+        WHERE id = #{id}
+    </update>
+
 </mapper>

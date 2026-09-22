@@ -2,11 +2,13 @@ package com.parttime.cservice.controller;
 
 import com.parttime.cservice.pojo.cmd.ExamSubmitCmd;
 import com.parttime.cservice.pojo.cmd.LessonCompleteCmd;
+import com.parttime.cservice.pojo.cmd.LessonExamSubmitCmd;
 import com.parttime.cservice.pojo.cmd.LessonProgressCmd;
 import com.parttime.cservice.pojo.cmd.StartCourseCmd;
 import com.parttime.cservice.pojo.cmd.StartLessonCmd;
 import com.parttime.cservice.pojo.vo.ApiResponse;
 import com.parttime.cservice.pojo.vo.ExamResultVO;
+import com.parttime.cservice.pojo.vo.LessonExamResultVO;
 import com.parttime.cservice.pojo.vo.LessonStartVO;
 import com.parttime.cservice.pojo.vo.TrainingCourseDetailVO;
 import com.parttime.cservice.pojo.vo.TrainingCourseVO;
@@ -65,6 +67,13 @@ public class TrainingController {
         Long workerId = requireWorkerId();
         trainingService.markComplete(workerId, cmd);
         return ApiResponse.success();
+    }
+
+    @Operation(summary = "提交课时考试", description = "判分、记录成绩与快照，通过则完成课时")
+    @PostMapping("/lessons/exam/submit")
+    public ApiResponse<LessonExamResultVO> submitLessonExam(@RequestBody LessonExamSubmitCmd cmd) {
+        Long workerId = requireWorkerId();
+        return ApiResponse.success(trainingService.submitLessonExam(workerId, cmd));
     }
 
     @Operation(summary = "开始学习", description = "开始学习课程，创建学习记录")
