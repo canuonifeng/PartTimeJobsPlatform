@@ -297,7 +297,7 @@ public class TrainingServiceImpl implements TrainingService {
         }
         workerLessonRecordMapper.update(record);
         if (autoComplete) {
-            checkAndGrantCertification(lesson.getCourseId());
+            checkAndGrantCertification(workerId, lesson.getCourseId());
         }
     }
 
@@ -329,7 +329,7 @@ public class TrainingServiceImpl implements TrainingService {
             record.setProgress(100);
             record.setCompletedAt(LocalDateTime.now());
             workerLessonRecordMapper.update(record);
-            checkAndGrantCertification(lesson.getCourseId());
+            checkAndGrantCertification(workerId, lesson.getCourseId());
         }
     }
 
@@ -450,7 +450,7 @@ public class TrainingServiceImpl implements TrainingService {
         workerLessonRecordMapper.updateExamResult(record);
 
         if (passed) {
-            checkAndGrantCertification(lesson.getCourseId());
+            checkAndGrantCertification(workerId, lesson.getCourseId());
         }
 
         LessonExamResultVO vo = new LessonExamResultVO();
@@ -501,8 +501,33 @@ public class TrainingServiceImpl implements TrainingService {
         }
     }
 
-    private void checkAndGrantCertification(Long courseId) {
-        log.info("课程完成检查 courseId={}，待 Task16 实现发认证逻辑", courseId);
+    private void checkAndGrantCertification(Long workerId, Long courseId) {
+        List<TrainingLesson> lessons = trainingLessonMapper.findByCourseId(courseId);
+        if (lessons.isEmpty()) {
+            return;
+        }
+        for (TrainingLesson lesson : lessons) {
+            WorkerLessonRecord record = workerLessonRecordMapper
+                    .findByWorkerAndLesson(workerId, lesson.getId()).orElse(null);
+            if (record == null || !STATUS_COMPLETED.equals(record.getStatus())) {
+                return;
+            }
+        }
+        TrainingCourse course = trainingCourseMapper.findPublishedById(courseId).orElse(null);
+        if (course == null || course.getCertificationId() == null) {
+            return;
+        }
+        Long certificationId = course.getCertificationId();
+        LocalDateTime now = LocalDateTime.now();
+        Optional<WorkerCertification> existing = workerCertificationMapper.findByWorkerAndCert(workerId, certificationId);
+        if (existing.isPresent()) {
+            WorkerCertification wc = existing.get();
+            if (CERT_ACTIVE.equals(wc.getStatus())
+                    && (wc.getExpiresAt() == null || wc.getExpiresAt().isAfter(now))) {
+                return;
+            }
+        }
+        grantCertification(workerId, certificationId);
     }
 
     private ExamPaperVO drawExamPaper(TrainingLesson lesson) {
