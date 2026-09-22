@@ -41,3 +41,20 @@ export function offlineTrainingCourse(id) {
 export function deleteTrainingCourse(id) {
   return request.post('/training/courses/delete', { id })
 }
+
+// ===== 题库管理 =====
+export function questionBankList() {
+  return request.post('/training/question-banks/list')
+}
+
+export function questionBankCreate(data) {
+  return request.post('/training/question-banks/create', data)
+}
+
+export function questionBankUpdate(data) {
+  return request.post('/training/question-banks/update', data)
+}
+
+export function questionBankToggle(id) {
+  return request.post('/training/question-banks/toggle', { id })
+}

@@ -197,6 +197,12 @@ const routes = [
       meta: { requiresAuth: true, title: '培训课程管理' }
     },
     {
+      path: '/training/question-banks',
+      name: 'TrainingQuestionBanks',
+      component: () => import('../views/training/QuestionBankList.vue'),
+      meta: { requiresAuth: true, title: '题库管理' }
+    },
+    {
       path: '/jobs/detail',
       name: 'JobDetail',
       component: () => import('../views/jobs/JobDetail.vue'),
