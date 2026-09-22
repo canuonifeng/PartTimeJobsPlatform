@@ -52,14 +52,18 @@
       <div class="lesson-drawer-head">
         <el-button type="primary" size="small" @click="handleLessonAdd">新增课时</el-button>
       </div>
-      <el-table :data="lessonDrawer.list" v-loading="lessonDrawer.loading" stripe style="width:100%">
+      <el-table :data="lessonDrawer.list" v-loading="lessonDrawer.loading" stripe style="width:100%" row-key="id" ref="lessonTableRef">
+        <el-table-column label="" width="36" class-name="drag-handle-col">
+          <template #default>
+            <span class="drag-handle">⠿</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="title" label="标题" min-width="160" show-overflow-tooltip />
         <el-table-column prop="lessonType" label="类型" width="100">
           <template #default="{ row }">
             <el-tag :type="lessonTypeTag(row.lessonType)">{{ lessonTypeText(row.lessonType) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="sortOrder" label="排序" width="70" />
         <el-table-column prop="status" label="状态" width="90">
           <template #default="{ row }">
             <el-tag :type="lessonStatusTag(row.status)">{{ lessonStatusText(row.status) }}</el-tag>
@@ -91,13 +95,43 @@
           </el-select>
         </el-form-item>
         <el-form-item label="媒体地址" required v-if="isMediaLesson">
-          <el-input v-model="lessonDialog.form.mediaUrl" placeholder="请输入媒体 URL" />
+          <div style="display:flex;gap:8px;align-items:center;width:100%">
+            <el-input v-model="lessonDialog.form.mediaUrl" placeholder="上传文件后自动回填，也可手动输入" />
+            <el-upload
+              :action="adminUploadUrl"
+              :headers="getUploadHeaders()"
+              :show-file-list="false"
+              :on-success="handleMediaUploadSuccess"
+              :before-upload="beforeMediaUpload"
+              style="flex-shrink:0"
+            >
+              <el-button type="primary" plain>上传文件</el-button>
+            </el-upload>
+          </div>
         </el-form-item>
         <el-form-item label="时长(分钟)" v-if="isMediaLesson">
           <el-input-number v-model="lessonDialog.form.durationMinutes" :min="0" />
         </el-form-item>
-        <el-form-item label="内容" required v-if="isTextLesson">
-          <el-input v-model="lessonDialog.form.content" type="textarea" :rows="6" placeholder="请输入内容" />
+        <el-form-item label="文件上传" v-if="isDocumentLesson">
+          <div style="display:flex;gap:8px;align-items:center;width:100%">
+            <el-input v-model="lessonDialog.form.mediaUrl" placeholder="上传文档后自动回填，也可手动输入" />
+            <el-upload
+              :action="adminUploadUrl"
+              :headers="getUploadHeaders()"
+              :show-file-list="false"
+              :on-success="handleMediaUploadSuccess"
+              :before-upload="beforeMediaUpload"
+              style="flex-shrink:0"
+            >
+              <el-button type="primary" plain>上传文件</el-button>
+            </el-upload>
+          </div>
+        </el-form-item>
+        <el-form-item label="内容" required v-if="isImageTextLesson">
+          <div style="width:100%;border:1px solid #dcdfe6;border-radius:4px">
+            <Toolbar :editor="wangEditorRef" :defaultConfig="toolbarConfig" mode="simple" style="border-bottom:1px solid #dcdfe6" />
+            <Editor v-model="editorHtml" :defaultConfig="editorConfig" mode="simple" style="height:300px;overflow-y:hidden" @onCreated="handleEditorCreated" />
+          </div>
         </el-form-item>
         <template v-if="isExamLesson">
           <el-form-item label="题库" required>
@@ -130,9 +164,6 @@
             </div>
           </el-form-item>
         </template>
-        <el-form-item label="排序">
-          <el-input-number v-model="lessonDialog.form.sortOrder" :min="0" />
-        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="lessonDialog.visible = false">取消</el-button>
@@ -143,16 +174,39 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick, onBeforeUnmount } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import Sortable from 'sortablejs'
+import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
+import '@wangeditor/editor/dist/css/style.css'
 import { getTrainingCertifications } from '../../api/training'
 import { getTrainingCourses, createTrainingCourse, updateTrainingCourse, publishTrainingCourse, offlineTrainingCourse, deleteTrainingCourse } from '../../api/training'
-import { questionBankList, lessonList, lessonCreate, lessonUpdate, lessonDelete, lessonPublish, lessonOffline } from '../../api/training'
+import { questionBankList, lessonList, lessonCreate, lessonUpdate, lessonDelete, lessonPublish, lessonOffline, lessonSort, adminUploadUrl, getUploadHeaders, getUploadUrl } from '../../api/training'
 
 const loading = ref(false)
 const courses = ref([])
 const certs = ref([])
 const banks = ref([])
+const lessonTableRef = ref(null)
+let sortableInstance = null
+
+const wangEditorRef = ref(null)
+const editorHtml = ref('')
+const toolbarConfig = {}
+const editorConfig = {
+  placeholder: '请输入图文内容',
+  MENU_CONF: {
+    uploadImage: {
+      server: adminUploadUrl,
+      fieldName: 'file',
+      headers: getUploadHeaders(),
+      maxFileSize: 10 * 1024 * 1024,
+      customInsert(res, insertFn) {
+        insertFn(getUploadUrl(res), '', '')
+      }
+    }
+  }
+}
 const dialog = ref({
   visible: false,
   isEdit: false,
@@ -174,7 +228,8 @@ const lessonDialog = ref({
 })
 
 const isMediaLesson = computed(() => ['VIDEO', 'AUDIO'].includes(lessonDialog.value.form.lessonType))
-const isTextLesson = computed(() => ['DOCUMENT', 'IMAGE_TEXT'].includes(lessonDialog.value.form.lessonType))
+const isDocumentLesson = computed(() => lessonDialog.value.form.lessonType === 'DOCUMENT')
+const isImageTextLesson = computed(() => lessonDialog.value.form.lessonType === 'IMAGE_TEXT')
 const isExamLesson = computed(() => lessonDialog.value.form.lessonType === 'EXAM')
 
 const examTotalScore = computed(() => {
@@ -225,8 +280,47 @@ async function fetchLessons() {
   try {
     const data = await lessonList(d.courseId)
     d.list = Array.isArray(data) ? data : (data.records || [])
+    await nextTick()
+    initLessonSortable()
   } finally {
     d.loading = false
+  }
+}
+
+function initLessonSortable() {
+  if (sortableInstance) {
+    sortableInstance.destroy()
+    sortableInstance = null
+  }
+  const el = lessonTableRef.value?.$el?.querySelector('.el-table__body-wrapper tbody')
+  if (!el || !lessonDrawer.value.list.length) return
+  sortableInstance = Sortable.create(el, {
+    handle: '.drag-handle',
+    animation: 150,
+    onEnd: async ({ oldIndex, newIndex }) => {
+      if (oldIndex === newIndex) return
+      const list = lessonDrawer.value.list
+      const [moved] = list.splice(oldIndex, 1)
+      list.splice(newIndex, 0, moved)
+      const items = list.map((item, idx) => ({ id: item.id, sortOrder: idx + 1 }))
+      try {
+        await lessonSort({ courseId: lessonDrawer.value.courseId, items })
+        ElMessage.success('排序已保存')
+      } catch (e) {
+        ElMessage.error(e.message || '排序保存失败')
+        await fetchLessons()
+      }
+    }
+  })
+}
+
+async function saveLessonSort() {
+  const items = lessonDrawer.value.list.map((item, idx) => ({ id: item.id, sortOrder: idx + 1 }))
+  try {
+    await lessonSort({ courseId: lessonDrawer.value.courseId, items })
+    ElMessage.success('排序已保存')
+  } catch (e) {
+    ElMessage.error(e.message || '排序保存失败')
   }
 }
 
@@ -242,6 +336,11 @@ function handleLessonTypeChange() {
   if (!isExamLesson.value) {
     lessonDialog.value.form.examConfig = { bankId: null, durationMinutes: 30, passScore: 60, rules: [] }
   }
+  if (!isImageTextLesson.value) {
+    editorHtml.value = ''
+  } else {
+    editorHtml.value = lessonDialog.value.form.content || ''
+  }
 }
 
 function addRule() {
@@ -253,6 +352,7 @@ function removeRule(idx) {
 }
 
 function handleLessonAdd() {
+  editorHtml.value = ''
   lessonDialog.value = {
     visible: true,
     isEdit: false,
@@ -267,6 +367,7 @@ function handleLessonEdit(row) {
     passScore: 60,
     rules: []
   }
+  editorHtml.value = row.lessonType === 'IMAGE_TEXT' ? (row.content || '') : ''
   lessonDialog.value = {
     visible: true,
     isEdit: true,
@@ -278,7 +379,6 @@ function handleLessonEdit(row) {
       content: row.content || '',
       mediaUrl: row.mediaUrl || '',
       durationMinutes: row.durationMinutes || 0,
-      sortOrder: row.sortOrder || 0,
       examConfig
     }
   }
@@ -291,10 +391,9 @@ function buildLessonPayload() {
     courseId: f.courseId,
     lessonType: f.lessonType,
     title: f.title,
-    content: isTextLesson.value ? f.content : '',
-    mediaUrl: isMediaLesson.value ? f.mediaUrl : '',
+    content: isImageTextLesson.value ? editorHtml.value : (isDocumentLesson.value ? '' : f.content),
+    mediaUrl: isMediaLesson.value ? f.mediaUrl : (isDocumentLesson.value ? f.mediaUrl : ''),
     durationMinutes: isMediaLesson.value ? f.durationMinutes : (isExamLesson.value ? f.examConfig.durationMinutes : 0),
-    sortOrder: f.sortOrder,
     examConfig: isExamLesson.value ? f.examConfig : null
   }
 }
@@ -309,7 +408,11 @@ async function confirmLessonSave() {
     ElMessage.warning('请填写媒体地址')
     return
   }
-  if (isTextLesson.value && !f.content) {
+  if (isDocumentLesson.value && !f.mediaUrl) {
+    ElMessage.warning('请上传文档文件')
+    return
+  }
+  if (isImageTextLesson.value && !editorHtml.value) {
     ElMessage.warning('请填写内容')
     return
   }
@@ -465,7 +568,42 @@ async function handleDelete(row) {
   } catch { /* cancelled */ }
 }
 
+function handleEditorCreated(editor) {
+  wangEditorRef.value = editor
+  editorHtml.value = lessonDialog.value.form.content || ''
+}
+
+function beforeMediaUpload(file) {
+  const maxSize = 100 * 1024 * 1024
+  if (file.size > maxSize) {
+    ElMessage.error('文件不能超过100MB')
+    return false
+  }
+  return true
+}
+
+function handleMediaUploadSuccess(response) {
+  const url = getUploadUrl(response)
+  if (!url) {
+    ElMessage.error('上传失败：未获取到文件地址')
+    return
+  }
+  lessonDialog.value.form.mediaUrl = url
+  ElMessage.success('上传成功，地址已回填')
+}
+
 onMounted(fetchData)
+
+onBeforeUnmount(() => {
+  if (sortableInstance) {
+    sortableInstance.destroy()
+    sortableInstance = null
+  }
+  if (wangEditorRef.value) {
+    wangEditorRef.value.destroy()
+    wangEditorRef.value = null
+  }
+})
 </script>
 
 <style scoped>
@@ -474,4 +612,7 @@ onMounted(fetchData)
 .rule-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
 .rule-label { color: #909399; font-size: 12px; }
 .rule-total { margin-top: 8px; color: #409eff; font-weight: 600; }
+.drag-handle { cursor: grab; color: #909399; font-size: 14px; user-select: none; }
+.drag-handle:active { cursor: grabbing; }
+.drag-handle-col { cursor: grab; }
 </style>

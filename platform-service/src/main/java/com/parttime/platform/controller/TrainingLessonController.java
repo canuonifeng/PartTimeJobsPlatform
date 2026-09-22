@@ -3,6 +3,7 @@ package com.parttime.platform.controller;
 import com.parttime.platform.pojo.cmd.IdCmd;
 import com.parttime.platform.pojo.cmd.TrainingLessonCreateCmd;
 import com.parttime.platform.pojo.cmd.TrainingLessonQueryCmd;
+import com.parttime.platform.pojo.cmd.TrainingLessonSortCmd;
 import com.parttime.platform.pojo.cmd.TrainingLessonUpdateCmd;
 import com.parttime.platform.pojo.vo.ApiResponse;
 import com.parttime.platform.pojo.vo.TrainingLessonVO;
@@ -36,6 +37,13 @@ public class TrainingLessonController {
     @PostMapping("/update")
     public ApiResponse<TrainingLessonVO> update(@RequestBody TrainingLessonUpdateCmd cmd) {
         return ApiResponse.success(trainingLessonService.update(cmd));
+    }
+
+    @Operation(summary = "课时排序", description = "批量更新课时排序号")
+    @PostMapping("/sort")
+    public ApiResponse<Void> sort(@RequestBody TrainingLessonSortCmd cmd) {
+        trainingLessonService.sort(cmd);
+        return ApiResponse.success();
     }
 
     @Operation(summary = "删除课时", description = "删除草稿或已下线的课时")

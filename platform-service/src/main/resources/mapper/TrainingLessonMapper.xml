@@ -45,6 +45,10 @@
         WHERE id = #{id}
     </update>
 
+    <update id="updateSortOrder">
+        UPDATE training_lessons SET sort_order = #{sortOrder} WHERE id = #{id}
+    </update>
+
     <update id="updateStatus">
         UPDATE training_lessons SET status = #{status} WHERE id = #{id}
     </update>

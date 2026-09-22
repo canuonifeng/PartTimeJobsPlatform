@@ -7,6 +7,7 @@ import com.parttime.platform.mapper.QuestionBankMapper;
 import com.parttime.platform.mapper.TrainingLessonMapper;
 import com.parttime.platform.pojo.cmd.TrainingLessonCreateCmd;
 import com.parttime.platform.pojo.cmd.TrainingLessonQueryCmd;
+import com.parttime.platform.pojo.cmd.TrainingLessonSortCmd;
 import com.parttime.platform.pojo.cmd.TrainingLessonUpdateCmd;
 import com.parttime.platform.pojo.entity.QuestionBank;
 import com.parttime.platform.pojo.entity.TrainingLesson;
@@ -102,6 +103,20 @@ public class TrainingLessonServiceImpl implements TrainingLessonService {
     }
 
     @Override
+    public void sort(TrainingLessonSortCmd cmd) {
+        if (cmd.getItems() == null || cmd.getItems().isEmpty()) {
+            throw new BusinessException("排序列表不能为空");
+        }
+        List<TrainingLesson> lessons = trainingLessonMapper.findByCourseId(cmd.getCourseId());
+        for (TrainingLessonSortCmd.SortItem item : cmd.getItems()) {
+            boolean exists = lessons.stream().anyMatch(l -> l.getId().equals(item.getId()));
+            if (!exists) {
+                throw new BusinessException("课时不存在: " + item.getId());
+            }
+            trainingLessonMapper.updateSortOrder(item.getId(), item.getSortOrder());
+        }
+    }
+
     public void delete(Long id) {
         TrainingLesson lesson = trainingLessonMapper.findById(id)
                 .orElseThrow(() -> new BusinessException("课时不存在: " + id));

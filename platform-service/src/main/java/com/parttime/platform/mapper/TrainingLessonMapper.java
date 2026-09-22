@@ -20,5 +20,7 @@ public interface TrainingLessonMapper {
 
     int updateStatus(@Param("id") Long id, @Param("status") String status);
 
+    int updateSortOrder(@Param("id") Long id, @Param("sortOrder") Integer sortOrder);
+
     int deleteById(@Param("id") Long id);
 }

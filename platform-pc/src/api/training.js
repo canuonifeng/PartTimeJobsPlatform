@@ -108,3 +108,19 @@ export function lessonPublish(id) {
 export function lessonOffline(id) {
   return request.post('/training/lessons/offline', { id })
 }
+
+export function lessonSort(data) {
+  return request.post('/training/lessons/sort', data)
+}
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+export const adminUploadUrl = `${API_BASE_URL}/admin/files/upload`
+
+export function getUploadHeaders() {
+  const token = localStorage.getItem('token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+export function getUploadUrl(response) {
+  return response?.data?.url || response?.url || ''
+}
