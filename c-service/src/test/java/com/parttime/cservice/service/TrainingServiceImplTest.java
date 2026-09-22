@@ -1,9 +1,13 @@
 package com.parttime.cservice.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.parttime.cservice.mapper.QuestionBankMapper;
+import com.parttime.cservice.mapper.QuestionBankQuestionMapper;
 import com.parttime.cservice.mapper.TrainingCertificationMapper;
 import com.parttime.cservice.mapper.TrainingCourseMapper;
+import com.parttime.cservice.mapper.TrainingLessonMapper;
 import com.parttime.cservice.mapper.WorkerCertificationMapper;
+import com.parttime.cservice.mapper.WorkerLessonRecordMapper;
 import com.parttime.cservice.mapper.WorkerTrainingRecordMapper;
 import com.parttime.cservice.pojo.cmd.ExamSubmitCmd;
 import com.parttime.cservice.pojo.entity.TrainingCertification;
@@ -49,6 +53,18 @@ class TrainingServiceImplTest {
     @Mock
     private WorkerCertificationMapper workerCertificationMapper;
 
+    @Mock
+    private TrainingLessonMapper trainingLessonMapper;
+
+    @Mock
+    private WorkerLessonRecordMapper workerLessonRecordMapper;
+
+    @Mock
+    private QuestionBankMapper questionBankMapper;
+
+    @Mock
+    private QuestionBankQuestionMapper questionBankQuestionMapper;
+
     @InjectMocks
     private TrainingServiceImpl trainingService;
 
@@ -87,7 +103,8 @@ class TrainingServiceImplTest {
     void listCourses_shouldReturnCoursesWithMyStatus() {
         when(trainingCourseMapper.findPublished()).thenReturn(List.of(course()));
         when(trainingCertificationMapper.findByIds(List.of(1L))).thenReturn(List.of(certification()));
-        when(workerTrainingRecordMapper.findByWorkerId(100L)).thenReturn(List.of());
+        when(trainingLessonMapper.findByCourseIds(any())).thenReturn(List.of());
+        when(workerLessonRecordMapper.findByWorkerId(100L)).thenReturn(List.of());
         when(workerCertificationMapper.findByWorkerId(100L)).thenReturn(List.of());
 
         List<TrainingCourseVO> result = trainingService.listCourses(100L);
@@ -107,7 +124,8 @@ class TrainingServiceImplTest {
         wc.setExpiresAt(LocalDateTime.now().plusDays(10));
         when(trainingCourseMapper.findPublished()).thenReturn(List.of(course()));
         when(trainingCertificationMapper.findByIds(List.of(1L))).thenReturn(List.of(certification()));
-        when(workerTrainingRecordMapper.findByWorkerId(100L)).thenReturn(List.of());
+        when(trainingLessonMapper.findByCourseIds(any())).thenReturn(List.of());
+        when(workerLessonRecordMapper.findByWorkerId(100L)).thenReturn(List.of());
         when(workerCertificationMapper.findByWorkerId(100L)).thenReturn(List.of(wc));
 
         List<TrainingCourseVO> result = trainingService.listCourses(100L);
@@ -116,21 +134,17 @@ class TrainingServiceImplTest {
     }
 
     @Test
-    void getCourseDetail_shouldStripAnswersFromQuestions() {
+    void getCourseDetail_shouldReturnLessonsWithoutAnswers() {
         when(trainingCourseMapper.findPublishedById(1L)).thenReturn(Optional.of(course()));
         when(trainingCertificationMapper.findById(1L)).thenReturn(Optional.of(certification()));
-        when(workerTrainingRecordMapper.findByWorkerAndCourse(100L, 1L)).thenReturn(Optional.empty());
+        when(trainingLessonMapper.findByCourseId(1L)).thenReturn(List.of());
+        when(workerLessonRecordMapper.findByWorkerId(100L)).thenReturn(List.of());
         when(workerCertificationMapper.findByWorkerAndCert(100L, 1L)).thenReturn(Optional.empty());
 
         TrainingCourseDetailVO result = trainingService.getCourseDetail(100L, 1L);
 
-        assertThat(result.getQuestions()).hasSize(2);
-        assertThat(result.getQuestions().get(0).getQuestion()).isEqualTo("标注问题");
-        assertThat(result.getQuestions().get(0).getOptions()).containsExactly("A", "B");
-        // 答案字段不能暴露给前端（ExamQuestionVO 无 answer 属性）
-        assertThat(result.getQuestions().get(0).getClass().getDeclaredFields())
-                .extracting(java.lang.reflect.Field::getName)
-                .doesNotContain("answer", "correctAnswer");
+        assertThat(result.getLessons()).isEmpty();
+        assertThat(result.getCertificationName()).isEqualTo("数据标注技能认证");
     }
 
     @Test
