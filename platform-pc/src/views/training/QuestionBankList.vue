@@ -16,9 +16,10 @@
         </template>
       </el-table-column>
       <el-table-column prop="count" label="题目数" width="100" />
-      <el-table-column label="操作" width="160" fixed="right">
+      <el-table-column label="操作" width="240" fixed="right">
         <template #default="{ row }">
           <el-button type="primary" size="small" text @click="handleEdit(row)">编辑</el-button>
+          <el-button type="success" size="small" text @click="handleManage(row)">管理题目</el-button>
           <el-button :type="row.status === 'ACTIVE' ? 'warning' : 'success'" size="small" text @click="handleToggle(row)">
             {{ row.status === 'ACTIVE' ? '停用' : '启用' }}
           </el-button>
@@ -45,9 +46,11 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { questionBankList, questionBankCreate, questionBankUpdate, questionBankToggle } from '../../api/training'
 
+const router = useRouter()
 const loading = ref(false)
 const banks = ref([])
 const dialog = ref({
@@ -103,6 +106,10 @@ async function handleToggle(row) {
   } catch (e) {
     ElMessage.error(e.message || '操作失败')
   }
+}
+
+function handleManage(row) {
+  router.push({ path: '/training/question-banks/questions', query: { bankId: row.id } })
 }
 
 onMounted(fetchData)

@@ -203,6 +203,12 @@ const routes = [
       meta: { requiresAuth: true, title: '题库管理' }
     },
     {
+      path: '/training/question-banks/questions',
+      name: 'TrainingQuestions',
+      component: () => import('../views/training/QuestionList.vue'),
+      meta: { requiresAuth: true, title: '题目管理' }
+    },
+    {
       path: '/jobs/detail',
       name: 'JobDetail',
       component: () => import('../views/jobs/JobDetail.vue'),

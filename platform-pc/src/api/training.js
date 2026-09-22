@@ -58,3 +58,28 @@ export function questionBankUpdate(data) {
 export function questionBankToggle(id) {
   return request.post('/training/question-banks/toggle', { id })
 }
+
+// ===== 题目管理 =====
+export function questionList(data) {
+  return request.post('/training/question-banks/questions/list', data)
+}
+
+export function questionCreate(data) {
+  return request.post('/training/question-banks/questions/create', data)
+}
+
+export function questionUpdate(data) {
+  return request.post('/training/question-banks/questions/update', data)
+}
+
+export function questionDelete(id) {
+  return request.post('/training/question-banks/questions/delete', { id })
+}
+
+export function questionPublish(id) {
+  return request.post('/training/question-banks/questions/publish', { id })
+}
+
+export function questionOffline(id) {
+  return request.post('/training/question-banks/questions/offline', { id })
+}
