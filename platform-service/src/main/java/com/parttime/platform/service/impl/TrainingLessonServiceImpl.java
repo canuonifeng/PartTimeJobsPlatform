@@ -3,10 +3,12 @@ package com.parttime.platform.service.impl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.parttime.platform.exception.BusinessException;
+import com.parttime.platform.mapper.QuestionBankMapper;
 import com.parttime.platform.mapper.TrainingLessonMapper;
 import com.parttime.platform.pojo.cmd.TrainingLessonCreateCmd;
 import com.parttime.platform.pojo.cmd.TrainingLessonQueryCmd;
 import com.parttime.platform.pojo.cmd.TrainingLessonUpdateCmd;
+import com.parttime.platform.pojo.entity.QuestionBank;
 import com.parttime.platform.pojo.entity.TrainingLesson;
 import com.parttime.platform.pojo.vo.TrainingLessonVO;
 import com.parttime.platform.service.TrainingLessonService;
@@ -27,12 +29,21 @@ public class TrainingLessonServiceImpl implements TrainingLessonService {
     private static final String DRAFT = "DRAFT";
     private static final String PUBLISHED = "PUBLISHED";
     private static final String OFFLINE = "OFFLINE";
-    private static final Set<String> VALID_TYPES = Set.of("VIDEO", "AUDIO", "DOCUMENT", "IMAGE_TEXT", "EXAM");
+    private static final String EXAM = "EXAM";
+    private static final String VIDEO = "VIDEO";
+    private static final String AUDIO = "AUDIO";
+    private static final String DOCUMENT = "DOCUMENT";
+    private static final String IMAGE_TEXT = "IMAGE_TEXT";
+    private static final Set<String> VALID_TYPES = Set.of(VIDEO, AUDIO, DOCUMENT, IMAGE_TEXT, EXAM);
+    private static final Set<String> VALID_QUESTION_TYPES = Set.of("SINGLE_CHOICE", "MULTIPLE_CHOICE", "JUDGE");
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Resource
     private TrainingLessonMapper trainingLessonMapper;
+
+    @Resource
+    private QuestionBankMapper questionBankMapper;
 
     @Override
     public List<TrainingLessonVO> list(TrainingLessonQueryCmd cmd) {
@@ -47,6 +58,12 @@ public class TrainingLessonServiceImpl implements TrainingLessonService {
     @Override
     public TrainingLessonVO create(TrainingLessonCreateCmd cmd) {
         validate(cmd.getCourseId(), cmd.getLessonType(), cmd.getTitle());
+        validateLessonContent(cmd.getLessonType(), cmd.getMediaUrl(), cmd.getContent(), cmd.getDurationMinutes());
+        String examConfigJson = null;
+        if (EXAM.equals(cmd.getLessonType())) {
+            validateExamConfig(cmd.getExamConfig());
+            examConfigJson = toExamConfigJson(cmd.getExamConfig());
+        }
         TrainingLesson lesson = new TrainingLesson();
         lesson.setCourseId(cmd.getCourseId());
         lesson.setLessonType(cmd.getLessonType());
@@ -54,7 +71,7 @@ public class TrainingLessonServiceImpl implements TrainingLessonService {
         lesson.setContent(cmd.getContent());
         lesson.setMediaUrl(cmd.getMediaUrl());
         lesson.setDurationMinutes(cmd.getDurationMinutes());
-        lesson.setExamConfigJson(toExamConfigJson(cmd.getExamConfig()));
+        lesson.setExamConfigJson(examConfigJson);
         lesson.setStatus(DRAFT);
         lesson.setSortOrder(cmd.getSortOrder() == null ? 0 : cmd.getSortOrder());
         trainingLessonMapper.insert(lesson);
@@ -66,13 +83,19 @@ public class TrainingLessonServiceImpl implements TrainingLessonService {
         TrainingLesson lesson = trainingLessonMapper.findById(cmd.getId())
                 .orElseThrow(() -> new BusinessException("课时不存在: " + cmd.getId()));
         validate(cmd.getCourseId(), cmd.getLessonType(), cmd.getTitle());
+        validateLessonContent(cmd.getLessonType(), cmd.getMediaUrl(), cmd.getContent(), cmd.getDurationMinutes());
+        String examConfigJson = null;
+        if (EXAM.equals(cmd.getLessonType())) {
+            validateExamConfigUpdate(cmd.getExamConfig());
+            examConfigJson = toExamConfigJson(cmd.getExamConfig());
+        }
         lesson.setCourseId(cmd.getCourseId());
         lesson.setLessonType(cmd.getLessonType());
         lesson.setTitle(cmd.getTitle().trim());
         lesson.setContent(cmd.getContent());
         lesson.setMediaUrl(cmd.getMediaUrl());
         lesson.setDurationMinutes(cmd.getDurationMinutes());
-        lesson.setExamConfigJson(toExamConfigJson(cmd.getExamConfig()));
+        lesson.setExamConfigJson(examConfigJson);
         lesson.setSortOrder(cmd.getSortOrder() == null ? lesson.getSortOrder() : cmd.getSortOrder());
         trainingLessonMapper.update(lesson);
         return toVO(lesson);
@@ -120,6 +143,84 @@ public class TrainingLessonServiceImpl implements TrainingLessonService {
         }
     }
 
+    private void validateLessonContent(String lessonType, String mediaUrl, String content, Integer durationMinutes) {
+        if (VIDEO.equals(lessonType) || AUDIO.equals(lessonType)) {
+            if (mediaUrl == null || mediaUrl.isBlank()) {
+                throw new BusinessException("音视频课时必须填写媒体地址");
+            }
+            if (durationMinutes == null || durationMinutes <= 0) {
+                throw new BusinessException("课时时长必须大于0");
+            }
+        }
+        if (DOCUMENT.equals(lessonType) || IMAGE_TEXT.equals(lessonType)) {
+            if (content == null || content.isBlank()) {
+                throw new BusinessException("文档课时必须填写正文内容");
+            }
+        }
+    }
+
+    private void validateExamConfig(TrainingLessonCreateCmd.ExamConfigDTO config) {
+        if (config == null) {
+            throw new BusinessException("考试课时必须配置考试规则");
+        }
+        validateExamConfigCommon(config.getBankId(), config.getDurationMinutes(),
+                config.getPassScore(), config.getRules());
+    }
+
+    private void validateExamConfigUpdate(TrainingLessonUpdateCmd.ExamConfigDTO config) {
+        if (config == null) {
+            throw new BusinessException("考试课时必须配置考试规则");
+        }
+        validateExamConfigCommon(config.getBankId(), config.getDurationMinutes(),
+                config.getPassScore(), config.getRules());
+    }
+
+    private void validateExamConfigCommon(Long bankId, Integer durationMinutes,
+                                           Integer passScore, List<?> rules) {
+        if (bankId == null) {
+            throw new BusinessException("考试课时必须选择题库");
+        }
+        QuestionBank bank = questionBankMapper.findById(bankId)
+                .orElseThrow(() -> new BusinessException("题库不存在或已停用"));
+        if (!"ACTIVE".equals(bank.getStatus())) {
+            throw new BusinessException("题库不存在或已停用");
+        }
+        if (durationMinutes == null || durationMinutes <= 0) {
+            throw new BusinessException("考试时长必须大于0");
+        }
+        if (passScore == null || passScore < 0) {
+            throw new BusinessException("及格分不能为负");
+        }
+        if (rules == null || rules.isEmpty()) {
+            throw new BusinessException("考试规则不能为空");
+        }
+        for (Object rule : rules) {
+            if (!isValidRule(rule)) {
+                throw new BusinessException("题型规则不合法");
+            }
+        }
+    }
+
+    private boolean isValidRule(Object rule) {
+        if (!(rule instanceof java.util.Map)) {
+            return false;
+        }
+        java.util.Map<?, ?> r = (java.util.Map<?, ?>) rule;
+        Object questionType = r.get("questionType");
+        Object count = r.get("count");
+        Object scorePer = r.get("scorePer");
+        if (questionType == null || !VALID_QUESTION_TYPES.contains(questionType.toString())) {
+            return false;
+        }
+        if (!(count instanceof Number) || ((Number) count).intValue() <= 0) {
+            return false;
+        }
+        if (!(scorePer instanceof Number) || ((Number) scorePer).intValue() <= 0) {
+            return false;
+        }
+        return true;
+    }
+
     private String toExamConfigJson(Object examConfig) {
         if (examConfig == null) {
             return null;
@@ -141,13 +242,27 @@ public class TrainingLessonServiceImpl implements TrainingLessonService {
         vo.setContent(lesson.getContent());
         vo.setMediaUrl(lesson.getMediaUrl());
         vo.setDurationMinutes(lesson.getDurationMinutes());
-        vo.setExamConfig(parseExamConfig(lesson.getExamConfigJson()));
-        vo.setTotalScore(null);
+        TrainingLessonVO.ExamConfigVO examConfig = parseExamConfig(lesson.getExamConfigJson());
+        vo.setExamConfig(examConfig);
+        vo.setTotalScore(calcTotalScore(examConfig));
         vo.setSortOrder(lesson.getSortOrder());
         vo.setStatus(lesson.getStatus());
         vo.setCreatedAt(lesson.getCreatedAt());
         vo.setUpdatedAt(lesson.getUpdatedAt());
         return vo;
+    }
+
+    private Integer calcTotalScore(TrainingLessonVO.ExamConfigVO examConfig) {
+        if (examConfig == null || examConfig.getRules() == null) {
+            return 0;
+        }
+        int total = 0;
+        for (TrainingLessonVO.ExamRuleVO rule : examConfig.getRules()) {
+            if (rule.getCount() != null && rule.getScorePer() != null) {
+                total += rule.getCount() * rule.getScorePer();
+            }
+        }
+        return total;
     }
 
     private TrainingLessonVO.ExamConfigVO parseExamConfig(String json) {
