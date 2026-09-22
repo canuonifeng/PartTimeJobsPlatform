@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.parttime.platform.mapper.QuestionBankQuestionMapper">
+
+    <resultMap id="QuestionMap" type="com.parttime.platform.pojo.entity.QuestionBankQuestion">
+        <id property="id" column="id"/>
+        <result property="bankId" column="bank_id"/>
+        <result property="questionType" column="question_type"/>
+        <result property="stem" column="stem"/>
+        <result property="optionsJson" column="options_json"/>
+        <result property="answer" column="answer"/>
+        <result property="analysis" column="analysis"/>
+        <result property="status" column="status"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.parttime.platform.pojo.entity.QuestionBankQuestion"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO question_bank_questions (bank_id, question_type, stem, options_json, answer, analysis, status, sort_order)
+        VALUES (#{bankId}, #{questionType}, #{stem}, #{optionsJson}, #{answer}, #{analysis}, #{status}, #{sortOrder})
+    </insert>
+
+    <select id="findById" resultMap="QuestionMap">
+        SELECT * FROM question_bank_questions WHERE id = #{id}
+    </select>
+
+    <select id="findByBankId" resultMap="QuestionMap">
+        SELECT * FROM question_bank_questions WHERE bank_id = #{bankId}
+        ORDER BY sort_order ASC, id DESC
+    </select>
+
+    <select id="findPublishedByBankAndType" resultMap="QuestionMap">
+        SELECT * FROM question_bank_questions
+        WHERE bank_id = #{bankId} AND question_type = #{questionType} AND status = 'PUBLISHED'
+        ORDER BY sort_order ASC, id DESC
+    </select>
+
+    <update id="update" parameterType="com.parttime.platform.pojo.entity.QuestionBankQuestion">
+        UPDATE question_bank_questions
+        SET bank_id = #{bankId},
+            question_type = #{questionType},
+            stem = #{stem},
+            options_json = #{optionsJson},
+            answer = #{answer},
+            analysis = #{analysis},
+            sort_order = #{sortOrder}
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE question_bank_questions SET status = #{status} WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM question_bank_questions WHERE id = #{id}
+    </delete>
+
+</mapper>
