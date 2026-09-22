@@ -83,3 +83,28 @@ export function questionPublish(id) {
 export function questionOffline(id) {
   return request.post('/training/question-banks/questions/offline', { id })
 }
+
+// ===== 课时管理 =====
+export function lessonList(courseId) {
+  return request.post('/training/lessons/list', { courseId })
+}
+
+export function lessonCreate(data) {
+  return request.post('/training/lessons/create', data)
+}
+
+export function lessonUpdate(data) {
+  return request.post('/training/lessons/update', data)
+}
+
+export function lessonDelete(id) {
+  return request.post('/training/lessons/delete', { id })
+}
+
+export function lessonPublish(id) {
+  return request.post('/training/lessons/publish', { id })
+}
+
+export function lessonOffline(id) {
+  return request.post('/training/lessons/offline', { id })
+}
