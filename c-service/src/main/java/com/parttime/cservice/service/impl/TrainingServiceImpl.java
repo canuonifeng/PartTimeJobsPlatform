@@ -9,6 +9,8 @@ import com.parttime.cservice.mapper.WorkerCertificationMapper;
 import com.parttime.cservice.mapper.WorkerLessonRecordMapper;
 import com.parttime.cservice.mapper.WorkerTrainingRecordMapper;
 import com.parttime.cservice.pojo.cmd.ExamSubmitCmd;
+import com.parttime.cservice.pojo.cmd.LessonCompleteCmd;
+import com.parttime.cservice.pojo.cmd.LessonProgressCmd;
 import com.parttime.cservice.pojo.cmd.StartLessonCmd;
 import com.parttime.cservice.pojo.entity.TrainingCertification;
 import com.parttime.cservice.pojo.entity.TrainingCourse;
@@ -240,6 +242,78 @@ public class TrainingServiceImpl implements TrainingService {
         vo.setDurationMinutes(lesson.getDurationMinutes());
         vo.setCurrentProgress(currentProgress);
         return vo;
+    }
+
+    @Override
+    @Transactional
+    public void reportProgress(Long workerId, LessonProgressCmd cmd) {
+        TrainingLesson lesson = trainingLessonMapper.findById(cmd.getLessonId())
+                .orElseThrow(() -> new RuntimeException("课时不存在"));
+        if (!"PUBLISHED".equals(lesson.getStatus())) {
+            throw new RuntimeException("课时未发布");
+        }
+        if (!"VIDEO".equals(lesson.getLessonType()) && !"AUDIO".equals(lesson.getLessonType())) {
+            throw new RuntimeException("仅音视频课时可上报进度");
+        }
+        WorkerLessonRecord record = workerLessonRecordMapper
+                .findByWorkerAndLesson(workerId, lesson.getId()).orElse(null);
+        if (record == null) {
+            throw new RuntimeException("请先开始课时");
+        }
+        int newProgress = cmd.getProgress() == null ? 0 : cmd.getProgress();
+        if (newProgress > 100) {
+            newProgress = 100;
+        }
+        int oldProgress = record.getProgress() == null ? 0 : record.getProgress();
+        if (newProgress < oldProgress) {
+            throw new RuntimeException("进度不能回退");
+        }
+        record.setProgress(newProgress);
+        boolean autoComplete = newProgress >= 100 && !STATUS_COMPLETED.equals(record.getStatus());
+        if (autoComplete) {
+            record.setStatus(STATUS_COMPLETED);
+            record.setCompletedAt(LocalDateTime.now());
+        }
+        workerLessonRecordMapper.update(record);
+        if (autoComplete) {
+            checkAndGrantCertification(lesson.getCourseId());
+        }
+    }
+
+    @Override
+    @Transactional
+    public void markComplete(Long workerId, LessonCompleteCmd cmd) {
+        TrainingLesson lesson = trainingLessonMapper.findById(cmd.getLessonId())
+                .orElseThrow(() -> new RuntimeException("课时不存在"));
+        if (!"PUBLISHED".equals(lesson.getStatus())) {
+            throw new RuntimeException("课时未发布");
+        }
+        if (!"DOCUMENT".equals(lesson.getLessonType()) && !"IMAGE_TEXT".equals(lesson.getLessonType())) {
+            throw new RuntimeException("仅文档/图文课时可标记已读");
+        }
+        WorkerLessonRecord record = workerLessonRecordMapper
+                .findByWorkerAndLesson(workerId, lesson.getId()).orElse(null);
+        if (record == null) {
+            record = new WorkerLessonRecord();
+            record.setWorkerId(workerId);
+            record.setLessonId(lesson.getId());
+            record.setStatus(STATUS_IN_PROGRESS);
+            record.setProgress(0);
+            record.setExamAttempts(0);
+            record.setStartedAt(LocalDateTime.now());
+            workerLessonRecordMapper.insert(record);
+        }
+        if (!STATUS_COMPLETED.equals(record.getStatus())) {
+            record.setStatus(STATUS_COMPLETED);
+            record.setProgress(100);
+            record.setCompletedAt(LocalDateTime.now());
+            workerLessonRecordMapper.update(record);
+            checkAndGrantCertification(lesson.getCourseId());
+        }
+    }
+
+    private void checkAndGrantCertification(Long courseId) {
+        log.info("课程完成检查 courseId={}，待 Task16 实现发认证逻辑", courseId);
     }
 
     private LessonStartVO drawExamPaper(TrainingLesson lesson) {

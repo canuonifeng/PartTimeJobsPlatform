@@ -1,6 +1,8 @@
 package com.parttime.cservice.controller;
 
 import com.parttime.cservice.pojo.cmd.ExamSubmitCmd;
+import com.parttime.cservice.pojo.cmd.LessonCompleteCmd;
+import com.parttime.cservice.pojo.cmd.LessonProgressCmd;
 import com.parttime.cservice.pojo.cmd.StartCourseCmd;
 import com.parttime.cservice.pojo.cmd.StartLessonCmd;
 import com.parttime.cservice.pojo.vo.ApiResponse;
@@ -47,6 +49,22 @@ public class TrainingController {
     public ApiResponse<LessonStartVO> startLesson(@RequestBody StartLessonCmd cmd) {
         Long workerId = requireWorkerId();
         return ApiResponse.success(trainingService.startLesson(workerId, cmd));
+    }
+
+    @Operation(summary = "上报课时进度", description = "音视频课时上报播放进度，达100%自动完成")
+    @PostMapping("/lessons/progress")
+    public ApiResponse<Void> reportProgress(@RequestBody LessonProgressCmd cmd) {
+        Long workerId = requireWorkerId();
+        trainingService.reportProgress(workerId, cmd);
+        return ApiResponse.success();
+    }
+
+    @Operation(summary = "标记课时已完成", description = "文档/图文课时标记已读")
+    @PostMapping("/lessons/complete")
+    public ApiResponse<Void> markComplete(@RequestBody LessonCompleteCmd cmd) {
+        Long workerId = requireWorkerId();
+        trainingService.markComplete(workerId, cmd);
+        return ApiResponse.success();
     }
 
     @Operation(summary = "开始学习", description = "开始学习课程，创建学习记录")

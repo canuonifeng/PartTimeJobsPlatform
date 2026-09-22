@@ -15,4 +15,6 @@ public interface WorkerLessonRecordMapper {
     List<WorkerLessonRecord> findByWorkerId(@Param("workerId") Long workerId);
 
     int insert(WorkerLessonRecord record);
+
+    int update(WorkerLessonRecord record);
 }

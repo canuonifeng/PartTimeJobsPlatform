@@ -33,4 +33,12 @@
         VALUES (#{workerId}, #{lessonId}, #{status}, #{progress}, #{score}, #{examAttempts}, #{startedAt}, #{completedAt})
     </insert>
 
+    <update id="update" parameterType="com.parttime.cservice.pojo.entity.WorkerLessonRecord">
+        UPDATE worker_lesson_records
+        SET status = #{status},
+            progress = #{progress},
+            completed_at = #{completedAt}
+        WHERE id = #{id}
+    </update>
+
 </mapper>

@@ -1,6 +1,8 @@
 package com.parttime.cservice.service;
 
 import com.parttime.cservice.pojo.cmd.ExamSubmitCmd;
+import com.parttime.cservice.pojo.cmd.LessonCompleteCmd;
+import com.parttime.cservice.pojo.cmd.LessonProgressCmd;
 import com.parttime.cservice.pojo.cmd.StartLessonCmd;
 import com.parttime.cservice.pojo.vo.ExamResultVO;
 import com.parttime.cservice.pojo.vo.LessonStartVO;
@@ -17,6 +19,10 @@ public interface TrainingService {
     TrainingCourseDetailVO getCourseDetail(Long workerId, Long courseId);
 
     LessonStartVO startLesson(Long workerId, StartLessonCmd cmd);
+
+    void reportProgress(Long workerId, LessonProgressCmd cmd);
+
+    void markComplete(Long workerId, LessonCompleteCmd cmd);
 
     void startCourse(Long workerId, Long courseId);
 
