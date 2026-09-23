@@ -28,6 +28,7 @@
           <text class="order-company">{{ order.companyName || '企业' }}</text>
           <text class="order-earnings">¥{{ money(order.earnings) }}</text>
         </view>
+        <button class="platform-btn" @click="goAnnotationPlatform">去 PC 端完成标注</button>
       </view>
     </view>
 
@@ -61,6 +62,20 @@ const loading = ref(false)
 const loadingMore = ref(false)
 const activeTab = ref('all')
 const orders = ref<TaskOrder[]>([])
+
+const ANNOTATION_PLATFORM_URL = 'https://annotation.example.com'
+
+function goAnnotationPlatform() {
+  // #ifdef H5
+  window.open(ANNOTATION_PLATFORM_URL)
+  // #endif
+  // #ifndef H5
+  uni.setClipboardData({
+    data: ANNOTATION_PLATFORM_URL,
+    success: () => uni.showToast({ title: '链接已复制，请在PC浏览器打开', icon: 'none' })
+  })
+  // #endif
+}
 
 const tabs = [
   { key: 'all', label: '全部' },
@@ -310,6 +325,23 @@ onMounted(() => {
   font-size: 32rpx;
   font-weight: 800;
   color: #ff6b35;
+}
+
+.platform-btn {
+  margin-top: 20rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: 14rpx;
+  background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 40%, #2563eb 100%);
+  color: #fff;
+  font-size: 28rpx;
+  font-weight: 600;
+  border: none;
+  padding: 0;
+}
+
+.platform-btn::after {
+  border: none;
 }
 
 .empty-state {
