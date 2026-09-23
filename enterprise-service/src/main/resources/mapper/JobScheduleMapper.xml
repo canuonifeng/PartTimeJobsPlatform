@@ -13,6 +13,7 @@
         <result property="contactName" column="contact_name"/>
         <result property="contactPhone" column="contact_phone"/>
         <result property="status" column="status"/>
+        <result property="batchCode" column="batch_code"/>
         <result property="totalItems" column="total_items"/>
         <result property="externalBatchId" column="external_batch_id"/>
         <result property="createdAt" column="created_at"/>
@@ -66,8 +67,8 @@
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO job_schedules (job_id, schedule_date, start_time, end_time, schedule_name, slots_available, contact_name, contact_phone, status, total_items, external_batch_id)
-        VALUES (#{jobId}, #{scheduleDate}, #{startTime}, #{endTime}, #{scheduleName}, #{slotsAvailable}, #{contactName}, #{contactPhone}, #{status}, #{totalItems}, #{externalBatchId})
+        INSERT INTO job_schedules (job_id, schedule_date, start_time, end_time, schedule_name, slots_available, contact_name, contact_phone, status, batch_code, total_items, external_batch_id)
+        VALUES (#{jobId}, #{scheduleDate}, #{startTime}, #{endTime}, #{scheduleName}, #{slotsAvailable}, #{contactName}, #{contactPhone}, #{status}, #{batchCode}, #{totalItems}, #{externalBatchId})
     </insert>
 
     <select id="findById" resultMap="JobScheduleResultMap">
@@ -82,6 +83,10 @@
         SELECT * FROM job_schedules WHERE job_id = #{jobId} AND status = 'ACTIVE' ORDER BY schedule_date ASC, start_time ASC
     </select>
 
+    <select id="findBatchesByJobId" resultMap="JobScheduleResultMap">
+        SELECT * FROM job_schedules WHERE job_id = #{jobId} AND schedule_date IS NULL ORDER BY id DESC
+    </select>
+
     <select id="findAll" resultMap="JobScheduleResultMap">
         SELECT * FROM job_schedules
     </select>
@@ -93,6 +98,16 @@
             contact_name = #{contactName}, contact_phone = #{contactPhone},
             total_items = #{totalItems}, external_batch_id = #{externalBatchId}
         WHERE id = #{id}
+    </update>
+
+    <update id="updateBatch">
+        UPDATE job_schedules
+        SET batch_code = #{batchCode}, total_items = #{totalItems}, external_batch_id = #{externalBatchId}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE job_schedules SET status = #{status}, updated_at = NOW() WHERE id = #{id}
     </update>
 
     <update id="cancelSchedule">

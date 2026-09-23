@@ -20,7 +20,16 @@ public interface JobScheduleMapper {
 
     List<JobSchedule> findActiveByJobId(Long jobId);
 
+    List<JobSchedule> findBatchesByJobId(Long jobId);
+
     int update(JobSchedule schedule);
+
+    int updateBatch(@Param("id") Long id,
+                    @Param("batchCode") String batchCode,
+                    @Param("totalItems") Integer totalItems,
+                    @Param("externalBatchId") String externalBatchId);
+
+    int updateStatus(@Param("id") Long id, @Param("status") String status);
 
     int cancelSchedule(Long id);
 
