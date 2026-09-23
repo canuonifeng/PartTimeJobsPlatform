@@ -13,7 +13,7 @@
     </view>
 
     <view class="orders-list">
-      <view v-for="order in filteredOrders" :key="order.id" class="order-card" @click="goDetail(order)">
+      <view v-for="order in filteredOrders" :key="order.id" class="order-card">
         <view class="order-header">
           <text class="order-title">{{ order.jobTitle }}</text>
           <text class="order-status" :class="statusClass(order.status)">{{ statusText(order.status) }}</text>
@@ -93,6 +93,7 @@ function money(value: any) {
 
 function statusText(status: string): string {
   const map: Record<string, string> = {
+    PENDING: '待处理',
     IN_PROGRESS: '进行中',
     COMPLETED: '已完成',
     SETTLED: '已结算',
@@ -103,6 +104,7 @@ function statusText(status: string): string {
 
 function statusClass(status: string): string {
   const map: Record<string, string> = {
+    PENDING: 'pending',
     IN_PROGRESS: 'pending',
     COMPLETED: 'success',
     SETTLED: 'success',
@@ -165,10 +167,6 @@ async function loadOrders(p: number, append: boolean) {
     loading.value = false
     loadingMore.value = false
   }
-}
-
-function goDetail(order: TaskOrder) {
-  uni.navigateTo({ url: `/pages/jobs/jobDetailAnnotation?id=${order.jobId}` })
 }
 
 async function loadMore() {
