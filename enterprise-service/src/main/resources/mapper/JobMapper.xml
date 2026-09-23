@@ -59,6 +59,10 @@
         SELECT * FROM jobs WHERE company_id = #{companyId} AND status = #{status} ORDER BY created_at DESC
     </select>
 
+    <select id="findByCompanyIdAndTaskType" resultMap="JobResultMap">
+        SELECT * FROM jobs WHERE company_id = #{companyId} AND task_type = #{taskType} ORDER BY created_at DESC
+    </select>
+
     <select id="findByCompanyIdAndStatusAndTaskType" resultMap="JobResultMap">
         SELECT * FROM jobs
         WHERE company_id = #{companyId}

@@ -2,6 +2,7 @@ package com.parttime.enterprise.service;
 
 import com.parttime.enterprise.enums.JobRateType;
 import com.parttime.enterprise.enums.JobStatus;
+import com.parttime.enterprise.enums.TaskType;
 import com.parttime.enterprise.exception.BusinessException;
 import com.parttime.enterprise.mapper.JobCategoryMapper;
 import com.parttime.enterprise.mapper.JobMapper;
@@ -162,6 +163,49 @@ class JobServiceTest {
         assertThat(jobs.get(0).getPendingApplicationCount()).isEqualTo(2);
         assertThat(jobs.get(1).getApplicationCount()).isEqualTo(3);
         assertThat(jobs.get(1).getPendingApplicationCount()).isEqualTo(1);
+    }
+
+    @Test
+    void getJobsByCompany_taskTypeOnly_shouldUseTaskTypeFilter() {
+        Job annotationJob = new Job();
+        annotationJob.setId(11L);
+        annotationJob.setCompanyId(1L);
+        annotationJob.setTitle("标注任务");
+        annotationJob.setStatus("PUBLISHED");
+        annotationJob.setTaskType("ANNOTATION");
+
+        when(jobMapper.findByCompanyIdAndTaskType(1L, "ANNOTATION")).thenReturn(List.of(annotationJob));
+        when(jobRateMapper.findByJobId(11L)).thenReturn(List.of());
+        when(jobScheduleMapper.findActiveByJobId(11L)).thenReturn(List.of());
+        when(jobTagRelationMapper.findTagsByJobId(11L)).thenReturn(List.of());
+
+        List<JobVO> jobs = jobService.getJobsByCompany(1L, "", "ANNOTATION", null, null);
+
+        assertThat(jobs).hasSize(1);
+        assertThat(jobs.get(0).getTaskType()).isEqualTo(TaskType.ANNOTATION);
+        verify(jobMapper).findByCompanyIdAndTaskType(1L, "ANNOTATION");
+        verify(jobMapper, never()).findByCompanyId(1L);
+    }
+
+    @Test
+    void getJobsByCompany_statusAndTaskType_shouldUseCombinedFilter() {
+        Job annotationJob = new Job();
+        annotationJob.setId(12L);
+        annotationJob.setCompanyId(1L);
+        annotationJob.setTitle("已发布标注");
+        annotationJob.setStatus("PUBLISHED");
+        annotationJob.setTaskType("ANNOTATION");
+
+        when(jobMapper.findByCompanyIdAndStatusAndTaskType(1L, "PUBLISHED", "ANNOTATION")).thenReturn(List.of(annotationJob));
+        when(jobRateMapper.findByJobId(12L)).thenReturn(List.of());
+        when(jobScheduleMapper.findActiveByJobId(12L)).thenReturn(List.of());
+        when(jobTagRelationMapper.findTagsByJobId(12L)).thenReturn(List.of());
+
+        List<JobVO> jobs = jobService.getJobsByCompany(1L, "PUBLISHED", "ANNOTATION", null, null);
+
+        assertThat(jobs).hasSize(1);
+        assertThat(jobs.get(0).getTaskType()).isEqualTo(TaskType.ANNOTATION);
+        verify(jobMapper).findByCompanyIdAndStatusAndTaskType(1L, "PUBLISHED", "ANNOTATION");
     }
 
     @Test
