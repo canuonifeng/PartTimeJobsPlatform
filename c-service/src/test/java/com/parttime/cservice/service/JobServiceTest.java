@@ -15,7 +15,10 @@ import com.parttime.cservice.pojo.entity.Enterprise;
 import com.parttime.cservice.pojo.entity.Job;
 import com.parttime.cservice.pojo.entity.JobCategory;
 import com.parttime.cservice.pojo.entity.JobRate;
+import com.parttime.cservice.pojo.entity.JobSchedule;
+import com.parttime.cservice.pojo.entity.AnnotationTaskOrder;
 import com.parttime.cservice.pojo.entity.ScheduleApplication;
+import com.parttime.cservice.mapper.JobScheduleMapper;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
 import com.parttime.cservice.pojo.vo.JobTagVO;
@@ -38,6 +41,7 @@ class JobServiceTest {
     @InjectMocks
     private JobServiceImpl jobService;
     private CountingJobTagRelationMapper jobTagRelationMapper;
+    private InMemoryMappers.TestAnnotationTaskOrderMapper annotationTaskOrderMapper;
 
     @BeforeEach
     void setUp() {
@@ -57,6 +61,8 @@ class JobServiceTest {
         ReflectionTestUtils.setField(jobService, "shiftMapper", InMemoryMappers.createShiftMapper());
         ReflectionTestUtils.setField(jobService, "notificationMapper", InMemoryMappers.createNotificationMapper());
         ReflectionTestUtils.setField(jobService, "jobTagGroupMapper", InMemoryMappers.createJobTagGroupMapper());
+        annotationTaskOrderMapper = InMemoryMappers.createAnnotationTaskOrderMapper();
+        ReflectionTestUtils.setField(jobService, "annotationTaskOrderMapper", annotationTaskOrderMapper);
         EnterpriseMapper enterpriseMapper = InMemoryMappers.createEnterpriseMapper();
         JobRateMapper jobRateMapper = InMemoryMappers.createJobRateMapper();
         JobCategoryMapper jobCategoryMapper = InMemoryMappers.createJobCategoryMapper();
@@ -281,6 +287,99 @@ class JobServiceTest {
         List<ScheduleApplication> statuses = jobService.getApplicationStatus(999L, 1L);
 
         assertThat(statuses).isEmpty();
+    }
+
+    @Test
+    void searchJobs_withUrgentTrue_returnsOnlyUrgentJobs() {
+        Job urgentJob = new Job();
+        urgentJob.setId(30L);
+        urgentJob.setCompanyId(1L);
+        urgentJob.setTitle("Urgent Annotation Task");
+        urgentJob.setStatus("PUBLISHED");
+        urgentJob.setTaskType("ANNOTATION");
+        urgentJob.setUrgent(true);
+        urgentJob.setCategoryId(1L);
+        JobMapper jobMapper = (JobMapper) ReflectionTestUtils.getField(jobService, "jobMapper");
+        jobMapper.insert(urgentJob);
+
+        PageVO<JobSummaryVO> urgentPage = jobService.searchJobs(null, null, null, null, null, null, null, null, true, null, 1, 10);
+        assertThat(urgentPage.getRecords()).hasSize(1);
+        assertThat(urgentPage.getRecords().get(0).getId()).isEqualTo(30L);
+        assertThat(urgentPage.getRecords().get(0).getUrgent()).isTrue();
+
+        PageVO<JobSummaryVO> nonUrgentPage = jobService.searchJobs(null, null, null, null, null, null, null, null, false, null, 1, 10);
+        assertThat(nonUrgentPage.getRecords()).noneMatch(j -> j.getId().equals(30L));
+    }
+
+    @Test
+    void searchJobs_sortDistanceWithoutCoordinates_doesNotCrash() {
+        PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, null, null, null, null, null, null, null, "distance", 1, 10);
+
+        assertThat(page.getRecords()).hasSize(3);
+    }
+
+    @Test
+    void getJobDetail_annotationJob_returnsActiveBatchesWithRemainingItems() {
+        Job annotationJob = new Job();
+        annotationJob.setId(40L);
+        annotationJob.setCompanyId(1L);
+        annotationJob.setTitle("Image Annotation");
+        annotationJob.setStatus("PUBLISHED");
+        annotationJob.setTaskType("ANNOTATION");
+        annotationJob.setPricingMode("PER_ITEM");
+        annotationJob.setPricePerUnit(new BigDecimal("0.50"));
+        annotationJob.setTotalItems(1000);
+        JobMapper jobMapper = (JobMapper) ReflectionTestUtils.getField(jobService, "jobMapper");
+        jobMapper.insert(annotationJob);
+
+        JobSchedule batch1 = new JobSchedule();
+        batch1.setId(100L);
+        batch1.setJobId(40L);
+        batch1.setStatus("ACTIVE");
+        batch1.setScheduleDate(java.time.LocalDate.now().plusDays(5));
+        batch1.setStartTime(java.time.LocalTime.of(9, 0));
+        batch1.setEndTime(java.time.LocalTime.of(18, 0));
+        batch1.setTotalItems(500);
+        batch1.setExternalBatchId("BATCH-001");
+        JobSchedule batch2 = new JobSchedule();
+        batch2.setId(101L);
+        batch2.setJobId(40L);
+        batch2.setStatus("ACTIVE");
+        batch2.setScheduleDate(java.time.LocalDate.now().plusDays(6));
+        batch2.setStartTime(java.time.LocalTime.of(9, 0));
+        batch2.setEndTime(java.time.LocalTime.of(18, 0));
+        batch2.setTotalItems(300);
+        batch2.setExternalBatchId("BATCH-002");
+        JobScheduleMapper jobScheduleMapper = (JobScheduleMapper) ReflectionTestUtils.getField(jobService, "jobScheduleMapper");
+        jobScheduleMapper.batchInsert(List.of(batch1, batch2));
+
+        for (int i = 0; i < 50; i++) {
+            AnnotationTaskOrder order = new AnnotationTaskOrder();
+            order.setScheduleId(100L);
+            order.setWorkerId((long) (i + 1));
+            order.setJobId(40L);
+            annotationTaskOrderMapper.insert(order);
+        }
+
+        JobDetailVO detail = jobService.getJobDetail(40L);
+
+        assertThat(detail.getSchedules()).hasSize(2);
+        assertThat(detail.getSchedules())
+                .filteredOn(s -> s.getId().equals(100L))
+                .singleElement()
+                .satisfies(s -> {
+                    assertThat(s.getTotalItems()).isEqualTo(500);
+                    assertThat(s.getExternalBatchId()).isEqualTo("BATCH-001");
+                    assertThat(s.getRemainingItems()).isEqualTo(450);
+                });
+        assertThat(detail.getSchedules())
+                .filteredOn(s -> s.getId().equals(101L))
+                .singleElement()
+                .satisfies(s -> {
+                    assertThat(s.getTotalItems()).isEqualTo(300);
+                    assertThat(s.getExternalBatchId()).isEqualTo("BATCH-002");
+                    assertThat(s.getRemainingItems()).isEqualTo(300);
+                });
     }
 
     private static class CountingJobTagRelationMapper implements JobTagRelationMapper {
