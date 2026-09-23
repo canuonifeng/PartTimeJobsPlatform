@@ -16,6 +16,8 @@ public class TaskOrderVO {
     private String jobTitle;
     @Schema(description = "排班ID")
     private Long scheduleId;
+    @Schema(description = "外部批次ID")
+    private String externalBatchId;
     @Schema(description = "已完成数量")
     private Integer itemsCompleted;
     @Schema(description = "总数量")

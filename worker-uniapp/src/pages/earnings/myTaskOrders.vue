@@ -28,7 +28,7 @@
           <text class="order-company">{{ order.companyName || '企业' }}</text>
           <text class="order-earnings">¥{{ money(order.earnings) }}</text>
         </view>
-        <button class="platform-btn" @click="goAnnotationPlatform">去 PC 端完成标注</button>
+        <button class="platform-btn" @click="goAnnotationPlatform(order)">去 PC 端完成标注</button>
       </view>
     </view>
 
@@ -49,6 +49,7 @@ interface TaskOrder {
   jobTitle: string
   companyName?: string
   status: string
+  externalBatchId?: string
   totalItems: number
   completedItems: number
   earnings: number
@@ -65,13 +66,17 @@ const orders = ref<TaskOrder[]>([])
 
 const ANNOTATION_PLATFORM_URL = 'https://annotation.example.com'
 
-function goAnnotationPlatform() {
+function goAnnotationPlatform(order: TaskOrder) {
+  const batchId = order.externalBatchId || ''
+  const url = batchId
+    ? `${ANNOTATION_PLATFORM_URL}?batchId=${encodeURIComponent(batchId)}`
+    : ANNOTATION_PLATFORM_URL
   // #ifdef H5
-  window.open(ANNOTATION_PLATFORM_URL)
+  window.open(url)
   // #endif
   // #ifndef H5
   uni.setClipboardData({
-    data: ANNOTATION_PLATFORM_URL,
+    data: url,
     success: () => uni.showToast({ title: '链接已复制，请在PC浏览器打开', icon: 'none' })
   })
   // #endif
@@ -154,6 +159,7 @@ function mapOrder(item: any): TaskOrder {
     jobTitle: item?.jobTitle || item?.title || '标注任务',
     companyName: item?.companyName || '',
     status: String(item?.status || 'IN_PROGRESS').toUpperCase(),
+    externalBatchId: item?.externalBatchId || '',
     totalItems: num(item?.totalItems || item?.itemsTotal),
     completedItems: num(item?.completedItems || item?.itemsCompleted),
     earnings: num(item?.earnings || item?.amount || item?.payablePay),

@@ -59,12 +59,22 @@ public class TaskOrderServiceImpl implements TaskOrderService {
                 : jobMapper.findByJobIds(jobIds).stream()
                         .collect(Collectors.toMap(Job::getId, j -> j));
 
+        List<Long> scheduleIds = allOrders.stream()
+                .map(AnnotationTaskOrder::getScheduleId)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, String> externalBatchMap = scheduleIds.isEmpty()
+                ? Map.of()
+                : jobScheduleMapper.findByIds(scheduleIds).stream()
+                        .collect(Collectors.toMap(JobSchedule::getId, JobSchedule::getExternalBatchId));
+
         List<TaskOrderVO> voList = allOrders.stream()
                 .map(order -> {
                     TaskOrderVO vo = new TaskOrderVO();
                     vo.setId(order.getId());
                     vo.setJobId(order.getJobId());
                     vo.setScheduleId(order.getScheduleId());
+                    vo.setExternalBatchId(externalBatchMap.get(order.getScheduleId()));
                     vo.setItemsCompleted(order.getItemsCompleted());
                     vo.setStatus(order.getStatus());
                     vo.setSubmittedAt(order.getSubmittedAt());
