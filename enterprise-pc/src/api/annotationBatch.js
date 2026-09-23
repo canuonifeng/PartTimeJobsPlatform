@@ -5,7 +5,7 @@ export function listBatches(jobId) {
 }
 
 export function createBatch(data) {
-  return request.post('/annotation-batches', data)
+  return request.post('/annotation-batches/create', data)
 }
 
 export function updateBatch(data) {
