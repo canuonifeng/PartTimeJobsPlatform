@@ -28,6 +28,11 @@
           <text class="order-company">{{ order.companyName || '企业' }}</text>
           <text class="order-earnings">¥{{ money(order.earnings) }}</text>
         </view>
+        <view class="platform-address" @click="copyPlatformUrl">
+          <text class="platform-address-label">标注平台地址：</text>
+          <text class="platform-address-value">{{ annotationPlatformUrl || '未配置' }}</text>
+          <text v-if="annotationPlatformUrl" class="platform-copy">复制</text>
+        </view>
         <button class="platform-btn" @click="goAnnotationPlatform(order)">去 PC 端完成标注</button>
       </view>
     </view>
@@ -67,10 +72,7 @@ const orders = ref<TaskOrder[]>([])
 
 const annotationPlatformUrl = ref('')
 
-async function goAnnotationPlatform(order: TaskOrder) {
-  if (!annotationPlatformUrl.value) {
-    annotationPlatformUrl.value = await getAnnotationPlatformUrl()
-  }
+function goAnnotationPlatform(order: TaskOrder) {
   if (!annotationPlatformUrl.value) {
     uni.showToast({ title: '标注平台地址未配置', icon: 'none' })
     return
@@ -88,6 +90,14 @@ async function goAnnotationPlatform(order: TaskOrder) {
     success: () => uni.showToast({ title: '链接已复制，请在PC浏览器打开', icon: 'none' })
   })
   // #endif
+}
+
+function copyPlatformUrl() {
+  if (!annotationPlatformUrl.value) return
+  uni.setClipboardData({
+    data: annotationPlatformUrl.value,
+    success: () => uni.showToast({ title: '标注平台地址已复制', icon: 'none' })
+  })
 }
 
 const tabs = [
@@ -204,7 +214,8 @@ async function loadMore() {
   await loadOrders(page.value, true)
 }
 
-onMounted(() => {
+onMounted(async () => {
+  annotationPlatformUrl.value = await getAnnotationPlatformUrl()
   loadOrders(1, false)
 })
 </script>
@@ -339,6 +350,41 @@ onMounted(() => {
   font-size: 32rpx;
   font-weight: 800;
   color: #ff6b35;
+}
+
+.platform-address {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  margin-top: 20rpx;
+  padding: 14rpx 18rpx;
+  background: #f8fafc;
+  border-radius: 12rpx;
+}
+
+.platform-address-label {
+  font-size: 24rpx;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.platform-address-value {
+  flex: 1;
+  font-size: 24rpx;
+  color: #3b82f6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.platform-copy {
+  flex-shrink: 0;
+  font-size: 24rpx;
+  color: #3b82f6;
+  font-weight: 600;
+  padding: 4rpx 14rpx;
+  background: #eff6ff;
+  border-radius: 10rpx;
 }
 
 .platform-btn {
