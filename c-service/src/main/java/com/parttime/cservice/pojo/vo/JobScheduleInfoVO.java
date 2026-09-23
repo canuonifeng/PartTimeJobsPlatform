@@ -29,4 +29,6 @@ public class JobScheduleInfoVO {
     private Integer totalItems;
     @Schema(description = "外部批次ID")
     private String externalBatchId;
+    @Schema(description = "剩余可抢数量")
+    private Integer remainingItems;
 }

@@ -25,4 +25,15 @@
         SELECT * FROM annotation_task_orders WHERE id = #{id}
     </select>
 
+    <select id="aggregateGrabbedByScheduleIds" resultType="com.parttime.cservice.pojo.vo.AnnotationBatchProgress">
+        SELECT schedule_id AS scheduleId,
+               COUNT(*) AS grabbedCount
+        FROM annotation_task_orders
+        WHERE schedule_id IN
+        <foreach collection="scheduleIds" item="scheduleId" open="(" separator="," close=")">
+            #{scheduleId}
+        </foreach>
+        GROUP BY schedule_id
+    </select>
+
 </mapper>

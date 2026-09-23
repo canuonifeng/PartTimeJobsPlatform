@@ -1,6 +1,7 @@
 package com.parttime.cservice.service.impl;
 
 import com.parttime.cservice.mapper.CompanyWorkerInsertMapper;
+import com.parttime.cservice.mapper.AnnotationTaskOrderMapper;
 import com.parttime.cservice.mapper.EnterpriseMapper;
 import com.parttime.cservice.mapper.JobCategoryMapper;
 import com.parttime.cservice.mapper.JobMapper;
@@ -22,6 +23,7 @@ import com.parttime.cservice.pojo.entity.ScheduleApplication;
 import com.parttime.cservice.pojo.entity.ShiftEntity;
 import com.parttime.cservice.pojo.entity.SystemConfig;
 import com.parttime.cservice.pojo.vo.JobDetailVO;
+import com.parttime.cservice.pojo.vo.AnnotationBatchProgress;
 import com.parttime.cservice.pojo.vo.JobRateInfoVO;
 import com.parttime.cservice.pojo.vo.JobScheduleInfoVO;
 import com.parttime.cservice.pojo.vo.JobSummaryVO;
@@ -75,6 +77,8 @@ public class JobServiceImpl implements JobService {
     private NotificationMapper notificationMapper;
     @Resource
     private CertificationGateService certificationGateService;
+    @Resource
+    private AnnotationTaskOrderMapper annotationTaskOrderMapper;
 
     @Override
     public PageVO<JobSummaryVO> searchJobs(String keyword, Long categoryId, String location,
@@ -464,6 +468,24 @@ public class JobServiceImpl implements JobService {
         }).toList();
     }
 
+    private List<JobScheduleInfoVO> toAnnotationBatchVOs(List<JobSchedule> entities) {
+        if (entities == null || entities.isEmpty()) return emptyList();
+        List<Long> scheduleIds = entities.stream().map(JobSchedule::getId).collect(Collectors.toList());
+        Map<Long, Integer> grabbedMap = annotationTaskOrderMapper.aggregateGrabbedByScheduleIds(scheduleIds).stream()
+                .collect(Collectors.toMap(AnnotationBatchProgress::getScheduleId, AnnotationBatchProgress::getGrabbedCount));
+        return entities.stream().map(e -> {
+            JobScheduleInfoVO vo = new JobScheduleInfoVO();
+            vo.setId(e.getId());
+            vo.setTotalItems(e.getTotalItems());
+            vo.setExternalBatchId(e.getExternalBatchId());
+            if (e.getTotalItems() != null) {
+                int grabbed = grabbedMap.getOrDefault(e.getId(), 0);
+                vo.setRemainingItems(Math.max(0, e.getTotalItems() - grabbed));
+            }
+            return vo;
+        }).toList();
+    }
+
     private JobDetailVO toDetail(Job job, Long workerId, Enterprise company, JobCategory category,
                                  List<JobRate> rates, List<JobTagVO> tags) {
         JobDetailVO detail = new JobDetailVO();
@@ -518,16 +540,20 @@ public class JobServiceImpl implements JobService {
         }
         // 过滤过期排班
         List<JobSchedule> allActive = jobScheduleMapper.findActiveByJobId(job.getId());
-        List<JobSchedule> validSchedules = allActive.stream()
-                .filter(s -> LocalDateTime.of(s.getScheduleDate(), s.getStartTime()).isAfter(now))
-                .toList();
-        detail.setSchedules(toScheduleVOs(validSchedules));
-        // 如果所有排班都已过期，自动关闭职位
-        if (allActive.size() > 0 && validSchedules.size() == 0 && !"CLOSED".equals(job.getStatus())) {
-            job.setStatus("CLOSED");
-            job.setCloseReason("所有排班已过期");
-            jobMapper.update(job);
-            detail.setStatus("CLOSED");
+        if ("ANNOTATION".equals(job.getTaskType())) {
+            detail.setSchedules(toAnnotationBatchVOs(allActive));
+        } else {
+            List<JobSchedule> validSchedules = allActive.stream()
+                    .filter(s -> LocalDateTime.of(s.getScheduleDate(), s.getStartTime()).isAfter(now))
+                    .toList();
+            detail.setSchedules(toScheduleVOs(validSchedules));
+            // 如果所有排班都已过期，自动关闭职位
+            if (allActive.size() > 0 && validSchedules.size() == 0 && !"CLOSED".equals(job.getStatus())) {
+                job.setStatus("CLOSED");
+                job.setCloseReason("所有排班已过期");
+                jobMapper.update(job);
+                detail.setStatus("CLOSED");
+            }
         }
         if (workerId != null) {
             List<ScheduleApplication> apps = scheduleApplicationMapper.findByWorkerId(workerId);

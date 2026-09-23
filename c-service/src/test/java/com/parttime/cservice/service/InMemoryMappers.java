@@ -838,4 +838,37 @@ public class InMemoryMappers {
             store.put(key, config);
         }
     }
+public static com.parttime.cservice.mapper.AnnotationTaskOrderMapper createAnnotationTaskOrderMapper() {
+        return new com.parttime.cservice.mapper.AnnotationTaskOrderMapper() {
+            private final ConcurrentHashMap<Long, com.parttime.cservice.pojo.entity.AnnotationTaskOrder> store = new ConcurrentHashMap<>();
+            private final AtomicLong idGen = new AtomicLong(1);
+
+            @Override public java.util.List<com.parttime.cservice.pojo.entity.AnnotationTaskOrder> selectByWorkerId(Long workerId) {
+                return store.values().stream().filter(o -> workerId.equals(o.getWorkerId())).collect(Collectors.toList());
+            }
+            @Override public com.parttime.cservice.pojo.entity.AnnotationTaskOrder selectById(Long id) {
+                return store.get(id);
+            }
+            @Override public java.util.List<com.parttime.cservice.pojo.vo.AnnotationBatchProgress> aggregateGrabbedByScheduleIds(java.util.List<Long> scheduleIds) {
+                return store.values().stream()
+                        .filter(o -> scheduleIds.contains(o.getScheduleId()))
+                        .collect(Collectors.groupingBy(
+                                com.parttime.cservice.pojo.entity.AnnotationTaskOrder::getScheduleId,
+                                Collectors.collectingAndThen(Collectors.counting(), Long::intValue)))
+                        .entrySet().stream()
+                        .map(e -> {
+                            com.parttime.cservice.pojo.vo.AnnotationBatchProgress p = new com.parttime.cservice.pojo.vo.AnnotationBatchProgress();
+                            p.setScheduleId(e.getKey());
+                            p.setGrabbedCount(e.getValue());
+                            return p;
+                        })
+                        .collect(Collectors.toList());
+            }
+            public int insert(com.parttime.cservice.pojo.entity.AnnotationTaskOrder order) {
+                if (order.getId() == null) order.setId(idGen.getAndIncrement());
+                store.put(order.getId(), order);
+                return 1;
+            }
+        };
+    }
 }
