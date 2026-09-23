@@ -305,6 +305,7 @@ function clearSearch() {
 
 function onCategoryChange(id: number | undefined) {
   categoryId.value = id
+  quickFilter.value = 'all'
   page.value = 1
   fetchJobs(1)
 }

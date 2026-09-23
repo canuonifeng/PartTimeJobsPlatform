@@ -64,7 +64,7 @@
               <text class="batch-info">共 {{ batch.totalItems }} 条，剩余 {{ batch.remainingItems }} 条</text>
             </view>
             <view class="batch-right">
-              <text class="batch-remaining" :class="{ low: batch.remainingItems < 10 }">{{ batch.remainingItems }}条可抢</text>
+              <text class="batch-remaining" :class="{ low: num(batch.remainingItems) < 10 }">{{ batch.remainingItems }}条可抢</text>
             </view>
           </view>
         </view>
