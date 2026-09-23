@@ -31,13 +31,16 @@
         <result property="externalTaskId" column="external_task_id"/>
         <result property="externalSystemType" column="external_system_type"/>
         <result property="autoSettle" column="auto_settle"/>
+        <result property="urgent" column="urgent"/>
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO jobs (company_id, title, description, requirements, contact_name, contact_phone, location, province, city, district, address, latitude, longitude, category_id, headcount, status, deadline, image_url,
-                          task_type, pricing_mode, price_per_unit, total_items, external_task_id, external_system_type, auto_settle)
+                          task_type, pricing_mode, price_per_unit, total_items, external_task_id, external_system_type, auto_settle
+        <if test="urgent != null">, urgent</if>)
         VALUES (#{companyId}, #{title}, #{description}, #{requirements}, #{contactName}, #{contactPhone}, #{location}, #{province}, #{city}, #{district}, #{address}, #{latitude}, #{longitude}, #{categoryId}, #{headcount}, #{status}, #{deadline}, #{imageUrl},
-                #{taskType}, #{pricingMode}, #{pricePerUnit}, #{totalItems}, #{externalTaskId}, #{externalSystemType}, #{autoSettle})
+                #{taskType}, #{pricingMode}, #{pricePerUnit}, #{totalItems}, #{externalTaskId}, #{externalSystemType}, #{autoSettle}
+        <if test="urgent != null">, #{urgent}</if>)
     </insert>
 
     <select id="findById" resultMap="JobResultMap">
@@ -81,7 +84,8 @@
             image_url = #{imageUrl},
             task_type = #{taskType}, pricing_mode = #{pricingMode}, price_per_unit = #{pricePerUnit},
             total_items = #{totalItems}, external_task_id = #{externalTaskId}, external_system_type = #{externalSystemType},
-            auto_settle = #{autoSettle}
+            auto_settle = #{autoSettle},
+            urgent = #{urgent}
         WHERE id = #{id}
     </update>
 

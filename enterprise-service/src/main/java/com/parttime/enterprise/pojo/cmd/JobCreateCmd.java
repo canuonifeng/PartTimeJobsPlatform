@@ -65,4 +65,6 @@ public class JobCreateCmd {
     private String externalTaskId;
     @Schema(description = "外部系统类型")
     private String externalSystemType;
+    @Schema(description = "是否急招")
+    private Boolean urgent;
 }

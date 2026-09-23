@@ -61,6 +61,8 @@ public class Job {
     private String externalSystemType;
     @Schema(description = "是否自动结算")
     private Boolean autoSettle;
+    @Schema(description = "是否急招")
+    private Boolean urgent;
     @Schema(description = "创建时间")
     private LocalDateTime createdAt;
     @Schema(description = "更新时间")
