@@ -1,0 +1,5 @@
+ALTER TABLE jobs ADD COLUMN urgent TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否急招';
+ALTER TABLE job_schedules MODIFY COLUMN schedule_date DATE NULL;
+ALTER TABLE job_schedules MODIFY COLUMN start_time TIME NULL;
+ALTER TABLE job_schedules MODIFY COLUMN end_time TIME NULL;
+ALTER TABLE job_schedules ADD COLUMN batch_code VARCHAR(64) NULL COMMENT '批次代号（标注批次）';
