@@ -23,7 +23,8 @@ public class PublicConfigController {
     @Operation(summary = "获取协议内容", description = "公开接口，获取用户协议或隐私政策内容")
     @GetMapping
     public ApiResponse<ConfigValueVO> getConfig(@Parameter(description = "配置key") @RequestParam String key) {
-        if (!"user_agreement".equals(key) && !"privacy_policy".equals(key) && !"check_in_radius_meters".equals(key)) {
+        if (!"user_agreement".equals(key) && !"privacy_policy".equals(key) && !"check_in_radius_meters".equals(key)
+                && !"annotation_platform_url".equals(key)) {
             return ApiResponse.error(400, "不支持的配置项");
         }
         SystemConfig config = systemConfigService.findByKey(key).orElse(null);

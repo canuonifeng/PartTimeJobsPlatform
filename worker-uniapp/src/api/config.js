@@ -15,3 +15,19 @@ export async function getCheckInRadius() {
   }
   return cachedRadius
 }
+
+let cachedAnnotationPlatformUrl = null
+
+export async function getAnnotationPlatformUrl() {
+  if (cachedAnnotationPlatformUrl !== null) return cachedAnnotationPlatformUrl
+  try {
+    const data = await request({
+      url: '/auth/configs?key=annotation_platform_url',
+      method: 'GET'
+    })
+    cachedAnnotationPlatformUrl = data?.value || ''
+  } catch {
+    cachedAnnotationPlatformUrl = ''
+  }
+  return cachedAnnotationPlatformUrl
+}

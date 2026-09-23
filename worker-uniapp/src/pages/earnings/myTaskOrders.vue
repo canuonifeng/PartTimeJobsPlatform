@@ -41,6 +41,7 @@
 import { ref, computed } from 'vue'
 import { onMounted } from 'vue'
 import { getTaskOrders } from '@/api/jobs'
+import { getAnnotationPlatformUrl } from '@/api/config'
 import LoginSheet from '@/components/LoginSheet.vue'
 
 interface TaskOrder {
@@ -64,13 +65,20 @@ const loadingMore = ref(false)
 const activeTab = ref('all')
 const orders = ref<TaskOrder[]>([])
 
-const ANNOTATION_PLATFORM_URL = 'https://annotation.example.com'
+const annotationPlatformUrl = ref('')
 
-function goAnnotationPlatform(order: TaskOrder) {
+async function goAnnotationPlatform(order: TaskOrder) {
+  if (!annotationPlatformUrl.value) {
+    annotationPlatformUrl.value = await getAnnotationPlatformUrl()
+  }
+  if (!annotationPlatformUrl.value) {
+    uni.showToast({ title: '标注平台地址未配置', icon: 'none' })
+    return
+  }
   const batchId = order.externalBatchId || ''
   const url = batchId
-    ? `${ANNOTATION_PLATFORM_URL}?batchId=${encodeURIComponent(batchId)}`
-    : ANNOTATION_PLATFORM_URL
+    ? `${annotationPlatformUrl.value}?batchId=${encodeURIComponent(batchId)}`
+    : annotationPlatformUrl.value
   // #ifdef H5
   window.open(url)
   // #endif
