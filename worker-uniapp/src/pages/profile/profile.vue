@@ -134,7 +134,7 @@ const menuGroups = [
     { title: '我的报名', url: '/pages/signup/signup', icon: '报', iconClass: 'icon-blue' },
     { title: '打卡记录', url: '/pages/attendance/clockIn', icon: '卡', iconClass: 'icon-orange' },
     { title: '收入明细', url: '/pages/earnings/earnings', icon: '收', iconClass: 'icon-gold' },
-    { title: '我的任务单', url: '/pages/earnings/myTaskOrders', icon: '标', iconClass: 'icon-cyan' },
+    { title: '我的任务', url: '/pages/earnings/myTaskOrders', icon: '标', iconClass: 'icon-cyan' },
     { title: '培训中心', url: '/pages/training/trainingList', icon: '培', iconClass: 'icon-green' },
     { title: '我的认证', url: '/pages/training/myCertifications', icon: '证', iconClass: 'icon-purple' }
   ],
