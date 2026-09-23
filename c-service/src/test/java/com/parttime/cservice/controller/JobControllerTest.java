@@ -75,7 +75,7 @@ class JobControllerTest {
         job2.setMaxRate(new BigDecimal("80.00"));
         job2.setRateTypes(List.of("HOURLY"));
 
-        when(jobService.searchJobs(null, null, null, null, null, null, null, null, 1, 10))
+        when(jobService.searchJobs(null, null, null, null, null, null, null, null, null, 1, 10))
                 .thenReturn(new PageVO<>(List.of(job1, job2), 2));
 
         mockMvc.perform(get("/api/worker/jobs"))
@@ -97,7 +97,7 @@ class JobControllerTest {
         job.setMaxRate(new BigDecimal("400.00"));
         job.setRateTypes(List.of("HOURLY", "DAILY"));
 
-        when(jobService.searchJobs(eq("engineer"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(1), eq(10)))
+        when(jobService.searchJobs(eq("engineer"), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(1), eq(10)))
                 .thenReturn(new PageVO<>(List.of(job), 1));
 
         mockMvc.perform(get("/api/worker/jobs?keyword=engineer"))

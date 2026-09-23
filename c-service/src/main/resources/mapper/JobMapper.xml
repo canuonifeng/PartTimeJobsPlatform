@@ -60,6 +60,9 @@
         <if test="taskType != null and taskType != ''">
             AND task_type = #{taskType}
         </if>
+        <if test="urgent != null">
+            AND urgent = #{urgent}
+        </if>
     </select>
 
     <select id="findByCompanyId" resultMap="jobResultMap">

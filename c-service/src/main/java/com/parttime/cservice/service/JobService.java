@@ -18,7 +18,7 @@ public interface JobService {
     PageVO<JobSummaryVO> searchJobs(String keyword, Long categoryId, String location,
                                      BigDecimal minRate, BigDecimal maxRate,
                                      BigDecimal latitude, BigDecimal longitude,
-                                     String taskType, int page, int pageSize);
+                                     String taskType, Boolean urgent, int page, int pageSize);
     void addJob(Long id, String title, String description, String location, Long categoryId, String categoryName,
                 List<JobRateInfoVO> rates, List<JobScheduleInfoVO> schedules,
                 Integer headcount, Integer acceptedCount, LocalDateTime deadline, String status);

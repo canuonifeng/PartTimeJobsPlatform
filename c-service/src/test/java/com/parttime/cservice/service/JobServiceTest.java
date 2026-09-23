@@ -102,7 +102,7 @@ class JobServiceTest {
 
     @Test
     void searchJobs_withoutFilters_returnsAllPublishedJobs() {
-        PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, null, null, null, null, null, null, 1, 10);
+        PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, null, null, null, null, null, null, null, 1, 10);
 
         assertThat(page.getRecords()).hasSize(3);
         assertThat(page.getTotal()).isEqualTo(3);
@@ -110,7 +110,7 @@ class JobServiceTest {
 
     @Test
     void searchJobs_withKeyword_filtersCorrectly() {
-        PageVO<JobSummaryVO> page = jobService.searchJobs("engineer", null, null, null, null, null, null, null, 1, 10);
+        PageVO<JobSummaryVO> page = jobService.searchJobs("engineer", null, null, null, null, null, null, null, null, 1, 10);
 
         assertThat(page.getRecords()).hasSize(1);
         assertThat(page.getRecords().get(0).getTitle()).contains("Engineer");
@@ -118,7 +118,7 @@ class JobServiceTest {
 
     @Test
     void searchJobs_withCategoryId_filtersCorrectly() {
-        PageVO<JobSummaryVO> page = jobService.searchJobs(null, 2L, null, null, null, null, null, null, 1, 10);
+        PageVO<JobSummaryVO> page = jobService.searchJobs(null, 2L, null, null, null, null, null, null, null, 1, 10);
 
         assertThat(page.getRecords()).hasSize(1);
         assertThat(page.getRecords().get(0).getCategoryName()).isEqualTo("Marketing");
@@ -126,7 +126,7 @@ class JobServiceTest {
 
     @Test
     void searchJobs_withLocation_filtersCorrectly() {
-        PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, "Shanghai", null, null, null, null, null, 1, 10);
+        PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, "Shanghai", null, null, null, null, null, null, 1, 10);
 
         assertThat(page.getRecords()).hasSize(1);
         assertThat(page.getRecords().get(0).getLocation()).isEqualTo("Shanghai");
@@ -134,14 +134,14 @@ class JobServiceTest {
 
     @Test
     void searchJobs_withMinRate_filtersCorrectly() {
-        PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, null, new BigDecimal("500.00"), null, null, null, null, 1, 10);
+        PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, null, new BigDecimal("500.00"), null, null, null, null, null, 1, 10);
 
         assertThat(page.getRecords()).hasSize(1);
     }
 
     @Test
     void searchJobs_withMaxRate_filtersCorrectly() {
-        PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, null, null, new BigDecimal("100.00"), null, null, null, 1, 10);
+        PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, null, null, new BigDecimal("100.00"), null, null, null, null, 1, 10);
 
         assertThat(page.getRecords()).hasSize(2);
     }
@@ -149,7 +149,7 @@ class JobServiceTest {
     @Test
     void searchJobs_withCoordinates_sortsByDistance() {
         PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, null, null, null,
-                new BigDecimal("39.9"), new BigDecimal("116.4"), null, 1, 10);
+                new BigDecimal("39.9"), new BigDecimal("116.4"), null, null, 1, 10);
 
         assertThat(page.getRecords()).hasSize(3);
         assertThat(page.getRecords().get(0).getId()).isEqualTo(1L);
@@ -202,7 +202,7 @@ class JobServiceTest {
         jobTagRelationMapper.addTag(1L, "日结");
         jobTagRelationMapper.addTag(2L, "按时");
 
-        PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, null, null, null, null, null, null, 1, 10);
+        PageVO<JobSummaryVO> page = jobService.searchJobs(null, null, null, null, null, null, null, null, null, 1, 10);
 
         assertThat(page.getRecords()).hasSize(3);
         assertThat(page.getRecords().get(0).getTags()).extracting(JobTagVO::getName).containsExactly("日结");
@@ -214,7 +214,7 @@ class JobServiceTest {
 
     @Test
     void searchJobs_doesNotFetchTagsWhenNoJobsMatch() {
-        PageVO<JobSummaryVO> page = jobService.searchJobs("missing", null, null, null, null, null, null, null, 1, 10);
+        PageVO<JobSummaryVO> page = jobService.searchJobs("missing", null, null, null, null, null, null, null, null, 1, 10);
 
         assertThat(page.getRecords()).isEmpty();
         assertThat(jobTagRelationMapper.batchFetchCount).isZero();

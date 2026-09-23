@@ -13,7 +13,7 @@ public interface JobMapper {
     Optional<Job> findById(Long id);
     Optional<Job> findByJobId(Long jobId);
     List<Job> findAll();
-    List<Job> search(@Param("keyword") String keyword, @Param("location") String location, @Param("categoryId") Long categoryId, @Param("taskType") String taskType);
+    List<Job> search(@Param("keyword") String keyword, @Param("location") String location, @Param("categoryId") Long categoryId, @Param("taskType") String taskType, @Param("urgent") Boolean urgent);
     List<Job> findByCompanyId(Long companyId);
     List<Job> findByJobIds(@Param("jobIds") List<Long> jobIds);
     int update(Job job);

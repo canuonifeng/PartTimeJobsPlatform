@@ -63,7 +63,7 @@ public class InMemoryMappers {
                 return Optional.ofNullable(store.get(jobId));
             }
             @Override public List<Job> findAll() { return new ArrayList<>(store.values()); }
-            @Override public List<Job> search(String keyword, String location, Long categoryId, String taskType) {
+            @Override public List<Job> search(String keyword, String location, Long categoryId, String taskType, Boolean urgent) {
                 return store.values().stream()
                         .filter(job -> "PUBLISHED".equals(job.getStatus()))
                         .filter(job -> keyword == null || keyword.isEmpty()
@@ -71,6 +71,9 @@ public class InMemoryMappers {
                         .filter(job -> categoryId == null || categoryId.equals(job.getCategoryId()))
                         .filter(job -> location == null || location.isEmpty()
                                 || (job.getLocation() != null && job.getLocation().toLowerCase().contains(location.toLowerCase())))
+                        .filter(job -> taskType == null || taskType.isEmpty()
+                                || taskType.equals(job.getTaskType()))
+                        .filter(job -> urgent == null || urgent.equals(job.getUrgent()))
                         .collect(Collectors.toList());
             }
             @Override public List<Job> findByCompanyId(Long companyId) {

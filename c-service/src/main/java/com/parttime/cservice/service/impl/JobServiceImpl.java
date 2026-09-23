@@ -80,8 +80,8 @@ public class JobServiceImpl implements JobService {
     public PageVO<JobSummaryVO> searchJobs(String keyword, Long categoryId, String location,
                                             BigDecimal minRate, BigDecimal maxRate,
                                             BigDecimal latitude, BigDecimal longitude,
-                                            String taskType, int page, int pageSize) {
-        List<Job> jobs = jobMapper.search(keyword, location, categoryId, taskType);
+                                            String taskType, Boolean urgent, int page, int pageSize) {
+        List<Job> jobs = jobMapper.search(keyword, location, categoryId, taskType, urgent);
         LocalDateTime now = LocalDateTime.now();
         // 自动关闭已过报名截止的岗位
         List<Long> expiredIds = jobs.stream()
