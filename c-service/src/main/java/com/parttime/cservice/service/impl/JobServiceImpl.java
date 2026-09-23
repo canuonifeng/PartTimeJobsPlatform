@@ -80,7 +80,7 @@ public class JobServiceImpl implements JobService {
     public PageVO<JobSummaryVO> searchJobs(String keyword, Long categoryId, String location,
                                             BigDecimal minRate, BigDecimal maxRate,
                                             BigDecimal latitude, BigDecimal longitude,
-                                            String taskType, Boolean urgent, int page, int pageSize) {
+                                            String taskType, Boolean urgent, String sort, int page, int pageSize) {
         List<Job> jobs = jobMapper.search(keyword, location, categoryId, taskType, urgent);
         LocalDateTime now = LocalDateTime.now();
         // 自动关闭已过报名截止的岗位
@@ -100,7 +100,7 @@ public class JobServiceImpl implements JobService {
         jobs = jobs.stream()
                 .filter(j -> !"CLOSED".equals(j.getStatus()))
                 .toList();
-        if (latitude != null && longitude != null) {
+        if ("distance".equals(sort) && latitude != null && longitude != null) {
             jobs = jobs.stream()
                     .sorted((a, b) -> Double.compare(
                             distance(latitude, longitude, a.getLatitude(), a.getLongitude()),
