@@ -35,11 +35,12 @@ public class AnnotationBatchServiceImpl implements AnnotationBatchService {
     private JobMapper jobMapper;
 
     @Override
-    public List<AnnotationBatchVO> list(AnnotationBatchListCmd cmd) {
+    public List<AnnotationBatchVO> list(Long companyId, AnnotationBatchListCmd cmd) {
         if (cmd.getJobId() == null) {
             throw new BusinessException("岗位ID不能为空");
         }
-        List<JobSchedule> batches = jobScheduleMapper.findBatchesByJobId(cmd.getJobId());
+        Job job = requireOwnedJob(companyId, cmd.getJobId());
+        List<JobSchedule> batches = jobScheduleMapper.findBatchesByJobId(job.getId());
         List<Long> ids = batches.stream().map(JobSchedule::getId).collect(Collectors.toList());
         Map<Long, AnnotationBatchProgress> progressMap = ids.isEmpty()
                 ? Collections.emptyMap()
@@ -52,19 +53,18 @@ public class AnnotationBatchServiceImpl implements AnnotationBatchService {
 
     @Override
     @Transactional
-    public AnnotationBatchVO create(AnnotationBatchCreateCmd cmd) {
+    public AnnotationBatchVO create(Long companyId, AnnotationBatchCreateCmd cmd) {
         if (cmd.getJobId() == null) {
             throw new BusinessException("岗位ID不能为空");
         }
-        Job job = jobMapper.findById(cmd.getJobId())
-                .orElseThrow(() -> new BusinessException("岗位不存在"));
+        Job job = requireOwnedJob(companyId, cmd.getJobId());
         if (!TaskType.ANNOTATION.getCode().equals(job.getTaskType())) {
             throw new BusinessException("该岗位不是标注类型职位");
         }
         validateBatchFields(cmd.getBatchCode(), cmd.getTotalItems());
 
         JobSchedule batch = new JobSchedule();
-        batch.setJobId(cmd.getJobId());
+        batch.setJobId(job.getId());
         batch.setBatchCode(cmd.getBatchCode().trim());
         batch.setTotalItems(cmd.getTotalItems());
         batch.setExternalBatchId(cmd.getExternalBatchId());
@@ -76,8 +76,8 @@ public class AnnotationBatchServiceImpl implements AnnotationBatchService {
 
     @Override
     @Transactional
-    public AnnotationBatchVO update(AnnotationBatchUpdateCmd cmd) {
-        JobSchedule batch = requireBatch(cmd.getId());
+    public AnnotationBatchVO update(Long companyId, AnnotationBatchUpdateCmd cmd) {
+        JobSchedule batch = requireOwnedBatch(companyId, cmd.getId());
         validateBatchFields(cmd.getBatchCode(), cmd.getTotalItems());
         jobScheduleMapper.updateBatch(cmd.getId(), cmd.getBatchCode().trim(), cmd.getTotalItems(), cmd.getExternalBatchId());
         batch.setBatchCode(cmd.getBatchCode().trim());
@@ -88,25 +88,44 @@ public class AnnotationBatchServiceImpl implements AnnotationBatchService {
 
     @Override
     @Transactional
-    public AnnotationBatchVO toggle(AnnotationBatchToggleCmd cmd) {
+    public AnnotationBatchVO toggle(Long companyId, AnnotationBatchToggleCmd cmd) {
         if (cmd.getId() == null) {
             throw new BusinessException("批次ID不能为空");
         }
-        if (cmd.getStatus() == null || cmd.getStatus().isBlank()) {
-            throw new BusinessException("状态不能为空");
+        String normalizedStatus = cmd.getStatus() == null ? "" : cmd.getStatus().trim();
+        if (!"ACTIVE".equals(normalizedStatus) && !"CANCELLED".equals(normalizedStatus)) {
+            throw new BusinessException("状态仅支持 ACTIVE/CANCELLED");
         }
-        JobSchedule batch = requireBatch(cmd.getId());
-        jobScheduleMapper.updateStatus(cmd.getId(), cmd.getStatus().trim());
-        batch.setStatus(cmd.getStatus().trim());
+        JobSchedule batch = requireOwnedBatch(companyId, cmd.getId());
+        jobScheduleMapper.updateStatus(cmd.getId(), normalizedStatus);
+        batch.setStatus(normalizedStatus);
         return toVO(batch, progressOf(cmd.getId()));
     }
 
-    private JobSchedule requireBatch(Long id) {
+    private Job requireOwnedJob(Long companyId, Long jobId) {
+        Job job = jobMapper.findById(jobId)
+                .orElseThrow(() -> new BusinessException("岗位不存在"));
+        if (!companyId.equals(job.getCompanyId())) {
+            throw new BusinessException("岗位不存在");
+        }
+        return job;
+    }
+
+    private JobSchedule requireOwnedBatch(Long companyId, Long id) {
         if (id == null) {
             throw new BusinessException("批次ID不能为空");
         }
-        return jobScheduleMapper.findById(id)
+        JobSchedule batch = jobScheduleMapper.findById(id)
                 .orElseThrow(() -> new BusinessException("标注批次不存在"));
+        if (batch.getScheduleDate() != null) {
+            throw new BusinessException("该记录不是标注批次");
+        }
+        Job job = jobMapper.findById(batch.getJobId())
+                .orElseThrow(() -> new BusinessException("标注批次不存在"));
+        if (!companyId.equals(job.getCompanyId())) {
+            throw new BusinessException("标注批次不存在");
+        }
+        return batch;
     }
 
     private void validateBatchFields(String batchCode, Integer totalItems) {

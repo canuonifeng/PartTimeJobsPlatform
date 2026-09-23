@@ -10,11 +10,11 @@ import java.util.List;
 
 public interface AnnotationBatchService {
 
-    List<AnnotationBatchVO> list(AnnotationBatchListCmd cmd);
+    List<AnnotationBatchVO> list(Long companyId, AnnotationBatchListCmd cmd);
 
-    AnnotationBatchVO create(AnnotationBatchCreateCmd cmd);
+    AnnotationBatchVO create(Long companyId, AnnotationBatchCreateCmd cmd);
 
-    AnnotationBatchVO update(AnnotationBatchUpdateCmd cmd);
+    AnnotationBatchVO update(Long companyId, AnnotationBatchUpdateCmd cmd);
 
-    AnnotationBatchVO toggle(AnnotationBatchToggleCmd cmd);
+    AnnotationBatchVO toggle(Long companyId, AnnotationBatchToggleCmd cmd);
 }

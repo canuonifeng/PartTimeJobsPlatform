@@ -1,5 +1,6 @@
 package com.parttime.enterprise.controller;
 
+import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.pojo.cmd.AnnotationBatchCreateCmd;
 import com.parttime.enterprise.pojo.cmd.AnnotationBatchListCmd;
 import com.parttime.enterprise.pojo.cmd.AnnotationBatchToggleCmd;
@@ -26,24 +27,28 @@ public class AnnotationBatchController {
     @Operation(summary = "标注批次列表", description = "按岗位ID查询标注批次及进度")
     @PostMapping("/list")
     public ApiResponse<List<AnnotationBatchVO>> list(@RequestBody AnnotationBatchListCmd cmd) {
-        return ApiResponse.success(annotationBatchService.list(cmd));
+        Long companyId = SecurityUtil.getCurrentCompanyId();
+        return ApiResponse.success(annotationBatchService.list(companyId, cmd));
     }
 
     @Operation(summary = "创建标注批次")
     @PostMapping("/create")
     public ApiResponse<AnnotationBatchVO> create(@RequestBody AnnotationBatchCreateCmd cmd) {
-        return ApiResponse.success(annotationBatchService.create(cmd));
+        Long companyId = SecurityUtil.getCurrentCompanyId();
+        return ApiResponse.success(annotationBatchService.create(companyId, cmd));
     }
 
     @Operation(summary = "更新标注批次")
     @PostMapping("/update")
     public ApiResponse<AnnotationBatchVO> update(@RequestBody AnnotationBatchUpdateCmd cmd) {
-        return ApiResponse.success(annotationBatchService.update(cmd));
+        Long companyId = SecurityUtil.getCurrentCompanyId();
+        return ApiResponse.success(annotationBatchService.update(companyId, cmd));
     }
 
     @Operation(summary = "切换标注批次状态")
     @PostMapping("/toggle")
     public ApiResponse<AnnotationBatchVO> toggle(@RequestBody AnnotationBatchToggleCmd cmd) {
-        return ApiResponse.success(annotationBatchService.toggle(cmd));
+        Long companyId = SecurityUtil.getCurrentCompanyId();
+        return ApiResponse.success(annotationBatchService.toggle(companyId, cmd));
     }
 }
