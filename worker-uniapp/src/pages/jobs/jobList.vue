@@ -24,17 +24,26 @@
       </view>
     </view>
 
-    <scroll-view class="category-scroll" scroll-x :show-scrollbar="false">
-      <view class="category-chips">
+    <scroll-view class="quick-scroll" scroll-x :show-scrollbar="false">
+      <view class="quick-chips">
         <view
-          v-for="tab in taskTypeTabs"
-          :key="tab.key"
-          class="category-chip"
-          :class="{ active: activeTaskTypeTab === tab.key }"
-          @click="onTaskTypeTabChange(tab.key)"
+          v-for="q in quickFilters"
+          :key="q.key"
+          class="quick-chip"
+          :class="{ active: quickFilter === q.key }"
+          @click="onQuickFilterChange(q.key)"
         >
-          <text class="chip-text">{{ tab.label }}</text>
+          <text class="chip-text">{{ q.label }}</text>
         </view>
+      </view>
+    </scroll-view>
+
+    <view class="category-toggle" @click="categoryExpanded = !categoryExpanded">
+      <text class="category-toggle-text">全部分类</text>
+      <text class="category-toggle-arrow">{{ categoryExpanded ? '▲' : '▼' }}</text>
+    </view>
+    <scroll-view v-if="categoryExpanded" class="category-scroll" scroll-x :show-scrollbar="false">
+      <view class="category-chips">
         <view
           v-for="cat in categories"
           :key="cat.key"
@@ -149,15 +158,18 @@ const refreshing = ref(false)
 const currentLocation = ref<{ latitude: number; longitude: number } | null>(null)
 const locationLoaded = ref(false)
 const cityName = ref('')
-const activeTaskTypeTab = ref('all')
+const quickFilter = ref<'all' | 'work' | 'annotation' | 'nearby' | 'urgent'>('all')
+const categoryExpanded = ref(false)
 
 const allCategory = { id: undefined, name: '全部', key: 'all' }
 const categories = ref<JobCategory[]>([allCategory])
 
-const taskTypeTabs = [
+const quickFilters = [
   { key: 'all', label: '全部' },
-  { key: 'REGULAR', label: '零工' },
-  { key: 'ANNOTATION', label: '标注任务' }
+  { key: 'work', label: '零工' },
+  { key: 'annotation', label: '标注' },
+  { key: 'nearby', label: '附近' },
+  { key: 'urgent', label: '急招' }
 ]
 
 
@@ -202,15 +214,24 @@ async function fetchJobs(p: number, append: boolean = false) {
   if (!append) loading.value = true
   else loadingMore.value = true
   try {
-    const res: { list?: JobItem[] } | JobItem[] | null | undefined = await getJobs({
+    const params: Record<string, any> = {
       keyword: keyword.value || undefined,
       categoryId: categoryId.value,
-      taskType: activeTaskTypeTab.value === 'all' ? undefined : activeTaskTypeTab.value,
       page: p,
       pageSize,
       latitude: currentLocation.value?.latitude,
       longitude: currentLocation.value?.longitude
-    })
+    }
+    if (quickFilter.value === 'work') {
+      params.taskType = 'WORK'
+    } else if (quickFilter.value === 'annotation') {
+      params.taskType = 'ANNOTATION'
+    } else if (quickFilter.value === 'urgent') {
+      params.urgent = true
+    } else if (quickFilter.value === 'nearby' && currentLocation.value) {
+      params.sort = 'distance'
+    }
+    const res: { list?: JobItem[] } | JobItem[] | null | undefined = await getJobs(params)
     const list = Array.isArray(res) ? res : (res?.records || res?.list || [])
     applyJobs(list, append)
   } catch {
@@ -288,10 +309,13 @@ function onCategoryChange(id: number | undefined) {
   fetchJobs(1)
 }
 
-function onTaskTypeTabChange(key: string) {
-  activeTaskTypeTab.value = key
+function onQuickFilterChange(key: 'all' | 'work' | 'annotation' | 'nearby' | 'urgent') {
+  quickFilter.value = key
   categoryId.value = undefined
   page.value = 1
+  if (key === 'nearby' && !currentLocation.value) {
+    uni.showToast({ title: '未获取到定位，已按默认排序', icon: 'none' })
+  }
   fetchJobs(1)
 }
 
@@ -537,7 +561,56 @@ onMounted(() => {
 .category-scroll {
   background: #f5f6fa;
   white-space: nowrap;
+  padding: 0 0 16rpx;
+}
+
+.quick-scroll {
+  background: #f5f6fa;
+  white-space: nowrap;
   padding: 24rpx 0 16rpx;
+}
+
+.quick-chips {
+  display: inline-flex;
+  padding: 0 24rpx;
+  gap: 16rpx;
+}
+
+.quick-chip {
+  flex-shrink: 0;
+  padding: 14rpx 40rpx;
+  border-radius: 36rpx;
+  background: #fff;
+  border: 1rpx solid #eee;
+  transition: all 0.2s ease;
+}
+
+.quick-chip.active {
+  background: linear-gradient(135deg, #20c26b 0%, #1aab5a 100%);
+  border-color: transparent;
+  box-shadow: 0 6rpx 18rpx rgba(16, 185, 129, 0.35);
+}
+
+.quick-chip.active .chip-text {
+  color: #fff;
+  font-weight: 600;
+}
+
+.category-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 4rpx 24rpx 12rpx;
+}
+
+.category-toggle-text {
+  font-size: 24rpx;
+  color: #999;
+}
+
+.category-toggle-arrow {
+  font-size: 20rpx;
+  color: #999;
 }
 
 .category-chips {
