@@ -193,15 +193,25 @@ const certificationRequired = computed(() => {
 
 const certified = computed(() => !!job.value?.certified)
 
+const appliedScheduleIds = computed(() =>
+  Array.isArray(job.value?.appliedScheduleIds) ? job.value.appliedScheduleIds.map(Number) : []
+)
+
+const hasApplied = computed(() =>
+  batches.value.some((b: any) => appliedScheduleIds.value.includes(Number(b.id)))
+)
+
 const canGrab = computed(() => {
   if (certificationRequired.value && !certified.value) return false
   if (!job.value || job.value.status === 'CLOSED') return false
+  if (hasApplied.value) return false
   return availableBatches.value.length > 0
 })
 
 const grabButtonText = computed(() => {
   if (!job.value) return '加载中'
   if (job.value.status === 'CLOSED') return '已关闭'
+  if (hasApplied.value) return '已报名'
   if (availableBatches.value.length === 0) return '暂无可用批次'
   if (grabbing.value) return '抢单中...'
   return '立即抢单'
