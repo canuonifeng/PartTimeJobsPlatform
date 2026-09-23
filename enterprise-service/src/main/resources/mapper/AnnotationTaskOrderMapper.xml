@@ -99,4 +99,16 @@
         </where>
     </select>
 
+    <select id="aggregateProgress" resultType="com.parttime.enterprise.pojo.vo.AnnotationBatchProgress">
+        SELECT schedule_id AS scheduleId,
+               COUNT(*) AS grabbedCount,
+               COALESCE(SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END), 0) AS completedCount
+        FROM annotation_task_orders
+        WHERE schedule_id IN
+        <foreach collection="scheduleIds" item="scheduleId" open="(" separator="," close=")">
+            #{scheduleId}
+        </foreach>
+        GROUP BY schedule_id
+    </select>
+
 </mapper>

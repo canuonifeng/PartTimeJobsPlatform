@@ -1,6 +1,7 @@
 package com.parttime.enterprise.mapper;
 
 import com.parttime.enterprise.pojo.entity.AnnotationTaskOrder;
+import com.parttime.enterprise.pojo.vo.AnnotationBatchProgress;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -38,4 +39,6 @@ public interface AnnotationTaskOrderMapper {
                   @Param("workerId") Long workerId,
                   @Param("jobId") Long jobId,
                   @Param("status") String status);
+
+    List<AnnotationBatchProgress> aggregateProgress(@Param("scheduleIds") List<Long> scheduleIds);
 }
