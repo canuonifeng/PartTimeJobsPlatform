@@ -29,7 +29,7 @@
                headcount, accepted_count, deadline, created_at, updated_at,
                close_reason, auto_approve, image_url,
                task_type, pricing_mode, price_per_unit, total_items,
-               external_task_id, external_system_type, auto_settle
+               external_task_id, external_system_type, auto_settle, urgent
         FROM jobs
     </sql>
 

@@ -78,4 +78,6 @@ public class JobDetailVO {
     private Boolean certificationRequired;
     @Schema(description = "当前工人是否已具备所需认证")
     private Boolean certified;
+    @Schema(description = "是否急招")
+    private Boolean urgent;
 }

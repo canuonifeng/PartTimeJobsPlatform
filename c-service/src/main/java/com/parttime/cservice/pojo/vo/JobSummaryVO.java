@@ -50,4 +50,6 @@ public class JobSummaryVO {
     private Integer totalItems;
     @Schema(description = "已完成数量")
     private Integer itemsCompleted;
+    @Schema(description = "是否急招")
+    private Boolean urgent;
 }

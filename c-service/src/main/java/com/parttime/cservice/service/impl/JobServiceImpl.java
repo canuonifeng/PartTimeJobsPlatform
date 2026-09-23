@@ -439,6 +439,7 @@ public class JobServiceImpl implements JobService {
         summary.setPricingMode(job.getPricingMode());
         summary.setPricePerUnit(job.getPricePerUnit());
         summary.setTotalItems(job.getTotalItems());
+        summary.setUrgent(job.getUrgent());
         return summary;
     }
 
@@ -488,6 +489,7 @@ public class JobServiceImpl implements JobService {
         detail.setPricingMode(job.getPricingMode());
         detail.setPricePerUnit(job.getPricePerUnit());
         detail.setTotalItems(job.getTotalItems());
+        detail.setUrgent(job.getUrgent());
         detail.setStatus(job.getStatus());
         detail.setHeadcount(job.getHeadcount());
         detail.setDeadline(job.getDeadline());
