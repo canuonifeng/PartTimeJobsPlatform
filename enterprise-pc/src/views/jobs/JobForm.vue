@@ -13,6 +13,7 @@ import LocationPicker from '../../components/LocationPicker.vue'
 const router = useRouter()
 const route = useRoute()
 const isEdit = !!route.params.id
+const presetTaskType = ['WORK', 'ANNOTATION'].includes(route.query.taskType) ? route.query.taskType : ''
 const loading = ref(false)
 const locationDialogVisible = ref(false)
 const availableLocations = ref([])
@@ -64,7 +65,8 @@ const form = ref({
   scheduleSlots: [{ date: '', startTime: '', endTime: '' }],
   autoApprove: null,
   status: 'DRAFT',
-  taskType: 'WORK',
+  taskType: presetTaskType || 'WORK',
+  urgent: false,
   pricingMode: 'PER_ITEM',
   pricePerUnit: null,
   totalItems: null
@@ -200,7 +202,8 @@ async function fetchDetail() {
       longitude: res.longitude || null,
       imageUrl: res.imageUrl || '',
       autoApprove: res.autoApprove ?? null,
-      taskType: res.taskType || 'WORK',
+      taskType: res.taskType || presetTaskType || 'WORK',
+      urgent: res.urgent ?? false,
       pricingMode: res.pricingMode || 'PER_ITEM',
       pricePerUnit: res.pricePerUnit ?? null,
       totalItems: res.totalItems ?? null,
@@ -236,6 +239,7 @@ function buildPayload() {
     autoApprove: form.value.autoApprove,
     status: form.value.status,
     taskType: form.value.taskType,
+    urgent: form.value.urgent,
     pricingMode: form.value.taskType === 'ANNOTATION' ? form.value.pricingMode : null,
     pricePerUnit: form.value.taskType === 'ANNOTATION' ? form.value.pricePerUnit : null,
     totalItems: form.value.taskType === 'ANNOTATION' ? form.value.totalItems : null,
@@ -343,7 +347,7 @@ onMounted(async () => {
             <el-option v-for="opt in categoryOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
           </el-select>
         </el-form-item>
-        <el-form-item label="任务类型">
+        <el-form-item v-if="!presetTaskType" label="任务类型">
           <el-select v-model="form.taskType" style="width: 260px">
             <el-option label="零工" value="WORK" />
             <el-option label="标注任务" value="ANNOTATION" />
@@ -450,6 +454,9 @@ onMounted(async () => {
             <el-option label="开启" :value="true" />
             <el-option label="关闭" :value="false" />
           </el-select>
+        </el-form-item>
+        <el-form-item label="急招">
+          <el-switch v-model="form.urgent" />
         </el-form-item>
       </el-form>
     </el-card>
