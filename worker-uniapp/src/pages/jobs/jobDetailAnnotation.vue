@@ -55,10 +55,10 @@
             <view class="title-icon"><text>📦</text></view>
             <text class="title-text">可抢单批次</text>
           </view>
-          <view v-if="batches.length === 0" class="empty-hint">
+          <view v-if="availableBatches.length === 0" class="empty-hint">
             <text>暂无可用批次</text>
           </view>
-          <view v-for="batch in batches" :key="batch.id" class="batch-card">
+          <view v-for="batch in availableBatches" :key="batch.id" class="batch-card">
             <view class="batch-left">
               <text class="batch-title">批次 #{{ batch.id }}</text>
               <text class="batch-info">共 {{ batch.totalItems }} 条，剩余 {{ batch.remainingItems }} 条</text>
@@ -174,10 +174,12 @@ const estimatedEarnings = computed(() => {
   return result % 1 === 0 ? result : result.toFixed(2)
 })
 const batches = computed(() => {
+  if (Array.isArray(job.value?.schedules)) return job.value.schedules
   if (Array.isArray(job.value?.jobSchedules)) return job.value.jobSchedules
   if (Array.isArray(job.value?.batches)) return job.value.batches
   return []
 })
+const availableBatches = computed(() => batches.value.filter((b: any) => num(b.remainingItems) > 0))
 const dutyItems = computed(() => {
   const text = job.value?.responsibilities || job.value?.description || ''
   if (!text) return []
@@ -194,14 +196,13 @@ const certified = computed(() => !!job.value?.certified)
 const canGrab = computed(() => {
   if (certificationRequired.value && !certified.value) return false
   if (!job.value || job.value.status === 'CLOSED') return false
-  if (batches.value.length === 0) return false
-  return batches.value.some((b: any) => b.remainingItems > 0)
+  return availableBatches.value.length > 0
 })
 
 const grabButtonText = computed(() => {
   if (!job.value) return '加载中'
   if (job.value.status === 'CLOSED') return '已关闭'
-  if (batches.value.length === 0) return '暂无可用批次'
+  if (availableBatches.value.length === 0) return '暂无可用批次'
   if (grabbing.value) return '抢单中...'
   return '立即抢单'
 })
