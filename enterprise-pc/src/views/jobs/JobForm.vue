@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Delete, SuccessFilled } from '@element-plus/icons-vue'
@@ -81,6 +81,18 @@ const categoryOptions = [
   { value: 6, label: '美容美发' },
   { value: 7, label: '其他' }
 ]
+
+const annotationCategoryOptions = [
+  { value: 101, label: '图像标注' },
+  { value: 102, label: '语音标注' },
+  { value: 103, label: '文本标注' },
+  { value: 104, label: '视频标注' },
+  { value: 105, label: '混合数据标注' }
+]
+
+const effectiveCategoryOptions = computed(() => form.value.taskType === 'ANNOTATION' ? annotationCategoryOptions : categoryOptions)
+
+watch(() => form.value.taskType, () => { form.value.category = '' })
 
 const statusOptions = [
   { value: 'DRAFT', label: '草稿' },
@@ -217,7 +229,8 @@ async function fetchDetail() {
 }
 
 function buildPayload() {
-  const locationStr = form.value.location || [form.value.province, form.value.city, form.value.district, form.value.address].filter(Boolean).join(' ')
+  const isAnnotation = form.value.taskType === 'ANNOTATION'
+  const locationStr = isAnnotation ? null : (form.value.location || [form.value.province, form.value.city, form.value.district, form.value.address].filter(Boolean).join(' '))
   return {
     title: form.value.title,
     description: form.value.description,
@@ -226,12 +239,12 @@ function buildPayload() {
     contactPhone: form.value.contactPhone,
     tagIds: normalizeTagIds(form.value.tagIds),
     location: locationStr,
-    province: form.value.province || null,
-    city: form.value.city || null,
-    district: form.value.district || null,
-    address: form.value.address || null,
-    latitude: form.value.latitude || null,
-    longitude: form.value.longitude || null,
+    province: isAnnotation ? null : (form.value.province || null),
+    city: isAnnotation ? null : (form.value.city || null),
+    district: isAnnotation ? null : (form.value.district || null),
+    address: isAnnotation ? null : (form.value.address || null),
+    latitude: isAnnotation ? null : (form.value.latitude || null),
+    longitude: isAnnotation ? null : (form.value.longitude || null),
     categoryId: form.value.category || null,
     headcount: form.value.headcount,
     deadline: form.value.deadline ? `${form.value.deadline} 23:59:59` : null,
@@ -240,11 +253,11 @@ function buildPayload() {
     status: form.value.status,
     taskType: form.value.taskType,
     urgent: form.value.urgent,
-    pricingMode: form.value.taskType === 'ANNOTATION' ? form.value.pricingMode : null,
-    pricePerUnit: form.value.taskType === 'ANNOTATION' ? form.value.pricePerUnit : null,
-    totalItems: form.value.taskType === 'ANNOTATION' ? form.value.totalItems : null,
+    pricingMode: null,
+    pricePerUnit: null,
+    totalItems: isAnnotation ? form.value.totalItems : null,
     rates: form.value.salaryRates.filter((r) => r.type && r.rate).map((r) => ({ id: r.id, type: r.type, amount: Number(r.rate), currency: 'CNY' })),
-    schedules: form.value.scheduleSlots.filter((s) => s.date && s.startTime && s.endTime).map((s) => ({ id: s.id, scheduleDate: s.date, startTime: s.startTime, endTime: s.endTime }))
+    schedules: isAnnotation ? [] : form.value.scheduleSlots.filter((s) => s.date && s.startTime && s.endTime).map((s) => ({ id: s.id, scheduleDate: s.date, startTime: s.startTime, endTime: s.endTime }))
   }
 }
 
@@ -332,7 +345,7 @@ onMounted(async () => {
         <div class="section-header">{{ isEdit ? '编辑职位' : '新建职位' }} - 岗位信息</div>
       </template>
       <el-form ref="formRef" :model="form" label-width="120px" style="max-width: 800px">
-        <el-form-item label="选择已有职位模版">
+        <el-form-item v-if="form.taskType !== 'ANNOTATION'" label="选择已有职位模版">
           <el-button type="primary" plain @click="openTemplatePicker" style="width: 260px; justify-content: flex-start">选择已有职位模版</el-button>
           <div v-if="selectedTemplateName" class="selected-tip">
             <el-icon><SuccessFilled /></el-icon>
@@ -342,9 +355,9 @@ onMounted(async () => {
         <el-form-item label="职位名称" prop="title" :rules="[{ required: true, message: '请输入职位名称' }]">
           <el-input v-model="form.title" />
         </el-form-item>
-        <el-form-item label="职位类型" prop="category">
+        <el-form-item label="职位类型" prop="category" :rules="[{ required: true, message: '请选择职位类型' }]">
           <el-select v-model="form.category" style="width: 260px">
-            <el-option v-for="opt in categoryOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+            <el-option v-for="opt in effectiveCategoryOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
           </el-select>
         </el-form-item>
         <el-form-item v-if="!presetTaskType" label="任务类型">
@@ -354,16 +367,7 @@ onMounted(async () => {
           </el-select>
         </el-form-item>
         <template v-if="form.taskType === 'ANNOTATION'">
-          <el-form-item label="计价方式">
-            <el-select v-model="form.pricingMode" style="width: 260px">
-              <el-option label="按件计价" value="PER_ITEM" />
-              <el-option label="按包计价" value="PER_PACKAGE" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="单价">
-            <el-input-number v-model="form.pricePerUnit" :min="0" :precision="2" style="width: 260px" />
-          </el-form-item>
-          <el-form-item label="任务总量">
+          <el-form-item label="任务总量" prop="totalItems" :rules="[{ required: true, message: '请输入任务总量' }]">
             <el-input-number v-model="form.totalItems" :min="1" style="width: 260px" />
           </el-form-item>
         </template>
@@ -412,7 +416,7 @@ onMounted(async () => {
       </el-form>
     </el-card>
 
-    <el-card class="section-card">
+    <el-card v-if="form.taskType !== 'ANNOTATION'" class="section-card">
       <template #header>
         <div class="section-header">地址信息</div>
       </template>
@@ -483,7 +487,7 @@ onMounted(async () => {
       </el-form>
     </el-card>
 
-    <el-card class="section-card">
+    <el-card v-if="form.taskType !== 'ANNOTATION'" class="section-card">
       <template #header>
         <div class="section-header">排班时段</div>
       </template>
