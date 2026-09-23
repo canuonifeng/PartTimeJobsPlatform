@@ -97,12 +97,7 @@ public class JobServiceImpl implements JobService {
         job.setUrgent(request.getUrgent());
 
         if (TaskType.ANNOTATION.equals(request.getTaskType())) {
-            if (request.getPricingMode() == null) {
-                throw new BusinessException("标注任务包必须选择计价模式");
-            }
-            if (request.getPricePerUnit() == null || request.getPricePerUnit().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new BusinessException("标注任务包单价必须大于0");
-            }
+            validateAnnotationRates(request.getRates());
             if (request.getTotalItems() == null || request.getTotalItems() <= 0) {
                 throw new BusinessException("标注任务包总数量必须大于0");
             }
@@ -113,6 +108,7 @@ public class JobServiceImpl implements JobService {
 
         if (request.getRates() != null) {
             for (JobRateCmd rateReq : request.getRates()) {
+                if (rateReq.getType() == null || rateReq.getAmount() == null) continue;
                 JobRate rate = new JobRate();
                 rate.setJobId(job.getId());
                 rate.setType(rateReq.getType().name());
@@ -158,9 +154,18 @@ public class JobServiceImpl implements JobService {
         if (request.getLongitude() != null) job.setLongitude(request.getLongitude());
         if (request.getCategoryId() != null) job.setCategoryId(request.getCategoryId());
         if (request.getHeadcount() != null) job.setHeadcount(request.getHeadcount());
+        if (request.getTotalItems() != null) job.setTotalItems(request.getTotalItems());
         if (request.getDeadline() != null) job.setDeadline(request.getDeadline());
         if (request.getImageUrl() != null) job.setImageUrl(request.getImageUrl());
         if (request.getUrgent() != null) job.setUrgent(request.getUrgent());
+        if (TaskType.ANNOTATION.name().equals(job.getTaskType())) {
+            if (request.getRates() != null) {
+                validateAnnotationRates(request.getRates());
+            }
+            if (request.getTotalItems() != null && request.getTotalItems() <= 0) {
+                throw new BusinessException("标注任务包总数量必须大于0");
+            }
+        }
         jobMapper.update(job);
         if ("PUBLISHED".equals(request.getStatus()) && !"PUBLISHED".equals(job.getStatus())) {
             publishJob(id);
@@ -172,6 +177,7 @@ public class JobServiceImpl implements JobService {
         if (request.getRates() != null) {
             jobRateMapper.deleteByJobId(id);
             for (JobRateCmd rateReq : request.getRates()) {
+                if (rateReq.getType() == null || rateReq.getAmount() == null) continue;
                 JobRate rate = new JobRate();
                 rate.setJobId(id);
                 rate.setType(rateReq.getType().name());
@@ -394,6 +400,15 @@ public class JobServiceImpl implements JobService {
                 .orElseThrow(() -> new RuntimeException("JobSchedule not found: " + scheduleId));
         Long jobId = schedule.getJobId();
         jobScheduleMapper.delete(scheduleId);
+    }
+
+    private void validateAnnotationRates(List<JobRateCmd> rates) {
+        boolean hasValidRate = rates != null && rates.stream()
+                .anyMatch(r -> r.getType() != null && r.getAmount() != null
+                        && r.getAmount().compareTo(BigDecimal.ZERO) > 0);
+        if (!hasValidRate) {
+            throw new BusinessException("标注任务包必须至少填写一条有效的薪资标准");
+        }
     }
 
     private void replaceJobTags(Long jobId, List<Long> tagIds) {

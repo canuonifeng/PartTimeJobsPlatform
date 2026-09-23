@@ -44,6 +44,8 @@ public class UpdateJobCmd {
     private Long categoryId;
     @Schema(description = "招聘人数")
     private Integer headcount;
+    @Schema(description = "标注任务包总数量")
+    private Integer totalItems;
     @Schema(description = "报名截止时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Asia/Shanghai")
     private LocalDateTime deadline;

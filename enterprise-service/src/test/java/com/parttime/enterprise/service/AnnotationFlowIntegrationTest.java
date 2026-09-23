@@ -1,5 +1,6 @@
 package com.parttime.enterprise.service;
 
+import com.parttime.enterprise.enums.JobRateType;
 import com.parttime.enterprise.enums.PricingMode;
 import com.parttime.enterprise.enums.TaskType;
 import com.parttime.enterprise.mapper.AnnotationTaskOrderMapper;
@@ -20,6 +21,7 @@ import com.parttime.enterprise.mapper.WorkerNotificationMapper;
 import com.parttime.enterprise.mapper.WorkerSyncMapper;
 import com.parttime.enterprise.pojo.cmd.AnnotationSubmitCmd;
 import com.parttime.enterprise.pojo.cmd.JobCreateCmd;
+import com.parttime.enterprise.pojo.cmd.JobRateCmd;
 import com.parttime.enterprise.pojo.cmd.QualityCheckCmd;
 import com.parttime.enterprise.pojo.entity.AnnotationTaskOrder;
 import com.parttime.enterprise.pojo.entity.ExternalWorkerMapping;
@@ -123,6 +125,10 @@ class AnnotationFlowIntegrationTest {
         createCmd.setTotalItems(1000);
         createCmd.setExternalTaskId("EXT_TASK_001");
         createCmd.setExternalSystemType("EXT_SYS");
+        JobRateCmd rate = new JobRateCmd();
+        rate.setType(JobRateType.HOURLY);
+        rate.setAmount(new BigDecimal("30.00"));
+        createCmd.setRates(List.of(rate));
 
         doAnswer(inv -> {
             Job j = inv.getArgument(0);
