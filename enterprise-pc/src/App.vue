@@ -57,7 +57,8 @@ function handleMenuSelect(index) {
             <el-icon><Briefcase /></el-icon>
             <span>招聘管理</span>
           </template>
-          <el-menu-item index="/jobs">招聘计划</el-menu-item>
+          <el-menu-item index="/jobs">零工招聘</el-menu-item>
+          <el-menu-item index="/jobs/annotation">标注任务</el-menu-item>
           <el-menu-item index="/jobs/task-orders">任务单管理</el-menu-item>
           <el-menu-item index="/jobs/worker-mapping">人员映射</el-menu-item>
           <el-menu-item index="/applications">报名审核</el-menu-item>

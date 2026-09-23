@@ -24,6 +24,19 @@ const routes = [
     meta: { requiresAuth: true, title: '招聘计划' }
   },
   {
+    path: '/jobs/annotation',
+    name: 'AnnotationJobList',
+    component: () => import('../views/jobs/AnnotationJobList.vue'),
+    meta: { requiresAuth: true, title: '标注任务' }
+  },
+  {
+    path: '/jobs/annotation/:id/batches',
+    name: 'AnnotationBatchList',
+    component: () => import('../views/jobs/AnnotationBatchList.vue'),
+    meta: { requiresAuth: true, title: '批次管理' },
+    props: true
+  },
+  {
     path: '/jobs/create',
     name: 'JobCreate',
     component: () => import('../views/jobs/JobForm.vue'),

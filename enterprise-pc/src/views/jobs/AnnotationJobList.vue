@@ -39,7 +39,7 @@ function handleCreate() {
 }
 
 function handleEdit(row) {
-  router.push(`/jobs/${row.id}/edit`)
+  router.push(`/jobs/${row.id}/edit?taskType=ANNOTATION`)
 }
 
 async function handlePublish(row) {
