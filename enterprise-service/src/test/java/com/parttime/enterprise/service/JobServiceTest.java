@@ -195,6 +195,7 @@ class JobServiceTest {
         request.setDeadline(LocalDateTime.of(2026, 7, 1, 0, 0));
         request.setRates(List.of(rateRequest));
         request.setSchedules(List.of(scheduleRequest));
+        request.setUrgent(true);
 
         doAnswer(invocation -> {
             Job job = invocation.getArgument(0);
@@ -213,12 +214,14 @@ class JobServiceTest {
         assertThat(response.getCategoryId()).isEqualTo(10L);
         assertThat(response.getHeadcount()).isEqualTo(3);
         assertThat(response.getStatus()).isEqualTo(JobStatus.DRAFT);
+        assertThat(response.getUrgent()).isTrue();
 
         verify(jobMapper).insert(jobCaptor.capture());
         Job savedJob = jobCaptor.getValue();
         assertThat(savedJob.getTitle()).isEqualTo("Software Engineer");
         assertThat(savedJob.getCompanyId()).isEqualTo(1L);
         assertThat(savedJob.getStatus()).isEqualTo("DRAFT");
+        assertThat(savedJob.getUrgent()).isTrue();
 
         verify(jobRateMapper).insert(rateCaptor.capture());
         assertThat(rateCaptor.getValue().getType()).isEqualTo("HOURLY");

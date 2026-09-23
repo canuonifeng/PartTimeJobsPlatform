@@ -94,6 +94,7 @@ public class JobServiceImpl implements JobService {
         job.setTotalItems(request.getTotalItems());
         job.setExternalTaskId(request.getExternalTaskId());
         job.setExternalSystemType(request.getExternalSystemType());
+        job.setUrgent(request.getUrgent());
 
         if (TaskType.ANNOTATION.equals(request.getTaskType())) {
             if (request.getPricingMode() == null) {
@@ -159,6 +160,7 @@ public class JobServiceImpl implements JobService {
         if (request.getHeadcount() != null) job.setHeadcount(request.getHeadcount());
         if (request.getDeadline() != null) job.setDeadline(request.getDeadline());
         if (request.getImageUrl() != null) job.setImageUrl(request.getImageUrl());
+        if (request.getUrgent() != null) job.setUrgent(request.getUrgent());
         jobMapper.update(job);
         if ("PUBLISHED".equals(request.getStatus()) && !"PUBLISHED".equals(job.getStatus())) {
             publishJob(id);
@@ -506,6 +508,7 @@ public class JobServiceImpl implements JobService {
         response.setExternalTaskId(job.getExternalTaskId());
         response.setExternalSystemType(job.getExternalSystemType());
         response.setAutoSettle(job.getAutoSettle());
+        response.setUrgent(job.getUrgent());
         response.setStatus(JobStatus.valueOf(job.getStatus()));
         response.setApplicationCount(scheduleApplicationMapper.countByJobId(job.getId()));
         response.setPendingApplicationCount(scheduleApplicationMapper.countByJobIdAndStatus(job.getId(), "PENDING"));
