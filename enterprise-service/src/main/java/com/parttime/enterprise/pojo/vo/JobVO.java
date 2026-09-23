@@ -74,6 +74,8 @@ public class JobVO {
     private BigDecimal pricePerUnit;
     @Schema(description = "总数量")
     private Integer totalItems;
+    @Schema(description = "最新批次代号")
+    private String batchCode;
     @Schema(description = "外部任务ID")
     private String externalTaskId;
     @Schema(description = "外部系统类型")

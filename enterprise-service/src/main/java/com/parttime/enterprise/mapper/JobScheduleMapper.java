@@ -22,6 +22,8 @@ public interface JobScheduleMapper {
 
     List<JobSchedule> findBatchesByJobId(Long jobId);
 
+    String findLatestBatchCodeByJobId(@Param("jobId") Long jobId);
+
     int update(JobSchedule schedule);
 
     int updateBatch(@Param("id") Long id,

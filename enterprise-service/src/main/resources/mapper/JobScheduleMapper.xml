@@ -87,6 +87,10 @@
         SELECT * FROM job_schedules WHERE job_id = #{jobId} AND schedule_date IS NULL ORDER BY id DESC
     </select>
 
+    <select id="findLatestBatchCodeByJobId" resultType="java.lang.String">
+        SELECT batch_code FROM job_schedules WHERE job_id = #{jobId} AND batch_code IS NOT NULL ORDER BY id DESC LIMIT 1
+    </select>
+
     <select id="findAll" resultMap="JobScheduleResultMap">
         SELECT * FROM job_schedules
     </select>

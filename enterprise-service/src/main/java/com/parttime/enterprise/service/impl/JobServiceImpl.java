@@ -505,6 +505,7 @@ public class JobServiceImpl implements JobService {
         }
         response.setPricePerUnit(job.getPricePerUnit());
         response.setTotalItems(job.getTotalItems());
+        response.setBatchCode(jobScheduleMapper.findLatestBatchCodeByJobId(job.getId()));
         response.setExternalTaskId(job.getExternalTaskId());
         response.setExternalSystemType(job.getExternalSystemType());
         response.setAutoSettle(job.getAutoSettle());
