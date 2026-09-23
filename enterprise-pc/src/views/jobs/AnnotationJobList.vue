@@ -87,6 +87,35 @@ const statusMap = {
   CLOSED: 'danger'
 }
 
+const rateTypeMap = {
+  HOURLY: '时薪',
+  DAILY: '日薪',
+  PER_SHIFT: '按单'
+}
+
+function formatRates(rates) {
+  if (!Array.isArray(rates) || rates.length === 0) return '-'
+  const first = rates[0]
+  if (!first || first.amount == null) return '-'
+  const typeLabel = rateTypeMap[first.type] || first.type
+  const suffix = rates.length > 1 ? '起' : ''
+  return `${typeLabel} ¥${first.amount}${suffix}`
+}
+
+const categoryIdMap = {
+  101: '图像标注',
+  102: '语音标注',
+  103: '文本标注',
+  104: '视频标注',
+  105: '混合数据标注'
+}
+
+function resolveCategory(row) {
+  if (row.categoryName) return row.categoryName
+  if (row.categoryId != null && categoryIdMap[row.categoryId]) return categoryIdMap[row.categoryId]
+  return row.categoryId != null ? String(row.categoryId) : '-'
+}
+
 onMounted(() => {
   fetchData()
 })
@@ -117,17 +146,24 @@ onMounted(() => {
       </div>
       <el-table :data="jobs" v-loading="loading" stripe style="width: 100%">
         <el-table-column prop="title" label="职位名称" min-width="160" />
-        <el-table-column label="工作地点" width="180">
+        <el-table-column label="类别" width="120">
           <template #default="{ row }">
-            {{ row.location || [row.province, row.city, row.district, row.address].filter(Boolean).join(' ') || '暂无' }}
+            {{ resolveCategory(row) }}
           </template>
         </el-table-column>
-        <el-table-column prop="categoryName" label="类别" width="100" />
-        <el-table-column prop="headcount" label="招聘人数" width="80" />
-        <el-table-column label="报名情况" width="140">
+        <el-table-column label="薪资标准" width="140">
           <template #default="{ row }">
-            <div>总数：{{ row.applicationCount ?? 0 }}</div>
-            <div>待审：{{ row.pendingApplicationCount ?? 0 }}</div>
+            {{ formatRates(row.rates) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="任务总量" width="100">
+          <template #default="{ row }">
+            {{ row.totalItems ?? '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column label="批次代号" width="140">
+          <template #default="{ row }">
+            {{ row.batchCode || '-' }}
           </template>
         </el-table-column>
         <el-table-column label="状态" width="100">
