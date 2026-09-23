@@ -334,6 +334,45 @@ class JobServiceTest {
     }
 
     @Test
+    void updateJob_shouldSetUrgentWhenProvided() {
+        Job existing = new Job();
+        existing.setId(1L);
+        existing.setCompanyId(1L);
+        existing.setStatus("DRAFT");
+        existing.setUrgent(false);
+
+        UpdateJobCmd request = new UpdateJobCmd();
+        request.setUrgent(true);
+
+        when(jobMapper.findById(1L)).thenReturn(Optional.of(existing));
+
+        JobVO response = jobService.updateJob(1L, request);
+
+        verify(jobMapper).update(existing);
+        assertThat(existing.getUrgent()).isTrue();
+        assertThat(response.getUrgent()).isTrue();
+    }
+
+    @Test
+    void updateJob_shouldPreserveUrgentWhenNotProvided() {
+        Job existing = new Job();
+        existing.setId(1L);
+        existing.setCompanyId(1L);
+        existing.setStatus("DRAFT");
+        existing.setUrgent(true);
+
+        UpdateJobCmd request = new UpdateJobCmd();
+
+        when(jobMapper.findById(1L)).thenReturn(Optional.of(existing));
+
+        JobVO response = jobService.updateJob(1L, request);
+
+        verify(jobMapper).update(existing);
+        assertThat(existing.getUrgent()).isTrue();
+        assertThat(response.getUrgent()).isTrue();
+    }
+
+    @Test
     void createJob_shouldRejectInvalidOrDisabledTagIds() {
         JobCreateCmd request = new JobCreateCmd();
         request.setCompanyId(1L);
