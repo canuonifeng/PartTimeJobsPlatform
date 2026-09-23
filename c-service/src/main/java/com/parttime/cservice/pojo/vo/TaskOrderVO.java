@@ -14,6 +14,8 @@ public class TaskOrderVO {
     private Long jobId;
     @Schema(description = "岗位标题")
     private String jobTitle;
+    @Schema(description = "发布企业名称")
+    private String companyName;
     @Schema(description = "排班ID")
     private Long scheduleId;
     @Schema(description = "外部批次ID")

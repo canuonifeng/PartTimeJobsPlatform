@@ -2,11 +2,13 @@ package com.parttime.cservice.service.impl;
 
 import com.parttime.cservice.mapper.AnnotationTaskOrderMapper;
 import com.parttime.cservice.mapper.CompanyWorkerInsertMapper;
+import com.parttime.cservice.mapper.EnterpriseMapper;
 import com.parttime.cservice.mapper.JobMapper;
 import com.parttime.cservice.mapper.JobScheduleMapper;
 import com.parttime.cservice.mapper.ScheduleApplicationMapper;
 import com.parttime.cservice.pojo.cmd.GrabTaskOrderCmd;
 import com.parttime.cservice.pojo.entity.AnnotationTaskOrder;
+import com.parttime.cservice.pojo.entity.Enterprise;
 import com.parttime.cservice.pojo.entity.Job;
 import com.parttime.cservice.pojo.entity.JobSchedule;
 import com.parttime.cservice.pojo.entity.ScheduleApplication;
@@ -34,6 +36,9 @@ public class TaskOrderServiceImpl implements TaskOrderService {
     private JobMapper jobMapper;
 
     @Resource
+    private EnterpriseMapper enterpriseMapper;
+
+    @Resource
     private JobScheduleMapper jobScheduleMapper;
 
     @Resource
@@ -58,6 +63,16 @@ public class TaskOrderServiceImpl implements TaskOrderService {
                 ? Map.of()
                 : jobMapper.findByJobIds(jobIds).stream()
                         .collect(Collectors.toMap(Job::getId, j -> j));
+
+        List<Long> companyIds = jobMap.values().stream()
+                .map(Job::getCompanyId)
+                .filter(id -> id != null)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, String> companyNameMap = companyIds.isEmpty()
+                ? Map.of()
+                : enterpriseMapper.findByIds(companyIds).stream()
+                        .collect(Collectors.toMap(Enterprise::getId, Enterprise::getCompanyName));
 
         List<Long> scheduleIds = allOrders.stream()
                 .map(AnnotationTaskOrder::getScheduleId)
@@ -84,6 +99,9 @@ public class TaskOrderServiceImpl implements TaskOrderService {
                     Job job = jobMap.get(order.getJobId());
                     if (job != null) {
                         vo.setJobTitle(job.getTitle());
+                        if (job.getCompanyId() != null) {
+                            vo.setCompanyName(companyNameMap.get(job.getCompanyId()));
+                        }
                         vo.setTotalItems(job.getTotalItems());
                         vo.setPricingMode(job.getPricingMode());
                         vo.setUnitPrice(job.getPricePerUnit());

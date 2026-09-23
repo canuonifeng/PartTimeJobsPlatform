@@ -25,7 +25,8 @@
           <text class="progress-text">{{ order.completedItems }}/{{ order.totalItems }}条</text>
         </view>
         <view class="order-footer">
-          <text class="order-company">{{ order.companyName || '企业' }}</text>
+          <text v-if="order.companyName" class="order-company">{{ order.companyName }}</text>
+          <text v-else class="order-company"></text>
           <text class="order-earnings">¥{{ money(order.earnings) }}</text>
         </view>
         <view class="platform-address" @click="copyPlatformUrl">
