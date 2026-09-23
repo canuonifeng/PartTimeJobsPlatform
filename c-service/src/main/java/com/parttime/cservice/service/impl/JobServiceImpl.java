@@ -42,6 +42,7 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -339,14 +340,14 @@ public class JobServiceImpl implements JobService {
 
     private Map<Long, Enterprise> loadCompanies(List<Job> jobs) {
         List<Long> companyIds = jobs.stream().map(Job::getCompanyId).filter(id -> id != null).distinct().toList();
-        if (companyIds.isEmpty()) return Map.of();
+        if (companyIds.isEmpty()) return new HashMap<>();
         return enterpriseMapper.findByIds(companyIds).stream()
                 .collect(Collectors.toMap(Enterprise::getId, e -> e));
     }
 
     private Map<Long, JobCategory> loadCategories(List<Job> jobs) {
         List<Long> categoryIds = jobs.stream().map(Job::getCategoryId).filter(id -> id != null).distinct().toList();
-        if (categoryIds.isEmpty()) return Map.of();
+        if (categoryIds.isEmpty()) return new HashMap<>();
         return jobCategoryMapper.findByIds(categoryIds).stream()
                 .collect(Collectors.toMap(JobCategory::getId, c -> c));
     }
