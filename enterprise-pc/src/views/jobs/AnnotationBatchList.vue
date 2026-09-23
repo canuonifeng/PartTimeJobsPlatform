@@ -93,7 +93,7 @@ async function handleSubmit() {
       await createBatch({
         jobId: jobId.value,
         batchCode: form.value.batchCode,
-        totalItems: form.value.totalItems,
+        totalItems: Number(form.value.totalItems),
         externalBatchId: form.value.externalBatchId || undefined
       })
       ElMessage.success('新建成功')
@@ -101,7 +101,7 @@ async function handleSubmit() {
       await updateBatch({
         id: form.value.id,
         batchCode: form.value.batchCode,
-        totalItems: form.value.totalItems,
+        totalItems: Number(form.value.totalItems),
         externalBatchId: form.value.externalBatchId || undefined
       })
       ElMessage.success('保存成功')

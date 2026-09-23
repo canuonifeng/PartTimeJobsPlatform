@@ -21,7 +21,7 @@ const routes = [
     path: '/jobs',
     name: 'JobList',
     component: () => import('../views/jobs/JobList.vue'),
-    meta: { requiresAuth: true, title: '招聘计划' }
+    meta: { requiresAuth: true, title: '零工招聘' }
   },
   {
     path: '/jobs/annotation',
