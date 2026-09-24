@@ -29,3 +29,13 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+oss:
+  endpoint: ${OSS_ENDPOINT:}
+  region: ${OSS_REGION:}
+  access-key-id: ${OSS_ACCESS_KEY_ID:}
+  access-key-secret: ${OSS_ACCESS_KEY_SECRET:}
+  private-bucket: ${OSS_PRIVATE_BUCKET:}
+  public-bucket: ${OSS_PUBLIC_BUCKET:}
+  sts-role-arn: ${OSS_STS_ROLE_ARN:}
+  sts-role-session-name: ${OSS_STS_ROLE_SESSION_NAME:}

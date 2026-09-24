@@ -42,3 +42,13 @@ wechat:
     private-key-path: ${WECHAT_PRIVATE_KEY_PATH:certs/apiclient_key.pem}
     notify-url: ${WECHAT_NOTIFY_URL:http://your-domain/api/wechat/notify}
     api-v3-key: ${WECHAT_API_V3_KEY:your_api_v3_key}
+
+oss:
+  endpoint: ${OSS_ENDPOINT:}
+  region: ${OSS_REGION:}
+  access-key-id: ${OSS_ACCESS_KEY_ID:}
+  access-key-secret: ${OSS_ACCESS_KEY_SECRET:}
+  private-bucket: ${OSS_PRIVATE_BUCKET:}
+  public-bucket: ${OSS_PUBLIC_BUCKET:}
+  sts-role-arn: ${OSS_STS_ROLE_ARN:}
+  sts-role-session-name: ${OSS_STS_ROLE_SESSION_NAME:}
