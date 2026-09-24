@@ -275,7 +275,7 @@ async function handleSubmit() {
       await createJob(payload)
       ElMessage.success('创建成功')
     }
-    router.push('/jobs')
+    router.push(form.value.taskType === 'ANNOTATION' ? '/jobs/annotation' : '/jobs')
   } finally {
     loading.value = false
   }
