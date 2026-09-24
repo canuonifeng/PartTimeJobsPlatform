@@ -1,3 +1,4 @@
+import axios from 'axios'
 import request from './request'
 
 // ===== 技能认证管理 =====
@@ -123,4 +124,21 @@ export function getUploadHeaders() {
 
 export function getUploadUrl(response) {
   return response?.data?.url || response?.url || ''
+}
+
+function authConfig() {
+  const token = localStorage.getItem('token')
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+export async function getSts(biz) {
+  const res = await axios.post(`${API_BASE_URL}/admin/files/sts`, null, {
+    params: { biz },
+    headers: authConfig()
+  })
+  return res.data
+}
+
+export function getSignedUrl(key) {
+  return request.get('/files/signed-url', { params: { key } })
 }

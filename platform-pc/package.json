@@ -12,6 +12,7 @@
     "@element-plus/icons-vue": "^2.3.0",
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-vue": "^5.1.12",
+    "ali-oss": "^6.23.0",
     "axios": "^1.7.0",
     "echarts": "^5.5.0",
     "element-plus": "^2.7.0",

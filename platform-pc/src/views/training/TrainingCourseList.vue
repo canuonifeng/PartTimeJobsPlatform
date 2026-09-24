@@ -98,10 +98,8 @@
           <div style="display:flex;gap:8px;align-items:center;width:100%">
             <el-input v-model="lessonDialog.form.mediaUrl" placeholder="上传文件后自动回填，也可手动输入" />
             <el-upload
-              :action="adminUploadUrl"
-              :headers="getUploadHeaders()"
+              :http-request="handleMediaUpload"
               :show-file-list="false"
-              :on-success="handleMediaUploadSuccess"
               :before-upload="beforeMediaUpload"
               style="flex-shrink:0"
             >
@@ -116,10 +114,8 @@
           <div style="display:flex;gap:8px;align-items:center;width:100%">
             <el-input v-model="lessonDialog.form.mediaUrl" placeholder="上传文档后自动回填，也可手动输入" />
             <el-upload
-              :action="adminUploadUrl"
-              :headers="getUploadHeaders()"
+              :http-request="handleMediaUpload"
               :show-file-list="false"
-              :on-success="handleMediaUploadSuccess"
               :before-upload="beforeMediaUpload"
               style="flex-shrink:0"
             >
@@ -182,6 +178,7 @@ import '@wangeditor/editor/dist/css/style.css'
 import { getTrainingCertifications } from '../../api/training'
 import { getTrainingCourses, createTrainingCourse, updateTrainingCourse, publishTrainingCourse, offlineTrainingCourse, deleteTrainingCourse } from '../../api/training'
 import { questionBankList, lessonList, lessonCreate, lessonUpdate, lessonDelete, lessonPublish, lessonOffline, lessonSort, adminUploadUrl, getUploadHeaders, getUploadUrl } from '../../api/training'
+import { uploadToOss } from '../../utils/ossUpload'
 
 const loading = ref(false)
 const courses = ref([])
@@ -582,14 +579,21 @@ function beforeMediaUpload(file) {
   return true
 }
 
-function handleMediaUploadSuccess(response) {
-  const url = getUploadUrl(response)
-  if (!url) {
-    ElMessage.error('上传失败：未获取到文件地址')
-    return
+async function handleMediaUpload(options) {
+  try {
+    const result = await uploadToOss(options.file, 'training')
+    if (!result.url) {
+      ElMessage.error('上传失败：未获取到文件地址')
+      options.onError(new Error('上传失败'))
+      return
+    }
+    lessonDialog.value.form.mediaUrl = result.url
+    ElMessage.success('上传成功，地址已回填')
+    options.onSuccess(result, options.file)
+  } catch (e) {
+    ElMessage.error(e.message || '上传失败')
+    options.onError(e)
   }
-  lessonDialog.value.form.mediaUrl = url
-  ElMessage.success('上传成功，地址已回填')
 }
 
 onMounted(fetchData)
