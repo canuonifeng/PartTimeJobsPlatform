@@ -119,4 +119,10 @@ class OssSignedUrlServiceImplTest {
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("OSS bucket 未配置");
     }
+
+    @Test
+    void getSignedUrl_nullCompanyId_shouldThrowIllegalState() {
+        assertThatThrownBy(() -> service.getSignedUrl(null, "license/42/license.pdf"))
+                .isInstanceOf(IllegalStateException.class);
+    }
 }

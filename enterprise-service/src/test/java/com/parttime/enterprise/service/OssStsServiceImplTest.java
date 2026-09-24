@@ -83,7 +83,7 @@ class OssStsServiceImplTest {
         verify(stsClient).getAcsResponse(captor.capture());
         AssumeRoleRequest req = captor.getValue();
         assertThat(req.getRoleArn()).isEqualTo("acs:ram::1234:role/linggong-oss");
-        assertThat(req.getRoleSessionName()).isEqualTo("linggong-enterprise-enterprise-42");
+        assertThat(req.getRoleSessionName()).isEqualTo("linggong-enterprise-42");
         assertPolicy(req.getPolicy(), "linggong-private", "license/42/");
     }
 
@@ -99,7 +99,7 @@ class OssStsServiceImplTest {
 
         verify(stsClient).getAcsResponse(captor.capture());
         AssumeRoleRequest req = captor.getValue();
-        assertThat(req.getRoleSessionName()).isEqualTo("linggong-enterprise-enterprise-42");
+        assertThat(req.getRoleSessionName()).isEqualTo("linggong-enterprise-42");
         assertPolicy(req.getPolicy(), "linggong-public", "logo/42/");
     }
 
@@ -158,8 +158,8 @@ class OssStsServiceImplTest {
     }
 
     @Test
-    void issueSts_nullCompanyId_shouldThrowIllegalArgument() {
+    void issueSts_nullCompanyId_shouldThrowIllegalState() {
         assertThatThrownBy(() -> service.issueSts(null, "license"))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(IllegalStateException.class);
     }
 }

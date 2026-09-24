@@ -45,7 +45,7 @@ public class OssStsServiceImpl implements OssStsService {
     @Override
     public OssStsVO issueSts(Long companyId, String biz) {
         if (companyId == null) {
-            throw new IllegalArgumentException("未登录");
+            throw new IllegalStateException("未登录");
         }
         if (biz == null || biz.isBlank()) {
             throw new IllegalArgumentException("biz 不能为空");
@@ -79,7 +79,7 @@ public class OssStsServiceImpl implements OssStsService {
 
         AssumeRoleRequest request = new AssumeRoleRequest();
         request.setRoleArn(ossProperties.getStsRoleArn());
-        request.setRoleSessionName(ossProperties.getStsRoleSessionName() + "-enterprise-" + companyId);
+        request.setRoleSessionName(ossProperties.getStsRoleSessionName() + "-" + companyId);
         request.setPolicy(policy);
 
         AssumeRoleResponse response;

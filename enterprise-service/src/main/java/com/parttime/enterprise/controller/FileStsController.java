@@ -1,6 +1,5 @@
 package com.parttime.enterprise.controller;
 
-import com.parttime.enterprise.config.SecurityUtil;
 import com.parttime.enterprise.pojo.vo.ApiResponse;
 import com.parttime.enterprise.pojo.vo.OssStsVO;
 import com.parttime.enterprise.service.OssStsService;
@@ -13,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/enterprise/files")
 public class FileStsController {
@@ -20,18 +21,27 @@ public class FileStsController {
     @Resource
     private OssStsService ossStsService;
 
-    private boolean isLoggedIn() {
+    private Long resolveCompanyId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal());
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return null;
+        }
+        if (auth.getDetails() instanceof Map<?, ?> details) {
+            Object companyId = details.get("companyId");
+            if (companyId instanceof Number num) {
+                return num.longValue();
+            }
+        }
+        return null;
     }
 
     @Operation(summary = "获取 OSS 直传 STS 凭证")
     @PostMapping("/sts")
     public ApiResponse<OssStsVO> issueSts(@RequestParam("biz") String biz) {
-        if (!isLoggedIn()) {
+        Long companyId = resolveCompanyId();
+        if (companyId == null) {
             return ApiResponse.error(401, "未登录");
         }
-        Long companyId = SecurityUtil.getCurrentCompanyId();
         try {
             OssStsVO vo = ossStsService.issueSts(companyId, biz);
             return ApiResponse.success(vo);
@@ -40,7 +50,7 @@ public class FileStsController {
         } catch (IllegalStateException e) {
             return ApiResponse.error(503, e.getMessage());
         } catch (RuntimeException e) {
-            return ApiResponse.error(500, e.getMessage());
+            return ApiResponse.error(500, "服务器内部错误");
         }
     }
 }

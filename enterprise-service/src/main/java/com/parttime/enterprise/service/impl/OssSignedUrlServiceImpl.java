@@ -29,7 +29,7 @@ public class OssSignedUrlServiceImpl implements OssSignedUrlService {
     @Override
     public SignedUrlVO getSignedUrl(Long companyId, String key) {
         if (companyId == null) {
-            throw new IllegalArgumentException("未登录");
+            throw new IllegalStateException("未登录");
         }
         if (!StringUtils.hasText(key)) {
             throw new IllegalArgumentException("key 不能为空");
