@@ -66,7 +66,8 @@
 <script setup>
 import { ref, reactive, computed } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
-import { getRealNameStatus, submitRealName, uploadRealNameImage } from '@/api/realName'
+import { getRealNameStatus, submitRealName } from '@/api/realName'
+import { uploadToOss } from '@/utils/ossUpload'
 import LoginSheet from '@/components/LoginSheet.vue'
 
 const status = ref('NONE')
@@ -131,11 +132,12 @@ function chooseImage(side) {
 async function uploadImage(side, filePath) {
   uploadingSide.value = side
   try {
-    const res = await uploadRealNameImage(filePath)
+    const res = await uploadToOss(filePath, 'realname')
+    const value = res.key || res.url || ''
     if (side === 'front') {
-      form.idCardFrontUrl = res?.url || ''
+      form.idCardFrontUrl = value
     } else {
-      form.idCardBackUrl = res?.url || ''
+      form.idCardBackUrl = value
     }
     uni.showToast({ title: '上传成功', icon: 'success' })
   } catch (e) {

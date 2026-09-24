@@ -81,6 +81,7 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive } from 'vue'
 import { getProfile, updateProfile } from '@/api/profile'
+import { uploadToOss } from '@/utils/ossUpload'
 import { useAuthStore } from '@/store'
 
 const previewAvatar = ref('')
@@ -165,18 +166,21 @@ async function handleSave() {
   }
   saving.value = true
   if (previewAvatar.value) {
-    const payloadWithoutAvatar = {
-      name,
-      phone,
-      gender: form.gender,
-      birthday: form.birthday,
-      skills: [...form.skills],
-      availableDays: [...form.availableDays]
-    }
     try {
-      await updateProfile(payloadWithoutAvatar)
-      authStore.setWorkerInfo({ ...payloadWithoutAvatar, avatar: form.avatar })
-      uni.showToast({ title: '头像上传暂未接入，已保存其他资料', icon: 'none' })
+      const uploadRes = await uploadToOss(previewAvatar.value, 'avatar')
+      const avatarUrl = uploadRes.url || uploadRes.key || previewAvatar.value
+      const payload = {
+        name,
+        phone,
+        avatar: avatarUrl,
+        gender: form.gender,
+        birthday: form.birthday,
+        skills: [...form.skills],
+        availableDays: [...form.availableDays]
+      }
+      await updateProfile(payload)
+      authStore.setWorkerInfo(payload)
+      uni.showToast({ title: '保存成功', icon: 'success' })
       uni.navigateBack()
     } catch (e: any) {
       uni.showToast({ title: e?.message || '保存失败', icon: 'none' })
