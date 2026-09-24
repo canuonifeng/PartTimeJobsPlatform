@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class OssStsServiceImplTest {
 
-    private static final Long ADMIN_ID = 7L;
+    private static final String ADMIN_NAME = "admin";
     private static final DateTimeFormatter DAY_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -74,7 +74,7 @@ class OssStsServiceImplTest {
         mockStsResponse();
         ArgumentCaptor<AssumeRoleRequest> captor = ArgumentCaptor.forClass(AssumeRoleRequest.class);
 
-        OssStsVO vo = service.issueSts(ADMIN_ID, "training");
+        OssStsVO vo = service.issueSts(ADMIN_NAME, "training");
 
         String day = LocalDate.now().format(DAY_FORMATTER);
         assertThat(vo.getBucket()).isEqualTo("linggong-public");
@@ -88,7 +88,7 @@ class OssStsServiceImplTest {
         verify(stsClient).getAcsResponse(captor.capture());
         AssumeRoleRequest req = captor.getValue();
         assertThat(req.getRoleArn()).isEqualTo("acs:ram::1234:role/linggong-oss");
-        assertThat(req.getRoleSessionName()).isEqualTo("linggong-admin-7");
+        assertThat(req.getRoleSessionName()).isEqualTo("linggong-admin-admin");
         assertPolicy(req.getPolicy(), "linggong-public", "training/" + day + "/");
     }
 
@@ -97,7 +97,7 @@ class OssStsServiceImplTest {
         mockStsResponse();
         ArgumentCaptor<AssumeRoleRequest> captor = ArgumentCaptor.forClass(AssumeRoleRequest.class);
 
-        OssStsVO vo = service.issueSts(ADMIN_ID, "material");
+        OssStsVO vo = service.issueSts(ADMIN_NAME, "material");
 
         String day = LocalDate.now().format(DAY_FORMATTER);
         assertThat(vo.getBucket()).isEqualTo("linggong-public");
@@ -125,12 +125,12 @@ class OssStsServiceImplTest {
 
     @Test
     void issueSts_unknownBiz_shouldThrowIllegalArgument() {
-        assertThatThrownBy(() -> service.issueSts(ADMIN_ID, "realname"))
+        assertThatThrownBy(() -> service.issueSts(ADMIN_NAME, "realname"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("不支持的业务类型");
-        assertThatThrownBy(() -> service.issueSts(ADMIN_ID, "job"))
+        assertThatThrownBy(() -> service.issueSts(ADMIN_NAME, "job"))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> service.issueSts(ADMIN_ID, "avatar"))
+        assertThatThrownBy(() -> service.issueSts(ADMIN_NAME, "avatar"))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -138,7 +138,7 @@ class OssStsServiceImplTest {
     void issueSts_noStsClient_shouldThrowIllegalState() {
         when(stsClientProvider.getIfAvailable()).thenReturn(null);
 
-        assertThatThrownBy(() -> service.issueSts(ADMIN_ID, "training"))
+        assertThatThrownBy(() -> service.issueSts(ADMIN_NAME, "training"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("OSS未配置");
     }
@@ -146,7 +146,7 @@ class OssStsServiceImplTest {
     @Test
     void issueSts_blankBucket_shouldThrowIllegalState() {
         properties.setPublicBucket("");
-        assertThatThrownBy(() -> service.issueSts(ADMIN_ID, "training"))
+        assertThatThrownBy(() -> service.issueSts(ADMIN_NAME, "training"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("OSS bucket 未配置");
     }

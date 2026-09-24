@@ -19,7 +19,7 @@ public class FileSignedUrlController {
     @Resource
     private OssSignedUrlService ossSignedUrlService;
 
-    private Long resolveAdminId() {
+    private String resolveAdminName() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
             return null;
@@ -28,22 +28,18 @@ public class FileSignedUrlController {
         if (name == null || name.isBlank()) {
             return null;
         }
-        try {
-            return Long.valueOf(name);
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        return name;
     }
 
     @Operation(summary = "获取 OSS 私有文件签名 URL")
     @GetMapping("/signed-url")
     public ApiResponse<SignedUrlVO> getSignedUrl(@RequestParam("key") String key) {
-        Long adminId = resolveAdminId();
-        if (adminId == null) {
+        String adminName = resolveAdminName();
+        if (adminName == null) {
             return ApiResponse.error(401, "未登录");
         }
         try {
-            SignedUrlVO vo = ossSignedUrlService.getSignedUrl(adminId, key);
+            SignedUrlVO vo = ossSignedUrlService.getSignedUrl(adminName, key);
             return ApiResponse.success(vo);
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(404, e.getMessage());

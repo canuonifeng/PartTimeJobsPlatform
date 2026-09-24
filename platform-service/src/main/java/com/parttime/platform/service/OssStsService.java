@@ -4,5 +4,5 @@ import com.parttime.platform.pojo.vo.OssStsVO;
 
 public interface OssStsService {
 
-    OssStsVO issueSts(Long adminId, String biz);
+    OssStsVO issueSts(String adminName, String biz);
 }

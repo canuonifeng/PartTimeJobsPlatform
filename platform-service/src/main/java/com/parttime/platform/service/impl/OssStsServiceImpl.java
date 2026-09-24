@@ -46,8 +46,8 @@ public class OssStsServiceImpl implements OssStsService {
     }
 
     @Override
-    public OssStsVO issueSts(Long adminId, String biz) {
-        if (adminId == null) {
+    public OssStsVO issueSts(String adminName, String biz) {
+        if (adminName == null || adminName.isBlank()) {
             throw new IllegalArgumentException("未登录");
         }
         if (biz == null || biz.isBlank()) {
@@ -80,14 +80,14 @@ public class OssStsServiceImpl implements OssStsService {
 
         AssumeRoleRequest request = new AssumeRoleRequest();
         request.setRoleArn(ossProperties.getStsRoleArn());
-        request.setRoleSessionName(ossProperties.getStsRoleSessionName() + "-" + adminId);
+        request.setRoleSessionName(ossProperties.getStsRoleSessionName() + "-" + adminName);
         request.setPolicy(policy);
 
         AssumeRoleResponse response;
         try {
             response = stsClient.getAcsResponse(request);
         } catch (ClientException e) {
-            throw new IllegalStateException("STS 调用失败", e);
+            throw new IllegalStateException("STS 调用失败: " + e.getMessage(), e);
         }
 
         AssumeRoleResponse.Credentials credentials = response.getCredentials();
@@ -114,7 +114,7 @@ public class OssStsServiceImpl implements OssStsService {
         try {
             return objectMapper.writeValueAsString(policy);
         } catch (JsonProcessingException e) {
-            throw new IllegalStateException("Policy 序列化失败", e);
+            throw new IllegalStateException("Policy 序列化失败: " + e.getMessage(), e);
         }
     }
 }

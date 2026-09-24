@@ -28,8 +28,8 @@ public class OssSignedUrlServiceImpl implements OssSignedUrlService {
     }
 
     @Override
-    public SignedUrlVO getSignedUrl(Long adminId, String key) {
-        if (adminId == null) {
+    public SignedUrlVO getSignedUrl(String adminName, String key) {
+        if (adminName == null || adminName.isBlank()) {
             throw new IllegalArgumentException("未登录");
         }
         if (!StringUtils.hasText(key)) {

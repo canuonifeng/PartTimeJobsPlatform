@@ -19,7 +19,7 @@ public class FileStsController {
     @Resource
     private OssStsService ossStsService;
 
-    private Long resolveAdminId() {
+    private String resolveAdminName() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
             return null;
@@ -28,22 +28,18 @@ public class FileStsController {
         if (name == null || name.isBlank()) {
             return null;
         }
-        try {
-            return Long.valueOf(name);
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        return name;
     }
 
     @Operation(summary = "获取 OSS 直传 STS 凭证")
     @PostMapping("/sts")
     public ApiResponse<OssStsVO> issueSts(@RequestParam("biz") String biz) {
-        Long adminId = resolveAdminId();
-        if (adminId == null) {
+        String adminName = resolveAdminName();
+        if (adminName == null) {
             return ApiResponse.error(401, "未登录");
         }
         try {
-            OssStsVO vo = ossStsService.issueSts(adminId, biz);
+            OssStsVO vo = ossStsService.issueSts(adminName, biz);
             return ApiResponse.success(vo);
         } catch (IllegalArgumentException e) {
             return ApiResponse.error(400, e.getMessage());

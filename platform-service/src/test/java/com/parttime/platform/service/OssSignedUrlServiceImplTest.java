@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class OssSignedUrlServiceImplTest {
 
-    private static final Long ADMIN_ID = 7L;
+    private static final String ADMIN_NAME = "admin";
     private static final long EXPIRE_MILLIS = 600_000L;
 
     @Mock
@@ -61,7 +61,7 @@ class OssSignedUrlServiceImplTest {
         mockPresignedUrl(key);
 
         long before = System.currentTimeMillis();
-        SignedUrlVO vo = service.getSignedUrl(ADMIN_ID, key);
+        SignedUrlVO vo = service.getSignedUrl(ADMIN_NAME, key);
         long after = System.currentTimeMillis();
 
         assertThat(vo.getUrl()).isEqualTo("https://linggong-private.oss-cn-hangzhou.aliyuncs.com/" + key + "?signature=abc");
@@ -74,7 +74,7 @@ class OssSignedUrlServiceImplTest {
         String key = "license/99/license.pdf";
         mockPresignedUrl(key);
 
-        SignedUrlVO vo = service.getSignedUrl(ADMIN_ID, key);
+        SignedUrlVO vo = service.getSignedUrl(ADMIN_NAME, key);
 
         assertThat(vo.getUrl()).isEqualTo("https://linggong-private.oss-cn-hangzhou.aliyuncs.com/" + key + "?signature=abc");
         verify(ossClient).generatePresignedUrl(eq("linggong-private"), eq(key), any(Date.class));
@@ -82,32 +82,32 @@ class OssSignedUrlServiceImplTest {
 
     @Test
     void getSignedUrl_malformedKeys_shouldThrowIllegalArgument() {
-        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_ID, ""))
+        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_NAME, ""))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_ID, "realname/"))
+        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_NAME, "realname/"))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_ID, "realname/42"))
+        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_NAME, "realname/42"))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_ID, "realname/42/"))
+        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_NAME, "realname/42/"))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_ID, "realname/42//id.jpg"))
+        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_NAME, "realname/42//id.jpg"))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_ID, "../etc/passwd"))
+        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_NAME, "../etc/passwd"))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_ID, "realname/42/a b.jpg"))
+        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_NAME, "realname/42/a b.jpg"))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_ID, "realname\\42\\id.jpg"))
+        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_NAME, "realname\\42\\id.jpg"))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_ID, "realname/abc/id.jpg"))
+        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_NAME, "realname/abc/id.jpg"))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void getSignedUrl_publicPrefix_shouldThrowSecurity() {
-        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_ID, "job/logo/x.jpg"))
+        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_NAME, "job/logo/x.jpg"))
                 .isInstanceOf(SecurityException.class)
                 .hasMessageContaining("无权");
-        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_ID, "avatar/1/head.jpg"))
+        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_NAME, "avatar/1/head.jpg"))
                 .isInstanceOf(SecurityException.class);
     }
 
@@ -115,8 +115,17 @@ class OssSignedUrlServiceImplTest {
     void getSignedUrl_noOssClient_shouldThrowIllegalState() {
         when(ossClientProvider.getIfAvailable()).thenReturn(null);
 
-        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_ID, "realname/42/id.jpg"))
+        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_NAME, "realname/42/id.jpg"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("OSS未配置");
+    }
+
+    @Test
+    void getSignedUrl_blankBucket_shouldThrowIllegalState() {
+        properties.setPrivateBucket("");
+
+        assertThatThrownBy(() -> service.getSignedUrl(ADMIN_NAME, "realname/42/id.jpg"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("OSS bucket 未配置");
     }
 }
