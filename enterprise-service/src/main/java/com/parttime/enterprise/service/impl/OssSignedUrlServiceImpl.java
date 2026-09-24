@@ -2,6 +2,7 @@ package com.parttime.enterprise.service.impl;
 
 import com.aliyun.oss.OSS;
 import com.parttime.enterprise.config.OssProperties;
+import com.parttime.enterprise.mapper.ScheduleApplicationMapper;
 import com.parttime.enterprise.pojo.vo.SignedUrlVO;
 import com.parttime.enterprise.service.OssSignedUrlService;
 import org.springframework.beans.factory.ObjectProvider;
@@ -20,10 +21,14 @@ public class OssSignedUrlServiceImpl implements OssSignedUrlService {
 
     private final OssProperties ossProperties;
     private final ObjectProvider<OSS> ossClientProvider;
+    private final ScheduleApplicationMapper scheduleApplicationMapper;
 
-    public OssSignedUrlServiceImpl(OssProperties ossProperties, ObjectProvider<OSS> ossClientProvider) {
+    public OssSignedUrlServiceImpl(OssProperties ossProperties,
+                                   ObjectProvider<OSS> ossClientProvider,
+                                   ScheduleApplicationMapper scheduleApplicationMapper) {
         this.ossProperties = ossProperties;
         this.ossClientProvider = ossClientProvider;
+        this.scheduleApplicationMapper = scheduleApplicationMapper;
     }
 
     @Override
@@ -38,14 +43,16 @@ public class OssSignedUrlServiceImpl implements OssSignedUrlService {
             throw new IllegalArgumentException("非法 key");
         }
 
-        if (key.startsWith(REALNAME_PREFIX)) {
-            throw new SecurityException("企业端暂不支持访问该文件");
-        }
-        if (!key.startsWith(LICENSE_PREFIX)) {
+        boolean realname;
+        if (key.startsWith(LICENSE_PREFIX)) {
+            realname = false;
+        } else if (key.startsWith(REALNAME_PREFIX)) {
+            realname = true;
+        } else {
             throw new IllegalArgumentException("非法 key");
         }
 
-        String rest = key.substring(LICENSE_PREFIX.length());
+        String rest = key.substring(realname ? REALNAME_PREFIX.length() : LICENSE_PREFIX.length());
         int slash = rest.indexOf('/');
         if (slash <= 0) {
             throw new IllegalArgumentException("非法 key");
@@ -61,7 +68,13 @@ public class OssSignedUrlServiceImpl implements OssSignedUrlService {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("非法 key");
         }
-        if (ownerId != companyId) {
+
+        if (realname) {
+            long count = scheduleApplicationMapper.countCompanyWorkerRelation(companyId, ownerId);
+            if (count <= 0) {
+                throw new SecurityException("无权访问该文件");
+            }
+        } else if (ownerId != companyId) {
             throw new SecurityException("无权访问该文件");
         }
 

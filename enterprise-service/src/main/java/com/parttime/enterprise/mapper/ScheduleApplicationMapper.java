@@ -60,4 +60,7 @@ public interface ScheduleApplicationMapper {
 
     ScheduleApplication findByScheduleIdAndWorkerId(@Param("scheduleId") Long scheduleId,
                                                      @Param("workerId") Long workerId);
+
+    long countCompanyWorkerRelation(@Param("companyId") Long companyId,
+                                    @Param("workerId") Long workerId);
 }

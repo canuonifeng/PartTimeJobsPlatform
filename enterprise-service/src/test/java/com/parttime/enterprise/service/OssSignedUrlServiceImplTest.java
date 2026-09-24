@@ -2,6 +2,7 @@ package com.parttime.enterprise.service;
 
 import com.aliyun.oss.OSS;
 import com.parttime.enterprise.config.OssProperties;
+import com.parttime.enterprise.mapper.ScheduleApplicationMapper;
 import com.parttime.enterprise.pojo.vo.SignedUrlVO;
 import com.parttime.enterprise.service.impl.OssSignedUrlServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +36,9 @@ class OssSignedUrlServiceImplTest {
     @Mock
     private ObjectProvider<OSS> ossClientProvider;
 
+    @Mock
+    private ScheduleApplicationMapper scheduleApplicationMapper;
+
     private OssProperties properties;
 
     private OssSignedUrlServiceImpl service;
@@ -47,7 +51,7 @@ class OssSignedUrlServiceImplTest {
         properties.setPublicBucket("linggong-public");
 
         lenient().when(ossClientProvider.getIfAvailable()).thenReturn(ossClient);
-        service = new OssSignedUrlServiceImpl(properties, ossClientProvider);
+        service = new OssSignedUrlServiceImpl(properties, ossClientProvider, scheduleApplicationMapper);
     }
 
     private void mockPresignedUrl() throws MalformedURLException {
@@ -76,9 +80,23 @@ class OssSignedUrlServiceImplTest {
     }
 
     @Test
-    void getSignedUrl_realnameKey_shouldThrowSecurity() {
+    void getSignedUrl_unrelatedRealnameKey_shouldThrowSecurity() {
+        when(scheduleApplicationMapper.countCompanyWorkerRelation(COMPANY_ID, 42L)).thenReturn(0L);
+
         assertThatThrownBy(() -> service.getSignedUrl(COMPANY_ID, "realname/42/id.jpg"))
                 .isInstanceOf(SecurityException.class);
+    }
+
+    @Test
+    void getSignedUrl_relatedRealnameKey_shouldReturnUrl() throws Exception {
+        when(scheduleApplicationMapper.countCompanyWorkerRelation(COMPANY_ID, 42L)).thenReturn(1L);
+        when(ossClient.generatePresignedUrl(eq("linggong-private"), eq("realname/42/id.jpg"), any(Date.class)))
+                .thenReturn(new URL("https://linggong-private.oss-cn-hangzhou.aliyuncs.com/realname/42/id.jpg?signature=xyz"));
+
+        SignedUrlVO vo = service.getSignedUrl(COMPANY_ID, "realname/42/id.jpg");
+
+        assertThat(vo.getUrl()).isEqualTo("https://linggong-private.oss-cn-hangzhou.aliyuncs.com/realname/42/id.jpg?signature=xyz");
+        verify(ossClient).generatePresignedUrl(eq("linggong-private"), eq("realname/42/id.jpg"), any(Date.class));
     }
 
     @Test
