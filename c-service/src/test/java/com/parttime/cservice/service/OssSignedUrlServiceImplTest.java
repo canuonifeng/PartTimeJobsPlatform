@@ -20,12 +20,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class OssSignedUrlServiceImplTest {
 
     private static final Long WORKER_ID = 42L;
+    private static final long EXPIRE_MILLIS = 600_000L;
 
     @Mock
     private OSS ossClient;
@@ -49,7 +51,7 @@ class OssSignedUrlServiceImplTest {
     }
 
     private void mockPresignedUrl() throws MalformedURLException {
-        when(ossClient.generatePresignedUrl(eq("linggong-private"), any(String.class), any(Date.class)))
+        when(ossClient.generatePresignedUrl(eq("linggong-private"), eq("realname/42/id.jpg"), any(Date.class)))
                 .thenReturn(new URL("https://linggong-private.oss-cn-hangzhou.aliyuncs.com/realname/42/id.jpg?signature=abc"));
     }
 
@@ -62,7 +64,9 @@ class OssSignedUrlServiceImplTest {
         long after = System.currentTimeMillis();
 
         assertThat(vo.getUrl()).isEqualTo("https://linggong-private.oss-cn-hangzhou.aliyuncs.com/realname/42/id.jpg?signature=abc");
-        assertThat(vo.getExpiresAt()).isBetween(before + 600_000L - 1000, after + 600_000L + 1000);
+        long expire = EXPIRE_MILLIS;
+        assertThat(vo.getExpiresAt()).isBetween(before + expire - 1000, after + expire + 1000);
+        verify(ossClient).generatePresignedUrl(eq("linggong-private"), eq("realname/42/id.jpg"), any(Date.class));
     }
 
     @Test
@@ -78,7 +82,11 @@ class OssSignedUrlServiceImplTest {
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> service.getSignedUrl(WORKER_ID, "realname/"))
                 .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.getSignedUrl(WORKER_ID, "realname/42"))
+                .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> service.getSignedUrl(WORKER_ID, "realname/42/"))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> service.getSignedUrl(WORKER_ID, "realname/42//id.jpg"))
                 .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> service.getSignedUrl(WORKER_ID, "avatar/x.jpg"))
                 .isInstanceOf(IllegalArgumentException.class);

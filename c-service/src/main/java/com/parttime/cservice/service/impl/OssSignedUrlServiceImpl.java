@@ -47,7 +47,7 @@ public class OssSignedUrlServiceImpl implements OssSignedUrlService {
         }
         String ownerPart = rest.substring(0, slash);
         String objectName = rest.substring(slash + 1);
-        if (!StringUtils.hasText(objectName)) {
+        if (!StringUtils.hasText(objectName) || objectName.startsWith("/")) {
             throw new IllegalArgumentException("非法 key");
         }
         long ownerId;
