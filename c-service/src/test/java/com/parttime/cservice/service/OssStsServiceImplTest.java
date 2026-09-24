@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,7 +51,7 @@ class OssStsServiceImplTest {
         properties.setStsRoleSessionName("linggong-worker");
 
         lenient().when(stsClientProvider.getIfAvailable()).thenReturn(stsClient);
-        service = new OssStsServiceImpl(properties, stsClientProvider);
+        service = new OssStsServiceImpl(properties, stsClientProvider, objectMapper);
     }
 
     private AssumeRoleResponse mockStsResponse() throws Exception {
@@ -81,7 +82,7 @@ class OssStsServiceImplTest {
         assertThat(vo.getSecurityToken()).isEqualTo("token-test");
         assertThat(vo.getExpiration()).isEqualTo("2026-09-24T12:00:00Z");
 
-        org.mockito.Mockito.verify(stsClient).getAcsResponse(captor.capture());
+        verify(stsClient).getAcsResponse(captor.capture());
         AssumeRoleRequest req = captor.getValue();
         assertThat(req.getRoleArn()).isEqualTo("acs:ram::1234:role/linggong-oss");
         assertThat(req.getRoleSessionName()).isEqualTo("linggong-worker-worker-42");
@@ -98,7 +99,7 @@ class OssStsServiceImplTest {
         assertThat(vo.getBucket()).isEqualTo("linggong-public");
         assertThat(vo.getPrefix()).isEqualTo("avatar/42/");
 
-        org.mockito.Mockito.verify(stsClient).getAcsResponse(captor.capture());
+        verify(stsClient).getAcsResponse(captor.capture());
         assertPolicy(captor.getValue().getPolicy(), "linggong-public", "avatar/42/");
     }
 
@@ -138,5 +139,13 @@ class OssStsServiceImplTest {
     void issueSts_nullWorkerId_shouldThrowIllegalArgument() {
         assertThatThrownBy(() -> service.issueSts(null, "realname"))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void issueSts_blankBucket_shouldThrowIllegalState() {
+        properties.setPrivateBucket("");
+        assertThatThrownBy(() -> service.issueSts(WORKER_ID, "realname"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("OSS bucket 未配置");
     }
 }

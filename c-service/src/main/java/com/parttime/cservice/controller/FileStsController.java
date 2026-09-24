@@ -41,6 +41,8 @@ public class FileStsController {
             return ApiResponse.error(400, e.getMessage());
         } catch (IllegalStateException e) {
             return ApiResponse.error(503, e.getMessage());
+        } catch (RuntimeException e) {
+            return ApiResponse.error(500, e.getMessage());
         }
     }
 }

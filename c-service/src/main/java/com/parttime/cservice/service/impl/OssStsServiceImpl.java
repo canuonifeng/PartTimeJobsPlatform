@@ -4,11 +4,17 @@ import com.aliyuncs.IAcsClient;
 import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.sts.model.v20150401.AssumeRoleRequest;
 import com.aliyuncs.sts.model.v20150401.AssumeRoleResponse;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.parttime.cservice.config.OssProperties;
 import com.parttime.cservice.pojo.vo.OssStsVO;
 import com.parttime.cservice.service.OssStsService;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class OssStsServiceImpl implements OssStsService {
@@ -16,7 +22,7 @@ public class OssStsServiceImpl implements OssStsService {
     private static final String BIZ_REALNAME = "realname";
     private static final String BIZ_AVATAR = "avatar";
 
-    private static final String STS_ACTIONS = String.join(",",
+    private static final List<String> STS_ACTIONS = List.of(
             "oss:PutObject",
             "oss:InitiateMultipartUpload",
             "oss:UploadPart",
@@ -25,10 +31,14 @@ public class OssStsServiceImpl implements OssStsService {
 
     private final OssProperties ossProperties;
     private final ObjectProvider<IAcsClient> stsClientProvider;
+    private final ObjectMapper objectMapper;
 
-    public OssStsServiceImpl(OssProperties ossProperties, ObjectProvider<IAcsClient> stsClientProvider) {
+    public OssStsServiceImpl(OssProperties ossProperties,
+                              ObjectProvider<IAcsClient> stsClientProvider,
+                              ObjectMapper objectMapper) {
         this.ossProperties = ossProperties;
         this.stsClientProvider = stsClientProvider;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -50,6 +60,10 @@ public class OssStsServiceImpl implements OssStsService {
             prefix = BIZ_AVATAR + "/" + workerId + "/";
         } else {
             throw new IllegalArgumentException("不支持的业务类型: " + biz);
+        }
+
+        if (!StringUtils.hasText(bucket)) {
+            throw new IllegalStateException("OSS bucket 未配置");
         }
 
         IAcsClient stsClient = stsClientProvider.getIfAvailable();
@@ -85,23 +99,17 @@ public class OssStsServiceImpl implements OssStsService {
 
     private String buildPolicy(String bucket, String prefix) {
         String resource = "acs:oss:*:*:" + bucket + "/" + prefix + "*";
-        return "{\"Version\":\"1\","
-                + "\"Statement\":[{"
-                + "\"Effect\":\"Allow\","
-                + "\"Action\":[" + quoteActions() + "],"
-                + "\"Resource\":[\"" + resource + "\"]"
-                + "}]}";
-    }
-
-    private String quoteActions() {
-        String[] actions = STS_ACTIONS.split(",");
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < actions.length; i++) {
-            if (i > 0) {
-                sb.append(",");
-            }
-            sb.append("\"").append(actions[i]).append("\"");
+        Map<String, Object> statement = Map.of(
+                "Effect", "Allow",
+                "Action", STS_ACTIONS,
+                "Resource", List.of(resource));
+        Map<String, Object> policy = Map.of(
+                "Version", "1",
+                "Statement", List.of(statement));
+        try {
+            return objectMapper.writeValueAsString(policy);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Policy 序列化失败: " + e.getMessage(), e);
         }
-        return sb.toString();
     }
 }
