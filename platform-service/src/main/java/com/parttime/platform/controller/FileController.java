@@ -37,6 +37,10 @@ public class FileController {
     @Value("${file.public-base-url:}")
     private String publicBaseUrl;
 
+    /**
+     * @deprecated 已由 STS 前端直传替代（见 /api/admin/files/sts），仅保留本地 dev fallback。
+     */
+    @Deprecated
     @Operation(summary = "上传文件", description = "上传培训课时媒体/文档/图片，返回可访问URL")
     @PostMapping("/upload")
     public ApiResponse<FileUploadVO> upload(@RequestParam("file") MultipartFile file) {

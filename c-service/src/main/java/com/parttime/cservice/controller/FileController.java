@@ -33,6 +33,10 @@ public class FileController {
         return Long.valueOf(auth.getName());
     }
 
+    /**
+     * @deprecated 已由 STS 前端直传替代（见 /api/worker/files/sts），仅保留本地 dev fallback。
+     */
+    @Deprecated
     @Operation(summary = "上传工人端图片")
     @PostMapping("/upload")
     public ApiResponse<FileUploadVO> upload(@RequestParam("file") MultipartFile file, HttpServletRequest request) {
