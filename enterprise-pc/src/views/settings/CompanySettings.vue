@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getEnterpriseInfo, updateCompanyLogo } from '../../api/enterprise'
-import { enterpriseUploadUrl, getUploadHeaders, getUploadUrl } from '../../api/upload'
+import { uploadToOss } from '../../utils/ossUpload'
 
 const loading = ref(false)
 const info = ref({ companyName: '', companyLogo: '' })
@@ -18,10 +18,16 @@ async function loadInfo() {
   }
 }
 
-function handleUploadSuccess(response) {
-  const url = getUploadUrl(response)
-  if (url) {
-    logoUrl.value = url
+async function handleLogoUpload(options) {
+  try {
+    const result = await uploadToOss(options.file, 'logo')
+    if (result.url) {
+      logoUrl.value = result.url
+    }
+    options.onSuccess(result, options.file)
+  } catch (e) {
+    ElMessage.error(e.message || '上传Logo失败')
+    options.onError(e)
   }
 }
 
@@ -60,10 +66,8 @@ onMounted(loadInfo)
         <el-form-item label="企业Logo">
           <div style="display:flex;gap:12px;align-items:center">
             <el-upload
-              :action="enterpriseUploadUrl"
-              :headers="getUploadHeaders()"
+              :http-request="handleLogoUpload"
               :show-file-list="false"
-              :on-success="handleUploadSuccess"
               :before-upload="beforeUpload"
             >
               <el-button type="primary">上传Logo</el-button>

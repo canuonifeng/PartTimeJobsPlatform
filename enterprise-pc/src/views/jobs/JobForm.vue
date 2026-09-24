@@ -6,7 +6,7 @@ import { Delete, SuccessFilled } from '@element-plus/icons-vue'
 import { getJob, createJob, updateJob, getJobTags } from '../../api/job'
 import { listLocations } from '../../api/location'
 import { listTemplates } from '../../api/template'
-import { enterpriseUploadUrl, getUploadHeaders, getUploadUrl } from '../../api/upload'
+import { uploadToOss } from '../../utils/ossUpload'
 import regions from '../../assets/regions.json'
 import LocationPicker from '../../components/LocationPicker.vue'
 
@@ -21,14 +21,20 @@ const tagGroups = ref([])
 const tagLoading = ref(false)
 const tagLoadFailed = ref(false)
 const formRef = ref(null)
-const uploadUrl = enterpriseUploadUrl
 
-function handleImageSuccess(response) {
-  const url = getUploadUrl(response)
-  if (url) {
-    form.value.imageUrl = url
+async function handleImageUpload(options) {
+  try {
+    const result = await uploadToOss(options.file, 'job')
+    if (result.url) {
+      form.value.imageUrl = result.url
+    }
+    options.onSuccess(result, options.file)
+  } catch (e) {
+    ElMessage.error(e.message || '上传图片失败')
+    options.onError(e)
   }
 }
+
 function beforeImageUpload(file) {
   const isImg = file.type.startsWith('image/')
   const isLt2M = file.size / 1024 / 1024 < 2
@@ -401,10 +407,8 @@ onMounted(async () => {
         <el-form-item label="职位图片">
           <div style="display:flex;gap:12px;align-items:center">
             <el-upload
-              :action="uploadUrl"
-              :headers="getUploadHeaders()"
+              :http-request="handleImageUpload"
               :show-file-list="false"
-              :on-success="handleImageSuccess"
               :before-upload="beforeImageUpload"
             >
               <el-button type="primary" plain>上传图片</el-button>
