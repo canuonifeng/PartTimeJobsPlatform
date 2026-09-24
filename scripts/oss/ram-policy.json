@@ -1,0 +1,38 @@
+{
+  "Version": "1",
+  "Statement": [
+    {
+      "Sid": "PrivateBucketRealnameWrite",
+      "Effect": "Allow",
+      "Action": [
+        "oss:PutObject",
+        "oss:InitiateMultipartUpload",
+        "oss:UploadPart",
+        "oss:CompleteMultipartUpload",
+        "oss:AbortMultipartUpload"
+      ],
+      "Resource": [
+        "acs:oss:*:*:parttime-private/realname/*",
+        "acs:oss:*:*:parttime-private/license/*"
+      ]
+    },
+    {
+      "Sid": "PublicBucketBusinessWrite",
+      "Effect": "Allow",
+      "Action": [
+        "oss:PutObject",
+        "oss:InitiateMultipartUpload",
+        "oss:UploadPart",
+        "oss:CompleteMultipartUpload",
+        "oss:AbortMultipartUpload"
+      ],
+      "Resource": [
+        "acs:oss:*:*:parttime-public/job/*",
+        "acs:oss:*:*:parttime-public/logo/*",
+        "acs:oss:*:*:parttime-public/avatar/*",
+        "acs:oss:*:*:parttime-public/training/*",
+        "acs:oss:*:*:parttime-public/material/*"
+      ]
+    }
+  ]
+}
