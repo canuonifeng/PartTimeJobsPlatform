@@ -363,7 +363,9 @@ function getSettlementTags(job: JobItem): string[] {
   const tags: string[] = []
   if (job.jobType) tags.push(job.jobType)
   if (job.experience) tags.push(job.experience)
-  return tags.length > 0 ? tags : ['日结']
+  if (tags.length > 0) return tags
+  if (job.taskType === 'ANNOTATION') return []
+  return ['日结']
 }
 
 function getDisplayTags(job: JobItem): string[] {
