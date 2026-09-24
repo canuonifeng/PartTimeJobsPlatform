@@ -85,7 +85,7 @@ class OssStsServiceImplTest {
         verify(stsClient).getAcsResponse(captor.capture());
         AssumeRoleRequest req = captor.getValue();
         assertThat(req.getRoleArn()).isEqualTo("acs:ram::1234:role/linggong-oss");
-        assertThat(req.getRoleSessionName()).isEqualTo("linggong-worker-worker-42");
+        assertThat(req.getRoleSessionName()).isEqualTo("linggong-worker-42");
         assertPolicy(req.getPolicy(), "linggong-private", "realname/42/");
     }
 

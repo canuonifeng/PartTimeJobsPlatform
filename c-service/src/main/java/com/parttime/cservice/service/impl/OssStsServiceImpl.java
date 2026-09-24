@@ -75,7 +75,7 @@ public class OssStsServiceImpl implements OssStsService {
 
         AssumeRoleRequest request = new AssumeRoleRequest();
         request.setRoleArn(ossProperties.getStsRoleArn());
-        request.setRoleSessionName(ossProperties.getStsRoleSessionName() + "-worker-" + workerId);
+        request.setRoleSessionName(ossProperties.getStsRoleSessionName() + "-" + workerId);
         request.setPolicy(policy);
 
         AssumeRoleResponse response;

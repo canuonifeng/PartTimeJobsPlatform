@@ -42,7 +42,7 @@ public class FileStsController {
         } catch (IllegalStateException e) {
             return ApiResponse.error(503, e.getMessage());
         } catch (RuntimeException e) {
-            return ApiResponse.error(500, e.getMessage());
+            return ApiResponse.error(500, "服务器内部错误");
         }
     }
 }
