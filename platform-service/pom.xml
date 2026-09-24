@@ -104,6 +104,7 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Aliyun OSS / STS SDK -->
         <dependency>
             <groupId>com.aliyun.oss</groupId>
             <artifactId>aliyun-sdk-oss</artifactId>

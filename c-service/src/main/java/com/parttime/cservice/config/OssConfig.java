@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnExpression(
         "T(org.springframework.util.StringUtils).hasText('${oss.endpoint:}')"
                 + " && T(org.springframework.util.StringUtils).hasText('${oss.access-key-id:}')"
+                + " && T(org.springframework.util.StringUtils).hasText('${oss.access-key-secret:}')"
 )
 public class OssConfig {
 
