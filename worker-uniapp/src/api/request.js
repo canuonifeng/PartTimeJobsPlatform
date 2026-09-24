@@ -48,7 +48,9 @@ function request(config) {
               if (shouldRedirectAuth) openLoginSheet()
               reject(new Error(body.message || '登录已过期'))
             } else {
-              reject(new Error(body.message || '请求失败'))
+              const err = new Error(body.message || '请求失败')
+              err.code = body.code
+              reject(err)
             }
           } else {
             resolve(body)

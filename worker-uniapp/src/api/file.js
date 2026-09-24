@@ -1,7 +1,7 @@
 import request from './request'
 
 export function getSts(biz) {
-  return request({ url: '/files/sts', method: 'POST', data: { biz } })
+  return request({ url: `/files/sts?biz=${encodeURIComponent(biz)}`, method: 'POST' })
 }
 
 export function getSignedUrl(key) {

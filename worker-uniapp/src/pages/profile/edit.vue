@@ -168,7 +168,7 @@ async function handleSave() {
   if (previewAvatar.value) {
     try {
       const uploadRes = await uploadToOss(previewAvatar.value, 'avatar')
-      const avatarUrl = uploadRes.url || uploadRes.key || previewAvatar.value
+      const avatarUrl = uploadRes.url || uploadRes.key
       const payload = {
         name,
         phone,

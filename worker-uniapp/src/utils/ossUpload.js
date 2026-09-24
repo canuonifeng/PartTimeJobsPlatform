@@ -127,13 +127,17 @@ function legacyUpload(filePath) {
 // 上传图片到 OSS 直传链路。
 // biz: realname（私有，返回对象 key）/ avatar（公有，返回完整公开 URL）
 // 返回 { key, url }：key 为 OSS 对象 key；url 仅 avatar 公有桶场景可用。
-// STS 未配置（后端 503）或请求异常时，自动回退旧 /files/upload 中转（dev 可用）。
+// 仅当后端明确返回 code=503（OSS 未配置）时回退旧 /files/upload 中转；
+// 其他错误（400/500/网络异常等）直接向上抛出，由页面感知失败。
 export async function uploadToOss(filePath, biz) {
   let sts
   try {
     sts = await getSts(biz)
   } catch (e) {
-    return legacyUpload(filePath)
+    if (e && e.code === 503) {
+      return legacyUpload(filePath)
+    }
+    throw e
   }
   const key = buildObjectKey(sts.prefix, filePath)
   await putToOss(sts, key, filePath)
