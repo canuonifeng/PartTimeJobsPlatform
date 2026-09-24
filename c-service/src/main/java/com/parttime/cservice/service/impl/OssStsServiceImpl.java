@@ -90,7 +90,7 @@ public class OssStsServiceImpl implements OssStsService {
                 + "\"Effect\":\"Allow\","
                 + "\"Action\":[" + quoteActions() + "],"
                 + "\"Resource\":[\"" + resource + "\"]"
-                + "]}]}";
+                + "}]}";
     }
 
     private String quoteActions() {

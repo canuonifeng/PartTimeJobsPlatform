@@ -6,6 +6,8 @@ import com.aliyuncs.sts.model.v20150401.AssumeRoleResponse;
 import com.parttime.cservice.config.OssProperties;
 import com.parttime.cservice.pojo.vo.OssStsVO;
 import com.parttime.cservice.service.impl.OssStsServiceImpl;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +26,8 @@ import static org.mockito.Mockito.when;
 class OssStsServiceImplTest {
 
     private static final Long WORKER_ID = 42L;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock
     private IAcsClient stsClient;
@@ -81,13 +85,7 @@ class OssStsServiceImplTest {
         AssumeRoleRequest req = captor.getValue();
         assertThat(req.getRoleArn()).isEqualTo("acs:ram::1234:role/linggong-oss");
         assertThat(req.getRoleSessionName()).isEqualTo("linggong-worker-worker-42");
-        String policy = req.getPolicy();
-        assertThat(policy).contains("linggong-private/realname/42/*");
-        assertThat(policy).contains("oss:PutObject");
-        assertThat(policy).contains("oss:InitiateMultipartUpload");
-        assertThat(policy).contains("oss:UploadPart");
-        assertThat(policy).contains("oss:CompleteMultipartUpload");
-        assertThat(policy).contains("oss:AbortMultipartUpload");
+        assertPolicy(req.getPolicy(), "linggong-private", "realname/42/");
     }
 
     @Test
@@ -101,8 +99,23 @@ class OssStsServiceImplTest {
         assertThat(vo.getPrefix()).isEqualTo("avatar/42/");
 
         org.mockito.Mockito.verify(stsClient).getAcsResponse(captor.capture());
-        String policy = captor.getValue().getPolicy();
-        assertThat(policy).contains("linggong-public/avatar/42/*");
+        assertPolicy(captor.getValue().getPolicy(), "linggong-public", "avatar/42/");
+    }
+
+    private void assertPolicy(String policy, String bucket, String prefix) throws Exception {
+        JsonNode root = objectMapper.readTree(policy);
+        assertThat(root.at("/Version").asText()).isEqualTo("1");
+        JsonNode statement = root.at("/Statement/0");
+        assertThat(statement.at("/Effect").asText()).isEqualTo("Allow");
+        JsonNode action = statement.at("/Action");
+        assertThat(action.isArray()).isTrue();
+        assertThat(action.toString()).contains("oss:PutObject");
+        assertThat(action.toString()).contains("oss:InitiateMultipartUpload");
+        assertThat(action.toString()).contains("oss:UploadPart");
+        assertThat(action.toString()).contains("oss:CompleteMultipartUpload");
+        assertThat(action.toString()).contains("oss:AbortMultipartUpload");
+        JsonNode resource = statement.at("/Resource/0");
+        assertThat(resource.asText()).isEqualTo("acs:oss:*:*:" + bucket + "/" + prefix + "*");
     }
 
     @Test
