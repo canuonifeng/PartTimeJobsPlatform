@@ -4,6 +4,8 @@ import com.parttime.cservice.mapper.WorkerRealNameAuthMapper;
 import com.parttime.cservice.pojo.cmd.WorkerRealNameSubmitCmd;
 import com.parttime.cservice.pojo.entity.WorkerRealNameAuth;
 import com.parttime.cservice.pojo.vo.WorkerRealNameAuthVO;
+import com.parttime.cservice.pojo.vo.SignedUrlVO;
+import com.parttime.cservice.service.OssSignedUrlService;
 import com.parttime.cservice.service.WorkerRealNameAuthService;
 import org.springframework.stereotype.Service;
 
@@ -14,8 +16,13 @@ import java.util.Optional;
 @Service
 public class WorkerRealNameAuthServiceImpl implements WorkerRealNameAuthService {
 
+    private static final String REALNAME_PREFIX = "realname/";
+
     @Resource
     private WorkerRealNameAuthMapper workerRealNameAuthMapper;
+
+    @Resource
+    private OssSignedUrlService ossSignedUrlService;
 
     @Override
     public WorkerRealNameAuthVO submit(Long workerId, WorkerRealNameSubmitCmd cmd) {
@@ -72,12 +79,24 @@ public class WorkerRealNameAuthServiceImpl implements WorkerRealNameAuthService 
         vo.setStatus(auth.getStatus());
         vo.setRealName(auth.getRealName());
         vo.setIdCardNoMasked(maskIdCard(auth.getIdCardNo()));
-        vo.setIdCardFrontUrl(auth.getIdCardFrontUrl());
-        vo.setIdCardBackUrl(auth.getIdCardBackUrl());
+        vo.setIdCardFrontUrl(resolvePrivateUrl(auth.getWorkerId(), auth.getIdCardFrontUrl()));
+        vo.setIdCardBackUrl(resolvePrivateUrl(auth.getWorkerId(), auth.getIdCardBackUrl()));
         vo.setRejectReason(auth.getRejectReason());
         vo.setSubmittedAt(auth.getSubmittedAt());
         vo.setReviewedAt(auth.getReviewedAt());
         return vo;
+    }
+
+    private String resolvePrivateUrl(Long workerId, String urlOrKey) {
+        if (urlOrKey == null || !urlOrKey.startsWith(REALNAME_PREFIX)) {
+            return urlOrKey;
+        }
+        try {
+            SignedUrlVO signed = ossSignedUrlService.getSignedUrl(workerId, urlOrKey);
+            return signed.getUrl();
+        } catch (RuntimeException e) {
+            return urlOrKey;
+        }
     }
 
     private String maskIdCard(String s) {

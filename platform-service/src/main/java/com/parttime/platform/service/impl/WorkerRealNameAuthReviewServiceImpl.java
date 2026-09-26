@@ -6,10 +6,14 @@ import com.parttime.platform.mapper.WorkerRealNameAuthMapper;
 import com.parttime.platform.pojo.entity.Worker;
 import com.parttime.platform.pojo.entity.WorkerRealNameAuth;
 import com.parttime.platform.pojo.vo.PageVO;
+import com.parttime.platform.pojo.vo.SignedUrlVO;
 import com.parttime.platform.pojo.vo.WorkerRealNameAuthVO;
+import com.parttime.platform.service.OssSignedUrlService;
 import com.parttime.platform.service.WorkerRealNameAuthReviewService;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,8 +24,13 @@ import java.util.stream.Collectors;
 @Service
 public class WorkerRealNameAuthReviewServiceImpl implements WorkerRealNameAuthReviewService {
 
+    private static final String REALNAME_PREFIX = "realname/";
+
     @Resource
     private WorkerRealNameAuthMapper mapper;
+
+    @Resource
+    private OssSignedUrlService ossSignedUrlService;
 
     @Resource
     private WorkerNotificationMapper workerNotificationMapper;
@@ -102,6 +111,33 @@ public class WorkerRealNameAuthReviewServiceImpl implements WorkerRealNameAuthRe
     private WorkerRealNameAuthVO toVO(WorkerRealNameAuth entity) {
         WorkerRealNameAuthVO vo = new WorkerRealNameAuthVO();
         BeanUtils.copyProperties(entity, vo);
+        vo.setIdCardFrontUrl(resolvePrivateUrl(entity.getIdCardFrontUrl()));
+        vo.setIdCardBackUrl(resolvePrivateUrl(entity.getIdCardBackUrl()));
         return vo;
+    }
+
+    private String resolvePrivateUrl(String urlOrKey) {
+        if (urlOrKey == null || !urlOrKey.startsWith(REALNAME_PREFIX)) {
+            return urlOrKey;
+        }
+        String adminName = resolveAdminName();
+        if (adminName == null) {
+            return urlOrKey;
+        }
+        try {
+            SignedUrlVO signed = ossSignedUrlService.getSignedUrl(adminName, urlOrKey);
+            return signed.getUrl();
+        } catch (RuntimeException e) {
+            return urlOrKey;
+        }
+    }
+
+    private String resolveAdminName() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return null;
+        }
+        String name = auth.getName();
+        return (name == null || name.isBlank()) ? null : name;
     }
 }

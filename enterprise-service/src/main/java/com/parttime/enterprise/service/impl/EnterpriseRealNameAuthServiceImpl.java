@@ -4,7 +4,9 @@ import com.parttime.enterprise.mapper.EnterpriseRealNameAuthMapper;
 import com.parttime.enterprise.pojo.cmd.EnterpriseRealNameSubmitCmd;
 import com.parttime.enterprise.pojo.entity.EnterpriseRealNameAuth;
 import com.parttime.enterprise.pojo.vo.EnterpriseRealNameAuthVO;
+import com.parttime.enterprise.pojo.vo.SignedUrlVO;
 import com.parttime.enterprise.service.EnterpriseRealNameAuthService;
+import com.parttime.enterprise.service.OssSignedUrlService;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
@@ -14,8 +16,13 @@ import java.util.Optional;
 @Service
 public class EnterpriseRealNameAuthServiceImpl implements EnterpriseRealNameAuthService {
 
+    private static final String LICENSE_PREFIX = "license/";
+
     @Resource
     private EnterpriseRealNameAuthMapper enterpriseRealNameAuthMapper;
+
+    @Resource
+    private OssSignedUrlService ossSignedUrlService;
 
     @Override
     public EnterpriseRealNameAuthVO submit(Long enterpriseId, EnterpriseRealNameSubmitCmd cmd) {
@@ -76,11 +83,23 @@ public class EnterpriseRealNameAuthServiceImpl implements EnterpriseRealNameAuth
         vo.setLegalPersonName(auth.getLegalPersonName());
         vo.setLegalPersonIdCardMasked(maskIdCard(auth.getLegalPersonIdCard()));
         vo.setUnifiedSocialCreditCode(auth.getUnifiedSocialCreditCode());
-        vo.setBusinessLicenseUrl(auth.getBusinessLicenseUrl());
+        vo.setBusinessLicenseUrl(resolvePrivateUrl(auth.getEnterpriseId(), auth.getBusinessLicenseUrl()));
         vo.setRejectReason(auth.getRejectReason());
         vo.setSubmittedAt(auth.getSubmittedAt());
         vo.setReviewedAt(auth.getReviewedAt());
         return vo;
+    }
+
+    private String resolvePrivateUrl(Long enterpriseId, String urlOrKey) {
+        if (urlOrKey == null || !urlOrKey.startsWith(LICENSE_PREFIX)) {
+            return urlOrKey;
+        }
+        try {
+            SignedUrlVO signed = ossSignedUrlService.getSignedUrl(enterpriseId, urlOrKey);
+            return signed.getUrl();
+        } catch (RuntimeException e) {
+            return urlOrKey;
+        }
     }
 
     private String maskIdCard(String s) {

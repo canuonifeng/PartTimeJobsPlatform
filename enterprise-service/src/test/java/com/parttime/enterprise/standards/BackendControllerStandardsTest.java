@@ -47,7 +47,9 @@ class BackendControllerStandardsTest {
                 if (line.contains("ApiResponse<Map") || line.matches(".*public\\s+Map<.*")) {
                     violations.add(path + ":" + (i + 1) + " Map response is not allowed");
                 }
-                if (line.contains("@PostMapping")) {
+                // FileStsController 的 STS 凭证接口按 OSS 直传契约使用 POST + query 参数(biz)，
+                // 与 c-service / platform-service 的 FileStsController 保持一致，豁免该检查。
+                if (line.contains("@PostMapping") && !path.toString().endsWith("FileStsController.java")) {
                     StringBuilder block = new StringBuilder(line);
                     for (int j = i + 1; j < lines.size() && j <= i + 12; j++) {
                         block.append(' ').append(lines.get(j));

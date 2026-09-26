@@ -6,9 +6,13 @@ import com.parttime.platform.pojo.entity.Enterprise;
 import com.parttime.platform.pojo.entity.EnterpriseRealNameAuth;
 import com.parttime.platform.pojo.vo.EnterpriseRealNameAuthVO;
 import com.parttime.platform.pojo.vo.PageVO;
+import com.parttime.platform.pojo.vo.SignedUrlVO;
 import com.parttime.platform.service.EnterpriseRealNameAuthReviewService;
+import com.parttime.platform.service.OssSignedUrlService;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,8 +23,13 @@ import java.util.stream.Collectors;
 @Service
 public class EnterpriseRealNameAuthReviewServiceImpl implements EnterpriseRealNameAuthReviewService {
 
+    private static final String LICENSE_PREFIX = "license/";
+
     @Resource
     private EnterpriseRealNameAuthMapper mapper;
+
+    @Resource
+    private OssSignedUrlService ossSignedUrlService;
 
     @Resource
     private EnterpriseMapper enterpriseMapper;
@@ -78,6 +87,32 @@ public class EnterpriseRealNameAuthReviewServiceImpl implements EnterpriseRealNa
     private EnterpriseRealNameAuthVO toVO(EnterpriseRealNameAuth entity) {
         EnterpriseRealNameAuthVO vo = new EnterpriseRealNameAuthVO();
         BeanUtils.copyProperties(entity, vo);
+        vo.setBusinessLicenseUrl(resolvePrivateUrl(entity.getBusinessLicenseUrl()));
         return vo;
+    }
+
+    private String resolvePrivateUrl(String urlOrKey) {
+        if (urlOrKey == null || !urlOrKey.startsWith(LICENSE_PREFIX)) {
+            return urlOrKey;
+        }
+        String adminName = resolveAdminName();
+        if (adminName == null) {
+            return urlOrKey;
+        }
+        try {
+            SignedUrlVO signed = ossSignedUrlService.getSignedUrl(adminName, urlOrKey);
+            return signed.getUrl();
+        } catch (RuntimeException e) {
+            return urlOrKey;
+        }
+    }
+
+    private String resolveAdminName() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return null;
+        }
+        String name = auth.getName();
+        return (name == null || name.isBlank()) ? null : name;
     }
 }
