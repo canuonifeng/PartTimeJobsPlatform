@@ -80,7 +80,7 @@ public class WorkerServiceImpl implements WorkerService {
 
     @Override
     public LoginVO loginWithWechat(String code, String referralCode) {
-        String openId = exchangeWechatCode(code);
+        String openId = exchangeWechatCode(code).getOpenId();
         Optional<Worker> existing = workerMapper.findByOpenId(openId);
         Long workerId;
         Worker worker;
@@ -114,8 +114,10 @@ public class WorkerServiceImpl implements WorkerService {
             throw new RuntimeException("手机号授权信息不能为空");
         }
 
-        String openId = exchangeWechatCode(request.code());
-        String phone = hasPhoneCode ? getWechatPhoneNumber(request.phoneCode()) : decryptPhone(request.encryptedData(), request.iv());
+        WechatSession session = exchangeWechatCode(request.code());
+        String openId = session.getOpenId();
+        String phone = hasPhoneCode ? getWechatPhoneNumber(request.phoneCode())
+                : decryptPhone(session.getSessionKey(), request.encryptedData(), request.iv());
 
         Worker worker = null;
 
@@ -231,9 +233,9 @@ public class WorkerServiceImpl implements WorkerService {
         workerProfileMapper.insert(profile);
     }
 
-    private String exchangeWechatCode(String code) {
+    private WechatSession exchangeWechatCode(String code) {
         if (isMockWechatConfig()) {
-            return "openid_" + code;
+            return new WechatSession("openid_" + code, "mock_session_key_" + code);
         }
         String url = UriComponentsBuilder.fromHttpUrl(weChatConfig.getLoginUrl())
                 .queryParam("appid", weChatConfig.getAppId())
@@ -245,7 +247,10 @@ public class WorkerServiceImpl implements WorkerService {
         if (response == null || response.get("openid") == null) {
             throw new RuntimeException("微信登录失败");
         }
-        return String.valueOf(response.get("openid"));
+        Object sessionKey = response.get("session_key");
+        return new WechatSession(
+                String.valueOf(response.get("openid")),
+                sessionKey != null ? String.valueOf(sessionKey) : "");
     }
 
     private String getWechatPhoneNumber(String phoneCode) {
@@ -283,13 +288,81 @@ public class WorkerServiceImpl implements WorkerService {
                 || weChatConfig.getAppId().startsWith("mock_") || weChatConfig.getAppSecret().startsWith("mock_");
     }
 
-    private String decryptPhone(String encryptedData, String iv) {
-        // TODO: 对接真实微信API后使用 AES-128-CBC 解密
-        // 当前 mock 实现：从 encryptedData 中提取手机号（开发用）
-        if (encryptedData.startsWith("mock_phone_")) {
-            return encryptedData.substring("mock_phone_".length());
+    /**
+     * 微信手机号解密（AES-128-CBC，PKCS7）。
+     * 算法：key=Base64Decode(session_key)，iv=Base64Decode(iv)，解密后为 JSON，
+     * 取 phone_info.phoneNumber（新接口）或纯 phoneNumber 字段（旧接口）。
+     * mock 配置或 mock 数据保持开发兼容。
+     */
+    private String decryptPhone(String sessionKey, String encryptedData, String iv) {
+        if (isMockWechatConfig() || sessionKey == null || sessionKey.startsWith("mock_session_key_")) {
+            if (encryptedData.startsWith("mock_phone_")) {
+                return encryptedData.substring("mock_phone_".length());
+            }
+            return "13800000000";
         }
-        return "13800000000";
+        try {
+            javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/CBC/PKCS5Padding");
+            byte[] keyBytes = java.util.Base64.getDecoder().decode(sessionKey);
+            byte[] ivBytes = java.util.Base64.getDecoder().decode(iv);
+            if (keyBytes.length != 16 || ivBytes.length != 16) {
+                throw new RuntimeException("session_key 或 iv 非法");
+            }
+            cipher.init(javax.crypto.Cipher.DECRYPT_MODE,
+                    new javax.crypto.spec.SecretKeySpec(keyBytes, "AES"),
+                    new javax.crypto.spec.IvParameterSpec(ivBytes));
+            byte[] plain = cipher.doFinal(java.util.Base64.getDecoder().decode(encryptedData));
+            String json = new String(plain, java.nio.charset.StandardCharsets.UTF_8);
+            return extractPhoneFromJson(json);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("微信手机号解密失败", e);
+        }
+    }
+
+    private String extractPhoneFromJson(String json) {
+        // phone_info: {"phoneNumber":"13800138000",...}（getPhoneNumber 组件格式）
+        int infoIdx = json.indexOf("phone_info");
+        String segment = infoIdx >= 0 ? json.substring(infoIdx) : json;
+        int keyIdx = segment.indexOf("phoneNumber");
+        if (keyIdx < 0) {
+            throw new RuntimeException("微信手机号解密结果无 phoneNumber");
+        }
+        int colonIdx = segment.indexOf(':', keyIdx);
+        if (colonIdx < 0) {
+            throw new RuntimeException("微信手机号解密结果格式非法");
+        }
+        int start = colonIdx + 1;
+        while (start < segment.length() && (segment.charAt(start) == '"' || segment.charAt(start) == ' ')) {
+            start++;
+        }
+        int end = start;
+        while (end < segment.length() && segment.charAt(end) != '"') {
+            end++;
+        }
+        if (end >= segment.length()) {
+            throw new RuntimeException("微信手机号解密结果格式非法");
+        }
+        return segment.substring(start, end);
+    }
+
+    private static final class WechatSession {
+        private final String openId;
+        private final String sessionKey;
+
+        WechatSession(String openId, String sessionKey) {
+            this.openId = openId;
+            this.sessionKey = sessionKey;
+        }
+
+        String getOpenId() {
+            return openId;
+        }
+
+        String getSessionKey() {
+            return sessionKey;
+        }
     }
 
     private WorkerVO toResponse(Worker worker) {

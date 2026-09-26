@@ -286,6 +286,12 @@ public class InMemoryMappers {
             @Override public Integer countMonthlyAttendanceDays(Long workerId, LocalDateTime startTime, LocalDateTime endTime) {
                 return 0;
             }
+            @Override public long countCompletedByWorkerId(Long workerId) {
+                return store.values().stream()
+                        .filter(r -> workerId.equals(r.getWorkerId()))
+                        .filter(r -> "PAID".equals(r.getSettlementStatus()))
+                        .count();
+            }
             @Override public int update(AttendanceRecordEntity record) {
                 store.put(record.getId(), record);
                 return 1;
@@ -601,6 +607,14 @@ public class InMemoryMappers {
             }
             @Override public BigDecimal sumMonthlyEarnings(Long workerId, LocalDateTime startTime, LocalDateTime endTime) {
                 return BigDecimal.ZERO;
+            }
+            @Override public BigDecimal sumTotalEarnings(Long workerId) {
+                return store.values().stream()
+                        .filter(t -> workerId.equals(t.getWorkerId()))
+                        .filter(t -> "EARNINGS".equals(t.getType()))
+                        .filter(t -> t.getAmount() != null && t.getAmount().compareTo(BigDecimal.ZERO) > 0)
+                        .map(com.parttime.cservice.pojo.entity.BalanceTransaction::getAmount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
             }
             @Override public int deleteByRelatedWithdrawalId(Long relatedWithdrawalId) {
                 return (int) store.values().stream()

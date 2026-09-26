@@ -1,5 +1,7 @@
 package com.parttime.cservice.service.impl;
 
+import com.parttime.cservice.mapper.AttendanceRecordMapper;
+import com.parttime.cservice.mapper.BalanceTransactionMapper;
 import com.parttime.cservice.mapper.ReferralCodeMapper;
 import com.parttime.cservice.mapper.ReferralRecordMapper;
 import com.parttime.cservice.mapper.ReferralRewardMapper;
@@ -52,6 +54,12 @@ public class ReferralServiceImpl implements ReferralService {
 
     @Resource
     private WorkerMapper workerMapper;
+
+    @Resource
+    private AttendanceRecordMapper attendanceRecordMapper;
+
+    @Resource
+    private BalanceTransactionMapper balanceTransactionMapper;
 
     private static final Logger log = LoggerFactory.getLogger(ReferralServiceImpl.class);
 
@@ -137,9 +145,13 @@ public class ReferralServiceImpl implements ReferralService {
             return;
         }
 
-        // TODO: 查询被邀请人打工次数和收入
-        int workCount = 0;
-        BigDecimal income = BigDecimal.ZERO;
+        // 查询被邀请人真实打工次数（已结算考勤）与累计收入（EARNINGS 流水）
+        long refereeWorkerId = record.getRefereeId();
+        int workCount = (int) attendanceRecordMapper.countCompletedByWorkerId(refereeWorkerId);
+        BigDecimal income = balanceTransactionMapper.sumTotalEarnings(refereeWorkerId);
+        if (income == null) {
+            income = BigDecimal.ZERO;
+        }
 
         if (workCount < minWorkCount || income.compareTo(minIncome) < 0) {
             return;
@@ -205,11 +217,16 @@ public class ReferralServiceImpl implements ReferralService {
         List<RefereeVO> list = records.stream()
                 .map(record -> {
                     RefereeVO vo = new RefereeVO();
-                    vo.setId(record.getRefereeId());
-                    vo.setName("用户" + record.getRefereeId());
-                    vo.setPhone("138****" + (record.getRefereeId() % 10000));
-                    vo.setWorkCount(0);
-                    vo.setWorkHours(BigDecimal.ZERO);
+                    Long refereeId = record.getRefereeId();
+                    vo.setId(refereeId);
+                    Worker referee = workerMapper.findById(refereeId).orElse(null);
+                    vo.setName(referee != null && referee.getName() != null ? referee.getName() : "用户" + refereeId);
+                    String phone = referee != null ? referee.getPhone() : null;
+                    vo.setPhone(maskPhone(phone, refereeId));
+                    long workCount = attendanceRecordMapper.countCompletedByWorkerId(refereeId);
+                    vo.setWorkCount((int) workCount);
+                    BigDecimal income = balanceTransactionMapper.sumTotalEarnings(refereeId);
+                    vo.setWorkHours(income != null ? income : BigDecimal.ZERO);
 
                     ReferralReward reward = rewardByRecordId.get(record.getId());
                     vo.setRewardStatus(reward != null ? reward.getStatus() : "NOT_QUALIFIED");
@@ -311,6 +328,13 @@ public class ReferralServiceImpl implements ReferralService {
             sb.append(CODE_CHARS.charAt(RANDOM.nextInt(CODE_CHARS.length())));
         }
         return sb.toString();
+    }
+
+    private String maskPhone(String phone, Long refereeId) {
+        if (phone != null && phone.length() == 11) {
+            return phone.substring(0, 3) + "****" + phone.substring(7);
+        }
+        return "138****" + (refereeId % 10000);
     }
 
     private int getConfigValue(List<ReferralConfig> configs, String key, int defaultValue) {

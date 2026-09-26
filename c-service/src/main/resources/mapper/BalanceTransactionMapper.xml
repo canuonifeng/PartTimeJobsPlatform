@@ -29,6 +29,14 @@
           AND created_at &lt; #{endTime}
     </select>
 
+    <select id="sumTotalEarnings" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0)
+        FROM balance_transactions
+        WHERE worker_id = #{workerId}
+          AND type = 'EARNINGS'
+          AND amount &gt; 0
+    </select>
+
     <delete id="deleteByRelatedWithdrawalId">
         DELETE FROM balance_transactions WHERE related_withdrawal_id = #{relatedWithdrawalId}
     </delete>

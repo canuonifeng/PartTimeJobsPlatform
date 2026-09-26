@@ -50,6 +50,8 @@ class ReferralServiceTest {
         ReflectionTestUtils.setField(referralService, "referralRecordMapper", InMemoryMappers.createReferralRecordMapper());
         ReflectionTestUtils.setField(referralService, "referralRewardMapper", InMemoryMappers.createReferralRewardMapper());
         ReflectionTestUtils.setField(referralService, "referralConfigMapper", InMemoryMappers.createReferralConfigMapper());
+        ReflectionTestUtils.setField(referralService, "attendanceRecordMapper", InMemoryMappers.createAttendanceRecordMapper());
+        ReflectionTestUtils.setField(referralService, "balanceTransactionMapper", InMemoryMappers.createBalanceTransactionMapper());
 
         try {
             when(weChatSchemeService.generateScheme(anyString(), anyString()))
